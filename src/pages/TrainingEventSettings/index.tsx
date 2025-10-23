@@ -1,9 +1,10 @@
-import { useContext, useMemo } from "react"
+import { useContext } from "react"
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native"
 import { useNavigation } from "@react-navigation/native"
 import { useTheme } from "../../context/ThemeContext"
 import { BotStateContext } from "../../context/BotStateContext"
 import CustomCheckbox from "../../components/CustomCheckbox"
+import CustomSelect from "../../components/CustomSelect"
 import MultiSelector from "../../components/MultiSelector"
 import { ArrowLeft } from "lucide-react-native"
 
@@ -17,11 +18,20 @@ const TrainingEventSettings = () => {
     const bsc = useContext(BotStateContext)
 
     const { settings, setSettings } = bsc
-    const { enablePrioritizeEnergyOptions } = settings.trainingEvent
+    const { enablePrioritizeEnergyOptions, acupunctureOption } = settings.trainingEvent
 
     // Extract character and support names from the data.
-    const characterNames = useMemo(() => Object.keys(charactersData), [])
-    const supportNames = useMemo(() => Object.keys(supportsData), [])
+    const characterNames = Object.keys(charactersData)
+    const supportNames = Object.keys(supportsData)
+
+    // Acupuncture event options.
+    const acupunctureOptions = [
+        { value: "Option 1: All stats +20", label: "Option 1: All stats +20" },
+        { value: "Option 2: Get Corner and Straightaway Recovery skills", label: "Option 2: Get Corner and Straightaway Recovery skills" },
+        { value: "Option 3: Energy recovery + Heal all negative status effects", label: "Option 3: Energy recovery + Heal all negative status effects" },
+        { value: "Option 4: Get Charming status effect", label: "Option 4: Get Charming status effect" },
+        { value: "Option 5: Energy +10", label: "Option 5: Energy +10" },
+    ]
 
     const updateTrainingEventSetting = (key: keyof typeof settings.trainingEvent, value: any) => {
         setSettings({
@@ -78,6 +88,22 @@ const TrainingEventSettings = () => {
                             label="Prioritize Energy Options"
                             description="When enabled, the bot will prioritize training event choices that provide energy recovery or avoid energy consumption, helping to maintain optimal energy levels for training sessions."
                             className="my-2"
+                        />
+                    </View>
+
+                    <View style={styles.section}>
+                        <Text style={{ fontSize: 16, fontWeight: "600", color: colors.foreground, marginBottom: 8 }}>
+                            Acupuncture Event Option
+                        </Text>
+                        <Text style={{ fontSize: 14, color: colors.mutedForeground, marginBottom: 12 }}>
+                            Select your preferred option for the Acupuncture event. Note: Options 1-4 have a 70%/55%/30%/15% percentage chance of failing in order, while Option 5 (Energy +10) is always successful.
+                        </Text>
+                        <CustomSelect
+                            options={acupunctureOptions}
+                            value={acupunctureOption}
+                            onValueChange={(value) => updateTrainingEventSetting("acupunctureOption", value)}
+                            placeholder="Select acupuncture option"
+                            width="100%"
                         />
                     </View>
 
