@@ -20,7 +20,7 @@ const TrainingSettings = () => {
     const [prioritizationModalVisible, setPrioritizationModalVisible] = useState(false)
 
     const { settings, setSettings, defaultSettings } = bsc
-    const { trainingBlacklist, statPrioritization, maximumFailureChance, disableTrainingOnMaxedStat, focusOnSparkStatTarget, preferredDistanceOverride } = settings.training
+    const { trainingBlacklist, statPrioritization, maximumFailureChance, disableTrainingOnMaxedStat, focusOnSparkStatTarget, preferredDistanceOverride, mustRestBeforeSummer } = settings.training
 
     const stats = ["Speed", "Stamina", "Power", "Guts", "Wit"]
 
@@ -290,6 +290,17 @@ const TrainingSettings = () => {
                             onCheckedChange={(checked) => updateTrainingSetting("focusOnSparkStatTarget", checked)}
                             label="Focus on Sparks for Stat Targets"
                             description="When enabled, the bot will prioritize training sessions that have a chance to trigger spark events for stats that are below their target values."
+                            className="my-2"
+                        />
+                    </View>
+
+                    <View style={styles.section}>
+                        <CustomCheckbox
+                            id="must-rest-before-summer"
+                            checked={mustRestBeforeSummer}
+                            onCheckedChange={(checked) => updateTrainingSetting("mustRestBeforeSummer", checked)}
+                            label="Must Rest before Summer"
+                            description="Forces the bot to rest during June Early and Late phases in Classic and Senior Years to ensure full energy for Summer Training in July."
                             className="my-2"
                         />
                     </View>
