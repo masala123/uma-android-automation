@@ -216,9 +216,9 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 	 * Starts the training event recognition process by performing OCR on the event title
 	 * and matching it against known event data.
 	 *
-	 * @return A pair containing the event option rewards and the confidence score of the match.
+	 * @return A triple containing the event option rewards, confidence score, and event title.
 	 */
-	fun start(): Pair<ArrayList<String>, Double> {
+	fun start(): Triple<ArrayList<String>, Double, String> {
 		// Reset to default values.
 		result = ""
 		confidence = 0.0
@@ -280,6 +280,6 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		val endTime: Long = System.currentTimeMillis()
 		Log.d(tag, "Total Runtime for recognizing training event: ${endTime - startTime}ms")
 		
-		return Pair(eventOptionRewards, confidence)
+		return Triple(eventOptionRewards, confidence, eventTitle)
 	}
 }
