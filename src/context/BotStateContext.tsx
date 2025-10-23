@@ -32,6 +32,7 @@ export interface Settings {
     // Training Event settings
     trainingEvent: {
         enablePrioritizeEnergyOptions: boolean
+        acupunctureOption: string
         selectAllCharacters: boolean
         selectAllSupportCards: boolean
         characterEventData: Record<string, Record<string, string[]>>
@@ -135,6 +136,7 @@ export const defaultSettings: Settings = {
     },
     trainingEvent: {
         enablePrioritizeEnergyOptions: false,
+        acupunctureOption: "Option 5: Energy +10",
         selectAllCharacters: true,
         selectAllSupportCards: true,
         characterEventData: {},
