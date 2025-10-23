@@ -52,6 +52,7 @@ export interface Settings {
         disableTrainingOnMaxedStat: boolean
         focusOnSparkStatTarget: boolean
         preferredDistanceOverride: string
+        mustRestBeforeSummer: boolean
     }
 
     // Training Stat Target settings
@@ -150,6 +151,7 @@ export const defaultSettings: Settings = {
         disableTrainingOnMaxedStat: true,
         focusOnSparkStatTarget: false,
         preferredDistanceOverride: "Auto",
+        mustRestBeforeSummer: false,
     },
     trainingStatTarget: {
         trainingSprintStatTarget_speedStatTarget: 900,
