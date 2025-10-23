@@ -1,6 +1,7 @@
 package com.steve1316.uma_android_automation.bot
 
 import com.steve1316.uma_android_automation.MainActivity
+import com.steve1316.uma_android_automation.utils.SettingsHelper
 
 /**
  * Base campaign class that contains all shared logic for campaign automation.
@@ -9,6 +10,8 @@ import com.steve1316.uma_android_automation.MainActivity
  */
 open class Campaign(val game: Game) {
 	protected val tag: String = "[${MainActivity.Companion.loggerTag}]Normal"
+
+	val mustRestBeforeSummer: Boolean = SettingsHelper.getBooleanSetting("training", "mustRestBeforeSummer")
 
 	/**
 	 * Campaign-specific training event handling.
@@ -56,8 +59,12 @@ open class Campaign(val game: Game) {
 						game.printToLog("\n[INFO] Force racing enabled - skipping all other activities and going straight to racing.", tag = tag)
 						needToRace = true
 					} else {
-						// If the bot detected a injury, then rest.
-						if (game.checkInjury()) {
+						// Check if we need to rest before Summer Training (June Early/Late in Classic/Senior Year).
+						if (mustRestBeforeSummer && (game.currentDate.year == 2 || game.currentDate.year == 3) && game.currentDate.month == 6) {
+							game.printToLog("\n[INFO] Forcing rest during June ${game.currentDate.phase} in Year ${game.currentDate.year} in preparation for Summer Training.", tag = tag)
+							game.recoverEnergy()
+							game.racing.skipRacing = false
+						} else if (game.checkInjury()) {
 							game.printToLog("[INFO] A infirmary visit was attempted in order to heal an injury.", tag = tag)
 							game.findAndTapImage("ok", region = game.imageUtils.regionMiddle)
 							game.wait(3.0)
