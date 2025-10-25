@@ -55,7 +55,12 @@ class Training(private val game: Game) {
 		"Wit" to 0
 	)
 	private val blacklist: List<String> = SettingsHelper.getStringArraySetting("training", "trainingBlacklist")
-	val statPrioritization: List<String> = SettingsHelper.getStringArraySetting("training", "statPrioritization")
+	private val statPrioritizationRaw = SettingsHelper.getStringArraySetting("training", "statPrioritization")
+	val statPrioritization: List<String> = if (!statPrioritizationRaw.isEmpty()) {
+		statPrioritizationRaw
+	} else {
+		listOf("Speed", "Stamina", "Power", "Wit", "Guts")
+	}
 	private val maximumFailureChance: Int = SettingsHelper.getIntSetting("training", "maximumFailureChance")
 	private val disableTrainingOnMaxedStat: Boolean = SettingsHelper.getBooleanSetting("training", "disableTrainingOnMaxedStat")
 	private val focusOnSparkStatTarget: Boolean = SettingsHelper.getBooleanSetting("training", "focusOnSparkStatTarget")
