@@ -180,7 +180,7 @@ class BaseScraper:
                 cookie_consent_button = driver.find_element(By.XPATH, "//button[contains(@class, 'legal_cookie_banner_button')]")
                 if cookie_consent_button:
                     cookie_consent_button.click()
-                    time.sleep(0.1)
+                    time.sleep(0.5)
                     self.cookie_accepted = True
                     logging.info("Cookie consent accepted.")
             except NoSuchElementException:
@@ -193,7 +193,7 @@ class BaseScraper:
                 ad_banner_button = driver.find_element(By.XPATH, "//div[contains(@class, 'publift-widget-sticky_footer-button')]")
                 if ad_banner_button and ad_banner_button.is_displayed():
                     ad_banner_button.click()
-                    time.sleep(0.1)
+                    time.sleep(0.5)
                     logging.info("Ad banner dismissed.")
                     return True
             except NoSuchElementException:
@@ -256,7 +256,7 @@ class BaseScraper:
 
         for j, training_event in enumerate(all_training_events):
             self.safe_click(driver, training_event)
-            time.sleep(0.3)
+            time.sleep(0.5)
 
             tooltip = driver.find_element(By.XPATH, "//div[@data-tippy-root]")
             try:
@@ -298,13 +298,13 @@ class SkillScraper(BaseScraper):
             By.XPATH, "//div[contains(@class, 'utils_padbottom_half')]//button[contains(@class, 'filters_button_moreless')]"
         )
         show_settings_button.click()
-        time.sleep(0.1)
+        time.sleep(0.5)
         show_skill_ids_checkbox = driver.find_element(By.XPATH, "//input[contains(@id, 'showIdCheckbox')]")
         show_skill_ids_checkbox.click()
-        time.sleep(0.1)
+        time.sleep(0.5)
         show_character_specific_checkbox = driver.find_element(By.XPATH, "//input[contains(@id, 'showUniqueCharCheckbox')]")
         show_character_specific_checkbox.click()
-        time.sleep(0.1)
+        time.sleep(0.5)
 
         all_skill_rows = driver.find_elements(By.XPATH, "//div[contains(@class, 'skills_table_row_ja')]")
         logging.info(f"Found {len(all_skill_rows)} non-hidden and hidden skill rows.")
@@ -384,18 +384,18 @@ class CharacterScraper(BaseScraper):
         sort_by_dropdown = driver.find_element(By.XPATH, "//div[contains(@class, 'filters_sort_row')]")
         first_select = sort_by_dropdown.find_element(By.XPATH, ".//select[1]")
         first_select.click()
-        time.sleep(0.1)
+        time.sleep(0.5)
         name_option = first_select.find_element(By.XPATH, ".//option[@value='name']")
         name_option.click()
-        time.sleep(0.1)
+        time.sleep(0.5)
 
         # Then sort by ascending order.
         second_select = sort_by_dropdown.find_element(By.XPATH, ".//select[2]")
         second_select.click()
-        time.sleep(0.1)
+        time.sleep(0.5)
         ascending_option = second_select.find_element(By.XPATH, ".//option[@value='asc']")
         ascending_option.click()
-        time.sleep(0.1)
+        time.sleep(0.5)
 
 
 class SupportCardScraper(BaseScraper):
@@ -544,7 +544,7 @@ class RaceScraper(BaseScraper):
             # Close the dialog.
             dialog_close_button = driver.find_element(By.XPATH, "//div[contains(@class, 'sc-f83b4a49-1')]")
             dialog_close_button.click()
-            time.sleep(0.3)
+            time.sleep(0.5)
 
         self.save_data()
         driver.quit()
