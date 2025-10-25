@@ -149,56 +149,53 @@ const MessageLog = () => {
     const formattedSettingsString = useMemo(() => {
         const settings = bsc.settings
 
-        // Campaign selection.
-        const campaignString = settings.general.scenario !== "" ? `🎯 ${settings.general.scenario}` : "⚠️ Please select one in the Select Campaign option"
-
-        // Character selection.
-        const characterString = settings.trainingEvent.selectAllCharacters
-            ? "👥 All Characters Selected"
-            : Object.keys(settings.trainingEvent.characterEventData).length > 0
-            ? `👤 ${Object.keys(settings.trainingEvent.characterEventData).length} Characters Selected`
-            : "⚠️ Please select one in the Training Event Settings"
-
-        // Support card selection.
-        const supportCardListString = settings.trainingEvent.selectAllSupportCards
-            ? "🃏 All Support Cards Selected"
-            : Object.keys(settings.trainingEvent.supportEventData).length > 0
-            ? `🃏 ${Object.keys(settings.trainingEvent.supportEventData).length} Support Cards Selected`
-            : "⚠️ None Selected"
-
-        // Training blacklist.
-        const trainingBlacklistString = settings.training.trainingBlacklist.length === 0 ? "✅ No Trainings blacklisted" : `🚫 ${settings.training.trainingBlacklist.join(", ")}`
-
-        // Stat prioritization.
-        const statPrioritizationString =
-            settings.training.statPrioritization.length === 0
-                ? "📊 Using Default Stat Prioritization: Speed, Stamina, Power, Guts, Wit"
-                : `📊 Stat Prioritization: ${settings.training.statPrioritization.join(", ")}`
-
-        // Focus on spark stat target.
-        const focusOnSparkString = settings.training.focusOnSparkStatTarget ? "✨ Focus on Sparks for Stat Targets: ✅" : "✨ Focus on Sparks for Stat Targets: ❌"
-
         // Training stat targets by distance.
         const sprintTargetsString = `Sprint: \n\t\tSpeed: ${settings.trainingStatTarget.trainingSprintStatTarget_speedStatTarget}\t\tStamina: ${settings.trainingStatTarget.trainingSprintStatTarget_staminaStatTarget}\t\tPower: ${settings.trainingStatTarget.trainingSprintStatTarget_powerStatTarget}\n\t\tGuts: ${settings.trainingStatTarget.trainingSprintStatTarget_gutsStatTarget}\t\t\tWit: ${settings.trainingStatTarget.trainingSprintStatTarget_witStatTarget}`
-
         const mileTargetsString = `Mile: \n\t\tSpeed: ${settings.trainingStatTarget.trainingMileStatTarget_speedStatTarget}\t\tStamina: ${settings.trainingStatTarget.trainingMileStatTarget_staminaStatTarget}\t\tPower: ${settings.trainingStatTarget.trainingMileStatTarget_powerStatTarget}\n\t\tGuts: ${settings.trainingStatTarget.trainingMileStatTarget_gutsStatTarget}\t\t\tWit: ${settings.trainingStatTarget.trainingMileStatTarget_witStatTarget}`
-
         const mediumTargetsString = `Medium: \n\t\tSpeed: ${settings.trainingStatTarget.trainingMediumStatTarget_speedStatTarget}\t\tStamina: ${settings.trainingStatTarget.trainingMediumStatTarget_staminaStatTarget}\t\tPower: ${settings.trainingStatTarget.trainingMediumStatTarget_powerStatTarget}\n\t\tGuts: ${settings.trainingStatTarget.trainingMediumStatTarget_gutsStatTarget}\t\t\tWit: ${settings.trainingStatTarget.trainingMediumStatTarget_witStatTarget}`
-
         const longTargetsString = `Long: \n\t\tSpeed: ${settings.trainingStatTarget.trainingLongStatTarget_speedStatTarget}\t\tStamina: ${settings.trainingStatTarget.trainingLongStatTarget_staminaStatTarget}\t\tPower: ${settings.trainingStatTarget.trainingLongStatTarget_powerStatTarget}\n\t\tGuts: ${settings.trainingStatTarget.trainingLongStatTarget_gutsStatTarget}\t\t\tWit: ${settings.trainingStatTarget.trainingLongStatTarget_witStatTarget}`
 
-        return `Campaign Selected: ${campaignString}
+        // Racing plan settings.
+        const racingPlanString =
+            settings.racing.racingPlan && settings.racing.racingPlan !== "[]" && typeof settings.racing.racingPlan === "string"
+                ? `${JSON.parse(settings.racing.racingPlan).length} Race(s) Selected`
+                : "None Selected"
+        const racingPlanDataString = settings.racing.racingPlanData !== "" ? `${settings.racing.racingPlanData.substring(0, 100)}...` : "None"
+
+        return `🏁 Campaign Selected: ${settings.general.scenario !== "" ? `${settings.general.scenario}` : "Please select one in the Select Campaign option"}
 
 ---------- Training Event Options ----------
-Character Selected: ${characterString}
-Support(s) Selected: ${supportCardListString}
+👤 Character Selected: ${
+            settings.trainingEvent.selectAllCharacters
+                ? `All ${Object.keys(settings.trainingEvent.characterEventData).length} Characters Selected`
+                : Object.keys(settings.trainingEvent.characterEventData).length > 0
+                ? `${Object.keys(settings.trainingEvent.characterEventData).length} Characters Selected`
+                : "Please select one in the Training Event Settings"
+        }
+🃏 Support(s) Selected: ${
+            settings.trainingEvent.selectAllSupportCards
+                ? `All ${Object.keys(settings.trainingEvent.supportEventData).length} Support Cards Selected`
+                : Object.keys(settings.trainingEvent.supportEventData).length > 0
+                ? `${Object.keys(settings.trainingEvent.supportEventData).length} Support Cards Selected`
+                : "Please select one in the Training Event Settings"
+        }
+🎭 Special Event Overrides: ${
+            Object.keys(settings.trainingEvent.specialEventOverrides).length === 0
+                ? "No Special Event Overrides"
+                : `${Object.keys(settings.trainingEvent.specialEventOverrides).length} Special Event Overrides applied`
+        }
+🔋 Prioritize Energy Options: ${settings.trainingEvent.enablePrioritizeEnergyOptions ? "✅" : "❌"}
 
 ---------- Training Options ----------
-Training Blacklist: ${trainingBlacklistString}
-${statPrioritizationString}
-Maximum Failure Chance Allowed: ${settings.training.maximumFailureChance}%
-Disable Training on Maxed Stat: ${settings.training.disableTrainingOnMaxedStat ? "✅" : "❌"}
-${focusOnSparkString}
+🚫 Training Blacklist: ${settings.training.trainingBlacklist.length === 0 ? "No Trainings blacklisted" : `${settings.training.trainingBlacklist.join(", ")}`}
+📊 Stat Prioritization: ${
+            settings.training.statPrioritization.length === 0 ? "Using Default Stat Prioritization: Speed, Stamina, Power, Wit, Guts" : `${settings.training.statPrioritization.join(", ")}`
+        }
+🔍 Maximum Failure Chance Allowed: ${settings.training.maximumFailureChance}%
+🔄 Disable Training on Maxed Stat: ${settings.training.disableTrainingOnMaxedStat ? "✅" : "❌"}
+✨ Focus on Sparks for Stat Targets: ${settings.training.focusOnSparkStatTarget ? "✅" : "❌"}
+📏 Preferred Distance Override: ${settings.training.preferredDistanceOverride === "Auto" ? "Auto" : settings.training.preferredDistanceOverride}
+☀️ Must Rest Before Summer: ${settings.training.mustRestBeforeSummer ? "✅" : "❌"}
 
 ---------- Training Stat Targets by Distance ----------
 ${sprintTargetsString}
@@ -207,36 +204,44 @@ ${mediumTargetsString}
 ${longTargetsString}
 
 ---------- Tesseract OCR Optimization ----------
-OCR Threshold: ${settings.ocr.ocrThreshold}
-Enable Automatic OCR retry: ${settings.ocr.enableAutomaticOCRRetry ? "✅" : "❌"}
-Minimum OCR Confidence: ${settings.ocr.ocrConfidence}
+🔍 OCR Threshold: ${settings.ocr.ocrThreshold}
+🔍 Enable Automatic OCR retry: ${settings.ocr.enableAutomaticOCRRetry ? "✅" : "❌"}
+🔍 Minimum OCR Confidence: ${settings.ocr.ocrConfidence}
 
 ---------- Racing Options ----------
-Prioritize Farming Fans: ${settings.racing.enableFarmingFans ? "✅" : "❌"}
-Modulo Days to Farm Fans: ${settings.racing.enableFarmingFans ? `📅 ${settings.racing.daysToRunExtraRaces} days` : "❌"}
-Disable Race Retries: ${settings.racing.disableRaceRetries ? "✅" : "❌"}
-Stop on Mandatory Race: ${settings.racing.enableStopOnMandatoryRaces ? "✅" : "❌"}
-Force Racing Every Day: ${settings.racing.enableForceRacing ? "✅" : "❌"}
+👥 Prioritize Farming Fans: ${settings.racing.enableFarmingFans ? "✅" : "❌"}
+⏰ Modulo Days to Farm Fans: ${settings.racing.enableFarmingFans ? `${settings.racing.daysToRunExtraRaces} days` : "❌"}
+🔄 Disable Race Retries: ${settings.racing.disableRaceRetries ? "✅" : "❌"}
+🏁 Stop on Mandatory Race: ${settings.racing.enableStopOnMandatoryRaces ? "✅" : "❌"}
+🏃 Force Racing Every Day: ${settings.racing.enableForceRacing ? "✅" : "❌"}
+🏁 Enable Racing Plan: ${settings.racing.enableRacingPlan ? "✅" : "❌"}
+🏁 Racing Plan: ${racingPlanString}
+📊 Racing Plan Data: ${racingPlanDataString}
+👥 Minimum Fans Threshold: ${settings.racing.minFansThreshold}
+🏃 Preferred Terrain: ${settings.racing.preferredTerrain}
+🏆 Preferred Grades: ${settings.racing.preferredGrades.join(", ")}
+📅 Look Ahead Days: ${settings.racing.lookAheadDays} days
+⏰ Smart Racing Check Interval: ${settings.racing.smartRacingCheckInterval} days
+🎯 Race Strategy Override: ${settings.racing.enableRaceStrategyOverride ? `✅ (${settings.racing.juniorYearRaceStrategy})` : "❌"}
 
 ---------- Misc Options ----------
-Skill Point Check: ${settings.general.enableSkillPointCheck ? `✅ Stop on ${settings.general.skillPointCheck} Skill Points or more` : "❌"}
-Popup Check: ${settings.general.enablePopupCheck ? "✅" : "❌"}
-Prioritize Energy Options: ${settings.trainingEvent.enablePrioritizeEnergyOptions ? "✅" : "❌"}
+🔍 Skill Point Check: ${settings.general.enableSkillPointCheck ? `Stop on ${settings.general.skillPointCheck} Skill Points or more` : "❌"}
+🔍 Popup Check: ${settings.general.enablePopupCheck ? "✅" : "❌"}
 
 ---------- Debug Options ----------
-Debug Mode: ${settings.debug.enableDebugMode ? "✅" : "❌"}
-Minimum Template Match Confidence: ${settings.debug.templateMatchConfidence}
-Custom Scale: ${settings.debug.templateMatchCustomScale / 100}
-Start Template Matching Test: ${settings.debug.debugMode_startTemplateMatchingTest ? "✅" : "❌"}
-Start Single Training OCR Test: ${settings.debug.debugMode_startSingleTrainingOCRTest ? "✅" : "❌"}
-Start Comprehensive Training OCR Test: ${settings.debug.debugMode_startComprehensiveTrainingOCRTest ? "✅" : "❌"}
-Start Date OCR Test: ${settings.debug.debugMode_startDateOCRTest ? "✅" : "❌"}
-Start Race List Detection Test: ${settings.debug.debugMode_startRaceListDetectionTest ? "✅" : "❌"}
-Start Aptitudes Detection Test: ${settings.debug.debugMode_startAptitudesDetectionTest ? "✅" : "❌"}
-Hide String Comparison Results: ${settings.debug.enableHideOCRComparisonResults ? "✅" : "❌"}
+🐛 Debug Mode: ${settings.debug.enableDebugMode ? "✅" : "❌"}
+🔍 Minimum Template Match Confidence: ${settings.debug.templateMatchConfidence}
+🔍 Custom Scale: ${settings.debug.templateMatchCustomScale / 100}
+🔍 Start Template Matching Test: ${settings.debug.debugMode_startTemplateMatchingTest ? "✅" : "❌"}
+🔍 Start Single Training OCR Test: ${settings.debug.debugMode_startSingleTrainingOCRTest ? "✅" : "❌"}
+🔍 Start Comprehensive Training OCR Test: ${settings.debug.debugMode_startComprehensiveTrainingOCRTest ? "✅" : "❌"}
+🔍 Start Date OCR Test: ${settings.debug.debugMode_startDateOCRTest ? "✅" : "❌"}
+🔍 Start Race List Detection Test: ${settings.debug.debugMode_startRaceListDetectionTest ? "✅" : "❌"}
+🔍 Start Aptitudes Detection Test: ${settings.debug.debugMode_startAptitudesDetectionTest ? "✅" : "❌"}
+🔍 Hide String Comparison Results: ${settings.debug.enableHideOCRComparisonResults ? "✅" : "❌"}
 
 ****************************************`
-}, [bsc.settings])
+    }, [bsc.settings])
 
     // Save the formatted string to the context for persistence.
     useEffect(() => {
@@ -253,7 +258,7 @@ Hide String Comparison Results: ${settings.debug.enableHideOCRComparisonResults 
     // Process log messages with color coding and virtualization.
     const processedMessages = useMemo((): LogMessage[] => {
         // Add intro message as the first item.
-        const introLines = introMessage.split("\n").filter((line) => line.trim() !== "")
+        const introLines = introMessage.split("\n")
         const introMessages = introLines.map((line, index) => ({
             id: `intro-${index}`,
             text: line,
