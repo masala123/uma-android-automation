@@ -613,14 +613,26 @@ class Racing (private val game: Game) {
         val raceTurnNumber = fullRaceData.turnNumber
         val turnDistance = raceTurnNumber - currentTurnNumber
         
-        game.printToLog("[RACE] Evaluating planned race \"${plannedRace.raceName}\" at turn $raceTurnNumber (distance: $turnDistance from current turn $currentTurnNumber).", tag = tag)
+//        if (game.debugMode) {
+//            game.printToLog("[DEBUG] Evaluating planned race \"${plannedRace.raceName}\" at turn $raceTurnNumber (distance: $turnDistance from current turn $currentTurnNumber).", tag = tag)
+//        } else {
+//            Log.d(tag, "[DEBUG] Evaluating planned race \"${plannedRace.raceName}\" at turn $raceTurnNumber (distance: $turnDistance from current turn $currentTurnNumber).")
+//        }
         
         // Check if race is within look-ahead window.
         if (turnDistance < 0) {
-            game.printToLog("[RACE] Planned race \"${plannedRace.raceName}\" is in the past (turn $raceTurnNumber < current turn $currentTurnNumber).", tag = tag)
+//            if (game.debugMode) {
+//                game.printToLog("[DEBUG] Planned race \"${plannedRace.raceName}\" is in the past (turn $raceTurnNumber < current turn $currentTurnNumber).", tag = tag)
+//            } else {
+//                Log.d(tag, "[DEBUG] Planned race \"${plannedRace.raceName}\" is in the past (turn $raceTurnNumber < current turn $currentTurnNumber).")
+//            }
             return false
         } else if (turnDistance > lookAheadDays) {
-            game.printToLog("[RACE] Planned race \"${plannedRace.raceName}\" is too far ahead of the look-ahead window (distance $turnDistance > lookAheadDays $lookAheadDays).", tag = tag)
+//            if (game.debugMode) {
+//                game.printToLog("[DEBUG] Planned race \"${plannedRace.raceName}\" is too far ahead of the look-ahead window (distance $turnDistance > lookAheadDays $lookAheadDays).", tag = tag)
+//            } else {
+//                Log.d(tag, "[DEBUG] Planned race \"${plannedRace.raceName}\" is too far ahead of the look-ahead window (distance $turnDistance > lookAheadDays $lookAheadDays).")
+//            }
             return false
         }
         
