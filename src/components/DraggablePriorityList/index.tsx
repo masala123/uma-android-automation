@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from "react"
-import { View, Text, TouchableOpacity, LayoutChangeEvent, ViewStyle } from "react-native"
+import { View, Text, TouchableOpacity, LayoutChangeEvent, ViewStyle, ScrollView } from "react-native"
 import DragList, { DragListRenderItemInfo } from "react-native-draglist"
 import { Checkbox } from "../ui/checkbox"
 import { Label } from "../ui/label"
 import { Text as UIText } from "../ui/text"
 import { useTheme } from "../../context/ThemeContext"
-import { GripVertical } from "lucide-react-native"
+import { Grip } from "lucide-react-native"
 
 interface PriorityItem {
     id: string
@@ -103,8 +103,6 @@ const DraggablePriorityList: React.FC<DraggablePriorityListProps> = ({ items, se
                     style={{ justifyContent: "space-between", backgroundColor: colors.input }}
                     activeOpacity={0.7}
                     className="flex flex-row items-center gap-2 border border-border rounded-lg p-2"
-                    onPressIn={isSelected ? onDragStart : undefined}
-                    onPressOut={isSelected ? onDragEnd : undefined}
                 >
                     <View style={{ flex: 1, flexDirection: "row", gap: 10 }}>
                         {/* Priority Number */}
@@ -125,12 +123,10 @@ const DraggablePriorityList: React.FC<DraggablePriorityListProps> = ({ items, se
                         </View>
                     </View>
 
-                    {!isSelected && <View className="w-8" />}
-
-                    {/* Drag Handle - smaller and more compact */}
+                    {/* Drag Handle */}
                     {isSelected && (
-                        <View className="p-1">
-                            <GripVertical size={18} color={colors.primary} />
+                        <View>
+                            <Grip size={18} color={colors.primary} onPressIn={isSelected ? onDragStart : undefined} onPressOut={isSelected ? onDragEnd : undefined} />
                         </View>
                     )}
                 </TouchableOpacity>
@@ -143,8 +139,9 @@ const DraggablePriorityList: React.FC<DraggablePriorityListProps> = ({ items, se
             <Text style={{ fontSize: 12, color: colors.mutedForeground, paddingBottom: 10 }}>Drag items to reorder. Top to bottom = highest to lowest priority.</Text>
 
             {/* Always show the DragList, regardless of selection state */}
-            <View>
+            <ScrollView scrollEnabled={true}>
                 <DragList
+                    scrollEnabled={false}
                     ref={dragListRef}
                     data={orderedItems.map((id) => items.find((item) => item.id === id)!).filter(Boolean)}
                     keyExtractor={(item) => item.id}
@@ -171,7 +168,7 @@ const DraggablePriorityList: React.FC<DraggablePriorityListProps> = ({ items, se
                         </TouchableOpacity>
                     </View>
                 )}
-            </View>
+            </ScrollView>
 
             {/* Show message below the list when no items are selected */}
             {selectedItems.length === 0 && <Text style={{ fontSize: 12, color: colors.mutedForeground, paddingTop: 10 }}>No stats selected. Select stats to set priority order.</Text>}
