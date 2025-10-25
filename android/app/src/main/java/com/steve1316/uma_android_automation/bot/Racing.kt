@@ -18,8 +18,15 @@ class Racing (private val game: Game) {
     private val daysToRunExtraRaces: Int = SettingsHelper.getIntSetting("racing", "daysToRunExtraRaces")
     private val disableRaceRetries: Boolean = SettingsHelper.getBooleanSetting("racing", "disableRaceRetries")
     val enableForceRacing = SettingsHelper.getBooleanSetting("racing", "enableForceRacing")
+
     private val enableRacingPlan = SettingsHelper.getBooleanSetting("racing", "enableRacingPlan")
     private val lookAheadDays = SettingsHelper.getIntSetting("racing", "lookAheadDays")
+    private val smartRacingCheckInterval = SettingsHelper.getIntSetting("racing", "smartRacingCheckInterval")
+    private val minFansThreshold = SettingsHelper.getIntSetting("racing", "minFansThreshold")
+    private val preferredTerrain = SettingsHelper.getStringSetting("racing", "preferredTerrain")
+    private val preferredGradesString = SettingsHelper.getStringSetting("racing", "preferredGrades")
+    private val racingPlanJson = SettingsHelper.getStringSetting("racing", "racingPlan")
+
     private var raceRetries = 3
     var raceRepeatWarningCheck = false
     var encounteredRacingPopup = false
@@ -543,15 +550,11 @@ class Racing (private val game: Game) {
      * @return A list of [RaceData] objects that satisfy all Racing Plan filter criteria.
      */
     fun filterRacesBySettings(races: List<RaceData>): List<RaceData> {
-        val minFansThreshold = SettingsHelper.getIntSetting("racing", "minFansThreshold")
-        val preferredTerrain = SettingsHelper.getStringSetting("racing", "preferredTerrain")
-        
         // Parse preferred grades from JSON array string.
-        val preferredGradesString = SettingsHelper.getStringSetting("racing", "preferredGrades")
         game.printToLog("[RACE] Raw preferred grades string: \"$preferredGradesString\".", tag = tag)
         val preferredGrades = try {
             // Parse as JSON array.
-            val jsonArray = org.json.JSONArray(preferredGradesString)
+            val jsonArray = JSONArray(preferredGradesString)
             val parsed = (0 until jsonArray.length()).map { jsonArray.getString(it) }
             game.printToLog("[RACE] Parsed as JSON array: $parsed.", tag = tag)
             parsed
