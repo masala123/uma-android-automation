@@ -1207,6 +1207,8 @@ class Racing (private val game: Game) {
                     if (game.currentDate.year == 3) {
                         if (!enableFarmingFans) game.printToLog("[RACE]   - enableFarmingFans is false", tag = tag)
                         if (enableForceRacing) game.printToLog("[RACE]   - enableForceRacing is true", tag = tag)
+                    } else if (game.currentDate.year == 1) {
+                        game.printToLog("[RACE]   - It is currently the Junior Year.", tag = tag)
                     } else {
                         game.printToLog("[RACE]   - No eligible user-selected races found for Year ${game.currentDate.year}", tag = tag)
                     }
