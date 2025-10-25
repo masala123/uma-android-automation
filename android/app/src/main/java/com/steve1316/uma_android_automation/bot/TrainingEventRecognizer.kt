@@ -28,7 +28,9 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 	private val characterEventData: JSONObject? = try {
 		val characterDataString = SettingsHelper.getStringSetting("trainingEvent", "characterEventData")
 		if (characterDataString.isNotEmpty()) {
-			JSONObject(characterDataString)
+			val jsonObject = JSONObject(characterDataString)
+			game.printToLog("[TRAINING_EVENT_RECOGNIZER] Character event data length: ${jsonObject.length()}.", tag = tag)
+			jsonObject
 		} else {
 			null
 		}
@@ -40,7 +42,9 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 	private val supportEventData: JSONObject? = try {
 		val supportDataString = SettingsHelper.getStringSetting("trainingEvent", "supportEventData")
 		if (supportDataString.isNotEmpty()) {
-			JSONObject(supportDataString)
+			val jsonObject = JSONObject(supportDataString)
+			game.printToLog("[TRAINING_EVENT_RECOGNIZER] Support event data length: ${jsonObject.length()}.", tag = tag)
+			jsonObject
 		} else {
 			null
 		}
