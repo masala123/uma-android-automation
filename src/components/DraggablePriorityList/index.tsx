@@ -26,7 +26,7 @@ const DraggablePriorityList: React.FC<DraggablePriorityListProps> = ({ items, se
     const { colors, isDark } = useTheme()
 
     const [orderedItems, setOrderedItems] = useState<string[]>(items.map((item) => item.id))
-    const dragOrderRef = useRef<string[]>([]) // Track drag order separately
+    const dragOrderRef = useRef<string[]>([]) // Track drag order separately.
     const dragListRef = useRef<any>(null)
 
     const [contentHeight, setContentHeight] = useState(0)
@@ -44,7 +44,7 @@ const DraggablePriorityList: React.FC<DraggablePriorityListProps> = ({ items, se
     useEffect(() => {
         if (selectedItems.length === 0) {
             setOrderedItems(items.map((item) => item.id))
-            dragOrderRef.current = [] // Clear drag order
+            dragOrderRef.current = [] // Clear the drag order.
             return
         }
 
@@ -107,17 +107,16 @@ const DraggablePriorityList: React.FC<DraggablePriorityListProps> = ({ items, se
                     onPressOut={isSelected ? onDragEnd : undefined}
                 >
                     <View style={{ flex: 1, flexDirection: "row", gap: 10 }}>
-                        {/* Priority Number - smaller size */}
+                        {/* Priority Number */}
                         {isSelected && (
                             <View className="w-6 h-6 bg-primary rounded-full items-center justify-center">
                                 <Text style={{ color: isDark ? "white" : "black" }}>{priorityNumber}</Text>
                             </View>
                         )}
 
-                        {/* Checkbox - keep same size */}
+                        {/* Checkbox for selection */}
                         <Checkbox id={`priority-${item.id}`} checked={isSelected} onCheckedChange={() => toggleItem(item.id)} className="dark:border-gray-400" />
 
-                        {/* Content - tighter spacing */}
                         <View className="flex-1 gap-1">
                             <Label style={{ color: colors.foreground }} className="text-sm" onPress={() => toggleItem(item.id)}>
                                 {item.label}
