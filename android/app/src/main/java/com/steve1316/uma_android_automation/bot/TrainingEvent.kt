@@ -3,6 +3,7 @@ package com.steve1316.uma_android_automation.bot
 import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.utils.SettingsHelper
 import org.opencv.core.Point
+import org.json.JSONObject
 
 class TrainingEvent(private val game: Game) {
     private val tag: String = "[${MainActivity.loggerTag}]TrainingEvent"
@@ -15,7 +16,7 @@ class TrainingEvent(private val game: Game) {
     private val specialEventOverrides: Map<String, EventOverride> = try {
         val overridesString = SettingsHelper.getStringSetting("trainingEvent", "specialEventOverrides")
         if (overridesString.isNotEmpty()) {
-            val jsonObject = org.json.JSONObject(overridesString)
+            val jsonObject = JSONObject(overridesString)
             val overridesMap = mutableMapOf<String, EventOverride>()
             jsonObject.keys().forEach { eventName ->
                 val eventData = jsonObject.getJSONObject(eventName)

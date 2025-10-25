@@ -7,6 +7,7 @@ import com.steve1316.uma_android_automation.utils.SQLiteSettingsManager
 import net.ricecode.similarity.JaroWinklerStrategy
 import net.ricecode.similarity.StringSimilarityServiceImpl
 import org.json.JSONArray
+import org.json.JSONObject
 import org.opencv.core.Point
 
 class Racing (private val game: Game) {
@@ -103,7 +104,7 @@ class Racing (private val game: Game) {
                 return emptyMap()
             }
             
-            val jsonObject = org.json.JSONObject(racingPlanDataJson)
+            val jsonObject = JSONObject(racingPlanDataJson)
             val raceDataMap = mutableMapOf<String, FullRaceData>()
             
             val keys = jsonObject.keys()
