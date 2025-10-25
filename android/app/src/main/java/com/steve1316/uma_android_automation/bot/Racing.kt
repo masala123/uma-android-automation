@@ -121,12 +121,9 @@ class Racing (private val game: Game) {
                 
                 val fullRaceData = FullRaceData(
                     name = raceObj.getString("name"),
-                    date = raceObj.getString("date"),
-                    raceTrack = raceObj.getString("raceTrack"),
                     grade = raceObj.getString("grade"),
                     terrain = raceObj.getString("terrain"),
                     distanceType = raceObj.getString("distanceType"),
-                    distanceMeters = raceObj.getInt("distanceMeters"),
                     fans = raceObj.getInt("fans"),
                     turnNumber = raceObj.getInt("turnNumber"),
                     nameFormatted = raceObj.getString("nameFormatted")
@@ -168,12 +165,9 @@ class Racing (private val game: Game) {
 
     data class FullRaceData(
         val name: String,
-        val date: String,
-        val raceTrack: String,
         val grade: String,
         val terrain: String,
         val distanceType: String,
-        val distanceMeters: Int,
         val fans: Int,
         val turnNumber: Int,
         val nameFormatted: String
