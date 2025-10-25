@@ -137,6 +137,15 @@ const CustomSlider: React.FC<CustomSliderProps> = ({
         return percentage * sliderWidth
     }
 
+    // Calculate the number of decimal places based on the step value.
+    const getDecimalPlaces = (stepValue: number) => {
+        if (stepValue >= 1) return 0
+        const stepStr = stepValue.toString()
+        const decimalIndex = stepStr.indexOf(".")
+        if (decimalIndex === -1) return 0
+        return stepStr.length - decimalIndex - 1
+    }
+
     // Initialize tooltip position when component mounts or value changes.
     useEffect(() => {
         if (sliderWidth > 0) {
