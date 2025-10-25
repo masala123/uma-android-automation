@@ -48,32 +48,16 @@ const DraggablePriorityList: React.FC<DraggablePriorityListProps> = ({ items, se
             return
         }
 
-        // Always preserve existing order when possible.
-        if (orderedItems.length > 0) {
-            // Get items that are currently in the list and are still selected.
-            const existingSelectedInOrder = orderedItems.filter((id) => selectedItems.includes(id))
-
-            // Get newly selected items that weren't in the current list.
-            const newlySelected = selectedItems.filter((id) => !orderedItems.includes(id))
-
-            // Get deselected items that should remain visible.
-            const deselectedItems = items.map((item) => item.id).filter((id) => !selectedItems.includes(id))
-
-            // Combine: existing selected items in their current order + newly selected + deselected.
-            const finalOrdered = [...existingSelectedInOrder, ...newlySelected, ...deselectedItems]
-            setOrderedItems(finalOrdered)
-
-            // Update drag order ref with the selected items in their new order.
-            const selectedInNewOrder = finalOrdered.filter((id) => selectedItems.includes(id))
-            dragOrderRef.current = selectedInNewOrder
-        } else {
-            // No existing order, create default order.
-            const deselectedItems = items.map((item) => item.id).filter((id) => !selectedItems.includes(id))
-            const finalOrdered = [...selectedItems, ...deselectedItems]
-            setOrderedItems(finalOrdered)
-            dragOrderRef.current = selectedItems
-        }
-    }, [selectedItems, items]) // Only depend on selection changes
+        // Get deselected items that should remain visible.
+        const deselectedItems = items.map((item) => item.id).filter((id) => !selectedItems.includes(id))
+        
+        // Use the selectedItems order as-is, then append deselected items.
+        const finalOrdered = [...selectedItems, ...deselectedItems]
+        setOrderedItems(finalOrdered)
+        
+        // Update drag order ref with the selected items in their order.
+        dragOrderRef.current = selectedItems
+    }, [selectedItems, items])
 
     const handleReordered = async (fromIndex: number, toIndex: number) => {
         const copy = [...orderedItems]

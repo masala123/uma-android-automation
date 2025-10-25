@@ -1,4 +1,4 @@
-import React, { useContext, useState } from "react"
+import React, { useContext, useEffect, useState } from "react"
 import { View, Text, ScrollView, StyleSheet, Modal, TouchableOpacity, Dimensions } from "react-native"
 import { useNavigation } from "@react-navigation/native"
 import { useTheme } from "../../context/ThemeContext"
@@ -20,9 +20,18 @@ const TrainingSettings = () => {
     const [prioritizationModalVisible, setPrioritizationModalVisible] = useState(false)
 
     const { settings, setSettings, defaultSettings } = bsc
-    const { trainingBlacklist, statPrioritization, maximumFailureChance, disableTrainingOnMaxedStat, focusOnSparkStatTarget, preferredDistanceOverride, mustRestBeforeSummer } = settings.training
+    const { maximumFailureChance, disableTrainingOnMaxedStat, focusOnSparkStatTarget, preferredDistanceOverride, mustRestBeforeSummer } = settings.training
 
-    const stats = ["Speed", "Stamina", "Power", "Guts", "Wit"]
+    const [statPrioritizationItems, setStatPrioritizationItems] = useState<string[]>(settings.training.statPrioritization.length > 0 ? settings.training.statPrioritization : defaultSettings.training.statPrioritization)
+    const [blacklistItems, setBlacklistItems] = useState<string[]>(settings.training.trainingBlacklist.length > 0 ? settings.training.trainingBlacklist : defaultSettings.training.trainingBlacklist)
+
+    useEffect(() => {
+        updateTrainingSetting("statPrioritization", statPrioritizationItems)
+    }, [statPrioritizationItems])
+
+    useEffect(() => {
+        updateTrainingSetting("trainingBlacklist", blacklistItems)
+    }, [blacklistItems])
 
     const updateTrainingSetting = (key: keyof typeof settings.training, value: any) => {
         setSettings({
@@ -188,7 +197,7 @@ const TrainingSettings = () => {
 
                         {mode === "priority" ? (
                             <DraggablePriorityList
-                                items={stats.map((stat) => ({
+                                items={defaultSettings.training.statPrioritization.map((stat) => ({
                                     id: stat,
                                     label: stat,
                                 }))}
@@ -200,7 +209,7 @@ const TrainingSettings = () => {
                                 }}
                             />
                         ) : (
-                            stats.map((stat) => (
+                            defaultSettings.training.statPrioritization.map((stat) => (
                                 <CustomCheckbox
                                     key={stat}
                                     id={`stat-${stat.toLowerCase()}`}
@@ -238,8 +247,8 @@ const TrainingSettings = () => {
                 <View className="m-1">
                     {renderStatSelector(
                         "Blacklist",
-                        trainingBlacklist,
-                        (value) => updateTrainingSetting("trainingBlacklist", value),
+                        blacklistItems,
+                        (value) => setBlacklistItems(value),
                         blacklistModalVisible,
                         setBlacklistModalVisible,
                         "Select which stats to exclude from training. These stats will be skipped during training sessions.",
@@ -248,8 +257,8 @@ const TrainingSettings = () => {
 
                     {renderStatSelector(
                         "Prioritization",
-                        statPrioritization,
-                        (value) => updateTrainingSetting("statPrioritization", value),
+                        statPrioritizationItems,
+                        (value) => setStatPrioritizationItems(value),
                         prioritizationModalVisible,
                         setPrioritizationModalVisible,
                         "Select the priority order of the stats. The stats will be trained in the order they are selected.",
