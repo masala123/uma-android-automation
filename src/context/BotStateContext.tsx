@@ -1,5 +1,7 @@
 import { createContext, useState } from "react"
 import { startTiming } from "../lib/performanceLogger"
+import charactersData from "../data/characters.json"
+import supportsData from "../data/supports.json"
 import racesData from "../data/races.json"
 
 export interface Settings {
@@ -146,8 +148,8 @@ export const defaultSettings: Settings = {
         acupunctureOption: "Option 5: Energy +10",
         selectAllCharacters: true,
         selectAllSupportCards: true,
-        characterEventData: {},
-        supportEventData: {},
+        characterEventData: charactersData as Record<string, Record<string, string[]>>,
+        supportEventData: supportsData as Record<string, Record<string, string[]>>,
     },
     misc: {
         enableSettingsDisplay: false,
