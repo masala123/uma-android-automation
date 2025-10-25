@@ -1474,7 +1474,7 @@ class Racing (private val game: Game) {
         } else {
             // Year 2+: Restore original strategy and disable feature.
             if (hasAppliedStrategyOverride && originalRaceStrategy != null) {
-                val restoreStrategy = originalRaceStrategy!!.uppercase()
+                val restoreStrategy = originalRaceStrategy!!
                 game.printToLog("[RACE] Restoring original race strategy: $restoreStrategy", tag = tag)
                 
                 if (modifyRacingStrategy(baseX, baseY, restoreStrategy)) {
@@ -1527,13 +1527,13 @@ class Racing (private val game: Game) {
      */
     private fun modifyRacingStrategy(baseX: Int, baseY: Int, strategy: String): Boolean {
         val strategyOffsets = mapOf(
-            "End" to Pair(-585, -210),
-            "Late" to Pair(-355, -210),
-            "Pace" to Pair(-125, -210),
-            "Front" to Pair(105, -210)
+            "end" to Pair(-585, -210),
+            "late" to Pair(-355, -210),
+            "pace" to Pair(-125, -210),
+            "front" to Pair(105, -210)
         )
 
-        val offset = strategyOffsets[strategy]
+        val offset = strategyOffsets[strategy.lowercase()]
         if (offset == null) {
             game.printToLog("[ERROR] Unknown strategy: $strategy", tag = tag, isError = true)
             return false
