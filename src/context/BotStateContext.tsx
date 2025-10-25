@@ -35,7 +35,7 @@ export interface Settings {
     // Training Event settings
     trainingEvent: {
         enablePrioritizeEnergyOptions: boolean
-        acupunctureOption: string
+        specialEventOverrides: Record<string, { selectedOption: string; requiresConfirmation: boolean }>
         selectAllCharacters: boolean
         selectAllSupportCards: boolean
         characterEventData: Record<string, Record<string, string[]>>
@@ -145,7 +145,48 @@ export const defaultSettings: Settings = {
     },
     trainingEvent: {
         enablePrioritizeEnergyOptions: false,
-        acupunctureOption: "Option 5: Energy +10",
+        specialEventOverrides: {
+            "New Year's Resolutions (Holiday Event)": {
+                selectedOption: "Option 2: Energy +20",
+                requiresConfirmation: false,
+            },
+            "New Year's Shrine Visit (Holiday Event)": {
+                selectedOption: "Option 1: Energy +30",
+                requiresConfirmation: false,
+            },
+            "Victory! (Race Result)": {
+                selectedOption: "Option 2: Energy -5 and random stat gain",
+                requiresConfirmation: false,
+            },
+            "Solid Showing (Race Result)": {
+                selectedOption: "Option 2: Energy -5/-20 and random stat gain",
+                requiresConfirmation: false,
+            },
+            "Defeat (Race Result)": {
+                selectedOption: "Option 1: Energy -25 and random stat gain",
+                requiresConfirmation: false,
+            },
+            "Failed Training (Get Well Soon!)": {
+                selectedOption: "Option 2: (Random) Mood -1 / Stat decrease / Get Practice Poor negative status",
+                requiresConfirmation: false,
+            },
+            "Failed Training (Don't Overdo It!)": {
+                selectedOption: "Option 2: (Random) Mood -3 / Stat decrease / Get Practice Poor negative status",
+                requiresConfirmation: false,
+            },
+            "Extra Training": {
+                selectedOption: "Option 2: Energy +5",
+                requiresConfirmation: false,
+            },
+            "Acupuncture (Just an Acupuncturist, No Worries! ☆)": {
+                selectedOption: "Option 5: Energy +10",
+                requiresConfirmation: true,
+            },
+            "Etsuko's Exhaustive Coverage": {
+                selectedOption: "Option 2: Energy Down / Gain skill points",
+                requiresConfirmation: false,
+            },
+        },
         selectAllCharacters: true,
         selectAllSupportCards: true,
         characterEventData: charactersData as Record<string, Record<string, string[]>>,
