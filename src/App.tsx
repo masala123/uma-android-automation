@@ -1,7 +1,7 @@
 import { NavigationContainer } from "@react-navigation/native"
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs"
 import { createNativeStackNavigator } from "@react-navigation/native-stack"
-import { Home as HomeIcon, Settings as SettingsIcon } from "lucide-react-native"
+import { Ionicons } from "@expo/vector-icons"
 import { PortalHost } from "@rn-primitives/portal"
 import { StatusBar } from "expo-status-bar"
 import { SafeAreaView } from "react-native-safe-area-context"
@@ -47,11 +47,11 @@ function AppWithBootstrap({ theme, colors }: { theme: string; colors: any }) {
                 <StatusBar style={theme === "light" ? "dark" : "light"} />
                 <Tab.Navigator
                     screenOptions={({ route }) => ({
-                        tabBarIcon: ({ size }: { size: number }) => {
+                        tabBarIcon: ({ focused, size }: { focused: boolean; size: number }) => {
                             if (route.name === "Home") {
-                                return <HomeIcon size={size} color={colors.primary} />
+                                return <Ionicons name={focused ? "home" : "home-outline"} size={size} color={colors.primary} />
                             } else if (route.name === "Settings") {
-                                return <SettingsIcon size={size} color={colors.primary} />
+                                return <Ionicons name={focused ? "settings" : "settings-outline"} size={size} color={colors.primary} />
                             }
                         },
                         headerShown: false,
