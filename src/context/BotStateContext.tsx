@@ -1,5 +1,6 @@
 import { createContext, useState } from "react"
 import { startTiming } from "../lib/performanceLogger"
+import racesData from "../data/races.json"
 
 export interface Settings {
     // General settings
@@ -124,8 +125,14 @@ export const defaultSettings: Settings = {
         enableStopOnMandatoryRaces: false,
         enableForceRacing: false,
         enableRacingPlan: false,
-        racingPlan: "[]",
-        racingPlanData: "",
+        racingPlan: JSON.stringify(
+            Object.values(racesData).map((race, index) => ({
+                raceName: race.name,
+                date: race.date,
+                priority: index,
+            }))
+        ),
+        racingPlanData: JSON.stringify(racesData),
         minFansThreshold: 0,
         preferredTerrain: "Any",
         preferredGrades: ["G1", "G2", "G3"],

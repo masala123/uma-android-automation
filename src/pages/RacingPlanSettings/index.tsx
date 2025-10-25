@@ -82,12 +82,8 @@ const RacingPlanSettings = () => {
             newPlan = [...parsedRacingPlan, newPlannedRace]
         }
 
-        // Also update racingPlanData if it's empty. Otherwise, update the racing plan with the changes.
-        if (!settings.racing.racingPlanData || settings.racing.racingPlanData === "") {
-            updateRacingSetting("racingPlanData", JSON.stringify(racesData))
-        } else {
-            updateRacingSetting("racingPlan", JSON.stringify(newPlan))
-        }
+        // Update the racing plan with the changes.
+        updateRacingSetting("racingPlan", JSON.stringify(newPlan))
     }
 
     const addAllRacesToPlan = () => {
@@ -98,11 +94,6 @@ const RacingPlanSettings = () => {
         }))
 
         updateRacingSetting("racingPlan", JSON.stringify(newPlan))
-
-        // Also update racingPlanData if it's empty.
-        if (!settings.racing.racingPlanData || settings.racing.racingPlanData === "") {
-            updateRacingSetting("racingPlanData", JSON.stringify(racesData))
-        }
     }
 
     const clearAllRacesFromPlan = () => {
