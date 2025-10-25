@@ -297,7 +297,7 @@ const Settings = () => {
                     }}
                     min={0.5}
                     max={1.0}
-                    step={0.1}
+                    step={0.01}
                     label="Adjust Confidence for Template Matching"
                     labelUnit=""
                     showValue={true}
@@ -322,7 +322,7 @@ const Settings = () => {
                     }}
                     min={0.5}
                     max={3.0}
-                    step={0.1}
+                    step={0.01}
                     label="Set the Custom Image Scale for Template Matching"
                     labelUnit=""
                     showValue={true}
