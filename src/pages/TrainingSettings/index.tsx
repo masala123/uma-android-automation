@@ -277,7 +277,7 @@ const TrainingSettings = () => {
                         (value) => setStatPrioritizationItems(value),
                         prioritizationModalVisible,
                         setPrioritizationModalVisible,
-                        "Select the priority order of the stats. The stats will be trained in the order they are selected.",
+                        "Select the priority order of the stats. The stats will be trained in the order they are selected. If none are selected, then the default order will be used.",
                         "priority"
                     )}
 
