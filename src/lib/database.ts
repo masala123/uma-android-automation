@@ -213,13 +213,14 @@ export class DatabaseManager {
             logWithTimestamp(`[DB] Successfully saved ${settings.length} settings in batch.`)
             endTiming({ status: "success", settingsCount: settings.length })
         } catch (error) {
-            logErrorWithTimestamp(`[DB] Failed to save settings batch:`, error)
+            const settingsInfo = settings.length > 0 ? ` (${settings.length} settings: ${settings.map((s) => `${s.category}.${s.key}`).join(", ")})` : " (no settings)"
+            logErrorWithTimestamp(`[DB] Failed to save settings batch${settingsInfo}:`, error)
 
             // Rollback transaction on error.
             try {
                 await this.db.runAsync("ROLLBACK")
             } catch (rollbackError) {
-                logErrorWithTimestamp("[DB] Failed to rollback transaction:", rollbackError)
+                logErrorWithTimestamp(`[DB] Failed to rollback transaction${settingsInfo}:`, rollbackError)
             }
 
             endTiming({ status: "error", settingsCount: settings.length, error: error instanceof Error ? error.message : String(error) })
@@ -259,14 +260,21 @@ export class DatabaseManager {
                 return null
             }
 
-            // Try to parse as JSON and fallback to string.
-            try {
-                return JSON.parse(result.value)
-            } catch {
+            // Settings that should remain as JSON strings (not parsed into objects)
+            const stringOnlySettings = ["racingPlan", "racingPlanData"]
+
+            if (stringOnlySettings.includes(key)) {
                 return result.value
+            } else {
+                // Try to parse as JSON and fallback to string.
+                try {
+                    return JSON.parse(result.value)
+                } catch {
+                    return result.value
+                }
             }
         } catch (error) {
-            logErrorWithTimestamp(`Failed to load setting ${category}.${key}:`, error)
+            logErrorWithTimestamp(`[DB] Failed to load setting ${category}.${key}:`, error)
             throw error
         }
     }
@@ -291,17 +299,24 @@ export class DatabaseManager {
                     settings[result.category] = {}
                 }
 
-                try {
-                    settings[result.category][result.key] = JSON.parse(result.value)
-                } catch {
+                // Settings that should remain as JSON strings (not parsed into objects)
+                const stringOnlySettings = ["racingPlan", "racingPlanData"]
+
+                if (stringOnlySettings.includes(result.key)) {
                     settings[result.category][result.key] = result.value
+                } else {
+                    try {
+                        settings[result.category][result.key] = JSON.parse(result.value)
+                    } catch {
+                        settings[result.category][result.key] = result.value
+                    }
                 }
             }
 
             endTiming({ status: "success", totalSettings: results.length, categoriesCount: Object.keys(settings).length })
             return settings
         } catch (error) {
-            logErrorWithTimestamp("Failed to load all settings:", error)
+            logErrorWithTimestamp("[DB] Failed to load all settings:", error)
             endTiming({ status: "error", error: error instanceof Error ? error.message : String(error) })
             throw error
         }
@@ -337,13 +352,13 @@ export class DatabaseManager {
                     race.distanceMeters,
                     race.fans,
                     race.turnNumber,
-                    race.nameFormatted
+                    race.nameFormatted,
                 ]
             )
             logWithTimestamp(`[DB] Successfully saved race: ${race.name}`)
             endTiming({ status: "success", raceName: race.name })
         } catch (error) {
-            logErrorWithTimestamp(`[DB] Failed to save race ${race.name}:`, error)
+            logErrorWithTimestamp(`[DB] Failed to save race ${race.name} (turn ${race.turnNumber}):`, error)
             endTiming({ status: "error", raceName: race.name, error: error instanceof Error ? error.message : String(error) })
             throw error
         }
@@ -370,9 +385,16 @@ export class DatabaseManager {
             logWithTimestamp(`[DB] Saving ${races.length} races using multi-value INSERT.`)
 
             // Build a single multi-value INSERT statement
-            const values = races.map(race => 
-                `('${race.key.replace(/'/g, "''")}', '${race.name.replace(/'/g, "''")}', '${race.date.replace(/'/g, "''")}', '${race.raceTrack.replace(/'/g, "''")}', ${race.course ? `'${race.course.replace(/'/g, "''")}'` : 'NULL'}, '${race.direction.replace(/'/g, "''")}', '${race.grade.replace(/'/g, "''")}', '${race.terrain.replace(/'/g, "''")}', '${race.distanceType.replace(/'/g, "''")}', ${race.distanceMeters}, ${race.fans}, ${race.turnNumber}, '${race.nameFormatted.replace(/'/g, "''")}')`
-            ).join(',')
+            const values = races
+                .map(
+                    (race) =>
+                        `('${race.key.replace(/'/g, "''")}', '${race.name.replace(/'/g, "''")}', '${race.date.replace(/'/g, "''")}', '${race.raceTrack.replace(/'/g, "''")}', ${
+                            race.course ? `'${race.course.replace(/'/g, "''")}'` : "NULL"
+                        }, '${race.direction.replace(/'/g, "''")}', '${race.grade.replace(/'/g, "''")}', '${race.terrain.replace(/'/g, "''")}', '${race.distanceType.replace(/'/g, "''")}', ${
+                            race.distanceMeters
+                        }, ${race.fans}, ${race.turnNumber}, '${race.nameFormatted.replace(/'/g, "''")}')`
+                )
+                .join(",")
 
             const sql = `INSERT OR REPLACE INTO races (key, name, date, raceTrack, course, direction, grade, terrain, distanceType, distanceMeters, fans, turnNumber, nameFormatted) VALUES ${values}`
 
@@ -381,7 +403,8 @@ export class DatabaseManager {
             logWithTimestamp(`[DB] Successfully saved ${races.length} races in single operation.`)
             endTiming({ status: "success", racesCount: races.length })
         } catch (error) {
-            logErrorWithTimestamp(`[DB] Failed to save races batch:`, error)
+            const racesInfo = races.length > 0 ? ` (${races.length} races: ${races.map((r) => `${r.name} (turn ${r.turnNumber})`).join(", ")})` : " (no races)"
+            logErrorWithTimestamp(`[DB] Failed to save races batch${racesInfo}:`, error)
             endTiming({ status: "error", racesCount: races.length, error: error instanceof Error ? error.message : String(error) })
             throw error
         }
@@ -403,7 +426,7 @@ export class DatabaseManager {
             endTiming({ status: "success", totalRaces: results.length })
             return results
         } catch (error) {
-            logErrorWithTimestamp("Failed to load all races:", error)
+            logErrorWithTimestamp("[DB] Failed to load all races:", error)
             endTiming({ status: "error", error: error instanceof Error ? error.message : String(error) })
             throw error
         }
@@ -421,14 +444,11 @@ export class DatabaseManager {
         }
 
         try {
-            const results = await this.db.getAllAsync<DatabaseRace>(
-                "SELECT * FROM races WHERE turnNumber = ? ORDER BY name", 
-                [turnNumber]
-            )
+            const results = await this.db.getAllAsync<DatabaseRace>("SELECT * FROM races WHERE turnNumber = ? ORDER BY name", [turnNumber])
             endTiming({ status: "success", turnNumber, racesCount: results.length })
             return results
         } catch (error) {
-            logErrorWithTimestamp(`Failed to load races for turn ${turnNumber}:`, error)
+            logErrorWithTimestamp(`[DB] Failed to load races for turn ${turnNumber}:`, error)
             endTiming({ status: "error", turnNumber, error: error instanceof Error ? error.message : String(error) })
             throw error
         }
@@ -450,7 +470,7 @@ export class DatabaseManager {
             logWithTimestamp("[DB] Successfully cleared all races.")
             endTiming({ status: "success" })
         } catch (error) {
-            logErrorWithTimestamp("Failed to clear races:", error)
+            logErrorWithTimestamp("[DB] Failed to clear races:", error)
             endTiming({ status: "error", error: error instanceof Error ? error.message : String(error) })
             throw error
         }

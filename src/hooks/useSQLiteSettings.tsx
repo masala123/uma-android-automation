@@ -162,7 +162,7 @@ export const useSQLiteSettings = () => {
             endTiming({ status: "success", categoriesCount: Object.keys(dbSettings).length, initializedDefaults: !hasSettings })
             return mergedSettings
         } catch (error) {
-            logErrorWithTimestamp("Failed to load settings from database:", error)
+            logErrorWithTimestamp(`[SQLite] Failed to load settings from database (operation: loadAllSettings):`, error)
             endTiming({ status: "error", error: error instanceof Error ? error.message : String(error) })
             return JSON.parse(JSON.stringify(defaultSettings))
         } finally {
@@ -185,6 +185,9 @@ export const useSQLiteSettings = () => {
                 return
             }
 
+            // Get only the changed settings before the try block so it's available in catch.
+            const changedSettings = getChangedSettings(settings, lastSavedSettings)
+
             try {
                 setIsSQLiteSaving(true)
 
@@ -199,9 +202,6 @@ export const useSQLiteSettings = () => {
                 }
 
                 logWithTimestamp("[SQLite] Starting to save settings to SQLite database...")
-
-                // Get only the changed settings.
-                const changedSettings = getChangedSettings(settings, lastSavedSettings)
 
                 logWithTimestamp(`[SQLite] Changed settings check: ${Object.keys(changedSettings).length} categories changed`)
                 logWithTimestamp(`[SQLite] Last saved settings: ${lastSavedSettings ? "exists" : "null"}`)
@@ -237,7 +237,10 @@ export const useSQLiteSettings = () => {
                 logWithTimestamp("[SQLite] Changed settings saved to SQLite database.")
                 endTiming({ status: "success", changedCategories: Object.keys(changedSettings).length, totalSettingsSaved })
             } catch (error) {
-                logErrorWithTimestamp("[SQLite] Failed to save settings to database:", error)
+                // Prepare settings info for error logging - reconstruct from changedSettings if batchSettings is not available.
+                const settingsInfo =
+                    Object.keys(changedSettings).length > 0 ? `(${Object.keys(changedSettings).length} categories: ${Object.keys(changedSettings).join(", ")})` : "(no settings to save)"
+                logErrorWithTimestamp(`[SQLite] Failed to save settings to database ${settingsInfo}:`, error)
                 endTiming({ status: "error", error: error instanceof Error ? error.message : String(error) })
                 throw error
             } finally {
