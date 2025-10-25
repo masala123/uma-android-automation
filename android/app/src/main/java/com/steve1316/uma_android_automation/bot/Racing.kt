@@ -599,10 +599,11 @@ class Racing (private val game: Game) {
      * 
      * @param plannedRace The user-selected race to evaluate.
      * @param racePlanData Full race database containing turn numbers.
+     * @param dayNumber The current day number in the game.
      * @param currentTurnNumber The current turn in the game.
      * @return True if the race should be considered for racing.
      */
-    private fun isPlannedRaceEligible(plannedRace: PlannedRace, racePlanData: Map<String, FullRaceData>, currentTurnNumber: Int): Boolean {
+    private fun isPlannedRaceEligible(plannedRace: PlannedRace, racePlanData: Map<String, FullRaceData>, dayNumber: Int, currentTurnNumber: Int): Boolean {
         // Find the race in the plan data.
         val fullRaceData = racePlanData[plannedRace.raceName]
         if (fullRaceData == null) {
@@ -636,28 +637,10 @@ class Racing (private val game: Game) {
             return false
         }
         
-        // For Classic Year, check if it's an eligible racing day based on the interval setting.
+        // For Classic Year, check if it's an eligible racing day using the settings for the standard racing logic.
         if (game.currentDate.year == 2) {
-            val smartRacingCheckInterval = SettingsHelper.getIntSetting("racing", "smartRacingCheckInterval")
-            val dayNumber = game.imageUtils.determineDayForExtraRace()
-
-            val isEligibleDay = dayNumber % smartRacingCheckInterval == 0
-            
-            if (!isEligibleDay) {
+            if (!(dayNumber % daysToRunExtraRaces == 0)) {
                 game.printToLog("[RACE] Planned race \"${plannedRace.raceName}\" is not on an eligible racing day (day $dayNumber, interval $smartRacingCheckInterval).", tag = tag)
-                return false
-            }
-            
-            // Check for summer restrictions and locked races.
-            val isSummer = game.imageUtils.findImage("recover_energy_summer", tries = 1, region = game.imageUtils.regionBottomHalf).first != null
-            val isLocked = game.imageUtils.findImage("race_select_extra_locked", tries = 1, region = game.imageUtils.regionBottomHalf).first != null
-            val isUmaFinalsLocked = game.imageUtils.findImage("race_select_extra_locked_uma_finals", tries = 1, region = game.imageUtils.regionBottomHalf).first != null
-            
-            if (isSummer) {
-                game.printToLog("[RACE] Planned race \"${plannedRace.raceName}\" cannot be raced due to summer restrictions.", tag = tag)
-                return false
-            } else if (isLocked || isUmaFinalsLocked) {
-                game.printToLog("[RACE] Planned race \"${plannedRace.raceName}\" cannot be raced due to locked race restrictions.", tag = tag)
                 return false
             }
         }
@@ -827,12 +810,13 @@ class Racing (private val game: Game) {
             game.printToLog("[RACE] No race plan data available for eligibility checking.", tag = tag)
             return false
         }
-        
+
+        val dayNumber = game.imageUtils.determineDayForExtraRace()
         val currentTurnNumber = game.currentDate.turnNumber
         
         // Check each planned race for eligibility.
         val eligiblePlannedRaces = userPlannedRaces.filter { plannedRace ->
-            isPlannedRaceEligible(plannedRace, racePlanData, currentTurnNumber)
+            isPlannedRaceEligible(plannedRace, racePlanData, dayNumber, currentTurnNumber)
         }
         
         if (eligiblePlannedRaces.isEmpty()) {
