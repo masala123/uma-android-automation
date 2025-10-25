@@ -36,6 +36,8 @@ export class DatabaseManager {
     private db: SQLite.SQLiteDatabase | null = null
     private isInitializing = false
     private initializationPromise: Promise<void> | null = null
+    private isTransactionActive = false
+    private transactionQueue: Array<() => Promise<void>> = []
 
     /**
      * Initialize the database and create tables if they don't exist.
@@ -175,6 +177,45 @@ export class DatabaseManager {
     }
 
     /**
+     * Execute a database operation with proper transaction management to prevent nested transactions.
+     */
+    private async executeWithTransaction<T>(operation: () => Promise<T>): Promise<T> {
+        return new Promise((resolve, reject) => {
+            const executeOperation = async () => {
+                if (this.isTransactionActive) {
+                    // If a transaction is already active, queue this operation.
+                    this.transactionQueue.push(executeOperation)
+                    return
+                }
+
+                this.isTransactionActive = true
+
+                try {
+                    const result = await operation()
+                    resolve(result)
+                } catch (error) {
+                    // Clear the transaction queue on error to prevent cascading failures.
+                    this.clearTransactionQueue()
+                    reject(error)
+                } finally {
+                    this.isTransactionActive = false
+
+                    // Process the next queued operation if any.
+                    if (this.transactionQueue.length > 0) {
+                        const nextOperation = this.transactionQueue.shift()
+                        if (nextOperation) {
+                            // Use setTimeout to avoid stack overflow with recursive calls.
+                            setTimeout(() => nextOperation(), 0)
+                        }
+                    }
+                }
+            }
+
+            executeOperation()
+        })
+    }
+
+    /**
      * Save multiple settings in a single transaction for better performance.
      */
     async saveSettingsBatch(settings: Array<{ category: string; key: string; value: any }>): Promise<void> {
@@ -192,25 +233,28 @@ export class DatabaseManager {
         }
 
         try {
-            logWithTimestamp(`[DB] Saving ${settings.length} settings in batch.`)
+            await this.executeWithTransaction(async () => {
+                logWithTimestamp(`[DB] Saving ${settings.length} settings in batch.`)
 
-            await this.db.runAsync("BEGIN TRANSACTION")
-            const stmt = await this.db.prepareAsync(
-                `INSERT OR REPLACE INTO settings (category, key, value, updated_at) 
-                 VALUES (?, ?, ?, CURRENT_TIMESTAMP)`
-            )
+                await this.db!.runAsync("BEGIN TRANSACTION")
+                const stmt = await this.db!.prepareAsync(
+                    `INSERT OR REPLACE INTO settings (category, key, value, updated_at) 
+                     VALUES (?, ?, ?, CURRENT_TIMESTAMP)`
+                )
 
-            // Execute all settings in batch.
-            for (const setting of settings) {
-                const valueString = typeof setting.value === "string" ? setting.value : JSON.stringify(setting.value)
-                await stmt.executeAsync([setting.category, setting.key, valueString])
-            }
+                // Execute all settings in batch.
+                for (const setting of settings) {
+                    const valueString = typeof setting.value === "string" ? setting.value : JSON.stringify(setting.value)
+                    await stmt.executeAsync([setting.category, setting.key, valueString])
+                }
 
-            // Finalize statement and commit transaction.
-            await stmt.finalizeAsync()
-            await this.db.runAsync("COMMIT")
+                // Finalize statement and commit transaction.
+                await stmt.finalizeAsync()
+                await this.db!.runAsync("COMMIT")
 
-            logWithTimestamp(`[DB] Successfully saved ${settings.length} settings in batch.`)
+                logWithTimestamp(`[DB] Successfully saved ${settings.length} settings in batch.`)
+            })
+
             endTiming({ status: "success", settingsCount: settings.length })
         } catch (error) {
             const settingsInfo = settings.length > 0 ? ` (${settings.length} settings: ${settings.map((s) => `${s.category}.${s.key}`).join(", ")})` : " (no settings)"
@@ -218,7 +262,9 @@ export class DatabaseManager {
 
             // Rollback transaction on error.
             try {
-                await this.db.runAsync("ROLLBACK")
+                if (this.db && this.isTransactionActive) {
+                    await this.db.runAsync("ROLLBACK")
+                }
             } catch (rollbackError) {
                 logErrorWithTimestamp(`[DB] Failed to rollback transaction${settingsInfo}:`, rollbackError)
             }
@@ -365,7 +411,7 @@ export class DatabaseManager {
     }
 
     /**
-     * Save multiple races using a single multi-value INSERT statement for better performance.
+     * Save multiple races using prepared statements for better performance and security.
      */
     async saveRacesBatch(races: Array<Omit<DatabaseRace, "id">>): Promise<void> {
         const endTiming = startTiming("database_save_races_batch", "database")
@@ -382,29 +428,55 @@ export class DatabaseManager {
         }
 
         try {
-            logWithTimestamp(`[DB] Saving ${races.length} races using multi-value INSERT.`)
+            await this.executeWithTransaction(async () => {
+                logWithTimestamp(`[DB] Saving ${races.length} races using prepared statement.`)
 
-            // Build a single multi-value INSERT statement
-            const values = races
-                .map(
-                    (race) =>
-                        `('${race.key.replace(/'/g, "''")}', '${race.name.replace(/'/g, "''")}', '${race.date.replace(/'/g, "''")}', '${race.raceTrack.replace(/'/g, "''")}', ${
-                            race.course ? `'${race.course.replace(/'/g, "''")}'` : "NULL"
-                        }, '${race.direction.replace(/'/g, "''")}', '${race.grade.replace(/'/g, "''")}', '${race.terrain.replace(/'/g, "''")}', '${race.distanceType.replace(/'/g, "''")}', ${
-                            race.distanceMeters
-                        }, ${race.fans}, ${race.turnNumber}, '${race.nameFormatted.replace(/'/g, "''")}')`
+                await this.db!.runAsync("BEGIN TRANSACTION")
+                const stmt = await this.db!.prepareAsync(
+                    `INSERT OR REPLACE INTO races (key, name, date, raceTrack, course, direction, grade, terrain, distanceType, distanceMeters, fans, turnNumber, nameFormatted) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
                 )
-                .join(",")
 
-            const sql = `INSERT OR REPLACE INTO races (key, name, date, raceTrack, course, direction, grade, terrain, distanceType, distanceMeters, fans, turnNumber, nameFormatted) VALUES ${values}`
+                // Execute all races in batch using prepared statement.
+                for (const race of races) {
+                    await stmt.executeAsync([
+                        race.key,
+                        race.name,
+                        race.date,
+                        race.raceTrack,
+                        race.course,
+                        race.direction,
+                        race.grade,
+                        race.terrain,
+                        race.distanceType,
+                        race.distanceMeters,
+                        race.fans,
+                        race.turnNumber,
+                        race.nameFormatted,
+                    ])
+                }
 
-            await this.db.runAsync(sql)
+                // Finalize statement and commit transaction.
+                await stmt.finalizeAsync()
+                await this.db!.runAsync("COMMIT")
 
-            logWithTimestamp(`[DB] Successfully saved ${races.length} races in single operation.`)
+                logWithTimestamp(`[DB] Successfully saved ${races.length} races in batch.`)
+            })
+
             endTiming({ status: "success", racesCount: races.length })
         } catch (error) {
             const racesInfo = races.length > 0 ? ` (${races.length} races: ${races.map((r) => `${r.name} (turn ${r.turnNumber})`).join(", ")})` : " (no races)"
             logErrorWithTimestamp(`[DB] Failed to save races batch${racesInfo}:`, error)
+
+            // Rollback transaction on error.
+            try {
+                if (this.db && this.isTransactionActive) {
+                    await this.db.runAsync("ROLLBACK")
+                }
+            } catch (rollbackError) {
+                logErrorWithTimestamp(`[DB] Failed to rollback transaction${racesInfo}:`, rollbackError)
+            }
+
             endTiming({ status: "error", racesCount: races.length, error: error instanceof Error ? error.message : String(error) })
             throw error
         }
@@ -481,6 +553,14 @@ export class DatabaseManager {
      */
     isInitialized(): boolean {
         return this.db !== null
+    }
+
+    /**
+     * Clear the transaction queue and reset transaction state (for error recovery).
+     */
+    private clearTransactionQueue(): void {
+        this.transactionQueue = []
+        this.isTransactionActive = false
     }
 }
 

@@ -3,9 +3,24 @@ import * as FileSystem from "expo-file-system"
 import * as Sharing from "expo-sharing"
 import { startActivityAsync } from "expo-intent-launcher"
 import { defaultSettings, Settings, BotStateContext } from "../context/BotStateContext"
-import { useSQLiteSettings } from "./useSQLiteSettings"
+import { databaseManager } from "../lib/database"
 import { startTiming } from "../lib/performanceLogger"
 import { logWithTimestamp, logErrorWithTimestamp } from "../lib/logger"
+
+/**
+ * Converts settings object to database batch format
+ */
+const convertSettingsToBatch = (settings: Settings) => {
+    const batch: Array<{ category: string; key: string; value: any }> = []
+
+    Object.entries(settings).forEach(([category, categorySettings]) => {
+        Object.entries(categorySettings).forEach(([key, value]) => {
+            batch.push({ category, key, value })
+        })
+    })
+
+    return batch
+}
 
 /**
  * Manages settings persistence using SQLite database.
@@ -17,13 +32,14 @@ export const useSettingsManager = () => {
 
     const bsc = useContext(BotStateContext)
 
-    const { isSQLiteInitialized, isSQLiteSaving, loadSQLiteSettings, saveSQLiteSettings, saveSQLiteSettingsImmediate } = useSQLiteSettings()
+    // Direct database operations
+    const isSQLiteInitialized = databaseManager.isInitialized()
+    const isSQLiteSaving = false
 
     // Auto-load settings when SQLite is initialized.
     useEffect(() => {
         if (isSQLiteInitialized && !migrationCompleted) {
-            logWithTimestamp("[SettingsManager] Auto-loading settings on initialization...")
-            loadSettings()
+            logWithTimestamp("[SettingsManager] SQLite initialized and loading settings will be handled by bootstrap.")
             setMigrationCompleted(true)
         }
     }, [isSQLiteInitialized, migrationCompleted])
@@ -36,7 +52,7 @@ export const useSettingsManager = () => {
 
         try {
             const localSettings: Settings = newSettings ? newSettings : bsc.settings
-            await saveSQLiteSettings(localSettings)
+            await databaseManager.saveSettingsBatch(convertSettingsToBatch(localSettings))
             endTiming({ status: "success", hasNewSettings: !!newSettings })
         } catch (error) {
             logErrorWithTimestamp(`Error saving settings: ${error}`)
@@ -54,7 +70,7 @@ export const useSettingsManager = () => {
 
         try {
             const localSettings: Settings = newSettings ? newSettings : bsc.settings
-            await saveSQLiteSettingsImmediate(localSettings)
+            await databaseManager.saveSettingsBatch(convertSettingsToBatch(localSettings))
             endTiming({ status: "success", hasNewSettings: !!newSettings, immediate: true })
         } catch (error) {
             logErrorWithTimestamp(`Error saving settings immediately: ${error}`)
@@ -65,12 +81,14 @@ export const useSettingsManager = () => {
     }
 
     // Load settings from SQLite database.
-    const loadSettings = async () => {
-        const endTiming = startTiming("settings_manager_load_settings", "settings")
+    const loadSettings = async (skipInitializationCheck: boolean = false) => {
+        const timingName = skipInitializationCheck ? "settings_manager_load_settings_bootstrap" : "settings_manager_load_settings"
+        const endTiming = startTiming(timingName, "settings")
+        const context = skipInitializationCheck ? "during bootstrap" : ""
 
         try {
-            // Wait for SQLite to be initialized.
-            if (!isSQLiteInitialized) {
+            // Wait for SQLite to be initialized (unless explicitly skipped).
+            if (!skipInitializationCheck && !isSQLiteInitialized) {
                 logWithTimestamp("[SettingsManager] Waiting for SQLite initialization...")
                 endTiming({ status: "skipped", reason: "sqlite_not_initialized" })
                 return
@@ -79,18 +97,20 @@ export const useSettingsManager = () => {
             // Load from SQLite database.
             let newSettings: Settings = JSON.parse(JSON.stringify(defaultSettings))
             try {
-                newSettings = await loadSQLiteSettings()
-                logWithTimestamp("[SettingsManager] Settings loaded from SQLite database.")
+                const dbSettings = await databaseManager.loadAllSettings()
+                newSettings = { ...defaultSettings, ...dbSettings } as Settings
+                logWithTimestamp(`[SettingsManager] Settings loaded from SQLite database ${context}.`)
             } catch (sqliteError) {
-                logWithTimestamp("[SettingsManager] Failed to load from SQLite, using defaults:")
+                logWithTimestamp(`[SettingsManager] Failed to load from SQLite ${context}, using defaults:`)
                 console.warn(sqliteError)
             }
 
             bsc.setSettings(newSettings)
-            logWithTimestamp("[SettingsManager] Settings loaded and applied to context.")
+            logWithTimestamp(`[SettingsManager] Settings loaded and applied to context${context}.`)
+            logWithTimestamp(`[SettingsManager] Scenario value after load: "${newSettings.general.scenario}"`)
             endTiming({ status: "success", usedDefaults: newSettings === defaultSettings })
         } catch (error) {
-            logErrorWithTimestamp("[SettingsManager] Error loading settings:", error)
+            logErrorWithTimestamp(`[SettingsManager] Error loading settings${context}:`, error)
             bsc.setSettings(JSON.parse(JSON.stringify(defaultSettings)))
             bsc.setReadyStatus(false)
             endTiming({ status: "error", error: error instanceof Error ? error.message : String(error) })
@@ -137,12 +157,12 @@ export const useSettingsManager = () => {
             logWithTimestamp("Ensuring database is initialized before saving...")
             if (!isSQLiteInitialized) {
                 logWithTimestamp("Database not initialized, triggering initialization...")
-                await loadSQLiteSettings()
+                await databaseManager.initialize()
             }
 
             // Save to SQLite database.
             const importedSettings = await loadFromJSONFile(fileUri)
-            await saveSQLiteSettings(importedSettings)
+            await databaseManager.saveSettingsBatch(convertSettingsToBatch(importedSettings))
             bsc.setSettings(importedSettings)
 
             logWithTimestamp("Settings imported successfully.")
@@ -247,14 +267,14 @@ export const useSettingsManager = () => {
             logWithTimestamp("Ensuring database is initialized before resetting...")
             if (!isSQLiteInitialized) {
                 logWithTimestamp("Database not initialized, triggering initialization...")
-                await loadSQLiteSettings()
+                await databaseManager.initialize()
             }
 
             // Create a deep copy of default settings to avoid reference issues.
             const defaultSettingsCopy = JSON.parse(JSON.stringify(defaultSettings))
 
             // Save default settings to SQLite database.
-            await saveSQLiteSettings(defaultSettingsCopy)
+            await databaseManager.saveSettingsBatch(convertSettingsToBatch(defaultSettingsCopy))
 
             // Update the current settings in context.
             bsc.setSettings(defaultSettingsCopy)

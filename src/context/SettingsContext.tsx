@@ -4,7 +4,7 @@ import { useSettingsManager } from "../hooks/useSettingsManager"
 interface SettingsContextType {
     saveSettings: (newSettings?: any) => Promise<void>
     saveSettingsImmediate: (newSettings?: any) => Promise<void>
-    loadSettings: () => Promise<void>
+    loadSettings: (skipInitializationCheck?: boolean) => Promise<void>
     importSettings: (fileUri: string) => Promise<boolean>
     exportSettings: () => Promise<string | null>
     resetSettings: () => Promise<boolean>

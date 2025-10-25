@@ -4,7 +4,6 @@ import { BotStateContext, BotStateProviderProps } from "../context/BotStateConte
 import { MessageLogContext, MessageLogProviderProps } from "../context/MessageLogContext"
 import { useSettings } from "../context/SettingsContext"
 import { logWithTimestamp, logErrorWithTimestamp } from "../lib/logger"
-import { useSQLiteSettings } from "./useSQLiteSettings"
 import { databaseManager, DatabaseRace } from "../lib/database"
 import racesData from "../data/races.json"
 
@@ -20,8 +19,7 @@ export const useBootstrap = () => {
     const mlc = useContext(MessageLogContext) as MessageLogProviderProps
 
     // Hook for managing settings persistence.
-    const { saveSettingsImmediate } = useSettings()
-    const { isSQLiteInitialized } = useSQLiteSettings()
+    const { saveSettingsImmediate, loadSettings } = useSettings()
 
     useEffect(() => {
         // Listen for messages from the Android automation service.
@@ -32,22 +30,30 @@ export const useBootstrap = () => {
         return () => messageLogSubscription.remove()
     }, [])
 
-    // Wait for SQLite database initialization to complete before marking app as ready.
-    // This ensures the data layer is fully set up before allowing settings operations.
+    // Initialize database and populate races data on mount.
     useEffect(() => {
-        if (isSQLiteInitialized) {
-            logWithTimestamp("[Bootstrap] SQLite initialized, populating races data...")
-            populateRacesData().then(() => {
-                logWithTimestamp("[Bootstrap] Races data populated, app ready...")
+        const initializeApp = async () => {
+            try {
+                logWithTimestamp("[Bootstrap] Initializing database and populating races data...")
+                await databaseManager.initialize()
+                await populateRacesData()
+
+                // Load settings after database initialization but before marking app as ready.
+                // Skip the initialization check since we know the database is ready.
+                logWithTimestamp("[Bootstrap] Loading settings from database...")
+                await loadSettings(true)
+
+                logWithTimestamp("[Bootstrap] Settings loaded.")
                 setIsReady(true)
                 logWithTimestamp("[Bootstrap] App initialization complete")
-            }).catch((error) => {
-                logErrorWithTimestamp("[Bootstrap] Failed to populate races data:", error)
-                // Still mark as ready even if races population fails
+            } catch (error) {
+                logErrorWithTimestamp("[Bootstrap] Failed to initialize app:", error)
                 setIsReady(true)
-            })
+            }
         }
-    }, [isSQLiteInitialized])
+
+        initializeApp()
+    }, [])
 
     /**
      * Populate the races table with data from races.json.
@@ -55,7 +61,7 @@ export const useBootstrap = () => {
     const populateRacesData = async (): Promise<void> => {
         try {
             logWithTimestamp("[Bootstrap] Starting races data population...")
-            
+
             // Convert races.json data to database format
             const races: Array<Omit<DatabaseRace, "id">> = Object.entries(racesData).map(([key, race]) => ({
                 key,
@@ -70,7 +76,7 @@ export const useBootstrap = () => {
                 distanceMeters: race.distanceMeters,
                 fans: race.fans,
                 turnNumber: race.turnNumber,
-                nameFormatted: race.nameFormatted
+                nameFormatted: race.nameFormatted,
             }))
 
             logWithTimestamp(`[Bootstrap] Converted ${races.length} races from JSON to database format`)
@@ -78,7 +84,7 @@ export const useBootstrap = () => {
             // Clear existing races and populate with new data
             await databaseManager.clearRaces()
             await databaseManager.saveRacesBatch(races)
-            
+
             logWithTimestamp(`[Bootstrap] Successfully populated ${races.length} races into database`)
         } catch (error) {
             logErrorWithTimestamp("[Bootstrap] Error populating races data:", error)
