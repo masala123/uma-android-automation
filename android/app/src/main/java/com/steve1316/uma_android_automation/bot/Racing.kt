@@ -834,10 +834,10 @@ class Racing (private val game: Game) {
         
         game.printToLog("[RACE] Best upcoming race: ${bestUpcomingRace.raceData.name} (score: ${game.decimalFormat.format(bestUpcomingRace.score)}).", tag = tag)
         
-        // Opportunity Cost Logic.
-        val minimumQualityThreshold = 50.0  // Don't race anything scoring below 50.
-        val timeDecayFactor = 0.90  // Future races worth 90% of their score.
-        val improvementThreshold = 15.0  // Only wait if improvement > 15 points.
+        // Opportunity Cost logic.
+        val minimumQualityThreshold = 70.0  // Don't race anything scoring below this.
+        val timeDecayFactor = 0.90  // Future races are worth this percentage of their score.
+        val improvementThreshold = 25.0  // Only wait if improvement is greater than this.
 
         // Apply time decay to upcoming race score.
         val discountedUpcomingScore = bestUpcomingRace.score * timeDecayFactor
