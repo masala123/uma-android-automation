@@ -1118,10 +1118,11 @@ class Racing (private val game: Game) {
             if (enableStopOnMandatoryRace) {
                 detectedMandatoryRaceCheck = true
                 return false
-            } else if (enableForceRacing) {
-                game.findAndTapImage("ok", tries = 1, region = game.imageUtils.regionMiddle)
-                game.wait(1.0)
             }
+
+            // If there is a popup warning about racing too many times, confirm the popup to continue as this is a mandatory race.
+            game.findAndTapImage("ok", tries = 1, region = game.imageUtils.regionMiddle, suppressError = true)
+            game.wait(1.0)
 
             // There is a mandatory race. Now confirm the selection and the resultant popup and then wait for the game to load.
             game.wait(2.0)
