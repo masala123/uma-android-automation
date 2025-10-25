@@ -33,6 +33,7 @@ class Racing (private val game: Game) {
     var skipRacing = false
     var firstTimeSmartRacingSetup = true
     var firstTimeRacing = true
+    private var nextSmartRaceDay: Int? = null  // Tracks the specific day to race based on opportunity cost analysis.
 
     private val enableStopOnMandatoryRace: Boolean = SettingsHelper.getBooleanSetting("racing", "enableStopOnMandatoryRaces")
     var detectedMandatoryRaceCheck = false
@@ -466,6 +467,75 @@ class Racing (private val game: Game) {
     }
 
     /**
+     * Retrieves all races scheduled within a specified look-ahead window from the database with turn numbers.
+     *
+     * This function queries races whose turn numbers fall between [currentTurn] and
+     * [currentTurn] + [lookAheadDays], inclusive. It returns the corresponding [FullRaceData]
+     * entries sorted in ascending order by turn number.
+     *
+     * @param currentTurn The current turn number used as the starting point.
+     * @param lookAheadDays The number of days (turns) to look ahead for upcoming races.
+     * @return A list of [FullRaceData] objects representing all races within the look-ahead window.
+     */
+    fun getLookAheadRacesWithTurnNumbers(currentTurn: Int, lookAheadDays: Int): List<FullRaceData> {
+        val settingsManager = SQLiteSettingsManager(game.myContext)
+        if (!settingsManager.initialize()) {
+            game.printToLog("[ERROR] Database not available for look-ahead race lookup.", tag = tag, isError = true)
+            return emptyList()
+        }
+
+        return try {
+            val database = settingsManager.getDatabase()
+            if (database == null) {
+                game.printToLog("[ERROR] Database is null for look-ahead race lookup.", tag = tag, isError = true)
+                return emptyList()
+            }
+
+            val endTurn = currentTurn + lookAheadDays
+            val cursor = database.query(
+                TABLE_RACES,
+                arrayOf(
+                    RACES_COLUMN_NAME,
+                    RACES_COLUMN_GRADE,
+                    RACES_COLUMN_FANS,
+                    RACES_COLUMN_NAME_FORMATTED,
+                    RACES_COLUMN_TERRAIN,
+                    RACES_COLUMN_DISTANCE_TYPE,
+                    RACES_COLUMN_TURN_NUMBER
+                ),
+                "$RACES_COLUMN_TURN_NUMBER >= ? AND $RACES_COLUMN_TURN_NUMBER <= ?",
+                arrayOf(currentTurn.toString(), endTurn.toString()),
+                null, null, "$RACES_COLUMN_TURN_NUMBER ASC"
+            )
+
+            val races = mutableListOf<FullRaceData>()
+            if (cursor.moveToFirst()) {
+                do {
+                    val race = FullRaceData(
+                        name = cursor.getString(0),
+                        grade = cursor.getString(1),
+                        terrain = cursor.getString(4),
+                        distanceType = cursor.getString(5),
+                        fans = cursor.getInt(2),
+                        turnNumber = cursor.getInt(6),
+                        nameFormatted = cursor.getString(3)
+                    )
+                    races.add(race)
+                } while (cursor.moveToNext())
+            }
+            cursor.close()
+            settingsManager.close()
+            
+            game.printToLog("[RACE] Found ${races.size} races in look-ahead window (turns $currentTurn to $endTurn).", tag = tag)
+            races
+        } catch (e: Exception) {
+            game.printToLog("[ERROR] Error getting look-ahead races: ${e.message}", tag = tag, isError = true)
+            settingsManager.close()
+            emptyList()
+        }
+    }
+
+    /**
      * Retrieves all races scheduled within a specified look-ahead window from the database.
      *
      * This function queries races whose turn numbers fall between [currentTurn] and
@@ -737,8 +807,20 @@ class Racing (private val game: Game) {
         
         // Get and score upcoming races.
         game.printToLog("[RACE] Looking ahead $lookAheadDays days for upcoming races...", tag = tag)
-        val upcomingRaces = getLookAheadRaces(game.currentDate.turnNumber + 1, lookAheadDays)
-        game.printToLog("[RACE] Found ${upcomingRaces.size} upcoming races in database.", tag = tag)
+        val upcomingRacesWithTurnNumbers = getLookAheadRacesWithTurnNumbers(game.currentDate.turnNumber + 1, lookAheadDays)
+        game.printToLog("[RACE] Found ${upcomingRacesWithTurnNumbers.size} upcoming races in database.", tag = tag)
+        
+        // Convert FullRaceData to RaceData for filtering and scoring.
+        val upcomingRaces = upcomingRacesWithTurnNumbers.map { fullRaceData ->
+            RaceData(
+                name = fullRaceData.name,
+                grade = fullRaceData.grade,
+                fans = fullRaceData.fans,
+                nameFormatted = fullRaceData.nameFormatted,
+                terrain = fullRaceData.terrain,
+                distanceType = fullRaceData.distanceType
+            )
+        }
         
         val filteredUpcomingRaces = filterRacesBySettings(upcomingRaces)
         game.printToLog("[RACE] After filtering: ${filteredUpcomingRaces.size} upcoming races remain.", tag = tag)
@@ -780,6 +862,8 @@ class Racing (private val game: Game) {
         // Print the reasoning for the decision.
         if (shouldRace) {
             game.printToLog("[RACE] Reasoning: Current race is good enough (${game.decimalFormat.format(bestCurrentRace.score)} ≥ ${minimumQualityThreshold}) and waiting only gives ${game.decimalFormat.format(improvementFromWaiting)} more points (less than ${improvementThreshold}).", tag = tag)
+            // Race now - clear the next race day tracker.
+            nextSmartRaceDay = null
         } else {
             val reason = if (!isGoodEnough) {
                 "Current race quality too low (${game.decimalFormat.format(bestCurrentRace.score)} < ${minimumQualityThreshold})."
@@ -787,6 +871,11 @@ class Racing (private val game: Game) {
                 "Worth waiting for better opportunity (+${game.decimalFormat.format(improvementFromWaiting)} points > ${improvementThreshold})."
             }
             game.printToLog("[RACE] Reasoning: $reason", tag = tag)
+            // Wait for better opportunity - store the turn number to race on.
+            // Find the corresponding FullRaceData to get the turn number.
+            val bestUpcomingFullRace = upcomingRacesWithTurnNumbers.find { it.name == bestUpcomingRace.raceData.name }
+            nextSmartRaceDay = bestUpcomingFullRace?.turnNumber
+            game.printToLog("[RACE] Setting next smart race day to turn ${nextSmartRaceDay}.", tag = tag)
         }
         
         return shouldRace
@@ -972,22 +1061,42 @@ class Racing (private val game: Game) {
         // If the setting to force racing extra races is enabled, always return true.
         if (enableForceRacing) return true
 
-        // Check if smart racing is enabled - if so, use smartRacingCheckInterval instead of daysToRunExtraRaces.
-        // Additionally, it makes sure that it always run at the beginning for the first time in order to score upcoming races.
-        val enableRacingPlan = SettingsHelper.getBooleanSetting("racing", "enableRacingPlan")
-        if (firstTimeSmartRacingSetup || (enableRacingPlan && enableFarmingFans)) {
-            val smartRacingCheckInterval = SettingsHelper.getIntSetting("racing", "smartRacingCheckInterval")
-            firstTimeSmartRacingSetup = false
-            return dayNumber % smartRacingCheckInterval == 0 && !raceRepeatWarningCheck &&
-                    game.imageUtils.findImage("race_select_extra_locked_uma_finals", tries = 1, region = game.imageUtils.regionBottomHalf).first == null &&
-                    game.imageUtils.findImage("race_select_extra_locked", tries = 1, region = game.imageUtils.regionBottomHalf).first == null &&
-                    game.imageUtils.findImage("recover_energy_summer", tries = 1, region = game.imageUtils.regionBottomHalf).first == null
+        // Check for common restrictions that apply to both smart and standard racing.
+        val isUmaFinalsLocked = game.imageUtils.findImage("race_select_extra_locked_uma_finals", tries = 1, region = game.imageUtils.regionBottomHalf).first != null
+        val isLocked = game.imageUtils.findImage("race_select_extra_locked", tries = 1, region = game.imageUtils.regionBottomHalf).first != null
+        val isSummer = game.imageUtils.findImage("recover_energy_summer", tries = 1, region = game.imageUtils.regionBottomHalf).first != null
+        
+        if (isUmaFinalsLocked || isLocked || isSummer) {
+            return false
         }
 
-        return enableFarmingFans && dayNumber % daysToRunExtraRaces == 0 && !raceRepeatWarningCheck &&
-                game.imageUtils.findImage("race_select_extra_locked_uma_finals", tries = 1, region = game.imageUtils.regionBottomHalf).first == null &&
-                game.imageUtils.findImage("race_select_extra_locked", tries = 1, region = game.imageUtils.regionBottomHalf).first == null &&
-                game.imageUtils.findImage("recover_energy_summer", tries = 1, region = game.imageUtils.regionBottomHalf).first == null
+        // Check if smart racing is enabled.
+        if (enableRacingPlan && enableFarmingFans) {
+            // On first check or when no specific day is set, allow racing to trigger analysis.
+            if (firstTimeSmartRacingSetup || nextSmartRaceDay == null) {
+                firstTimeSmartRacingSetup = false
+                nextSmartRaceDay = null  // Ensure it's cleared on first setup.
+                return !raceRepeatWarningCheck
+            }
+            
+            // Check if current day matches the optimal race day or falls on the interval.
+            val isOptimalDay = nextSmartRaceDay == dayNumber
+            val isIntervalDay = dayNumber % smartRacingCheckInterval == 0
+            
+            if (isOptimalDay) {
+                game.printToLog("[RACE] Current day ($dayNumber) matches optimal race day.", tag = tag)
+                return !raceRepeatWarningCheck
+            } else if (isIntervalDay) {
+                game.printToLog("[RACE] Current day ($dayNumber) falls on smart racing interval ($smartRacingCheckInterval).", tag = tag)
+                return !raceRepeatWarningCheck
+            } else {
+                game.printToLog("[RACE] Current day ($dayNumber) is not optimal (next: $nextSmartRaceDay, interval: $smartRacingCheckInterval).", tag = tag)
+                return false
+            }
+        }
+
+        // Standard racing logic.
+        return enableFarmingFans && dayNumber % daysToRunExtraRaces == 0 && !raceRepeatWarningCheck
     }
 
     /**
@@ -1220,6 +1329,9 @@ class Racing (private val game: Game) {
 
             finishRace(resultCheck, isExtra = true)
 
+            // Clear the next smart race day tracker since we just completed a race.
+            nextSmartRaceDay = null
+
             game.printToLog("[RACE] Racing process for Extra Race is completed.", tag = tag)
             return true
         }
@@ -1421,7 +1533,9 @@ class Racing (private val game: Game) {
      * After Junior Year: Restores the original strategy and disables the feature.
      */
     private fun handleRaceStrategyOverride() {
-        if (!enableRaceStrategyOverride || (firstTimeRacing && game.currentDate.year != 1)) {
+        if (!enableRaceStrategyOverride || (enableRaceStrategyOverride && !firstTimeRacing)) {
+            return
+        } else if (enableRaceStrategyOverride && firstTimeRacing && game.currentDate.year != 1) {
             return
         }
 
