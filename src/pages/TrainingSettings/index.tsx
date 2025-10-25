@@ -163,8 +163,12 @@ const TrainingSettings = () => {
         setList([])
     }
 
-    const selectAll = (setList: (value: string[]) => void) => {
-        setList([...stats])
+    const selectAll = (setList: (value: string[]) => void, currentList: string[]) => {
+        // Add any missing items from default settings to the current list, preserving order.
+        const missingItems = defaultSettings.training.statPrioritization.filter(
+            (stat) => !currentList.includes(stat)
+        )
+        setList([...currentList, ...missingItems])
     }
 
     const renderStatSelector = (
@@ -222,10 +226,22 @@ const TrainingSettings = () => {
                         )}
 
                         <View style={styles.buttonRow}>
-                            <CustomButton onPress={() => clearAll(setSelectedStats)} variant="destructive">
+                            <CustomButton
+                                onPress={() => {
+                                    if (mode === "priority") {
+                                        // For prioritization, reset to default and dismiss modal.
+                                        setSelectedStats(defaultSettings.training.statPrioritization)
+                                        setModalVisible(false)
+                                    } else {
+                                        // For blacklist, just clear the list.
+                                        clearAll(setSelectedStats)
+                                    }
+                                }}
+                                variant="destructive"
+                            >
                                 Clear All
                             </CustomButton>
-                            <CustomButton onPress={() => selectAll(setSelectedStats)} variant="outline">
+                            <CustomButton onPress={() => selectAll(setSelectedStats, selectedStats)} variant="outline">
                                 Select All
                             </CustomButton>
                         </View>
