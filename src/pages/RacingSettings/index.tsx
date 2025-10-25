@@ -129,9 +129,7 @@ const RacingSettings = () => {
                             value={daysToRunExtraRaces.toString()}
                             onChangeText={(text) => {
                                 const value = parseInt(text) || 0
-                                if (value >= 0) {
-                                    updateRacingSetting("daysToRunExtraRaces", value)
-                                }
+                                updateRacingSetting("daysToRunExtraRaces", value)
                             }}
                             keyboardType="numeric"
                             placeholder="5"
