@@ -1,4 +1,78 @@
 {
+    "Sweep Tosho": {
+        "(❯) Fickle Genius Magical Girl Sweepy ☆": [
+            "Randomly either\n----------\nMood +1\nStraightaway Spurt hint +2\nSweep Tosho bond +5\n----------\nMood -1\nWit +5\nSweep Tosho bond +5",
+            "Skill points +15\nSweep Tosho bond +5"
+        ],
+        "(❯❯) A Drop of Black Magic ☆": [
+            "Randomly either\n----------\nEnergy +10\nSkill points +20\nSweep Tosho bond +5\n----------\nEnergy -10\nSkill points +15\nSweep Tosho bond +5",
+            "Wit +10\nSweep Tosho bond +5"
+        ],
+        "Miracle ☆ Escape!": [
+            "Energy +10\nSpeed +5\nSweep Tosho bond +5",
+            "Energy -10\nSpeed +20\nSweep Tosho bond +5"
+        ],
+        "Wonderful ☆ Mistake!": [
+            "Randomly either\n----------\nEnergy -15\nSkill points +40\n----------\nEnergy -20\nSkill points +40\nSweep Tosho bond +5",
+            "Get Charming ○ status\nSweep Tosho bond +5"
+        ],
+        "(❯) Some Very Green Friends": [
+            "Speed +5\nSkill points +10\nLucky Seven hint +1\nSweep Tosho bond +5",
+            "Mood -1\nMaverick ○ hint +5"
+        ],
+        "(❯❯) Premeditated Mischief": [
+            "Speed +10\nSkill points +20\nLevelheaded hint +1\nSweep Tosho bond +5",
+            "Mood -1\nLone Wolf hint +1"
+        ]
+    },
+    "Winning Ticket": {
+        "Full-Power Muscles!": [
+            "Stamina +5\nSkill points +15\nWinning Ticket bond +5",
+            "Mood +1\nSkill points +15\nWinning Ticket bond +5"
+        ],
+        "Full-Power Racing!": [
+            "Late Surger Corners ○ hint +1\nWinning Ticket bond +5",
+            "Skill points +30\nWinning Ticket bond +5"
+        ]
+    },
+    "Daiwa Scarlet": {
+        "(❯) Number One Reactions?": [
+            "Speed +3\nPower +3\nWit +3\nDaiwa Scarlet bond +5",
+            "Energy +15\nEvent chain ended"
+        ],
+        "This Is Nothing!": [
+            "Stamina to Spare hint +1\nDaiwa Scarlet bond +5",
+            "Energy +20\nMood +1\nDaiwa Scarlet bond +5"
+        ],
+        "I'm Going to Win Tomorrow!": [
+            "Wit +10\nDaiwa Scarlet bond +5",
+            "Mood +1\nSkill points +15\nDaiwa Scarlet bond +5"
+        ]
+    },
+    "Narita Brian": {
+        "Student Council Member!": [
+            "Mood +1\nSpeed +5\nNarita Brian bond +5",
+            "Maximum Energy +4\nNarita Brian bond +5"
+        ],
+        "Lone Wolf": [
+            "Speed +3\nStamina +3\nPower +3\nNarita Brian bond +5",
+            "Lone Wolf hint +1\nNarita Brian bond +5"
+        ]
+    },
+    "Mejiro Ryan": {
+        "(❯) Flustered Afternoon Tea!": [
+            "Energy +10\nMood +1",
+            "Wit +10\nSkill points +15\nPace Chaser Savvy ○ hint +3"
+        ],
+        "My Muscles and Me, Onward to Tomorrow!": [
+            "Energy -10\nPower +15\nMejiro Ryan bond +5",
+            "Maximum Energy +4\nPower +5\nMejiro Ryan bond +5"
+        ],
+        "It's Not Like I Like Romance!": [
+            "Pace Strategy hint +1\nMejiro Ryan bond +5",
+            "Energy +30\nMejiro Ryan bond +5"
+        ]
+    },
     "Seiun Sky": {
         "(❯) Sudden Murder Mystery! Part 1": [
             "Wit +5\nSkill points +10\nSeiun Sky bond +5",
@@ -67,13 +141,13 @@
             "Energy -10\nMood +1\nStamina +5\nPower +5\nBamboo Memory bond +5",
             "Energy +30\nHesitant Late Surgers hint +1\nEvent chain ended"
         ],
-        "Overthrow the Rival!": [
-            "Guts +10\nBamboo Memory bond +5",
-            "Maximum Energy +4\nEnergy -5\nBamboo Memory bond +5"
-        ],
         "Tons of Trouble!": [
             "Stamina +5\nGuts +5\nBamboo Memory bond +5",
             "Energy -10\nStandard Distance ○ hint +5\nBamboo Memory bond +5"
+        ],
+        "Overthrow the Rival!": [
+            "Guts +10\nBamboo Memory bond +5",
+            "Maximum Energy +4\nEnergy -5\nBamboo Memory bond +5"
         ]
     },
     "Kawakami Princess": {
@@ -123,10 +197,6 @@
         ]
     },
     "Sakura Chiyono O": {
-        "(❯❯) Blooming Hope!": [
-            "Randomly either\n----------\nStamina +15\nHeal a negative status effect\nSakura Chiyono O bond +5\n----------\nEnergy -10\nGuts +15\nSakura Chiyono O bond +5",
-            "Energy +10\nMood +1\nSakura Chiyono O bond +5"
-        ],
         "(❯❯❯) Someday, I'll Bloom!": [
             "Randomly either\n----------\nEnergy -15\nStamina +20\nSkill points +10\nSpeed Star hint +3\nSakura Chiyono O bond +5\n----------\nEnergy -15\nStamina +10\nSkill points +5\nPrepared to Pass hint +3\nSakura Chiyono O bond +5",
             "Speed +5\nStamina +10\nPower +5\nSkill points +30\nSakura Chiyono O bond +5"
@@ -141,27 +211,13 @@
         ]
     },
     "Yaeno Muteki": {
-        "(❯❯) A Reasonable Diet vs. an Explosive Diet": [
-            "Energy +10\nSkill points +10\nYaeno Muteki bond +5",
-            "Energy +10\nWit +10\nSkill points +10\nPlaytime's Over! hint +3\nEvent chain ended"
+        "The Will to Protect!": [
+            "Stamina +10\nPower +10",
+            "Medium Corners ○ hint +1"
         ],
         "Firm and Plain, Yet Close to Virtue": [
             "Speed +10",
             "Mood +1\nPower +5"
-        ],
-        "The Will to Protect!": [
-            "Stamina +10\nPower +10",
-            "Medium Corners ○ hint +1"
-        ]
-    },
-    "Winning Ticket": {
-        "Full-Power Muscles!": [
-            "Stamina +5\nSkill points +15\nWinning Ticket bond +5",
-            "Mood +1\nSkill points +15\nWinning Ticket bond +5"
-        ],
-        "Full-Power Racing!": [
-            "Late Surger Corners ○ hint +1\nWinning Ticket bond +5",
-            "Skill points +30\nWinning Ticket bond +5"
         ]
     },
     "Yukino Bijin": {
@@ -187,24 +243,16 @@
         ]
     },
     "Kitasan Black": {
-        "(❯❯) Paying It Forward": [
-            "Energy +10\nMood +1\nKitasan Black bond +5",
-            "Speed +5/+10\nStraightaway Adept hint +1/+3\nKitasan Black bond +5"
+        "Ah, Home Sweet Home": [
+            "Speed +5\nPower +10\nKitasan Black bond +5",
+            "Get Practice Perfect ○ status\nKitasan Black bond +5"
         ],
         "Ah, Friendship": [
             "Mood +1\nPower +5\nKitasan Black bond +5",
             "Energy +10\nKitasan Black bond +5"
-        ],
-        "Ah, Home Sweet Home": [
-            "Speed +5\nPower +10\nKitasan Black bond +5",
-            "Get Practice Perfect ○ status\nKitasan Black bond +5"
         ]
     },
     "Satono Diamond": {
-        "(❯❯) Diamond Fixation": [
-            "Wit +10\nSatono Diamond bond +5",
-            "Randomly either\n----------\nEnergy +15\nStamina +10\nSatono Diamond bond +5\n----------\nMood -1\nGuts +20"
-        ],
         "(❯❯❯) Only for You": [
             "Energy -20\nStamina +30\nIron Will hint +1\nSatono Diamond bond +5",
             "Energy +5\nGuts +5\nIron Will hint +1\nSatono Diamond bond +5"
@@ -265,7 +313,7 @@
         ],
         "(❯❯❯) Turbo Is Strong!": [
             "Randomly either\n----------\nEnergy -10\nSpeed +5\nEarly Lead hint +3\n----------\nEnergy -10\nSpeed +25\nTaking the Lead hint +3\nTwin Turbo bond +5",
-            "Energy +15\nWatchful Eye hint +1"
+            "Energy +15\nWatchful Eye hint +3"
         ],
         "Just Start Running!": [
             "Mood -1\nSpeed +20",
@@ -307,10 +355,6 @@
         "So Many Options!": [
             "Energy +10\nMood +1\nSpecial Week bond +5",
             "Energy -10\nStamina +15\nSkill points +15\nSpecial Week bond +5"
-        ],
-        "(❯❯) A Roller Coaster of Feelings!": [
-            "Energy -10\nSpeed +5\nStamina +5\nGuts +10\nSpecial Week bond +5",
-            "Energy +20\nWit +10\nSpecial Week bond +5\nEvent chain ended"
         ]
     },
     "Silence Suzuka": {
@@ -344,10 +388,6 @@
         ]
     },
     "Grass Wonder": {
-        "(❯❯) A Moment's Respite": [
-            "Energy +15\nGrass Wonder bond +5",
-            "Randomly either\n----------\nEnergy -10\nPower +5\nGuts +5\nWit +5\nGrass Wonder bond +5\n----------\nPower +5\nGuts +5\nWit +10\nGrass Wonder bond +5"
-        ],
         "Library Vexation": [
             "Wit +10\nGrass Wonder bond +5",
             "Guts +5\nWit +5\nGrass Wonder bond +5"
@@ -358,10 +398,6 @@
         ]
     },
     "El Condor Pasa": {
-        "(❯❯) Uma-me": [
-            "Energy +30\nEl Condor Pasa bond +5",
-            "Stamina to Spare hint +1\nEl Condor Pasa bond +5\nEvent chain ended"
-        ],
         "Blazing Fire!": [
             "Stamina +10\nEl Condor Pasa bond +5",
             "Energy -10\nPower +20\nEl Condor Pasa bond +5"
@@ -461,10 +497,6 @@
         ]
     },
     "Nishino Flower": {
-        "(❯❯) Aspiring to Adulthood": [
-            "Energy -10\nWit +20\nNishino Flower bond +5",
-            "Wit +5\nSkill points +15"
-        ],
         "Warmth, Love, and Lunch": [
             "Get Charming ○ status\nNishino Flower bond +5",
             "Energy +20\nNishino Flower bond +5"
@@ -517,6 +549,20 @@
         "A Page of Flower Shop Assistance": [
             "Mood +2\nRice Shower bond +5",
             "Stamina +10\nRice Shower bond +5"
+        ]
+    },
+    "Mejiro Ardan": {
+        "(❯) Special Drinks Made with Friends ♪": [
+            "Randomly either\n----------\nEnergy +10\nSpeed +5\nWit +5\nSkill points +10\n----------\nWit +10",
+            "Mood +1\nSpeed +10"
+        ],
+        "The Glass Girl Wants to Study": [
+            "Speed +10\nMejiro Ardan bond +5",
+            "Energy +10\nWit +5\nMejiro Ardan bond +5"
+        ],
+        "The Glass Girl Wants to Play": [
+            "Speed +10\nWit +10\nMejiro Ardan bond +5",
+            "Hesitant Pace Chasers hint +1\nMejiro Ardan bond +5"
         ]
     },
     "Shinko Windy": {
@@ -608,42 +654,14 @@
             "Long Shot ○ hint +1\nDaitaku Helios bond +5"
         ]
     },
-    "Sweep Tosho": {
-        "(❯) Some Very Green Friends": [
-            "Speed +5\nSkill points +10\nLucky Seven hint +1\nSweep Tosho bond +5",
-            "Mood -1\nMaverick ○ hint +5"
-        ],
-        "(❯❯) Premeditated Mischief": [
-            "Speed +10\nSkill points +20\nLevelheaded hint +1\nSweep Tosho bond +5",
-            "Mood -1\nLone Wolf hint +1"
-        ],
-        "Miracle ☆ Escape!": [
-            "Energy +10\nSpeed +5\nSweep Tosho bond +5",
-            "Energy -10\nSpeed +20\nSweep Tosho bond +5"
-        ],
-        "Wonderful ☆ Mistake!": [
-            "Randomly either\n----------\nEnergy -15\nSkill points +40\n----------\nEnergy -20\nSkill points +40\nSweep Tosho bond +5",
-            "Get Charming ○ status\nSweep Tosho bond +5"
-        ]
-    },
     "Fuji Kiseki": {
-        "Misdirection": [
-            "Prepared to Pass hint +1\nFuji Kiseki bond +5",
-            "Skill points +30\nFuji Kiseki bond +5"
-        ],
         "Sleight of Hand": [
             "Wit +5\nSkill points +15\nFuji Kiseki bond +5",
             "Power +5\nSkill points +15\nFuji Kiseki bond +5"
-        ]
-    },
-    "Daiwa Scarlet": {
-        "This Is Nothing!": [
-            "Stamina to Spare hint +1\nDaiwa Scarlet bond +5",
-            "Energy +20\nMood +1\nDaiwa Scarlet bond +5"
         ],
-        "I'm Going to Win Tomorrow!": [
-            "Wit +10\nDaiwa Scarlet bond +5",
-            "Mood +1\nSkill points +15\nDaiwa Scarlet bond +5"
+        "Misdirection": [
+            "Prepared to Pass hint +1\nFuji Kiseki bond +5",
+            "Skill points +30\nFuji Kiseki bond +5"
         ]
     },
     "Hishi Amazon": {
@@ -657,13 +675,13 @@
         ]
     },
     "Air Groove": {
-        "Agile but Strong": [
-            "Power +15\nAir Groove bond +5",
-            "Speed +10\nStamina +5\nAir Groove bond +5"
-        ],
         "Strict but Gracious": [
             "Go with the Flow hint +1\nAir Groove bond +5",
             "Energy +10\nWit +10"
+        ],
+        "Agile but Strong": [
+            "Power +15\nAir Groove bond +5",
+            "Speed +10\nStamina +5\nAir Groove bond +5"
         ]
     },
     "Agnes Digital": {
@@ -677,13 +695,13 @@
         ]
     },
     "Biwa Hayahide": {
-        "Last-Minute Modal Theory": [
-            "Power +15\nBiwa Hayahide bond +5",
-            "Speed +10\nSkill points +15\nBiwa Hayahide bond +5"
-        ],
         "Step-Out-of-Your-Comfort-Zone Theory": [
             "Energy -10\nInside Scoop hint +1\nBiwa Hayahide bond +5",
             "Energy +10\nStamina +10\nBiwa Hayahide bond +5"
+        ],
+        "Last-Minute Modal Theory": [
+            "Power +15\nBiwa Hayahide bond +5",
+            "Speed +10\nSkill points +15\nBiwa Hayahide bond +5"
         ]
     },
     "Mayano Top Gun": {
@@ -711,32 +729,22 @@
             "Guts +10\nSkill points +15\nMihono Bourbon bond +5",
             "Energy -10\nCorner Recovery ○ hint +1\n(random) Mihono Bourbon bond -5\nEvent chain ended"
         ],
-        "Do No Harm": [
-            "Energy -10\nStamina +5\nPower +15\nMihono Bourbon bond +5",
-            "Energy +10\nWit +5\nMihono Bourbon bond +5"
-        ],
         "Orders Must Be Followed": [
             "Focus hint +1\nMihono Bourbon bond +5",
             "Speed +10\nSkill points +15\nMihono Bourbon bond +5"
-        ]
-    },
-    "Mejiro Ryan": {
-        "It's Not Like I Like Romance!": [
-            "Pace Strategy hint +1\nMejiro Ryan bond +5",
-            "Energy +30\nMejiro Ryan bond +5"
         ],
-        "My Muscles and Me, Onward to Tomorrow!": [
-            "Energy -10\nPower +15\nMejiro Ryan bond +5",
-            "Maximum Energy +4\nPower +5\nMejiro Ryan bond +5"
+        "Do No Harm": [
+            "Energy -10\nStamina +5\nPower +15\nMihono Bourbon bond +5",
+            "Energy +10\nWit +5\nMihono Bourbon bond +5"
         ]
     },
     "Agnes Tachyon": {
-        "Happenstance Introduced Through Intervention": [
-            "Late Surger Savvy ○ hint +1\nAgnes Tachyon bond +5",
-            "Wit +10\nAgnes Tachyon bond +5"
-        ],
         "The Correlation between Sleep and Efficiency": [
             "Power +5\nWit +5\nAgnes Tachyon bond +5",
+            "Wit +10\nAgnes Tachyon bond +5"
+        ],
+        "Happenstance Introduced Through Intervention": [
+            "Late Surger Savvy ○ hint +1\nAgnes Tachyon bond +5",
             "Wit +10\nAgnes Tachyon bond +5"
         ]
     },
@@ -751,30 +759,26 @@
         ]
     },
     "Narita Taishin": {
-        "Just Don't Bother Me": [
-            "Pressure hint +1\nNarita Taishin bond +5",
-            "Skill points +30\nNarita Taishin bond +5"
-        ],
         "Just Leave Me Alone": [
             "Stamina +5\nSkill points +15\nNarita Taishin bond +5",
             "Power +5\nSkill points +15\nNarita Taishin bond +5"
+        ],
+        "Just Don't Bother Me": [
+            "Pressure hint +1\nNarita Taishin bond +5",
+            "Skill points +30\nNarita Taishin bond +5"
         ]
     },
     "Marvelous Sunday": {
-        "How To Be More Marvelous ☆": [
-            "Energy +10\nMood +1\nMarvelous Sunday bond +5",
-            "Hanshin Racecourse ○ hint +1\nMarvelous Sunday bond +5"
-        ],
         "Marvelous, No Question ☆": [
             "Energy +10\nSpeed +5\nMarvelous Sunday bond +5",
             "Mood +1\nSpeed +5\nMarvelous Sunday bond +5"
+        ],
+        "How To Be More Marvelous ☆": [
+            "Energy +10\nMood +1\nMarvelous Sunday bond +5",
+            "Hanshin Racecourse ○ hint +1\nMarvelous Sunday bond +5"
         ]
     },
     "Matikanefukukitaru": {
-        "(❯❯) Guidance and Friends": [
-            "Skill points +45\nMatikanefukukitaru bond +5",
-            "Randomly either\n----------\nEnergy +10\nMood +1\nRight-Handed ○ hint +3\nMatikanefukukitaru bond +5\n----------\nEnergy -20\nRight-Handed ○ hint +1\nMatikanefukukitaru bond +5"
-        ],
         "Maximum Spirituality": [
             "Wit +5\nSkill points +15\nMatikanefukukitaru bond +5",
             "Energy -10\nSpeed +5\nStamina +5\nPower +5\nMatikanefukukitaru bond +5"
@@ -800,15 +804,15 @@
     },
     "Aoi Kiryuin": {
         "(❯❯) How I Play at the Park": [
-            "Energy +35\nWit +6\nAoi Kiryuin bond +5\n(random) Mood +1",
-            "Randomly either\n----------\nSkill points +18\nAoi Kiryuin bond +5\n----------\nSpeed +6\nSkill points +56\nMood +1\nAoi Kiryuin bond +5"
+            "Energy +32\nWit +6\nAoi Kiryuin bond +5\n(random) Mood +1",
+            "Randomly either\n----------\nSkill points +18\nAoi Kiryuin bond +5\n----------\nSpeed +6\nSkill points +54\nMood +1\nAoi Kiryuin bond +5"
         ],
         "Trainer Tip: Always Improve Your Coaching": [
-            "Energy +14\nSkill points +18\nAoi Kiryuin bond +5",
+            "Energy +13\nSkill points +18\nAoi Kiryuin bond +5",
             "Speed +6\nWit +6\nAoi Kiryuin bond +5"
         ],
         "The Search for a Hobby\nDating starts": [
-            "Energy +28\nSkill points +18\nMood +1\nAoi Kiryuin bond +5\nCan start dating",
+            "Energy +26\nSkill points +18\nMood +1\nAoi Kiryuin bond +5\nCan start dating",
             "Mood -1\nMaverick ○ hint +1\nAoi Kiryuin bond -5\nEvent chain ended"
         ]
     },
