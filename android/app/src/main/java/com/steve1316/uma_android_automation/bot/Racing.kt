@@ -1151,14 +1151,11 @@ class Racing (private val game: Game) {
             }
 
             // There is a extra race.
-            // Swipe up the list to get to the top and then select the first option.
             val statusLocation = game.imageUtils.findImage("race_status").first
             if (statusLocation == null) {
                 game.printToLog("[ERROR] Unable to determine existence of list of extra races. Canceling the racing process and doing something else.", tag = tag, isError = true)
                 return false
             }
-            game.gestureUtils.swipe(statusLocation.x.toFloat(), statusLocation.y.toFloat() + 300, statusLocation.x.toFloat(), statusLocation.y.toFloat() + 888)
-            game.wait(1.0)
 
             // Determine the best extra race using smart racing or traditional logic.
             val maxCount = game.imageUtils.findAll("race_selection_fans", region = game.imageUtils.regionBottomHalf).size
