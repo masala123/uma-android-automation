@@ -63,20 +63,6 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 	private val minimumConfidence = SettingsHelper.getIntSetting("ocr", "ocrConfidence").toDouble() / 100.0
 	private val threshold = SettingsHelper.getIntSetting("ocr", "ocrThreshold").toDouble()
 	private val enableAutomaticRetry = SettingsHelper.getBooleanSetting("ocr", "enableAutomaticOCRRetry")
-
-	/**
-	 * Fix incorrect characters determined by OCR by replacing them with their Japanese equivalents.
-	 */
-	private fun fixIncorrectCharacters() {
-		game.printToLog("\n[TRAINING_EVENT_RECOGNIZER] Now attempting to fix incorrect characters in: $result", tag = tag)
-		
-		if (result.last() == '/') {
-			result = result.replace("/", "！")
-		}
-		
-		result = result.replace("(", "（").replace(")", "）")
-		game.printToLog("[TRAINING_EVENT_RECOGNIZER] Finished attempting to fix incorrect characters: $result", tag = tag)
-	}
 	
 	/**
 	 * Attempt to find the most similar string from data compared to the string returned by OCR.
@@ -239,9 +225,6 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 			}
 			
 			if (result.isNotEmpty() && result != "empty!") {
-				// Make some minor improvements by replacing certain incorrect characters with their Japanese equivalents.
-				fixIncorrectCharacters()
-				
 				// Now attempt to find the most similar string compared to the one from OCR.
 				findMostSimilarString()
 				
