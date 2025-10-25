@@ -99,7 +99,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 						
 						val score = service.score(result, eventName)
 						if (!hideComparisonResults) {
-							game.printToLog("[CHARA] $characterKey \"${result}\" vs. \"${eventName}\" confidence: $score", tag = tag)
+							game.printToLog("[CHARA] $characterKey \"${result}\" vs. \"${eventName}\" confidence: ${game.decimalFormat.format(score)}", tag = tag)
 						}
 						
 						if (score >= confidence) {
