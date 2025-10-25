@@ -46,21 +46,16 @@ class TrainingEvent(private val game: Game) {
      * @return Pair of (optionIndex, requiresConfirmation) if match found, null otherwise
      */
     private fun checkSpecialEventOverride(eventTitle: String): Pair<Int, Boolean>? {
-        // Define event matching patterns
+        // Define event matching patterns.
         val eventPatterns = mapOf(
-            // Holiday Events
-            "New Year's Resolutions (Holiday Event)" to listOf("New Year's Resolutions", "Resolutions"),
-            "New Year's Shrine Visit (Holiday Event)" to listOf("New Year's Shrine Visit", "Shrine Visit"),
-            // Race Results
-            "Victory! (Race Result)" to listOf("Victory!"),
-            "Solid Showing (Race Result)" to listOf("Solid Showing"),
-            "Defeat (Race Result)" to listOf("Defeat"),
-            // Training Failures
-            "Failed Training (Get Well Soon!)" to listOf("Get Well Soon"),
-            "Failed Training (Don't Overdo It!)" to listOf("Don't Overdo It"),
-            // Miscellaneous
+            "New Year's Resolutions" to listOf("New Year's Resolutions", "Resolutions"),
+            "New Year's Shrine Visit" to listOf("New Year's Shrine Visit", "Shrine Visit"),
+            "Victory!" to listOf("Victory!"),
+            "Solid Showing" to listOf("Solid Showing"),
+            "Defeat" to listOf("Defeat"),
+            "Get Well Soon!" to listOf("Get Well Soon"),
+            "Don't Overdo It!" to listOf("Don't Overdo It"),
             "Extra Training" to listOf("Extra Training"),
-            // Original Events
             "Acupuncture (Just an Acupuncturist, No Worries! ☆)" to listOf("Acupuncture", "Just an Acupuncturist"),
             "Etsuko's Exhaustive Coverage" to listOf("Etsuko", "Exhaustive Coverage")
         )

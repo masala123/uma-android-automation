@@ -146,31 +146,31 @@ export const defaultSettings: Settings = {
     trainingEvent: {
         enablePrioritizeEnergyOptions: false,
         specialEventOverrides: {
-            "New Year's Resolutions (Holiday Event)": {
+            "New Year's Resolutions": {
                 selectedOption: "Option 2: Energy +20",
                 requiresConfirmation: false,
             },
-            "New Year's Shrine Visit (Holiday Event)": {
+            "New Year's Shrine Visit": {
                 selectedOption: "Option 1: Energy +30",
                 requiresConfirmation: false,
             },
-            "Victory! (Race Result)": {
+            "Victory!": {
                 selectedOption: "Option 2: Energy -5 and random stat gain",
                 requiresConfirmation: false,
             },
-            "Solid Showing (Race Result)": {
+            "Solid Showing": {
                 selectedOption: "Option 2: Energy -5/-20 and random stat gain",
                 requiresConfirmation: false,
             },
-            "Defeat (Race Result)": {
+            "Defeat": {
                 selectedOption: "Option 1: Energy -25 and random stat gain",
                 requiresConfirmation: false,
             },
-            "Failed Training (Get Well Soon!)": {
+            "Get Well Soon!": {
                 selectedOption: "Option 2: (Random) Mood -1 / Stat decrease / Get Practice Poor negative status",
                 requiresConfirmation: false,
             },
-            "Failed Training (Don't Overdo It!)": {
+            "Don't Overdo It!": {
                 selectedOption: "Option 2: (Random) Mood -3 / Stat decrease / Get Practice Poor negative status",
                 requiresConfirmation: false,
             },

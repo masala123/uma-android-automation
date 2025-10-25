@@ -164,8 +164,8 @@ const TrainingEventSettings = () => {
                                             <Text style={{ fontSize: 16, fontWeight: "600", color: colors.foreground, marginBottom: 12 }}>New Year's Resolutions (Classic Year)</Text>
                                             <CustomSelect
                                                 options={newYearResolutionsOptions}
-                                                value={specialEventOverrides["New Year's Resolutions (Holiday Event)"]?.selectedOption || "Option 2: Energy +20"}
-                                                onValueChange={(value) => updateSpecialEventOverride("New Year's Resolutions (Holiday Event)", "selectedOption", value)}
+                                                value={specialEventOverrides["New Year's Resolutions"]?.selectedOption || "Option 2: Energy +20"}
+                                                onValueChange={(value) => updateSpecialEventOverride("New Year's Resolutions", "selectedOption", value)}
                                                 placeholder="Select Option"
                                                 width="100%"
                                             />
@@ -175,8 +175,8 @@ const TrainingEventSettings = () => {
                                             <Text style={{ fontSize: 16, fontWeight: "600", color: colors.foreground, marginBottom: 12 }}>New Year's Shrine Visit (Senior Year)</Text>
                                             <CustomSelect
                                                 options={newYearShrineVisitOptions}
-                                                value={specialEventOverrides["New Year's Shrine Visit (Holiday Event)"]?.selectedOption || "Option 1: Energy +30"}
-                                                onValueChange={(value) => updateSpecialEventOverride("New Year's Shrine Visit (Holiday Event)", "selectedOption", value)}
+                                                value={specialEventOverrides["New Year's Shrine Visit"]?.selectedOption || "Option 1: Energy +30"}
+                                                onValueChange={(value) => updateSpecialEventOverride("New Year's Shrine Visit", "selectedOption", value)}
                                                 placeholder="Select Option"
                                                 width="100%"
                                             />
@@ -193,8 +193,8 @@ const TrainingEventSettings = () => {
                                             <Text style={{ fontSize: 16, fontWeight: "600", color: colors.foreground, marginBottom: 12 }}>Victory!</Text>
                                             <CustomSelect
                                                 options={victoryOptions}
-                                                value={specialEventOverrides["Victory! (Race Result)"]?.selectedOption || "Option 2: Energy -5 and random stat gain"}
-                                                onValueChange={(value) => updateSpecialEventOverride("Victory! (Race Result)", "selectedOption", value)}
+                                                value={specialEventOverrides["Victory!"]?.selectedOption || "Option 2: Energy -5 and random stat gain"}
+                                                onValueChange={(value) => updateSpecialEventOverride("Victory!", "selectedOption", value)}
                                                 placeholder="Select Option"
                                                 width="100%"
                                             />
@@ -204,8 +204,8 @@ const TrainingEventSettings = () => {
                                             <Text style={{ fontSize: 16, fontWeight: "600", color: colors.foreground, marginBottom: 12 }}>Solid Showing</Text>
                                             <CustomSelect
                                                 options={solidShowingOptions}
-                                                value={specialEventOverrides["Solid Showing (Race Result)"]?.selectedOption || "Option 2: Energy -5/-20 and random stat gain"}
-                                                onValueChange={(value) => updateSpecialEventOverride("Solid Showing (Race Result)", "selectedOption", value)}
+                                                value={specialEventOverrides["Solid Showing"]?.selectedOption || "Option 2: Energy -5/-20 and random stat gain"}
+                                                onValueChange={(value) => updateSpecialEventOverride("Solid Showing", "selectedOption", value)}
                                                 placeholder="Select Option"
                                                 width="100%"
                                             />
@@ -215,8 +215,8 @@ const TrainingEventSettings = () => {
                                             <Text style={{ fontSize: 16, fontWeight: "600", color: colors.foreground, marginBottom: 12 }}>Defeat</Text>
                                             <CustomSelect
                                                 options={defeatOptions}
-                                                value={specialEventOverrides["Defeat (Race Result)"]?.selectedOption || "Option 1: Energy -25 and random stat gain"}
-                                                onValueChange={(value) => updateSpecialEventOverride("Defeat (Race Result)", "selectedOption", value)}
+                                                value={specialEventOverrides["Defeat"]?.selectedOption || "Option 1: Energy -25 and random stat gain"}
+                                                onValueChange={(value) => updateSpecialEventOverride("Defeat", "selectedOption", value)}
                                                 placeholder="Select Option"
                                                 width="100%"
                                             />
@@ -230,28 +230,28 @@ const TrainingEventSettings = () => {
                                 children: (
                                     <View>
                                         <View style={styles.section}>
-                                            <Text style={{ fontSize: 16, fontWeight: "600", color: colors.foreground, marginBottom: 12 }}>Failed Training (Get Well Soon!)</Text>
+                                            <Text style={{ fontSize: 16, fontWeight: "600", color: colors.foreground, marginBottom: 12 }}>Get Well Soon!</Text>
                                             <CustomSelect
                                                 options={getWellSoonOptions}
                                                 value={
-                                                    specialEventOverrides["Failed Training (Get Well Soon!)"]?.selectedOption ||
+                                                    specialEventOverrides["Get Well Soon!"]?.selectedOption ||
                                                     "Option 2: (Random) Mood -1 / Stat decrease / Get Practice Poor negative status"
                                                 }
-                                                onValueChange={(value) => updateSpecialEventOverride("Failed Training (Get Well Soon!)", "selectedOption", value)}
+                                                onValueChange={(value) => updateSpecialEventOverride("Get Well Soon!", "selectedOption", value)}
                                                 placeholder="Select Option"
                                                 width="100%"
                                             />
                                         </View>
 
                                         <View style={styles.section}>
-                                            <Text style={{ fontSize: 16, fontWeight: "600", color: colors.foreground, marginBottom: 12 }}>Failed Training (Don't Overdo It!)</Text>
+                                            <Text style={{ fontSize: 16, fontWeight: "600", color: colors.foreground, marginBottom: 12 }}>Don't Overdo It!</Text>
                                             <CustomSelect
                                                 options={dontOverdoItOptions}
                                                 value={
-                                                    specialEventOverrides["Failed Training (Don't Overdo It!)"]?.selectedOption ||
+                                                    specialEventOverrides["Don't Overdo It!"]?.selectedOption ||
                                                     "Option 2: (Random) Mood -3 / Stat decrease / Get Practice Poor negative status"
                                                 }
-                                                onValueChange={(value) => updateSpecialEventOverride("Failed Training (Don't Overdo It!)", "selectedOption", value)}
+                                                onValueChange={(value) => updateSpecialEventOverride("Don't Overdo It!", "selectedOption", value)}
                                                 placeholder="Select Option"
                                                 width="100%"
                                             />
