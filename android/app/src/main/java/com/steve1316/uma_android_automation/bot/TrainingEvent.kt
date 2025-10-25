@@ -10,11 +10,87 @@ class TrainingEvent(private val game: Game) {
     private val trainingEventRecognizer: TrainingEventRecognizer = TrainingEventRecognizer(game, game.imageUtils)
 
     val enablePrioritizeEnergyOptions: Boolean = SettingsHelper.getBooleanSetting("trainingEvent", "enablePrioritizeEnergyOptions")
-    val acupunctureOption: String = SettingsHelper.getStringSetting("trainingEvent", "acupunctureOption")
+    
+    // Load special event overrides from settings.
+    private val specialEventOverrides: Map<String, EventOverride> = try {
+        val overridesString = SettingsHelper.getStringSetting("trainingEvent", "specialEventOverrides")
+        if (overridesString.isNotEmpty()) {
+            val jsonObject = org.json.JSONObject(overridesString)
+            val overridesMap = mutableMapOf<String, EventOverride>()
+            jsonObject.keys().forEach { eventName ->
+                val eventData = jsonObject.getJSONObject(eventName)
+                overridesMap[eventName] = EventOverride(
+                    selectedOption = eventData.getString("selectedOption"),
+                    requiresConfirmation = eventData.getBoolean("requiresConfirmation")
+                )
+            }
+            overridesMap
+        } else {
+            emptyMap()
+        }
+    } catch (e: Exception) {
+        game.printToLog("[WARNING] Could not parse special event overrides: ${e.message}", tag = tag)
+        emptyMap()
+    }
+    
+    data class EventOverride(val selectedOption: String, val requiresConfirmation: Boolean)
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Functions to handle Training Events with the help of the TrainingEventRecognizer class.
+
+    /**
+     * Check if the given event title matches any special event overrides.
+     * 
+     * @param eventTitle The detected event title from OCR
+     * @return Pair of (optionIndex, requiresConfirmation) if match found, null otherwise
+     */
+    private fun checkSpecialEventOverride(eventTitle: String): Pair<Int, Boolean>? {
+        // Define event matching patterns
+        val eventPatterns = mapOf(
+            // Holiday Events
+            "New Year's Resolutions (Holiday Event)" to listOf("New Year's Resolutions", "Resolutions"),
+            "New Year's Shrine Visit (Holiday Event)" to listOf("New Year's Shrine Visit", "Shrine Visit"),
+            // Race Results
+            "Victory! (Race Result)" to listOf("Victory!"),
+            "Solid Showing (Race Result)" to listOf("Solid Showing"),
+            "Defeat (Race Result)" to listOf("Defeat"),
+            // Training Failures
+            "Failed Training (Get Well Soon!)" to listOf("Get Well Soon"),
+            "Failed Training (Don't Overdo It!)" to listOf("Don't Overdo It"),
+            // Miscellaneous
+            "Extra Training" to listOf("Extra Training"),
+            // Original Events
+            "Acupuncture (Just an Acupuncturist, No Worries! ☆)" to listOf("Acupuncture", "Just an Acupuncturist"),
+            "Etsuko's Exhaustive Coverage" to listOf("Etsuko", "Exhaustive Coverage")
+        )
+        
+        for ((eventName, patterns) in eventPatterns) {
+            val override = specialEventOverrides[eventName]
+            if (override != null) {
+                // Check if any pattern matches the event title.
+                val matches = patterns.any { pattern -> eventTitle.contains(pattern) }
+                if (matches) {
+                    game.printToLog("[TRAINING_EVENT] Detected special event: $eventName", tag = tag)
+                    
+                    // Parse the option number from the setting (e.g., "Option 5: Energy +10" -> 5)
+                    val optionMatch = Regex("Option (\\d+)").find(override.selectedOption)
+                    val optionIndex = if (optionMatch != null) {
+                        val optionNumber = optionMatch.groupValues[1].toInt()
+                        game.printToLog("[TRAINING_EVENT] Using setting: ${override.selectedOption} (Option $optionNumber)", tag = tag)
+                        optionNumber - 1
+                    } else {
+                        game.printToLog("[WARNING] Could not parse option number from setting: ${override.selectedOption}. Using option 1 by default.", tag = tag)
+                        0
+                    }
+                    
+                    return Pair(optionIndex, override.requiresConfirmation)
+                }
+            }
+        }
+        
+        return null
+    }
 
     /**
      * Start text detection to determine what Training Event it is and the event rewards for each option.
@@ -34,30 +110,19 @@ class TrainingEvent(private val game: Game) {
         }
 
         if (eventRewards.isNotEmpty() && eventRewards[0] != "") {
-            // Check if this is the Acupuncture event and handle it specially.
-            if (eventTitle.contains("Acupuncture") || eventTitle.contains("Just an Acupuncturist")) {
-                game.printToLog("[TRAINING_EVENT] Detected Acupuncture event: $eventTitle", tag = tag)
-                
-                // Parse the option number from the setting (e.g., "Option 5: Energy +10" -> 5),
-                val optionMatch = Regex("Option (\\d+)").find(acupunctureOption)
-                optionSelected = if (optionMatch != null) {
-                    // Convert to 0-based index.
-                    val optionNumber = optionMatch.groupValues[1].toInt()
-                    game.printToLog("[TRAINING_EVENT] Using Acupuncture setting: $acupunctureOption (Option $optionNumber)", tag = tag)
-                    optionNumber - 1
-                } else {
-                    // Default to Option 5.
-                    game.printToLog("[WARNING] Could not parse option number from acupuncture setting: $acupunctureOption. Using default option 5.", tag = tag)
-                    4
-                }
+            // Check for special event overrides.
+            val specialEventResult = checkSpecialEventOverride(eventTitle)
+            if (specialEventResult != null) {
+                val (selectedOptionIndex, requiresConfirmation) = specialEventResult
+                optionSelected = selectedOptionIndex
                 
                 // Ensure the selected option is within bounds.
                 if (optionSelected >= eventRewards.size) {
-                    game.printToLog("[WARNING] Selected acupuncture option $optionSelected is out of bounds. Using last option.", tag = tag)
+                    game.printToLog("[WARNING] Selected special event option $optionSelected is out of bounds. Using last option.", tag = tag)
                     optionSelected = eventRewards.size - 1
                 }
                 
-                game.printToLog("[TRAINING_EVENT] Acupuncture event will select option ${optionSelected + 1}: \"${eventRewards[optionSelected]}\"", tag = tag)
+                game.printToLog("[TRAINING_EVENT] Special event override applied: option ${optionSelected + 1}: \"${eventRewards[optionSelected]}\"", tag = tag)
             } else {
                 // Initialize the List for normal event processing.
                 val selectionWeight = List(eventRewards.size) { 0 }.toMutableList()
@@ -270,21 +335,25 @@ class TrainingEvent(private val game: Game) {
         if (selectedLocation != null) {
             game.tap(selectedLocation.x + game.imageUtils.relWidth(100), selectedLocation.y, "training_event_active")
             
-            // Check if this was an Acupuncture event and handle confirmation.
-            if (eventRewards.isNotEmpty() && eventRewards[0] != "" && (eventTitle.contains("Acupuncture") || eventTitle.contains("Just an Acupuncturist"))) {
-                game.printToLog("[TRAINING_EVENT] Acupuncture event selected, waiting for confirmation dialog...", tag = tag)
-                
-                // Wait a moment for the confirmation dialog to appear.
-                game.wait(1.0)
-                
-                // Look for confirmation options and select the first one (Yes).
-                val confirmationLocations: ArrayList<Point> = game.imageUtils.findAll("training_event_active")
-                if (confirmationLocations.isNotEmpty()) {
-                    val confirmLocation = confirmationLocations[0]
-                    game.tap(confirmLocation.x + game.imageUtils.relWidth(100), confirmLocation.y, "training_event_active")
-                    game.printToLog("[TRAINING_EVENT] Acupuncture event confirmed.", tag = tag)
-                } else {
-                    game.printToLog("[WARNING] Could not find confirmation options for Acupuncture event.", tag = tag)
+            // Check if this special event requires confirmation.
+            val specialEventResult = checkSpecialEventOverride(eventTitle)
+            if (specialEventResult != null) {
+                val (_, requiresConfirmation) = specialEventResult
+                if (requiresConfirmation) {
+                    game.printToLog("[TRAINING_EVENT] Special event requires confirmation, waiting for dialog...", tag = tag)
+                    
+                    // Wait a moment for the confirmation dialog to appear.
+                    game.wait(1.0)
+                    
+                    // Look for confirmation options and select the first one (Yes).
+                    val confirmationLocations: ArrayList<Point> = game.imageUtils.findAll("training_event_active")
+                    if (confirmationLocations.isNotEmpty()) {
+                        val confirmLocation = confirmationLocations[0]
+                        game.tap(confirmLocation.x + game.imageUtils.relWidth(100), confirmLocation.y, "training_event_active")
+                        game.printToLog("[TRAINING_EVENT] Special event confirmed.", tag = tag)
+                    } else {
+                        game.printToLog("[WARNING] Could not find confirmation options for special event.", tag = tag)
+                    }
                 }
             }
         }
