@@ -231,7 +231,7 @@ ${longTargetsString}
 ---------- Debug Options ----------
 🐛 Debug Mode: ${settings.debug.enableDebugMode ? "✅" : "❌"}
 🔍 Minimum Template Match Confidence: ${settings.debug.templateMatchConfidence}
-🔍 Custom Scale: ${settings.debug.templateMatchCustomScale / 100}
+🔍 Custom Scale: ${settings.debug.templateMatchCustomScale}
 🔍 Start Template Matching Test: ${settings.debug.debugMode_startTemplateMatchingTest ? "✅" : "❌"}
 🔍 Start Single Training OCR Test: ${settings.debug.debugMode_startSingleTrainingOCRTest ? "✅" : "❌"}
 🔍 Start Comprehensive Training OCR Test: ${settings.debug.debugMode_startComprehensiveTrainingOCRTest ? "✅" : "❌"}
