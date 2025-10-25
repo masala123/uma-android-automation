@@ -528,8 +528,9 @@ class RaceScraper(BaseScraper):
                 race_data["turnNumber"] = calculate_turn_number(race_data["date"])
 
                 # Construct the in-game formatted name of the race.
+                distance_type_formatted = "Med" if info_map.get("Distance (type)") == "Medium" else info_map.get("Distance (type)")
                 race_data["nameFormatted"] = (
-                    f"{race_data['raceTrack']} {race_data['terrain']} {race_data['distanceMeters']}m ({race_data['distanceType']}) {race_data['direction']}"
+                    f"{race_data['raceTrack']} {race_data['terrain']} {race_data['distanceMeters']}m ({distance_type_formatted}) {race_data['direction']}"
                 )
                 if race_data["course"]:
                     race_data["nameFormatted"] += f" / {race_data['course']}"
