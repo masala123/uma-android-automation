@@ -167,6 +167,8 @@ type CustomScrollViewProps<T> = {
     position?: string | number
     // Scroll orientation.
     horizontal?: boolean
+    // Hide scrollbar if true.
+    hideScrollbar?: boolean
     // Always show scrollbar if true.
     persistentScrollbar?: boolean
     // Styling for scrollbar indicator.
@@ -202,6 +204,7 @@ export const CustomScrollView = <T = any,>({
     targetProps,
     position = "right",
     horizontal = false,
+    hideScrollbar = false,
     persistentScrollbar = false,
     indicatorStyle = {},
     containerStyle = { flex: 1 },
@@ -279,8 +282,8 @@ export const CustomScrollView = <T = any,>({
                 data={children ? (childArray as any) : (targetProps?.data as any)}
                 renderItem={children ? ({ item }: any) => <View style={{ width: "100%" }}>{item}</View> : (targetProps?.renderItem as any)}
                 horizontal={horizontal}
-                showsVerticalScrollIndicator={!enableCustomIndicator && !horizontal}
-                showsHorizontalScrollIndicator={!enableCustomIndicator && horizontal}
+                showsVerticalScrollIndicator={!hideScrollbar && !enableCustomIndicator && !horizontal}
+                showsHorizontalScrollIndicator={!hideScrollbar && !enableCustomIndicator && horizontal}
                 onContentSizeChange={enableCustomIndicator ? handleContentSizeChange : targetProps?.onContentSizeChange}
                 onLayout={(e) => {
                     if (enableCustomIndicator) {
