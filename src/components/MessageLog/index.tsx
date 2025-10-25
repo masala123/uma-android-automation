@@ -395,6 +395,7 @@ ${longTargetsString}
                         keyExtractor: keyExtractor,
                         removeClippedSubviews: true,
                     }}
+                    hideScrollbar={true}
                 />
             </View>
 
