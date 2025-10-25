@@ -9,6 +9,7 @@ import net.ricecode.similarity.StringSimilarityServiceImpl
 import org.json.JSONArray
 import org.json.JSONObject
 import org.opencv.core.Point
+import android.util.Log
 
 class Racing (private val game: Game) {
     private val tag: String = "[${MainActivity.loggerTag}]Racing"
@@ -59,11 +60,10 @@ class Racing (private val game: Game) {
         }
         
         return try {
-            val racingPlanJson = SettingsHelper.getStringSetting("racing", "racingPlan")
-            game.printToLog("[RACE] Raw racing plan JSON: \"$racingPlanJson\".", tag = tag)
+            if (game.debugMode) game.printToLog("[RACE] Raw user-selected racing plan JSON: \"$racingPlanJson\".", tag = tag)
             
             if (racingPlanJson.isEmpty() || racingPlanJson == "[]") {
-                game.printToLog("[RACE] Racing plan is empty, returning empty list.", tag = tag)
+                game.printToLog("[RACE] User-selected racing plan is empty, returning empty list.", tag = tag)
                 return emptyList()
             }
             
@@ -80,10 +80,10 @@ class Racing (private val game: Game) {
                 plannedRaces.add(plannedRace)
             }
             
-            game.printToLog("[RACE] Successfully loaded ${plannedRaces.size} planned races from settings.", tag = tag)
+            game.printToLog("[RACE] Successfully loaded ${plannedRaces.size} user-selected planned races from settings.", tag = tag)
             plannedRaces
         } catch (e: Exception) {
-            game.printToLog("[ERROR] Failed to parse racing plan JSON: ${e.message}. Returning empty list.", tag = tag, isError = true)
+            game.printToLog("[ERROR] Failed to parse user-selected racing plan JSON: ${e.message}. Returning empty list.", tag = tag, isError = true)
             emptyList()
         }
     }
@@ -97,7 +97,7 @@ class Racing (private val game: Game) {
     private fun getRacePlanData(): Map<String, FullRaceData> {
         return try {
             val racingPlanDataJson = SettingsHelper.getStringSetting("racing", "racingPlanData")
-            game.printToLog("[RACE] Raw racing plan data JSON length: ${racingPlanDataJson.length}.", tag = tag)
+            if (game.debugMode) game.printToLog("[RACE] Raw racing plan data JSON length: ${racingPlanDataJson.length}.", tag = tag)
             
             if (racingPlanDataJson.isEmpty()) {
                 game.printToLog("[RACE] Racing plan data is empty, returning empty map.", tag = tag)
@@ -201,10 +201,10 @@ class Racing (private val game: Game) {
             
             if (raceData != null) {
                 game.printToLog("[TEST] Race #${index + 1} - Match found:", tag = tag)
-                game.printToLog("[TEST]   Name: ${raceData.name}", tag = tag)
-                game.printToLog("[TEST]   Grade: ${raceData.grade}", tag = tag)
-                game.printToLog("[TEST]   Fans: ${raceData.fans}", tag = tag)
-                game.printToLog("[TEST]   Formatted: ${raceData.nameFormatted}", tag = tag)
+                game.printToLog("[TEST]     Name: ${raceData.name}", tag = tag)
+                game.printToLog("[TEST]     Grade: ${raceData.grade}", tag = tag)
+                game.printToLog("[TEST]     Fans: ${raceData.fans}", tag = tag)
+                game.printToLog("[TEST]     Formatted: ${raceData.nameFormatted}", tag = tag)
             } else {
                 game.printToLog("[TEST] Race #${index + 1} - No match found for turn ${game.currentDate.turnNumber}", tag = tag)
             }
@@ -231,7 +231,7 @@ class Racing (private val game: Game) {
             // Do exact matching based on the info gathered.
             val exactMatch = findExactMatch(settingsManager, turnNumber, detectedName)
             if (exactMatch != null) {
-                game.printToLog("[RACE] Found exact match: ${exactMatch.name}.", tag = tag)
+                game.printToLog("[RACE] Found exact match: \"${exactMatch.name}\" AKA \"${exactMatch.nameFormatted}\".", tag = tag)
                 settingsManager.close()
                 return exactMatch
             }
@@ -239,7 +239,7 @@ class Racing (private val game: Game) {
             // Otherwise, do fuzzy matching to find the most similar match using Jaro-Winkler.
             val fuzzyMatch = findFuzzyMatch(settingsManager, turnNumber, detectedName)
             if (fuzzyMatch != null) {
-                game.printToLog("[RACE] Found fuzzy match: ${fuzzyMatch.name}.", tag = tag)
+                game.printToLog("[RACE] Found fuzzy match: \"${fuzzyMatch.name}\" AKA \"${fuzzyMatch.nameFormatted}\".", tag = tag)
                 settingsManager.close()
                 return fuzzyMatch
             }
@@ -352,14 +352,15 @@ class Racing (private val game: Game) {
                     terrain = cursor.getString(4),
                     distanceType = cursor.getString(5)
                 )
-                game.printToLog("[RACE] Fuzzy match candidate: \"$nameFormatted\" with similarity ${game.decimalFormat.format(similarity)}.", tag = tag)
+                if (game.debugMode) game.printToLog("[DEBUG] Fuzzy match candidate: \"${bestMatch.name}\" AKA \"$nameFormatted\" with similarity ${game.decimalFormat.format(similarity)}.", tag = tag)
+                else Log.d(tag, "[DEBUG] Fuzzy match candidate: \"${bestMatch.name}\" AKA \"$nameFormatted\" with similarity ${game.decimalFormat.format(similarity)}.")
             }
         } while (cursor.moveToNext())
 
         cursor.close()
         
         if (bestMatch != null) {
-            game.printToLog("[RACE] Best fuzzy match: \"${bestMatch.nameFormatted}\" with similarity ${game.decimalFormat.format(bestScore)}.", tag = tag)
+            game.printToLog("[RACE] Best fuzzy match: \"${bestMatch.name}\" AKA \"${bestMatch.nameFormatted}\" with similarity ${game.decimalFormat.format(bestScore)}.", tag = tag)
         }
         
         return bestMatch
@@ -441,15 +442,15 @@ class Racing (private val game: Game) {
         // Log detailed scoring breakdown for debugging.
         val terrainAptitude = mapToAptitude(race.terrain)
         val distanceAptitude = mapToAptitude(race.distanceType)
-        game.printToLog(
+        if (game.debugMode) game.printToLog(
             """
-            [RACE] Scoring ${race.name}:
-            Fans     = ${race.fans} (${game.decimalFormat.format(fansScore)})
-            Grade    = ${race.grade} (${game.decimalFormat.format(gradeScore)})
-            Terrain  = ${race.terrain} ($terrainAptitude)
-            Distance = ${race.distanceType} ($distanceAptitude)
-            Aptitude = ${game.decimalFormat.format(aptitudeBonus)}
-            Final    = ${game.decimalFormat.format(finalScore)}
+            [DEBUG] Scoring ${race.name}:
+            Fans        = ${race.fans} (${game.decimalFormat.format(fansScore)})
+            Grade       = ${race.grade} (${game.decimalFormat.format(gradeScore)})
+            Terrain     = ${race.terrain} ($terrainAptitude)
+            Distance    = ${race.distanceType} ($distanceAptitude)
+            Aptitude    = ${game.decimalFormat.format(aptitudeBonus)}
+            Final       = ${game.decimalFormat.format(finalScore)}
             """.trimIndent(),
             tag = tag
         )
@@ -561,7 +562,8 @@ class Racing (private val game: Game) {
             parsed
         }
 
-        game.printToLog("[RACE] Filter criteria: Min fans: $minFansThreshold, terrain: $preferredTerrain, grades: $preferredGrades", tag = tag)
+        if (game.debugMode) game.printToLog("[DEBUG] Filter criteria: Min fans: $minFansThreshold, terrain: $preferredTerrain, grades: $preferredGrades", tag = tag)
+        else Log.d(tag, "[DEBUG] Filter criteria: Min fans: $minFansThreshold, terrain: $preferredTerrain, grades: $preferredGrades")
         
         val filteredRaces = races.filter { race ->
             val meetsFansThreshold = race.fans >= minFansThreshold
@@ -576,9 +578,11 @@ class Racing (private val game: Game) {
                 if (!meetsFansThreshold) reasons.add("fans ${race.fans} < $minFansThreshold")
                 if (!meetsTerrainPreference) reasons.add("terrain ${race.terrain} != $preferredTerrain")
                 if (!meetsGradePreference) reasons.add("grade ${race.grade} not in $preferredGrades")
-                game.printToLog("[RACE] ✗ Filtered out ${race.name}: ${reasons.joinToString(", ")}", tag = tag)
+                if (game.debugMode) game.printToLog("[DEBUG] ✗ Filtered out ${race.name}: ${reasons.joinToString(", ")}", tag = tag)
+                else Log.d(tag, "[DEBUG] ✗ Filtered out ${race.name}: ${reasons.joinToString(", ")}")
             } else {
-                game.printToLog("[RACE] ✓ Passed filter: ${race.name} (fans: ${race.fans}, terrain: ${race.terrain}, grade: ${race.grade})", tag = tag)
+                if (game.debugMode) game.printToLog("[DEBUG] ✓ Passed filter: ${race.name} (fans: ${race.fans}, terrain: ${race.terrain}, grade: ${race.grade})", tag = tag)
+                else Log.d(tag, "[DEBUG] ✓ Passed filter: ${race.name} (fans: ${race.fans}, terrain: ${race.terrain}, grade: ${race.grade})")
             }
             
             passes
@@ -605,7 +609,7 @@ class Racing (private val game: Game) {
         // Find the race in the plan data.
         val fullRaceData = racePlanData[plannedRace.raceName]
         if (fullRaceData == null) {
-            game.printToLog("[RACE] Planned race \"${plannedRace.raceName}\" not found in race plan data.", tag = tag)
+            game.printToLog("[ERROR] Planned race \"${plannedRace.raceName}\" not found in race plan data.", tag = tag, isError = true)
             return false
         }
         
@@ -675,7 +679,7 @@ class Racing (private val game: Game) {
         val sortedScoredRaces = scoredRaces.sortedByDescending { it.score }
         game.printToLog("[RACE] Scored all races (sorted by score descending):", tag = tag)
         sortedScoredRaces.forEach { scoredRace ->
-            game.printToLog("[RACE]   ${scoredRace.raceData.name}: score=${game.decimalFormat.format(scoredRace.score)}, " +
+            if (game.debugMode) game.printToLog("[DEBUG]    ${scoredRace.raceData.name}: score=${game.decimalFormat.format(scoredRace.score)}, " +
                     "fans=${scoredRace.raceData.fans}(${game.decimalFormat.format(scoredRace.fansScore)}), " +
                     "grade=${scoredRace.raceData.grade}(${game.decimalFormat.format(scoredRace.gradeScore)}), " +
                     "aptitude=${game.decimalFormat.format(scoredRace.aptitudeBonus)}",
@@ -687,7 +691,7 @@ class Racing (private val game: Game) {
         
         if (bestRace != null) {
             game.printToLog("[RACE] Best race in window: ${bestRace.raceData.name} (score: ${game.decimalFormat.format(bestRace.score)})", tag = tag)
-            game.printToLog("[RACE]   Fans: ${bestRace.raceData.fans} (${game.decimalFormat.format(bestRace.fansScore)}), Grade: ${bestRace.raceData.grade} (${game.decimalFormat.format(bestRace.gradeScore)}), Aptitude: ${game.decimalFormat.format(bestRace.aptitudeBonus)}", tag = tag)
+            game.printToLog("[RACE]     Fans: ${bestRace.raceData.fans} (${game.decimalFormat.format(bestRace.fansScore)}), Grade: ${bestRace.raceData.grade} (${game.decimalFormat.format(bestRace.gradeScore)}), Aptitude: ${game.decimalFormat.format(bestRace.aptitudeBonus)}", tag = tag)
         } else {
             game.printToLog("[RACE] Failed to determine best race from scored races.", tag = tag)
         }
@@ -728,7 +732,7 @@ class Racing (private val game: Game) {
         val currentScoredRaces = currentRaces.map { calculateRaceScore(it) }
         val sortedScoredRaces = currentScoredRaces.sortedByDescending { it.score }
         sortedScoredRaces.forEach { scoredRace ->
-            game.printToLog("[RACE]   Current race: ${scoredRace.raceData.name} (score: ${game.decimalFormat.format(scoredRace.score)})", tag = tag)
+            game.printToLog("[RACE]     Current race: ${scoredRace.raceData.name} (score: ${game.decimalFormat.format(scoredRace.score)})", tag = tag)
         }
         val bestCurrentRace = sortedScoredRaces.maxByOrNull { it.score }
         
@@ -773,13 +777,13 @@ class Racing (private val game: Game) {
         val shouldRace = isGoodEnough && notWorthWaiting
         
         game.printToLog("[RACE] Opportunity Cost Analysis:", tag = tag)
-        game.printToLog("[RACE]   Current score: ${game.decimalFormat.format(bestCurrentRace.score)}", tag = tag)
-        game.printToLog("[RACE]   Upcoming score (raw): ${game.decimalFormat.format(bestUpcomingRace.score)}", tag = tag)
-        game.printToLog("[RACE]   Upcoming score (discounted by ${game.decimalFormat.format((1 - timeDecayFactor) * 100)}%): ${game.decimalFormat.format(discountedUpcomingScore)}", tag = tag)
-        game.printToLog("[RACE]   Improvement from waiting: ${game.decimalFormat.format(improvementFromWaiting)}", tag = tag)
-        game.printToLog("[RACE]   Quality check (≥${minimumQualityThreshold}): ${if (isGoodEnough) "PASS" else "FAIL"}", tag = tag)
-        game.printToLog("[RACE]   Worth waiting check (<${improvementThreshold}): ${if (notWorthWaiting) "PASS" else "FAIL"}", tag = tag)
-        game.printToLog("[RACE]   Decision: ${if (shouldRace) "RACE NOW" else "WAIT FOR BETTER OPPORTUNITY"}", tag = tag)
+        game.printToLog("[RACE]     Current score: ${game.decimalFormat.format(bestCurrentRace.score)}", tag = tag)
+        game.printToLog("[RACE]     Upcoming score (raw): ${game.decimalFormat.format(bestUpcomingRace.score)}", tag = tag)
+        game.printToLog("[RACE]     Upcoming score (discounted by ${game.decimalFormat.format((1 - timeDecayFactor) * 100)}%): ${game.decimalFormat.format(discountedUpcomingScore)}", tag = tag)
+        game.printToLog("[RACE]     Improvement from waiting: ${game.decimalFormat.format(improvementFromWaiting)}", tag = tag)
+        game.printToLog("[RACE]     Quality check (≥${minimumQualityThreshold}): ${if (isGoodEnough) "PASS" else "FAIL"}", tag = tag)
+        game.printToLog("[RACE]     Worth waiting check (<${improvementThreshold}): ${if (notWorthWaiting) "PASS" else "FAIL"}", tag = tag)
+        game.printToLog("[RACE]     Decision: ${if (shouldRace) "RACE NOW" else "WAIT FOR BETTER OPPORTUNITY"}", tag = tag)
 
         // Print the reasoning for the decision.
         if (shouldRace) {
