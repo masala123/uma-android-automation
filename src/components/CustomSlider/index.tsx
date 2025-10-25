@@ -37,6 +37,7 @@ const CustomSlider: React.FC<CustomSliderProps> = ({
 }) => {
     const { colors } = useTheme()
     const [isDragging, setIsDragging] = useState(false)
+    const [isTyping, setIsTyping] = useState(false)
     const [sliderWidth, setSliderWidth] = useState(0)
     const [tooltipPosition, setTooltipPosition] = useState(0)
     const [localValue, setLocalValue] = useState(value)
@@ -154,13 +155,13 @@ const CustomSlider: React.FC<CustomSliderProps> = ({
         }
     }, [sliderWidth, value, min, max])
 
-    // Update local value when external value changes (but not during dragging).
+    // Update local value when external value changes (but not during dragging or typing).
     useEffect(() => {
-        if (!isDragging) {
+        if (!isDragging && !isTyping) {
             setLocalValue(value)
-            setInputValue(value.toString())
+            setInputValue(value.toFixed(getDecimalPlaces(step)))
         }
-    }, [value, isDragging])
+    }, [value, isDragging, isTyping, step])
 
     const handleSlidingStart = (sliderValue: number) => {
         setIsDragging(true)
@@ -205,18 +206,22 @@ const CustomSlider: React.FC<CustomSliderProps> = ({
     }
 
     const handleValueChange = (sliderValue: number) => {
-        // Only update local state during dragging, don't call parent onValueChange.
-        setLocalValue(sliderValue)
-        setInputValue(sliderValue.toString())
+        // Round to nearest step to avoid floating point precision issues.
+        const roundedValue = Math.round(sliderValue / step) * step
+        setLocalValue(roundedValue)
+        setInputValue(roundedValue.toFixed(getDecimalPlaces(step)))
         if (isDragging) {
-            const position = calculateTooltipPosition(sliderValue)
+            const position = calculateTooltipPosition(roundedValue)
             setTooltipPosition(position)
         }
     }
 
     const handleInputChange = (text: string) => {
+        setIsTyping(true)
         setInputValue(text)
         const numValue = parseFloat(text)
+
+        // Only update if we have a valid number that's within range.
         if (!isNaN(numValue) && numValue >= min && numValue <= max) {
             // Round to nearest step.
             const roundedValue = Math.round(numValue / step) * step
@@ -226,6 +231,7 @@ const CustomSlider: React.FC<CustomSliderProps> = ({
     }
 
     const handleInputSubmit = () => {
+        setIsTyping(false)
         const numValue = parseFloat(inputValue)
         if (!isNaN(numValue)) {
             // Clamp value to min/max and round to nearest step.
@@ -233,10 +239,10 @@ const CustomSlider: React.FC<CustomSliderProps> = ({
             const roundedValue = Math.round(clampedValue / step) * step
             setLocalValue(roundedValue)
             onValueChange(roundedValue)
-            setInputValue(roundedValue.toString())
+            setInputValue(roundedValue.toFixed(getDecimalPlaces(step)))
         } else {
             // Reset to current value if invalid.
-            setInputValue(localValue.toString())
+            setInputValue(localValue.toFixed(getDecimalPlaces(step)))
         }
     }
 
@@ -263,7 +269,7 @@ const CustomSlider: React.FC<CustomSliderProps> = ({
                     pointerEvents="none"
                 >
                     <Text style={styles.tooltipText}>
-                        {localValue.toFixed(1)}
+                        {localValue.toFixed(getDecimalPlaces(step))}
                         {labelUnit}
                     </Text>
                 </Animated.View>
@@ -301,7 +307,7 @@ const CustomSlider: React.FC<CustomSliderProps> = ({
                     <Text style={styles.labelText}>{showLabels ? min + labelUnit : ""}</Text>
                     <View style={styles.inputContainer}>
                         <Input
-                            value={localValue % 1 === 0 ? localValue.toString() : localValue.toFixed(1)}
+                            value={inputValue}
                             onChangeText={handleInputChange}
                             onEndEditing={handleInputSubmit}
                             onBlur={handleInputSubmit}
