@@ -1187,7 +1187,8 @@ class Racing (private val game: Game) {
                 enableFarmingFans && !enableForceRacing && enableRacingPlan
             } else {
                 // Year 2 (Classic Year): Check if user-selected races are eligible.
-                enableRacingPlan && checkPlannedRacesBeforeSeniorYear()
+                // Year 1 (Junior Year) will use the standard racing logic.
+                game.currentDate.year == 2 && enableRacingPlan && checkPlannedRacesBeforeSeniorYear()
             }
 
             val success = if (useSmartRacing) {
