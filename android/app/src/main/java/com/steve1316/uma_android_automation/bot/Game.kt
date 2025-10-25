@@ -35,7 +35,7 @@ class Game(val myContext: Context) {
 	////////////////////////////////////////////////////////////////////
 	// SQLite Settings
 	val campaign: String = SettingsHelper.getStringSetting("general", "scenario")
-	private val debugMode: Boolean = SettingsHelper.getBooleanSetting("debug", "enableDebugMode")
+	val debugMode: Boolean = SettingsHelper.getBooleanSetting("debug", "enableDebugMode")
 
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
