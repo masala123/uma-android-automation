@@ -1266,7 +1266,6 @@ class Racing (private val game: Game) {
                 return false
             }
 
-            // Determine the best extra race using smart racing or traditional logic.
             val maxCount = game.imageUtils.findAll("race_selection_fans", region = game.imageUtils.regionBottomHalf).size
             if (maxCount == 0) {
                 game.printToLog("[WARNING] Was unable to find any extra races to select. Canceling the racing process and doing something else.", tag = tag, isError = true)
@@ -1275,8 +1274,15 @@ class Racing (private val game: Game) {
                 game.printToLog("[RACE] There are $maxCount extra race options currently on screen.", tag = tag)
             }
 
+            // Check if the race needs to meet a fan requirement.
+            val needsFanRequirement = game.imageUtils.findImage("race_fans_criteria", tries = 1, region = game.imageUtils.regionTopHalf).first != null
+            if (needsFanRequirement) game.printToLog("[RACE] Fan requirement criteria detected. This race must be completed to meet the fan requirement.", tag = tag)
+
             // Determine whether to use smart racing with user-selected races or standard racing.
-            val useSmartRacing = if (game.currentDate.year == 3) {
+            val useSmartRacing = if (needsFanRequirement) {
+                // If fan requirement is needed, force standard racing to ensure the race proceeds.
+                false
+            } else if (game.currentDate.year == 3) {
                 // Year 3 (Senior Year): Use smart racing if conditions are met.
                 enableFarmingFans && !enableForceRacing && enableRacingPlan
             } else {
@@ -1295,7 +1301,7 @@ class Racing (private val game: Game) {
             } else {
                 // Use the standard racing logic.
                 // If needed, print the reason(s) to why the smart racing logic was not started.
-                if (enableRacingPlan) {
+                if (enableRacingPlan && !needsFanRequirement) {
                     game.printToLog("[RACE] Smart racing conditions not met due to current settings, using traditional racing logic...", tag = tag)
                     game.printToLog("[RACE] Reason: One or more conditions failed:", tag = tag)
                     if (game.currentDate.year == 3) {
