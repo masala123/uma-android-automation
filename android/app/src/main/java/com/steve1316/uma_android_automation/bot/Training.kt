@@ -4,7 +4,6 @@ import android.util.Log
 import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.utils.SettingsHelper
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
-import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.automation_library.data.SharedData
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -377,7 +376,7 @@ class Training(private val game: Game) {
 					} catch (_: InterruptedException) {
 						Log.e(tag, "[ERROR] Parallel training analysis timed out")
 					} finally {
-						MessageLog.printToLog("[INFO] All 5 stat regions processed for $training training. Results: ${statGains.toList()}", tag = tag)
+						game.printToLog("[INFO] All 5 stat regions processed for $training training. Results: ${statGains.toList()}", tag = tag)
 					}
 
 					val newTraining = TrainingOption(

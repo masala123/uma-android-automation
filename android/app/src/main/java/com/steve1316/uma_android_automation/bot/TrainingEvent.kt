@@ -173,7 +173,7 @@ class TrainingEvent(private val game: Game) {
                             selectionWeight[optionSelected] += finalEnergyValue
                         } else if (line.lowercase().contains("mood")) {
                             val moodWeight = if (formattedLine.contains("-")) -50 else 50
-                            game.printToLog("[TRAINING-EVENT Adding weight for option#${optionSelected + 1} of $moodWeight for ${if (moodWeight > 0) "positive" else "negative"} mood gain.", tag = tag)
+                            game.printToLog("[TRAINING-EVENT] Adding weight for option#${optionSelected + 1} of $moodWeight for ${if (moodWeight > 0) "positive" else "negative"} mood gain.", tag = tag)
                             selectionWeight[optionSelected] += moodWeight
                         } else if (line.lowercase().contains("bond")) {
                             game.printToLog("[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 20 for bond.", tag = tag)
