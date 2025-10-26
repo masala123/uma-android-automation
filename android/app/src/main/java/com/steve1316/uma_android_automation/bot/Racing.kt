@@ -1067,7 +1067,14 @@ class Racing (private val game: Game) {
         val isLocked = game.imageUtils.findImage("race_select_extra_locked", tries = 1, region = game.imageUtils.regionBottomHalf).first != null
         val isSummer = game.imageUtils.findImage("recover_energy_summer", tries = 1, region = game.imageUtils.regionBottomHalf).first != null
         
-        if (isUmaFinalsLocked || isLocked || isSummer) {
+        if (isUmaFinalsLocked) {
+            game.printToLog("[RACE] It is UMA Finals right now so there will be no extra races. Stopping extra race check.", tag = tag)
+            return false
+        } else if (isLocked) {
+            game.printToLog("[RACE] Extra Races button is currently locked. Stopping extra race check.", tag = tag)
+            return false
+        } else if (isSummer) {
+            game.printToLog("[RACE] It is currently Summer right now. Stopping extra race check.", tag = tag)
             return false
         }
 
