@@ -41,7 +41,8 @@ class Racing (private val game: Game) {
     // Race strategy override settings.
     private val enableRaceStrategyOverride = SettingsHelper.getBooleanSetting("racing", "enableRaceStrategyOverride")
     private val juniorYearRaceStrategy = SettingsHelper.getStringSetting("racing", "juniorYearRaceStrategy")
-    private var originalRaceStrategy: String? = null
+    private val userSelectedOriginalStrategy = SettingsHelper.getStringSetting("racing", "originalRaceStrategy")
+    private var detectedOriginalStrategy: String? = null
     private var hasAppliedStrategyOverride = false
 
     companion object {
@@ -1563,12 +1564,12 @@ class Racing (private val game: Game) {
         val baseY = confirmLocation.y.toInt()
 
         if (currentYear == 1) {
-            // Junior Year: Apply user's selected strategy and store original.
+            // Junior Year: Apply user's selected strategy and detect the original.
             if (!hasAppliedStrategyOverride) {
                 // Detect and store the original strategy.
                 val originalStrategy = detectOriginalStrategy()
                 if (originalStrategy != null) {
-                    originalRaceStrategy = originalStrategy
+                    detectedOriginalStrategy = originalStrategy
                     game.printToLog("[RACE] Detected original race strategy: $originalStrategy", tag = tag)
                 }
 
@@ -1583,16 +1584,21 @@ class Racing (private val game: Game) {
                 }
             }
         } else {
-            // Year 2+: Restore original strategy and disable feature.
-            if (hasAppliedStrategyOverride && originalRaceStrategy != null) {
-                val restoreStrategy = originalRaceStrategy!!
-                game.printToLog("[RACE] Restoring original race strategy: $restoreStrategy", tag = tag)
-                
-                if (modifyRacingStrategy(baseX, baseY, restoreStrategy)) {
-                    hasAppliedStrategyOverride = false
-                    game.printToLog("[RACE] Successfully restored original strategy. Strategy override disabled for rest of run.", tag = tag)
+            // Year 2+: Apply the detected original strategy if available, otherwise use user-selected strategy.
+            if (hasAppliedStrategyOverride) {
+                val strategyToApply = if (detectedOriginalStrategy != null) {
+                    detectedOriginalStrategy!!
                 } else {
-                    game.printToLog("[ERROR] Failed to restore original strategy.", tag = tag, isError = true)
+                    userSelectedOriginalStrategy
+                }
+                
+                game.printToLog("[RACE] Applying original race strategy: $strategyToApply", tag = tag)
+                
+                if (modifyRacingStrategy(baseX, baseY, strategyToApply)) {
+                    hasAppliedStrategyOverride = false
+                    game.printToLog("[RACE] Successfully applied original strategy. Strategy override disabled for rest of run.", tag = tag)
+                } else {
+                    game.printToLog("[ERROR] Failed to apply original strategy.", tag = tag, isError = true)
                 }
             }
         }
