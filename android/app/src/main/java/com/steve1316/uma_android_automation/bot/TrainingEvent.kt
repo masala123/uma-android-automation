@@ -12,6 +12,9 @@ class TrainingEvent(private val game: Game) {
 
     val enablePrioritizeEnergyOptions: Boolean = SettingsHelper.getBooleanSetting("trainingEvent", "enablePrioritizeEnergyOptions")
     
+    private val positiveStatuses = listOf("Charming", "Fast Learner", "Practice Practice")
+    private val negativeStatuses = listOf("Practice Poor", "Migraine", "Night Owl", "Slow Metabolism", "Slacker")
+
     // Load special event overrides from settings.
     private val specialEventOverrides: Map<String, EventOverride> = try {
         val overridesString = SettingsHelper.getStringSetting("trainingEvent", "specialEventOverrides")
@@ -187,6 +190,12 @@ class TrainingEvent(private val game: Game) {
                         } else if (line.lowercase().contains("hint")) {
                             game.printToLog("[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 25 for skill hint(s).", tag = tag)
                             selectionWeight[optionSelected] += 25
+                        } else if (positiveStatuses.any { status -> line.contains(status) }) {
+                            game.printToLog("[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 25 for positive status effect.", tag = tag)
+                            selectionWeight[optionSelected] += 25
+                        } else if (negativeStatuses.any { status -> line.contains(status) }) {
+                            game.printToLog("[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of -25 for negative status effect.", tag = tag)
+                            selectionWeight[optionSelected] += -25
                         } else if (line.lowercase().contains("skill")) {
                             val finalSkillPoints = if (formattedLine.contains("/")) {
                                 val splits = formattedLine.split("/")
