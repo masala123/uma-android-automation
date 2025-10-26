@@ -207,6 +207,7 @@ ${longTargetsString}
 🔍 OCR Threshold: ${settings.ocr.ocrThreshold}
 🔍 Enable Automatic OCR retry: ${settings.ocr.enableAutomaticOCRRetry ? "✅" : "❌"}
 🔍 Minimum OCR Confidence: ${settings.ocr.ocrConfidence}
+🔍 Hide OCR String Comparison Results: ${settings.debug.enableHideOCRComparisonResults ? "✅" : "❌"}
 
 ---------- Racing Options ----------
 👥 Prioritize Farming Fans: ${settings.racing.enableFarmingFans ? "✅" : "❌"}
