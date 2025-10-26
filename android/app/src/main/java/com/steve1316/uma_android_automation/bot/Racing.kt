@@ -1080,13 +1080,6 @@ class Racing (private val game: Game) {
 
         // Check if smart racing is enabled.
         if (enableRacingPlan && enableFarmingFans) {
-            // On first check or when no specific day is set, allow racing to trigger analysis.
-            if (firstTimeSmartRacingSetup || nextSmartRaceDay == null) {
-                firstTimeSmartRacingSetup = false
-                nextSmartRaceDay = null  // Ensure it's cleared on first setup.
-                return !raceRepeatWarningCheck
-            }
-            
             // Check if current day matches the optimal race day or falls on the interval.
             val isOptimalDay = nextSmartRaceDay == dayNumber
             val isIntervalDay = dayNumber % smartRacingCheckInterval == 0
