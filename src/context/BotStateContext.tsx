@@ -30,6 +30,7 @@ export interface Settings {
         smartRacingCheckInterval: number
         enableRaceStrategyOverride: boolean
         juniorYearRaceStrategy: string
+        originalRaceStrategy: string
     }
 
     // Training Event settings
@@ -142,6 +143,7 @@ export const defaultSettings: Settings = {
         smartRacingCheckInterval: 2,
         enableRaceStrategyOverride: false,
         juniorYearRaceStrategy: "Front",
+        originalRaceStrategy: "Pace",
     },
     trainingEvent: {
         enablePrioritizeEnergyOptions: false,

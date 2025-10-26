@@ -222,7 +222,7 @@ ${longTargetsString}
 🏆 Preferred Grades: ${settings.racing.preferredGrades.join(", ")}
 📅 Look Ahead Days: ${settings.racing.lookAheadDays} days
 ⏰ Smart Racing Check Interval: ${settings.racing.smartRacingCheckInterval} days
-🎯 Race Strategy Override: ${settings.racing.enableRaceStrategyOverride ? `✅ (${settings.racing.juniorYearRaceStrategy})` : "❌"}
+🎯 Race Strategy Override: ${settings.racing.enableRaceStrategyOverride ? `✅ (From ${settings.racing.originalRaceStrategy} to ${settings.racing.juniorYearRaceStrategy})` : "❌"}
 
 ---------- Misc Options ----------
 🔍 Skill Point Check: ${settings.general.enableSkillPointCheck ? `Stop on ${settings.general.skillPointCheck} Skill Points or more` : "❌"}

@@ -15,7 +15,8 @@ const RacingSettings = () => {
     const bsc = useContext(BotStateContext)
 
     const { settings, setSettings } = bsc
-    const { enableFarmingFans, daysToRunExtraRaces, disableRaceRetries, enableStopOnMandatoryRaces, enableForceRacing, enableRaceStrategyOverride, juniorYearRaceStrategy } = settings.racing
+    const { enableFarmingFans, daysToRunExtraRaces, disableRaceRetries, enableStopOnMandatoryRaces, enableForceRacing, enableRaceStrategyOverride, juniorYearRaceStrategy, originalRaceStrategy } =
+        settings.racing
 
     const updateRacingSetting = (key: keyof typeof settings.racing, value: any) => {
         setSettings({
@@ -172,23 +173,38 @@ const RacingSettings = () => {
                             className="my-2"
                         />
                         {enableRaceStrategyOverride && (
-                            <View style={styles.inputContainer}>
-                                <Text style={styles.inputLabel}>Junior Year Race Strategy</Text>
-                                <CustomSelect
-                                    options={[
-                                        { value: "Front", label: "Front" },
-                                        { value: "Pace", label: "Pace" },
-                                        { value: "Late", label: "Late" },
-                                        { value: "End", label: "End" },
-                                    ]}
-                                    value={juniorYearRaceStrategy}
-                                    onValueChange={(value) => updateRacingSetting("juniorYearRaceStrategy", value)}
-                                    placeholder="Select strategy"
-                                />
-                                <Text style={styles.inputDescription}>
-                                    The race strategy to use for all races during Junior Year. After Year 1, the bot will revert to using the horse's original race strategy.
-                                </Text>
-                            </View>
+                            <>
+                                <View style={styles.inputContainer}>
+                                    <Text style={styles.inputLabel}>Junior Year Race Strategy</Text>
+                                    <CustomSelect
+                                        options={[
+                                            { value: "Front", label: "Front" },
+                                            { value: "Pace", label: "Pace" },
+                                            { value: "Late", label: "Late" },
+                                            { value: "End", label: "End" },
+                                        ]}
+                                        value={juniorYearRaceStrategy}
+                                        onValueChange={(value) => updateRacingSetting("juniorYearRaceStrategy", value)}
+                                        placeholder="Select strategy"
+                                    />
+                                    <Text style={styles.inputDescription}>The race strategy to use for all races during Junior Year.</Text>
+                                </View>
+                                <View style={styles.inputContainer}>
+                                    <Text style={styles.inputLabel}>Original Race Strategy</Text>
+                                    <CustomSelect
+                                        options={[
+                                            { value: "Front", label: "Front" },
+                                            { value: "Pace", label: "Pace" },
+                                            { value: "Late", label: "Late" },
+                                            { value: "End", label: "End" },
+                                        ]}
+                                        value={originalRaceStrategy}
+                                        onValueChange={(value) => updateRacingSetting("originalRaceStrategy", value)}
+                                        placeholder="Select strategy"
+                                    />
+                                    <Text style={styles.inputDescription}>The race strategy to reset to after Junior Year. The bot will use this strategy for races in Year 2 and beyond.</Text>
+                                </View>
+                            </>
                         )}
                     </View>
 
