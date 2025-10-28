@@ -14,6 +14,7 @@ import com.facebook.react.defaults.DefaultNewArchitectureEntryPoint.fabricEnable
 import com.facebook.react.defaults.DefaultReactActivityDelegate
 import com.github.javiersantos.appupdater.AppUpdater
 import com.github.javiersantos.appupdater.enums.UpdateFrom
+import com.steve1316.automation_library.utils.ScreenStateReceiver
 import org.opencv.android.OpenCVLoader
 import java.util.Locale
 
@@ -31,6 +32,7 @@ class MainActivity : ReactActivity() {
         // State restoration needs to be null to avoid crash with react-native-screens.
         // https://github.com/software-mansion/react-native-screens/issues/17#issuecomment-424704067
 		super.onCreate(null)
+		ScreenStateReceiver.register(applicationContext)
 		
 		// Set application locale to combat cases where user's language uses commas instead of decimal points for floating numbers.
 		val config: Configuration? = this.getResources().configuration
@@ -52,6 +54,11 @@ class MainActivity : ReactActivity() {
 		if (savedInstanceState == null) {
 			showSplashScreen()
 		}
+	}
+
+	override fun onDestroy() {
+		ScreenStateReceiver.unregister(applicationContext)
+		super.onDestroy()
 	}
 
 	/**
