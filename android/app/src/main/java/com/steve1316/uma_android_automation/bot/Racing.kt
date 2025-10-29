@@ -872,6 +872,85 @@ class Racing (private val game: Game) {
     }
 
     /**
+     * Determines if racing is worthwhile based on turn number and opportunity cost analysis.
+     * 
+     * This function queries the race database to check if races exist at the current turn
+     * and uses opportunity cost logic to determine if racing is better than waiting.
+     * 
+     * @param currentTurnNumber The current turn number in the game.
+     * @param dayNumber The current day number for extra races.
+     * @return True if we should race based on turn analysis, false otherwise.
+     */
+    private fun shouldRaceBasedOnTurnNumber(currentTurnNumber: Int, dayNumber: Int): Boolean {
+        return try {
+            game.printToLog("[RACE] Checking eligibility for racing at turn $currentTurnNumber...", tag = tag)
+            
+            // First, check if there are any races available at the current turn.
+            val currentTurnRaces = getLookAheadRacesWithTurnNumbers(currentTurnNumber, 0)
+            if (currentTurnRaces.isEmpty()) {
+                game.printToLog("[RACE] No races available at turn $currentTurnNumber.", tag = tag)
+                return false
+            }
+            
+            game.printToLog("[RACE] Found ${currentTurnRaces.size} race(s) at turn $currentTurnNumber.", tag = tag)
+            
+            // Convert FullRaceData to RaceData for filtering.
+            val currentTurnRaceData = currentTurnRaces.map { fullRaceData ->
+                RaceData(
+                    name = fullRaceData.name,
+                    grade = fullRaceData.grade,
+                    fans = fullRaceData.fans,
+                    nameFormatted = fullRaceData.nameFormatted,
+                    terrain = fullRaceData.terrain,
+                    distanceType = fullRaceData.distanceType
+                )
+            }
+            
+            // Query upcoming races in the look-ahead window for opportunity cost analysis.
+            val upcomingRacesWithTurnNumbers = getLookAheadRacesWithTurnNumbers(currentTurnNumber + 1, lookAheadDays)
+            game.printToLog("[RACE] Found ${upcomingRacesWithTurnNumbers.size} upcoming races in look-ahead window.", tag = tag)
+            
+            // Convert upcoming races from FullRaceData to RaceData.
+            val upcomingRaces = upcomingRacesWithTurnNumbers.map { fullRaceData ->
+                RaceData(
+                    name = fullRaceData.name,
+                    grade = fullRaceData.grade,
+                    fans = fullRaceData.fans,
+                    nameFormatted = fullRaceData.nameFormatted,
+                    terrain = fullRaceData.terrain,
+                    distanceType = fullRaceData.distanceType
+                )
+            }
+            
+            // Apply filters to both current and upcoming races.
+            val filteredCurrentRaces = filterRacesBySettings(currentTurnRaceData)
+            val filteredUpcomingRaces = filterRacesBySettings(upcomingRaces)
+            
+            game.printToLog("[RACE] After filtering: ${filteredCurrentRaces.size} current races, ${filteredUpcomingRaces.size} upcoming races.", tag = tag)
+            
+            // If no filtered current races exist, we shouldn't race.
+            if (filteredCurrentRaces.isEmpty()) {
+                game.printToLog("[RACE] No current races match the filter criteria. Skipping racing.", tag = tag)
+                return false
+            }
+            
+            // If there are no upcoming races to compare against, race now if we have acceptable races.
+            if (filteredUpcomingRaces.isEmpty()) {
+                game.printToLog("[RACE] No upcoming races to compare against. Racing now with available races.", tag = tag)
+                return true
+            }
+            
+            // Use opportunity cost logic to determine if we should race now or wait.
+            val shouldRace = shouldRaceNow(filteredCurrentRaces, lookAheadDays)
+            
+            shouldRace
+        } catch (e: Exception) {
+            game.printToLog("[ERROR] Error in turn-based racing check: ${e.message}. Falling back to screen-based checks.", tag = tag, isError = true)
+            true  // Return true to fall back to screen checks.
+        }
+    }
+
+    /**
      * Handles user-selected races for the Classic Year.
      * Checks if any planned races are within range and eligible for racing.
      * 
