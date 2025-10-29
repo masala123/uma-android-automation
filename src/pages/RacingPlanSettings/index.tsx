@@ -207,7 +207,7 @@ const RacingPlanSettings = () => {
                         style={styles.input}
                         value={minFansThreshold.toString()}
                         onChangeText={(text) => {
-                            const value = parseInt(text) || 0
+                            const value = parseInt(text)
                             updateRacingSetting("minFansThreshold", value)
                         }}
                         keyboardType="numeric"
@@ -222,7 +222,7 @@ const RacingPlanSettings = () => {
                         style={styles.input}
                         value={lookAheadDays.toString()}
                         onChangeText={(text) => {
-                            const value = parseInt(text) || 10
+                            const value = parseInt(text)
                             updateRacingSetting("lookAheadDays", value)
                         }}
                         keyboardType="numeric"
@@ -237,7 +237,7 @@ const RacingPlanSettings = () => {
                         style={styles.input}
                         value={smartRacingCheckInterval.toString()}
                         onChangeText={(text) => {
-                            const value = parseInt(text) || 2
+                            const value = parseInt(text)
                             updateRacingSetting("smartRacingCheckInterval", value)
                         }}
                         keyboardType="numeric"
