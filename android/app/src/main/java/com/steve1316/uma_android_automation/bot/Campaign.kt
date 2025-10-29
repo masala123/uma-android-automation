@@ -64,12 +64,12 @@ open class Campaign(val game: Game) {
 							game.printToLog("\n[INFO] Forcing rest during June ${game.currentDate.phase} in Year ${game.currentDate.year} in preparation for Summer Training.", tag = tag)
 							game.recoverEnergy()
 							game.racing.skipRacing = false
-						} else if (game.checkInjury()) {
+						} else if (game.checkInjury() && !game.checkFinals()) {
 							game.printToLog("[INFO] A infirmary visit was attempted in order to heal an injury.", tag = tag)
 							game.findAndTapImage("ok", region = game.imageUtils.regionMiddle)
 							game.wait(3.0)
 							game.racing.skipRacing = false
-						} else if (game.recoverMood()) {
+						} else if (game.recoverMood() && !game.checkFinals()) {
 							game.printToLog("[INFO] Mood has recovered.", tag = tag)
 							game.racing.skipRacing = false
 						} else if (!game.racing.checkExtraRaceAvailability()) {
