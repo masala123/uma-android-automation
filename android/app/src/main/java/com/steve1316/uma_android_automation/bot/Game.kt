@@ -382,6 +382,21 @@ class Game(val myContext: Context) {
 	}
 
 	/**
+	 * Checks if the bot is currently at Finals.
+	 *
+	 * @return True if the bot is at Finals. Otherwise false.
+	 */
+	fun checkFinals(): Boolean {
+		val finalsLocation = imageUtils.findImage("race_select_extra_locked_uma_finals", tries = 1, suppressError = true, region = imageUtils.regionBottomHalf).first
+		return if (finalsLocation != null) {
+			printToLog("[INFO] Finals detected.")
+			true
+		} else {
+			false
+		}
+	}
+
+	/**
 	 * Checks if the bot has a injury.
 	 *
 	 * @return True if the bot has a injury. Otherwise false.
