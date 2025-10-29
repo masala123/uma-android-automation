@@ -19,7 +19,8 @@ class Training(private val game: Game) {
 		val name: String,
 		val statGains: IntArray,
 		val failureChance: Int,
-		val relationshipBars: ArrayList<CustomImageUtils.BarFillResult>
+		val relationshipBars: ArrayList<CustomImageUtils.BarFillResult>,
+		val isRainbow: Boolean
 	) {
 		override fun equals(other: Any?): Boolean {
 			if (this === other) return true
@@ -31,6 +32,7 @@ class Training(private val game: Game) {
 			if (name != other.name) return false
 			if (!statGains.contentEquals(other.statGains)) return false
 			if (relationshipBars != other.relationshipBars) return false
+			if (isRainbow != other.isRainbow) return false
 
 			return true
 		}
@@ -40,6 +42,7 @@ class Training(private val game: Game) {
 			result = 31 * result + name.hashCode()
 			result = 31 * result + statGains.contentHashCode()
 			result = 31 * result + relationshipBars.hashCode()
+			result = 31 * result + isRainbow.hashCode()
 			return result
 		}
 	}
@@ -63,6 +66,7 @@ class Training(private val game: Game) {
 	private val maximumFailureChance: Int = SettingsHelper.getIntSetting("training", "maximumFailureChance")
 	private val disableTrainingOnMaxedStat: Boolean = SettingsHelper.getBooleanSetting("training", "disableTrainingOnMaxedStat")
 	private val focusOnSparkStatTarget: Boolean = SettingsHelper.getBooleanSetting("training", "focusOnSparkStatTarget")
+	private val enableRainbowTrainingBonus: Boolean = SettingsHelper.getBooleanSetting("training", "enableRainbowTrainingBonus")
 	private val preferredDistanceOverride: String = SettingsHelper.getStringSetting("training", "preferredDistanceOverride")
 	private val statTargetsByDistance: MutableMap<String, IntArray> = mutableMapOf(
 		"Sprint" to intArrayOf(0, 0, 0, 0, 0),
@@ -322,13 +326,14 @@ class Training(private val game: Game) {
 					}
 
 					// Update the object in the training map.
-					// Use CountDownLatch to run the 3 operations in parallel to cut down on processing time.
-					val latch = CountDownLatch(3)
+					// Use CountDownLatch to run the 4 operations in parallel to cut down on processing time.
+					val latch = CountDownLatch(4)
 
 					// Variables to store results from parallel threads.
 					var statGains: IntArray = intArrayOf()
 					var failureChance: Int = -1
 					var relationshipBars: ArrayList<CustomImageUtils.BarFillResult> = arrayListOf()
+					var isRainbow = false
 
 					// Get the Points and source Bitmap beforehand before starting the threads to make them safe for parallel processing.
 					val (skillPointsLocation, sourceBitmap) = game.imageUtils.findImage("skill_points", tries = 1, region = game.imageUtils.regionMiddle)
@@ -370,7 +375,17 @@ class Training(private val game: Game) {
 						}
 					}.start()
 
-					// Wait for all threads to complete.
+					// Thread 4: Detect rainbow training.
+                    Thread {
+                        try {
+                            isRainbow = game.imageUtils.findImage("training_rainbow", tries = 2, confidence = 0.9, suppressError = true, region = game.imageUtils.regionBottomHalf).first != null
+                        } catch (e: Exception) {
+                            Log.e(tag, "[ERROR] Error in rainbow detection: ${e.stackTraceToString()}")
+                            isRainbow = false
+                        } finally {
+                            latch.countDown()
+                        }
+                    }.start()
 					try {
 						latch.await(10, TimeUnit.SECONDS)
 					} catch (_: InterruptedException) {
@@ -383,7 +398,8 @@ class Training(private val game: Game) {
 						name = training,
 						statGains = statGains,
 						failureChance = failureChance,
-						relationshipBars = relationshipBars
+						relationshipBars = relationshipBars,
+                        isRainbow = isRainbow
 					)
 					trainingMap.put(training, newTraining)
 					if (singleTraining) {
