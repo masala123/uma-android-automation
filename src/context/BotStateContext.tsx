@@ -203,7 +203,7 @@ export const defaultSettings: Settings = {
         formattedSettingsString: "",
     },
     training: {
-        trainingBlacklist: [],
+        trainingBlacklist: ["Guts"],
         statPrioritization: ["Speed", "Stamina", "Power", "Wit", "Guts"],
         maximumFailureChance: 20,
         disableTrainingOnMaxedStat: true,
