@@ -47,6 +47,13 @@ open class Campaign(val game: Game) {
 					// Refresh the stat values in memory.
 					game.updateStatValueMapping()
 
+					// Check for fan requirement on the main screen.
+					val needsFanRequirement = game.imageUtils.findImage("race_fans_criteria", tries = 1, region = game.imageUtils.regionTopHalf).first != null
+					if (needsFanRequirement) {
+						game.racing.hasFanRequirement = true
+						game.printToLog("[RACE] Fan requirement criteria detected on main screen. Forcing racing to fulfill requirement.", tag = tag)
+					}
+
 					// If the required skill points has been reached, stop the bot.
 					if (game.enableSkillPointCheck && game.imageUtils.determineSkillPoints() >= game.skillPointsRequired) {
 						game.printToLog("\n[END] Bot has acquired the set amount of skill points. Exiting now...", tag = tag)
