@@ -68,6 +68,9 @@ class Training(private val game: Game) {
 	private val focusOnSparkStatTarget: Boolean = SettingsHelper.getBooleanSetting("training", "focusOnSparkStatTarget")
 	private val enableRainbowTrainingBonus: Boolean = SettingsHelper.getBooleanSetting("training", "enableRainbowTrainingBonus")
 	private val preferredDistanceOverride: String = SettingsHelper.getStringSetting("training", "preferredDistanceOverride")
+	private val enableRiskyTraining: Boolean = SettingsHelper.getBooleanSetting("training", "enableRiskyTraining")
+	private val riskyTrainingMinStatGain: Int = SettingsHelper.getIntSetting("training", "riskyTrainingMinStatGain")
+	private val riskyTrainingMaxFailureChance: Int = SettingsHelper.getIntSetting("training", "riskyTrainingMaxFailureChance")
 	private val statTargetsByDistance: MutableMap<String, IntArray> = mutableMapOf(
 		"Sprint" to intArrayOf(0, 0, 0, 0, 0),
 		"Mile" to intArrayOf(0, 0, 0, 0, 0),
@@ -392,6 +395,25 @@ class Training(private val game: Game) {
 						Log.e(tag, "[ERROR] Parallel training analysis timed out")
 					} finally {
 						game.printToLog("[INFO] All 5 stat regions processed for $training training. Results: ${statGains.toList()}", tag = tag)
+					}
+
+					// Check if risky training logic should apply based on main stat gain.
+					// The main stat gain for each training type corresponds to its index in the statGains array.
+					val mainStatGain = statGains[index]
+					val effectiveFailureChance = if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
+						riskyTrainingMaxFailureChance
+					} else {
+						maximumFailureChance
+					}
+					
+					// Filter out trainings that exceed the effective failure chance threshold.
+					if (!test && failureChance > effectiveFailureChance) {
+						if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
+							game.printToLog("[TRAINING] Skipping $training training due to failure chance ($failureChance%) exceeding risky threshold (${riskyTrainingMaxFailureChance}%) despite high main stat gain of $mainStatGain.")
+						} else {
+							game.printToLog("[TRAINING] Skipping $training training due to failure chance ($failureChance%) exceeding threshold (${maximumFailureChance}%).")
+						}
+						continue
 					}
 
 					val newTraining = TrainingOption(
