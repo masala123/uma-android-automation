@@ -300,7 +300,7 @@ class Game(val myContext: Context) {
 
 			// Perform updates here if necessary.
 			updateDate()
-			if (currentDate.turnNumber % 5 == 0) updateAptitudes()
+			if (currentDate.turnNumber % 10 == 0) updateAptitudes()
 			true
 		} else if (!enablePopupCheck && imageUtils.findImage("cancel", tries = 1, region = imageUtils.regionBottomHalf).first != null &&
 			imageUtils.findImage("race_confirm", tries = 1, region = imageUtils.regionBottomHalf).first != null) {
