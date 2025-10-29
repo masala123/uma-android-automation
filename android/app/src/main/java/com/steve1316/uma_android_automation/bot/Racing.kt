@@ -630,7 +630,7 @@ class Racing (private val game: Game) {
         
         // For Classic Year, check if it's an eligible racing day using the settings for the standard racing logic.
         if (game.currentDate.year == 2) {
-            if (!(dayNumber % daysToRunExtraRaces == 0)) {
+            if (!isEligibleRacingDay(dayNumber)) {
                 game.printToLog("[RACE] Planned race \"${plannedRace.raceName}\" is not on an eligible racing day (day $dayNumber, interval $daysToRunExtraRaces).", tag = tag)
                 return false
             }
@@ -638,6 +638,16 @@ class Racing (private val game: Game) {
         
         game.printToLog("[RACE] Planned race \"${plannedRace.raceName}\" is eligible for racing.", tag = tag)
         return true
+    }
+
+    /**
+     * Checks if a given day number is eligible for racing based on the configured interval.
+     *
+     * @param dayNumber The day number to check.
+     * @return True if the day falls on the racing interval (dayNumber % daysToRunExtraRaces == 0).
+     */
+    private fun isEligibleRacingDay(dayNumber: Int): Boolean {
+        return dayNumber % daysToRunExtraRaces == 0
     }
 
     /**
@@ -683,8 +693,7 @@ class Racing (private val game: Game) {
     }
 
     /**
-     * Determines whether the bot should race immediately or wait for a better opportunity using
-     * Opportunity Cost analysis.
+     * Calculates opportunity cost to determine whether the bot should race immediately or wait for a better opportunity.
      *
      * The decision is based on comparing the best currently available races with upcoming races
      * within the specified look-ahead window. Each race is scored using [calculateRaceScore],
@@ -703,7 +712,7 @@ class Racing (private val game: Game) {
      * @param lookAheadDays Number of turns/days to consider for upcoming races.
      * @return True if the bot should race now, false if it is better to wait for a future race.
      */
-    fun shouldRaceNow(currentRaces: List<RaceData>, lookAheadDays: Int): Boolean {
+    fun calculateOpportunityCost(currentRaces: List<RaceData>, lookAheadDays: Int): Boolean {
         game.printToLog("[RACE] Evaluating whether to race now using Opportunity Cost logic...", tag = tag)
         if (currentRaces.isEmpty()) {
             game.printToLog("[RACE] No current races available, cannot race now.", tag = tag)
@@ -790,7 +799,7 @@ class Racing (private val game: Game) {
     }
 
     /**
-     * Determines if racing is worthwhile based on turn number and opportunity cost analysis.
+     * Determines if racing is worthwhile based on turn number and opportunity cost analysis for smart racing.
      * 
      * This function queries the race database to check if races exist at the current turn
      * and uses opportunity cost logic to determine if racing is better than waiting.
@@ -799,7 +808,7 @@ class Racing (private val game: Game) {
      * @param dayNumber The current day number for extra races.
      * @return True if we should race based on turn analysis, false otherwise.
      */
-    private fun shouldRaceBasedOnTurnNumber(currentTurnNumber: Int, dayNumber: Int): Boolean {
+    private fun shouldRaceSmartCheck(currentTurnNumber: Int, dayNumber: Int): Boolean {
         return try {
             game.printToLog("[RACE] Checking eligibility for racing at turn $currentTurnNumber...", tag = tag)
             
@@ -835,7 +844,7 @@ class Racing (private val game: Game) {
             }
             
             // Use opportunity cost logic to determine if we should race now or wait.
-            val shouldRace = shouldRaceNow(filteredCurrentRaces, lookAheadDays)
+            val shouldRace = calculateOpportunityCost(filteredCurrentRaces, lookAheadDays)
             
             shouldRace
         } catch (e: Exception) {
@@ -844,41 +853,6 @@ class Racing (private val game: Game) {
         }
     }
 
-    /**
-     * Handles user-selected races for the Classic Year.
-     * Checks if any planned races are within range and eligible for racing.
-     * 
-     * @return True if the bot should attempt to race, false to skip racing
-     */
-    private fun checkPlannedRacesBeforeSeniorYear(): Boolean {
-        val userPlannedRaces = getUserPlannedRaces()
-        if (userPlannedRaces.isEmpty()) {
-            game.printToLog("[RACE] No user-selected races configured.", tag = tag)
-            return false
-        }
-        
-        val racePlanData = getRacePlanData()
-        if (racePlanData.isEmpty()) {
-            game.printToLog("[RACE] No race plan data available for eligibility checking.", tag = tag)
-            return false
-        }
-
-        val dayNumber = game.imageUtils.determineDayForExtraRace()
-        val currentTurnNumber = game.currentDate.turnNumber
-        
-        // Check each planned race for eligibility.
-        val eligiblePlannedRaces = userPlannedRaces.filter { plannedRace ->
-            isPlannedRaceEligible(plannedRace, racePlanData, dayNumber, currentTurnNumber)
-        }
-        
-        if (eligiblePlannedRaces.isEmpty()) {
-            game.printToLog("[RACE] No user-selected races are eligible at turn $currentTurnNumber.", tag = tag)
-            return false
-        }
-        
-        game.printToLog("[RACE] Found ${eligiblePlannedRaces.size} eligible user-selected races: ${eligiblePlannedRaces.map { it.raceName }}.", tag = tag)
-        return true
-    }
 
     /**
      * Handles extra races using Smart Racing logic for Senior Year (Year 3).
@@ -950,7 +924,7 @@ class Racing (private val game: Game) {
         }
 
         // Evaluate whether the bot should race now using Opportunity Cost logic.
-        if (!shouldRaceNow(allFilteredRaces, lookAheadDays)) {
+        if (!calculateOpportunityCost(allFilteredRaces, lookAheadDays)) {
             game.printToLog("[RACE] Smart racing suggests waiting for better opportunities. Canceling racing process.", tag = tag)
             return false
         }
@@ -1013,16 +987,52 @@ class Racing (private val game: Game) {
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-     * Checks if the day number is odd to be eligible to run an extra race, excluding Summer where extra racing is not allowed.
+     * Determines if extra race is eligible to be run based on various eligibility criteria.
      *
-     * @return True if the day number is odd. Otherwise false.
+     * This function consolidates all eligibility checking logic including:
+     * - Force racing checks
+     * - Planned race eligibility (for years 1-2)
+     * - Opportunity cost analysis (via smart racing check)
+     * - Screen restrictions (locked, summer, UMA finals)
+     * - Day eligibility checks (optimal day, interval day, standard)
+     *
+     * @return True if extra race is eligible, false otherwise.
      */
-    fun checkExtraRaceAvailability(): Boolean {
+    fun isExtraRaceEligible(): Boolean {
         val dayNumber = game.imageUtils.determineDayForExtraRace()
         game.printToLog("\n[INFO] Current remaining number of days before the next mandatory race: $dayNumber.", tag = tag)
 
         // If the setting to force racing extra races is enabled, always return true.
         if (enableForceRacing) return true
+
+        // For years 1-2, check if planned races are eligible before proceeding.
+        if (game.currentDate.year == 2 && enableRacingPlan) {
+            val userPlannedRaces = getUserPlannedRaces()
+            if (userPlannedRaces.isNotEmpty()) {
+                val racePlanData = getRacePlanData()
+                if (racePlanData.isNotEmpty()) {
+                    val currentTurnNumber = game.currentDate.turnNumber
+                    
+                    // Check each planned race for eligibility.
+                    val eligiblePlannedRaces = userPlannedRaces.filter { plannedRace ->
+                        isPlannedRaceEligible(plannedRace, racePlanData, dayNumber, currentTurnNumber)
+                    }
+                    
+                    if (eligiblePlannedRaces.isEmpty()) {
+                        game.printToLog("[RACE] No user-selected races are eligible at turn $currentTurnNumber.", tag = tag)
+                        return false
+                    }
+                    
+                    game.printToLog("[RACE] Found ${eligiblePlannedRaces.size} eligible user-selected races: ${eligiblePlannedRaces.map { it.raceName }}.", tag = tag)
+                } else {
+                    game.printToLog("[RACE] No race plan data available for eligibility checking.", tag = tag)
+                    return false
+                }
+            } else {
+                game.printToLog("[RACE] No user-selected races configured.", tag = tag)
+                return false
+            }
+        }
 
         // If fan requirement is detected, bypass smart racing logic to force racing.
         if (hasFanRequirement) {
@@ -1035,7 +1045,7 @@ class Racing (private val game: Game) {
             if (isCheckInterval) {
                 game.printToLog("[RACE] Running opportunity cost analysis at turn ${game.currentDate.turnNumber} (smartRacingCheckInterval: every $smartRacingCheckInterval turns)...", tag = tag)
                 
-                val shouldRaceFromTurnCheck = shouldRaceBasedOnTurnNumber(game.currentDate.turnNumber, dayNumber)
+                val shouldRaceFromTurnCheck = shouldRaceSmartCheck(game.currentDate.turnNumber, dayNumber)
                 if (!shouldRaceFromTurnCheck) {
                     game.printToLog("[RACE] No suitable races at turn ${game.currentDate.turnNumber} based on opportunity cost analysis.", tag = tag)
                     return false
@@ -1072,7 +1082,7 @@ class Racing (private val game: Game) {
         } else if (enableRacingPlan && enableFarmingFans) {
             // Check if current day matches the optimal race day or falls on the interval.
             val isOptimalDay = nextSmartRaceDay == dayNumber
-            val isIntervalDay = dayNumber % daysToRunExtraRaces == 0
+            val isIntervalDay = isEligibleRacingDay(dayNumber)
             
             if (isOptimalDay) {
                 game.printToLog("[RACE] Current day ($dayNumber) matches optimal race day.", tag = tag)
@@ -1087,7 +1097,7 @@ class Racing (private val game: Game) {
         }
 
         // Standard racing logic.
-        return enableFarmingFans && dayNumber % daysToRunExtraRaces == 0 && !raceRepeatWarningCheck
+        return enableFarmingFans && isEligibleRacingDay(dayNumber) && !raceRepeatWarningCheck
     }
 
     /**
@@ -1274,9 +1284,10 @@ class Racing (private val game: Game) {
                 // Year 3 (Senior Year): Use smart racing if conditions are met.
                 enableFarmingFans && !enableForceRacing && enableRacingPlan
             } else {
-                // Year 2 (Classic Year): Check if user-selected races are eligible.
+                // Year 2 (Classic Year): Use smart racing if conditions are met.
+                // The planned race eligibility check is now handled inside isExtraRaceEligible().
                 // Year 1 (Junior Year) will use the standard racing logic.
-                game.currentDate.year == 2 && enableRacingPlan && checkPlannedRacesBeforeSeniorYear()
+                game.currentDate.year == 2 && enableRacingPlan
             }
 
             val success = if (useSmartRacing) {

@@ -79,7 +79,7 @@ open class Campaign(val game: Game) {
 						} else if (game.recoverMood() && !game.checkFinals()) {
 							game.printToLog("[INFO] Mood has recovered.", tag = tag)
 							game.racing.skipRacing = false
-						} else if (!game.racing.checkExtraRaceAvailability()) {
+						} else if (!game.racing.isExtraRaceEligible()) {
 							game.printToLog("[INFO] Training due to it not being an extra race day.", tag = tag)
 							game.training.handleTraining()
 							game.racing.skipRacing = false
