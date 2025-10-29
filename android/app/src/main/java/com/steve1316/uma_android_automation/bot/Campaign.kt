@@ -67,7 +67,7 @@ open class Campaign(val game: Game) {
 						needToRace = true
 					} else {
 						// Check if we need to rest before Summer Training (June Early/Late in Classic/Senior Year).
-						if (mustRestBeforeSummer && (game.currentDate.year == 2 || game.currentDate.year == 3) && game.currentDate.month == 6) {
+						if (mustRestBeforeSummer && (game.currentDate.year == 2 || game.currentDate.year == 3) && game.currentDate.month == 6 && game.currentDate.phase == "Late") {
 							game.printToLog("\n[INFO] Forcing rest during June ${game.currentDate.phase} in Year ${game.currentDate.year} in preparation for Summer Training.", tag = tag)
 							game.recoverEnergy()
 							game.racing.skipRacing = false
