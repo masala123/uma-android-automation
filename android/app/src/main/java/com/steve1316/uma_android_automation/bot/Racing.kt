@@ -33,6 +33,7 @@ class Racing (private val game: Game) {
     var skipRacing = false
     var firstTimeSmartRacingSetup = true
     var firstTimeRacing = true
+    var hasFanRequirement = false  // Indicates that a fan requirement has been detected on the main screen.
     private var nextSmartRaceDay: Int? = null  // Tracks the specific day to race based on opportunity cost analysis.
 
     private val enableStopOnMandatoryRace: Boolean = SettingsHelper.getBooleanSetting("racing", "enableStopOnMandatoryRaces")
@@ -666,7 +667,7 @@ class Racing (private val game: Game) {
      * For Years 1-2: Calculate turn distance and check eligibility:
      *   - Must be within lookAheadDays range
      *   - Must pass standard racing checks (not in summer, not locked, etc.)
-     *   - Use smartRacingCheckInterval to determine if it's an eligible racing day
+     *   - Use daysToRunExtraRaces to determine if it's an eligible racing day
      * 
      * @param plannedRace The user-selected race to evaluate.
      * @param racePlanData Full race database containing turn numbers.
@@ -700,7 +701,7 @@ class Racing (private val game: Game) {
         // For Classic Year, check if it's an eligible racing day using the settings for the standard racing logic.
         if (game.currentDate.year == 2) {
             if (!(dayNumber % daysToRunExtraRaces == 0)) {
-                game.printToLog("[RACE] Planned race \"${plannedRace.raceName}\" is not on an eligible racing day (day $dayNumber, interval $smartRacingCheckInterval).", tag = tag)
+                game.printToLog("[RACE] Planned race \"${plannedRace.raceName}\" is not on an eligible racing day (day $dayNumber, interval $daysToRunExtraRaces).", tag = tag)
                 return false
             }
         }
@@ -1130,6 +1131,22 @@ class Racing (private val game: Game) {
         // If the setting to force racing extra races is enabled, always return true.
         if (enableForceRacing) return true
 
+        // If fan requirement is detected, bypass smart racing logic to force racing.
+        if (hasFanRequirement) {
+            game.printToLog("[RACE] Fan requirement detected. Bypassing smart racing logic to fulfill requirement.", tag = tag)
+        } else if (enableRacingPlan && enableFarmingFans) {
+            // Smart racing: Check turn-based eligibility before screen checks.
+            game.printToLog("[RACE] Smart racing enabled, checking eligibility based on turn number...", tag = tag)
+            
+            val shouldRaceFromTurnCheck = shouldRaceBasedOnTurnNumber(game.currentDate.turnNumber, dayNumber)
+            if (!shouldRaceFromTurnCheck) {
+                game.printToLog("[RACE] No suitable races at turn ${game.currentDate.turnNumber} based on opportunity cost analysis.", tag = tag)
+                return false
+            }
+            
+            game.printToLog("[RACE] Turn-based analysis suggests racing is worthwhile, proceeding with screen checks...", tag = tag)
+        }
+
         // Check for common restrictions that apply to both smart and standard racing.
         val isUmaFinalsLocked = game.imageUtils.findImage("race_select_extra_locked_uma_finals", tries = 1, region = game.imageUtils.regionBottomHalf).first != null
         val isLocked = game.imageUtils.findImage("race_select_extra_locked", tries = 1, region = game.imageUtils.regionBottomHalf).first != null
@@ -1146,20 +1163,25 @@ class Racing (private val game: Game) {
             return false
         }
 
-        // Check if smart racing is enabled.
-        if (enableRacingPlan && enableFarmingFans) {
+        // For smart racing, if we got here, the turn-based check passed, so we should race.
+        // For standard racing, use the interval check.
+        // If fan requirement exists, always allow racing.
+        if (hasFanRequirement) {
+            game.printToLog("[RACE] Fan requirement detected. Allowing racing on any eligible day.", tag = tag)
+            return !raceRepeatWarningCheck
+        } else if (enableRacingPlan && enableFarmingFans) {
             // Check if current day matches the optimal race day or falls on the interval.
             val isOptimalDay = nextSmartRaceDay == dayNumber
-            val isIntervalDay = dayNumber % smartRacingCheckInterval == 0
+            val isIntervalDay = dayNumber % daysToRunExtraRaces == 0
             
             if (isOptimalDay) {
                 game.printToLog("[RACE] Current day ($dayNumber) matches optimal race day.", tag = tag)
                 return !raceRepeatWarningCheck
             } else if (isIntervalDay) {
-                game.printToLog("[RACE] Current day ($dayNumber) falls on smart racing interval ($smartRacingCheckInterval).", tag = tag)
+                game.printToLog("[RACE] Current day ($dayNumber) falls on racing interval ($daysToRunExtraRaces).", tag = tag)
                 return !raceRepeatWarningCheck
             } else {
-                game.printToLog("[RACE] Current day ($dayNumber) is not optimal (next: $nextSmartRaceDay, interval: $smartRacingCheckInterval).", tag = tag)
+                game.printToLog("[RACE] Current day ($dayNumber) is not optimal (next: $nextSmartRaceDay, interval: $daysToRunExtraRaces).", tag = tag)
                 return false
             }
         }
@@ -1342,12 +1364,10 @@ class Racing (private val game: Game) {
                 game.printToLog("[RACE] There are $maxCount extra race options currently on screen.", tag = tag)
             }
 
-            // Check if the race needs to meet a fan requirement.
-            val needsFanRequirement = game.imageUtils.findImage("race_fans_criteria", tries = 1, region = game.imageUtils.regionTopHalf).first != null
-            if (needsFanRequirement) game.printToLog("[RACE] Fan requirement criteria detected. This race must be completed to meet the fan requirement.", tag = tag)
+            if (hasFanRequirement) game.printToLog("[RACE] Fan requirement criteria detected. This race must be completed to meet the fan requirement.", tag = tag)
 
             // Determine whether to use smart racing with user-selected races or standard racing.
-            val useSmartRacing = if (needsFanRequirement) {
+            val useSmartRacing = if (hasFanRequirement) {
                 // If fan requirement is needed, force standard racing to ensure the race proceeds.
                 false
             } else if (game.currentDate.year == 3) {
@@ -1369,7 +1389,7 @@ class Racing (private val game: Game) {
             } else {
                 // Use the standard racing logic.
                 // If needed, print the reason(s) to why the smart racing logic was not started.
-                if (enableRacingPlan && !needsFanRequirement) {
+                if (enableRacingPlan && !hasFanRequirement) {
                     game.printToLog("[RACE] Smart racing conditions not met due to current settings, using traditional racing logic...", tag = tag)
                     game.printToLog("[RACE] Reason: One or more conditions failed:", tag = tag)
                     if (game.currentDate.year == 3) {
@@ -1596,6 +1616,7 @@ class Racing (private val game: Game) {
             }
 
             firstTimeRacing = false
+            hasFanRequirement = false  // Reset fan requirement flag after race completion.
         } else {
             game.printToLog("[ERROR] Cannot start the cleanup process for finishing the race. Moving on...", tag = tag, isError = true)
         }
