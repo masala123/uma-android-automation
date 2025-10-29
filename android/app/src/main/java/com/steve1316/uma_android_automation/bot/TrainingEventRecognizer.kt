@@ -24,6 +24,20 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 	
 	private var character = ""
 	
+	// Define event matching patterns to filter false positives during detection.
+	private val eventPatterns = mapOf(
+		"New Year's Resolutions" to listOf("New Year's Resolutions", "Resolutions"),
+		"New Year's Shrine Visit" to listOf("New Year's Shrine Visit", "Shrine Visit"),
+		"Victory!" to listOf("Victory!"),
+		"Solid Showing" to listOf("Solid Showing"),
+		"Defeat" to listOf("Defeat"),
+		"Get Well Soon!" to listOf("Get Well Soon"),
+		"Don't Overdo It!" to listOf("Don't Overdo It"),
+		"Extra Training" to listOf("Extra Training"),
+		"Acupuncture (Just an Acupuncturist, No Worries! ☆)" to listOf("Acupuncture", "Just an Acupuncturist"),
+		"Etsuko's Exhaustive Coverage" to listOf("Etsuko", "Exhaustive Coverage")
+	)
+	
 	// Get character event data from settings.
 	private val characterEventData: JSONObject? = try {
 		val characterDataString = SettingsHelper.getStringSetting("trainingEvent", "characterEventData")
@@ -78,6 +92,20 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 			game.printToLog("\n[TRAINING_EVENT_RECOGNIZER] Now starting process to find most similar string to: $result", tag = tag)
 		}
 		
+		// Check if this matches any special event patterns first to filter false positives.
+		var matchedSpecialEvent: String? = null
+		for ((eventName, patterns) in eventPatterns) {
+			if (patterns.any { pattern -> result.contains(pattern) }) {
+				matchedSpecialEvent = eventName
+				break
+			}
+		}
+		val isSpecialEvent = matchedSpecialEvent != null
+		if (isSpecialEvent) {
+			game.printToLog("[TRAINING_EVENT_RECOGNIZER] Detected special event pattern: $matchedSpecialEvent. Will restrict search to this event.", tag = tag)
+			eventTitle = matchedSpecialEvent
+		}
+		
 		// Remove any detected whitespaces.
 		result = result.replace(" ", "")
 		
@@ -91,6 +119,11 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 				characterEventData.keys().forEach { characterKey ->
 					val characterEvents = characterEventData.getJSONObject(characterKey)
 					characterEvents.keys().forEach { eventName ->
+						// Skip if this is a special event and the event name doesn't match our detected pattern.
+						if (isSpecialEvent && eventName != matchedSpecialEvent) {
+							return@forEach
+						}
+						
 						val eventOptionsArray = characterEvents.getJSONArray(eventName)
 						val eventOptions = ArrayList<String>()
 						for (i in 0 until eventOptionsArray.length()) {
@@ -116,6 +149,11 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 				if (character.isNotEmpty() && characterEventData.has(character)) {
 					val characterEvents = characterEventData.getJSONObject(character)
 					characterEvents.keys().forEach { eventName ->
+						// Skip if this is a special event and the event name doesn't match our detected pattern.
+						if (isSpecialEvent && eventName != matchedSpecialEvent) {
+							return@forEach
+						}
+						
 						val eventOptionsArray = characterEvents.getJSONArray(eventName)
 						val eventOptions = ArrayList<String>()
 						for (i in 0 until eventOptionsArray.length()) {
@@ -145,6 +183,11 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 					if (supportEventData.has(supportCardName)) {
 						val supportEvents = supportEventData.getJSONObject(supportCardName)
 						supportEvents.keys().forEach { eventName ->
+							// Skip if this is a special event and the event name doesn't match our detected pattern.
+							if (isSpecialEvent && eventName != matchedSpecialEvent) {
+								return@forEach
+							}
+							
 							val eventOptionsArray = supportEvents.getJSONArray(eventName)
 							val eventOptions = ArrayList<String>()
 							for (i in 0 until eventOptionsArray.length()) {
@@ -171,6 +214,11 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 				supportEventData.keys().forEach { supportName ->
 					val supportEvents = supportEventData.getJSONObject(supportName)
 					supportEvents.keys().forEach { eventName ->
+						// Skip if this is a special event and the event name doesn't match our detected pattern.
+						if (isSpecialEvent && eventName != matchedSpecialEvent) {
+							return@forEach
+						}
+						
 						val eventOptionsArray = supportEvents.getJSONArray(eventName)
 						val eventOptions = ArrayList<String>()
 						for (i in 0 until eventOptionsArray.length()) {
@@ -199,7 +247,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		} else {
 			game.printToLog("[TRAINING_EVENT_RECOGNIZER] Finished process to find similar string.", tag = tag)
 		}
-		game.printToLog("[TRAINING_EVENT_RECOGNIZER] Event data fetched for \"${eventTitle}\".")
+		game.printToLog("[TRAINING_EVENT_RECOGNIZER] Event data fetched for \"${eventTitle}\".", tag = tag)
 	}
 
 	/**
