@@ -192,9 +192,15 @@ const MessageLog = () => {
             settings.training.statPrioritization.length === 0 ? "Using Default Stat Prioritization: Speed, Stamina, Power, Wit, Guts" : `${settings.training.statPrioritization.join(", ")}`
         }
 🔍 Maximum Failure Chance Allowed: ${settings.training.maximumFailureChance}%
+⚠️ Enable Riskier Training: ${settings.training.enableRiskyTraining ? "✅" : "❌"}${
+            settings.training.enableRiskyTraining
+                ? `\n   📊 Minimum Stat Gain Threshold: ${settings.training.riskyTrainingMinStatGain}\n   🎯 Risky Training Maximum Failure Chance: ${settings.training.riskyTrainingMaxFailureChance}%`
+                : ""
+        }
 🔄 Disable Training on Maxed Stat: ${settings.training.disableTrainingOnMaxedStat ? "✅" : "❌"}
 ✨ Focus on Sparks for Stat Targets: ${settings.training.focusOnSparkStatTarget ? "✅" : "❌"}
 📏 Preferred Distance Override: ${settings.training.preferredDistanceOverride === "Auto" ? "Auto" : settings.training.preferredDistanceOverride}
+🌈 Enable Rainbow Training Bonus: ${settings.training.enableRainbowTrainingBonus ? "✅" : "❌"}
 ☀️ Must Rest Before Summer: ${settings.training.mustRestBeforeSummer ? "✅" : "❌"}
 
 ---------- Training Stat Targets by Distance ----------
