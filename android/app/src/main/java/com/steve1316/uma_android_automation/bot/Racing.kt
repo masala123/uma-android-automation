@@ -1629,9 +1629,9 @@ class Racing (private val game: Game) {
      * After Junior Year: Restores the original strategy and disables the feature.
      */
     private fun handleRaceStrategyOverride() {
-        if (!enableRaceStrategyOverride || (enableRaceStrategyOverride && !firstTimeRacing)) {
+        if (!enableRaceStrategyOverride) {
             return
-        } else if (enableRaceStrategyOverride && firstTimeRacing && game.currentDate.year != 1) {
+        } else if (enableRaceStrategyOverride && !firstTimeRacing && !hasAppliedStrategyOverride && game.currentDate.year != 1) {
             return
         }
 
@@ -1680,21 +1680,19 @@ class Racing (private val game: Game) {
             }
         } else {
             // Year 2+: Apply the detected original strategy if available, otherwise use user-selected strategy.
-            if (hasAppliedStrategyOverride) {
-                val strategyToApply = if (detectedOriginalStrategy != null) {
-                    detectedOriginalStrategy!!
-                } else {
-                    userSelectedOriginalStrategy
-                }
-                
-                game.printToLog("[RACE] Applying original race strategy: $strategyToApply", tag = tag)
-                
-                if (modifyRacingStrategy(baseX, baseY, strategyToApply)) {
-                    hasAppliedStrategyOverride = false
-                    game.printToLog("[RACE] Successfully applied original strategy. Strategy override disabled for rest of run.", tag = tag)
-                } else {
-                    game.printToLog("[ERROR] Failed to apply original strategy.", tag = tag, isError = true)
-                }
+            val strategyToApply = if (detectedOriginalStrategy != null) {
+                detectedOriginalStrategy!!
+            } else {
+                userSelectedOriginalStrategy
+            }
+            
+            game.printToLog("[RACE] Applying original race strategy: $strategyToApply", tag = tag)
+            
+            if (modifyRacingStrategy(baseX, baseY, strategyToApply)) {
+                hasAppliedStrategyOverride = false
+                game.printToLog("[RACE] Successfully applied original strategy. Strategy override disabled for rest of run.", tag = tag)
+            } else {
+                game.printToLog("[ERROR] Failed to apply original strategy.", tag = tag, isError = true)
             }
         }
 
