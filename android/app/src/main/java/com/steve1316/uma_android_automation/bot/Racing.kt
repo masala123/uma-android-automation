@@ -1029,15 +1029,22 @@ class Racing (private val game: Game) {
             game.printToLog("[RACE] Fan requirement detected. Bypassing smart racing logic to fulfill requirement.", tag = tag)
         } else if (enableRacingPlan && enableFarmingFans) {
             // Smart racing: Check turn-based eligibility before screen checks.
-            game.printToLog("[RACE] Smart racing enabled, checking eligibility based on turn number...", tag = tag)
+            // Only run opportunity cost analysis with smartRacingCheckInterval.
+            val isCheckInterval = game.currentDate.turnNumber % smartRacingCheckInterval == 0
             
-            val shouldRaceFromTurnCheck = shouldRaceBasedOnTurnNumber(game.currentDate.turnNumber, dayNumber)
-            if (!shouldRaceFromTurnCheck) {
-                game.printToLog("[RACE] No suitable races at turn ${game.currentDate.turnNumber} based on opportunity cost analysis.", tag = tag)
-                return false
+            if (isCheckInterval) {
+                game.printToLog("[RACE] Running opportunity cost analysis at turn ${game.currentDate.turnNumber} (smartRacingCheckInterval: every $smartRacingCheckInterval turns)...", tag = tag)
+                
+                val shouldRaceFromTurnCheck = shouldRaceBasedOnTurnNumber(game.currentDate.turnNumber, dayNumber)
+                if (!shouldRaceFromTurnCheck) {
+                    game.printToLog("[RACE] No suitable races at turn ${game.currentDate.turnNumber} based on opportunity cost analysis.", tag = tag)
+                    return false
+                }
+                
+                game.printToLog("[RACE] Opportunity cost analysis completed, proceeding with screen checks...", tag = tag)
+            } else {
+                game.printToLog("[RACE] Skipping opportunity cost analysis (turn ${game.currentDate.turnNumber} does not match smartRacingCheckInterval). Using cached optimal race day.", tag = tag)
             }
-            
-            game.printToLog("[RACE] Turn-based analysis suggests racing is worthwhile, proceeding with screen checks...", tag = tag)
         }
 
         // Check for common restrictions that apply to both smart and standard racing.
