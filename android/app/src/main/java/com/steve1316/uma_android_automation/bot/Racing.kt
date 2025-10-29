@@ -31,7 +31,6 @@ class Racing (private val game: Game) {
     var raceRepeatWarningCheck = false
     var encounteredRacingPopup = false
     var skipRacing = false
-    var firstTimeSmartRacingSetup = true
     var firstTimeRacing = true
     var hasFanRequirement = false  // Indicates that a fan requirement has been detected on the main screen.
     private var nextSmartRaceDay: Int? = null  // Tracks the specific day to race based on opportunity cost analysis.
@@ -102,9 +101,9 @@ class Racing (private val game: Game) {
      * Loads the complete race database from saved settings, including all race metadata such as
      * names, grades, distances, and turn numbers.
      *
-     * @return A map of race names to their [FullRaceData] or an empty map if racing plan data is missing or invalid.
+     * @return A map of race names to their [RaceData] or an empty map if racing plan data is missing or invalid.
      */
-    private fun getRacePlanData(): Map<String, FullRaceData> {
+    private fun getRacePlanData(): Map<String, RaceData> {
         return try {
             val racingPlanDataJson = SettingsHelper.getStringSetting("racing", "racingPlanData")
             if (game.debugMode) game.printToLog("[RACE] Raw racing plan data JSON length: ${racingPlanDataJson.length}.", tag = tag)
@@ -115,14 +114,14 @@ class Racing (private val game: Game) {
             }
             
             val jsonObject = JSONObject(racingPlanDataJson)
-            val raceDataMap = mutableMapOf<String, FullRaceData>()
+            val raceDataMap = mutableMapOf<String, RaceData>()
             
             val keys = jsonObject.keys()
             while (keys.hasNext()) {
                 val key = keys.next()
                 val raceObj = jsonObject.getJSONObject(key)
                 
-                val fullRaceData = FullRaceData(
+                val raceData = RaceData(
                     name = raceObj.getString("name"),
                     grade = raceObj.getString("grade"),
                     terrain = raceObj.getString("terrain"),
@@ -132,7 +131,7 @@ class Racing (private val game: Game) {
                     nameFormatted = raceObj.getString("nameFormatted")
                 )
                 
-                raceDataMap[fullRaceData.name] = fullRaceData
+                raceDataMap[raceData.name] = raceData
             }
             
             game.printToLog("[RACE] Successfully loaded ${raceDataMap.size} race entries from racing plan data.", tag = tag)
@@ -149,7 +148,8 @@ class Racing (private val game: Game) {
         val fans: Int,
         val nameFormatted: String,
         val terrain: String,
-        val distanceType: String
+        val distanceType: String,
+        val turnNumber: Int
     )
 
     data class ScoredRace(
@@ -164,16 +164,6 @@ class Racing (private val game: Game) {
         val raceName: String,
         val date: String,
         val priority: Int
-    )
-
-    data class FullRaceData(
-        val name: String,
-        val grade: String,
-        val terrain: String,
-        val distanceType: String,
-        val fans: Int,
-        val turnNumber: Int,
-        val nameFormatted: String
     )
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -214,6 +204,9 @@ class Racing (private val game: Game) {
             }
         }
     }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
      * Get race data by turn number and detected name using exact and/or fuzzy matching.
@@ -278,7 +271,8 @@ class Racing (private val game: Game) {
                 RACES_COLUMN_FANS,
                 RACES_COLUMN_NAME_FORMATTED,
                 RACES_COLUMN_TERRAIN,
-                RACES_COLUMN_DISTANCE_TYPE
+                RACES_COLUMN_DISTANCE_TYPE,
+                RACES_COLUMN_TURN_NUMBER
             ),
             "$RACES_COLUMN_TURN_NUMBER = ? AND $RACES_COLUMN_NAME_FORMATTED = ?",
             arrayOf(turnNumber.toString(), detectedName),
@@ -292,7 +286,8 @@ class Racing (private val game: Game) {
                 fans = cursor.getInt(2),
                 nameFormatted = cursor.getString(3),
                 terrain = cursor.getString(4),
-                distanceType = cursor.getString(5)
+                distanceType = cursor.getString(5),
+                turnNumber = cursor.getInt(6)
             )
             cursor.close()
             race
@@ -326,7 +321,8 @@ class Racing (private val game: Game) {
                 RACES_COLUMN_FANS,
                 RACES_COLUMN_NAME_FORMATTED,
                 RACES_COLUMN_TERRAIN,
-                RACES_COLUMN_DISTANCE_TYPE
+                RACES_COLUMN_DISTANCE_TYPE,
+                RACES_COLUMN_TURN_NUMBER
             ),
             "$RACES_COLUMN_TURN_NUMBER = ?",
             arrayOf(turnNumber.toString()),
@@ -354,7 +350,8 @@ class Racing (private val game: Game) {
                     fans = cursor.getInt(2),
                     nameFormatted = nameFormatted,
                     terrain = cursor.getString(4),
-                    distanceType = cursor.getString(5)
+                    distanceType = cursor.getString(5),
+                    turnNumber = cursor.getInt(6)
                 )
                 if (game.debugMode) game.printToLog("[DEBUG] Fuzzy match candidate: \"${bestMatch.name}\" AKA \"$nameFormatted\" with similarity ${game.decimalFormat.format(similarity)}.", tag = tag)
                 else Log.d(tag, "[DEBUG] Fuzzy match candidate: \"${bestMatch.name}\" AKA \"$nameFormatted\" with similarity ${game.decimalFormat.format(similarity)}.")
@@ -469,75 +466,6 @@ class Racing (private val game: Game) {
     }
 
     /**
-     * Retrieves all races scheduled within a specified look-ahead window from the database with turn numbers.
-     *
-     * This function queries races whose turn numbers fall between [currentTurn] and
-     * [currentTurn] + [lookAheadDays], inclusive. It returns the corresponding [FullRaceData]
-     * entries sorted in ascending order by turn number.
-     *
-     * @param currentTurn The current turn number used as the starting point.
-     * @param lookAheadDays The number of days (turns) to look ahead for upcoming races.
-     * @return A list of [FullRaceData] objects representing all races within the look-ahead window.
-     */
-    fun getLookAheadRacesWithTurnNumbers(currentTurn: Int, lookAheadDays: Int): List<FullRaceData> {
-        val settingsManager = SQLiteSettingsManager(game.myContext)
-        if (!settingsManager.initialize()) {
-            game.printToLog("[ERROR] Database not available for look-ahead race lookup.", tag = tag, isError = true)
-            return emptyList()
-        }
-
-        return try {
-            val database = settingsManager.getDatabase()
-            if (database == null) {
-                game.printToLog("[ERROR] Database is null for look-ahead race lookup.", tag = tag, isError = true)
-                return emptyList()
-            }
-
-            val endTurn = currentTurn + lookAheadDays
-            val cursor = database.query(
-                TABLE_RACES,
-                arrayOf(
-                    RACES_COLUMN_NAME,
-                    RACES_COLUMN_GRADE,
-                    RACES_COLUMN_FANS,
-                    RACES_COLUMN_NAME_FORMATTED,
-                    RACES_COLUMN_TERRAIN,
-                    RACES_COLUMN_DISTANCE_TYPE,
-                    RACES_COLUMN_TURN_NUMBER
-                ),
-                "$RACES_COLUMN_TURN_NUMBER >= ? AND $RACES_COLUMN_TURN_NUMBER <= ?",
-                arrayOf(currentTurn.toString(), endTurn.toString()),
-                null, null, "$RACES_COLUMN_TURN_NUMBER ASC"
-            )
-
-            val races = mutableListOf<FullRaceData>()
-            if (cursor.moveToFirst()) {
-                do {
-                    val race = FullRaceData(
-                        name = cursor.getString(0),
-                        grade = cursor.getString(1),
-                        terrain = cursor.getString(4),
-                        distanceType = cursor.getString(5),
-                        fans = cursor.getInt(2),
-                        turnNumber = cursor.getInt(6),
-                        nameFormatted = cursor.getString(3)
-                    )
-                    races.add(race)
-                } while (cursor.moveToNext())
-            }
-            cursor.close()
-            settingsManager.close()
-            
-            game.printToLog("[RACE] Found ${races.size} races in look-ahead window (turns $currentTurn to $endTurn).", tag = tag)
-            races
-        } catch (e: Exception) {
-            game.printToLog("[ERROR] Error getting look-ahead races: ${e.message}", tag = tag, isError = true)
-            settingsManager.close()
-            emptyList()
-        }
-    }
-
-    /**
      * Retrieves all races scheduled within a specified look-ahead window from the database.
      *
      * This function queries races whose turn numbers fall between [currentTurn] and
@@ -571,7 +499,8 @@ class Racing (private val game: Game) {
                     RACES_COLUMN_FANS,
                     RACES_COLUMN_NAME_FORMATTED,
                     RACES_COLUMN_TERRAIN,
-                    RACES_COLUMN_DISTANCE_TYPE
+                    RACES_COLUMN_DISTANCE_TYPE,
+                    RACES_COLUMN_TURN_NUMBER
                 ),
                 "$RACES_COLUMN_TURN_NUMBER >= ? AND $RACES_COLUMN_TURN_NUMBER <= ?",
                 arrayOf(currentTurn.toString(), endTurn.toString()),
@@ -587,7 +516,8 @@ class Racing (private val game: Game) {
                         fans = cursor.getInt(2),
                         nameFormatted = cursor.getString(3),
                         terrain = cursor.getString(4),
-                        distanceType = cursor.getString(5)
+                        distanceType = cursor.getString(5),
+                        turnNumber = cursor.getInt(6)
                     )
                     races.add(race)
                 } while (cursor.moveToNext())
@@ -675,15 +605,15 @@ class Racing (private val game: Game) {
      * @param currentTurnNumber The current turn in the game.
      * @return True if the race should be considered for racing.
      */
-    private fun isPlannedRaceEligible(plannedRace: PlannedRace, racePlanData: Map<String, FullRaceData>, dayNumber: Int, currentTurnNumber: Int): Boolean {
+    private fun isPlannedRaceEligible(plannedRace: PlannedRace, racePlanData: Map<String, RaceData>, dayNumber: Int, currentTurnNumber: Int): Boolean {
         // Find the race in the plan data.
-        val fullRaceData = racePlanData[plannedRace.raceName]
-        if (fullRaceData == null) {
+        val raceData = racePlanData[plannedRace.raceName]
+        if (raceData == null) {
             game.printToLog("[ERROR] Planned race \"${plannedRace.raceName}\" not found in race plan data.", tag = tag, isError = true)
             return false
         }
         
-        val raceTurnNumber = fullRaceData.turnNumber
+        val raceTurnNumber = raceData.turnNumber
         val turnDistance = raceTurnNumber - currentTurnNumber
         
         // Check if race is within look-ahead window.
@@ -798,20 +728,8 @@ class Racing (private val game: Game) {
         
         // Get and score upcoming races.
         game.printToLog("[RACE] Looking ahead $lookAheadDays days for upcoming races...", tag = tag)
-        val upcomingRacesWithTurnNumbers = getLookAheadRacesWithTurnNumbers(game.currentDate.turnNumber + 1, lookAheadDays)
-        game.printToLog("[RACE] Found ${upcomingRacesWithTurnNumbers.size} upcoming races in database.", tag = tag)
-        
-        // Convert FullRaceData to RaceData for filtering and scoring.
-        val upcomingRaces = upcomingRacesWithTurnNumbers.map { fullRaceData ->
-            RaceData(
-                name = fullRaceData.name,
-                grade = fullRaceData.grade,
-                fans = fullRaceData.fans,
-                nameFormatted = fullRaceData.nameFormatted,
-                terrain = fullRaceData.terrain,
-                distanceType = fullRaceData.distanceType
-            )
-        }
+        val upcomingRaces = getLookAheadRaces(game.currentDate.turnNumber + 1, lookAheadDays)
+        game.printToLog("[RACE] Found ${upcomingRaces.size} upcoming races in database.", tag = tag)
         
         val filteredUpcomingRaces = filterRacesBySettings(upcomingRaces)
         game.printToLog("[RACE] After filtering: ${filteredUpcomingRaces.size} upcoming races remain.", tag = tag)
@@ -863,9 +781,8 @@ class Racing (private val game: Game) {
             }
             game.printToLog("[RACE] Reasoning: $reason", tag = tag)
             // Wait for better opportunity - store the turn number to race on.
-            // Find the corresponding FullRaceData to get the turn number.
-            val bestUpcomingFullRace = upcomingRacesWithTurnNumbers.find { it.name == bestUpcomingRace.raceData.name }
-            nextSmartRaceDay = bestUpcomingFullRace?.turnNumber
+            val bestUpcomingRaceData = upcomingRaces.find { it.name == bestUpcomingRace.raceData.name }
+            nextSmartRaceDay = bestUpcomingRaceData?.turnNumber
             game.printToLog("[RACE] Setting next smart race day to turn ${nextSmartRaceDay}.", tag = tag)
         }
         
@@ -887,7 +804,7 @@ class Racing (private val game: Game) {
             game.printToLog("[RACE] Checking eligibility for racing at turn $currentTurnNumber...", tag = tag)
             
             // First, check if there are any races available at the current turn.
-            val currentTurnRaces = getLookAheadRacesWithTurnNumbers(currentTurnNumber, 0)
+            val currentTurnRaces = getLookAheadRaces(currentTurnNumber, 0)
             if (currentTurnRaces.isEmpty()) {
                 game.printToLog("[RACE] No races available at turn $currentTurnNumber.", tag = tag)
                 return false
@@ -895,36 +812,12 @@ class Racing (private val game: Game) {
             
             game.printToLog("[RACE] Found ${currentTurnRaces.size} race(s) at turn $currentTurnNumber.", tag = tag)
             
-            // Convert FullRaceData to RaceData for filtering.
-            val currentTurnRaceData = currentTurnRaces.map { fullRaceData ->
-                RaceData(
-                    name = fullRaceData.name,
-                    grade = fullRaceData.grade,
-                    fans = fullRaceData.fans,
-                    nameFormatted = fullRaceData.nameFormatted,
-                    terrain = fullRaceData.terrain,
-                    distanceType = fullRaceData.distanceType
-                )
-            }
-            
             // Query upcoming races in the look-ahead window for opportunity cost analysis.
-            val upcomingRacesWithTurnNumbers = getLookAheadRacesWithTurnNumbers(currentTurnNumber + 1, lookAheadDays)
-            game.printToLog("[RACE] Found ${upcomingRacesWithTurnNumbers.size} upcoming races in look-ahead window.", tag = tag)
-            
-            // Convert upcoming races from FullRaceData to RaceData.
-            val upcomingRaces = upcomingRacesWithTurnNumbers.map { fullRaceData ->
-                RaceData(
-                    name = fullRaceData.name,
-                    grade = fullRaceData.grade,
-                    fans = fullRaceData.fans,
-                    nameFormatted = fullRaceData.nameFormatted,
-                    terrain = fullRaceData.terrain,
-                    distanceType = fullRaceData.distanceType
-                )
-            }
+            val upcomingRaces = getLookAheadRaces(currentTurnNumber + 1, lookAheadDays)
+            game.printToLog("[RACE] Found ${upcomingRaces.size} upcoming races in look-ahead window.", tag = tag)
             
             // Apply filters to both current and upcoming races.
-            val filteredCurrentRaces = filterRacesBySettings(currentTurnRaceData)
+            val filteredCurrentRaces = filterRacesBySettings(currentTurnRaces)
             val filteredUpcomingRaces = filterRacesBySettings(upcomingRaces)
             
             game.printToLog("[RACE] After filtering: ${filteredCurrentRaces.size} current races, ${filteredUpcomingRaces.size} upcoming races.", tag = tag)
