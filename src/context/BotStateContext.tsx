@@ -56,8 +56,12 @@ export interface Settings {
         maximumFailureChance: number
         disableTrainingOnMaxedStat: boolean
         focusOnSparkStatTarget: boolean
+        enableRainbowTrainingBonus: boolean
         preferredDistanceOverride: string
         mustRestBeforeSummer: boolean
+        enableRiskyTraining: boolean
+        riskyTrainingMinStatGain: number
+        riskyTrainingMaxFailureChance: number
     }
 
     // Training Stat Target settings
@@ -164,7 +168,7 @@ export const defaultSettings: Settings = {
                 selectedOption: "Option 2: Energy -5/-20 and random stat gain",
                 requiresConfirmation: false,
             },
-            "Defeat": {
+            Defeat: {
                 selectedOption: "Option 1: Energy -25 and random stat gain",
                 requiresConfirmation: false,
             },
@@ -204,8 +208,12 @@ export const defaultSettings: Settings = {
         maximumFailureChance: 20,
         disableTrainingOnMaxedStat: true,
         focusOnSparkStatTarget: false,
+        enableRainbowTrainingBonus: false,
         preferredDistanceOverride: "Auto",
         mustRestBeforeSummer: false,
+        enableRiskyTraining: false,
+        riskyTrainingMinStatGain: 30,
+        riskyTrainingMaxFailureChance: 30,
     },
     trainingStatTarget: {
         trainingSprintStatTarget_speedStatTarget: 900,
