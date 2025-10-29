@@ -223,7 +223,6 @@ ${longTargetsString}
 🏃 Force Racing Every Day: ${settings.racing.enableForceRacing ? "✅" : "❌"}
 🏁 Enable Racing Plan: ${settings.racing.enableRacingPlan ? "✅" : "❌"}
 🏁 Racing Plan: ${racingPlanString}
-📊 Racing Plan Data: ${racingPlanDataString}
 👥 Minimum Fans Threshold: ${settings.racing.minFansThreshold}
 🏃 Preferred Terrain: ${settings.racing.preferredTerrain}
 🏆 Preferred Grades: ${settings.racing.preferredGrades.join(", ")}
