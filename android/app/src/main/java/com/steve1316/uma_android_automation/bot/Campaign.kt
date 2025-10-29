@@ -84,6 +84,7 @@ open class Campaign(val game: Game) {
 							game.training.handleTraining()
 							game.racing.skipRacing = false
 						} else {
+							game.printToLog("[INFO] Bot has no injuries, mood is sufficient and today is extra race day. Setting needToRace to true.", tag = tag)
 							needToRace = true
 						}
 					}
