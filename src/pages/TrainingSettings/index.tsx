@@ -20,9 +20,21 @@ const TrainingSettings = () => {
     const [prioritizationModalVisible, setPrioritizationModalVisible] = useState(false)
 
     const { settings, setSettings, defaultSettings } = bsc
-    const { maximumFailureChance, disableTrainingOnMaxedStat, focusOnSparkStatTarget, preferredDistanceOverride, mustRestBeforeSummer } = settings.training
+    const {
+        maximumFailureChance,
+        disableTrainingOnMaxedStat,
+        focusOnSparkStatTarget,
+        enableRainbowTrainingBonus,
+        preferredDistanceOverride,
+        mustRestBeforeSummer,
+        enableRiskyTraining,
+        riskyTrainingMinStatGain,
+        riskyTrainingMaxFailureChance,
+    } = settings.training
 
-    const [statPrioritizationItems, setStatPrioritizationItems] = useState<string[]>(settings.training.statPrioritization.length > 0 ? settings.training.statPrioritization : defaultSettings.training.statPrioritization)
+    const [statPrioritizationItems, setStatPrioritizationItems] = useState<string[]>(
+        settings.training.statPrioritization.length > 0 ? settings.training.statPrioritization : defaultSettings.training.statPrioritization
+    )
     const [blacklistItems, setBlacklistItems] = useState<string[]>(settings.training.trainingBlacklist.length > 0 ? settings.training.trainingBlacklist : defaultSettings.training.trainingBlacklist)
 
     useEffect(() => {
@@ -165,9 +177,7 @@ const TrainingSettings = () => {
 
     const selectAll = (setList: (value: string[]) => void, currentList: string[]) => {
         // Add any missing items from default settings to the current list, preserving order.
-        const missingItems = defaultSettings.training.statPrioritization.filter(
-            (stat) => !currentList.includes(stat)
-        )
+        const missingItems = defaultSettings.training.statPrioritization.filter((stat) => !currentList.includes(stat))
         setList([...currentList, ...missingItems])
     }
 
@@ -310,6 +320,47 @@ const TrainingSettings = () => {
 
                     <View style={styles.section}>
                         <CustomCheckbox
+                            id="enable-riskier-training"
+                            checked={enableRiskyTraining}
+                            onCheckedChange={(checked) => updateTrainingSetting("enableRiskyTraining", checked)}
+                            label="Enable Riskier Training"
+                            description="When enabled, trainings with high main stat gains will use a separate, higher maximum failure chance threshold."
+                            className="my-2"
+                        />
+                        {enableRiskyTraining && (
+                            <>
+                                <CustomSlider
+                                    value={riskyTrainingMinStatGain || defaultSettings.training.riskyTrainingMinStatGain}
+                                    placeholder={defaultSettings.training.riskyTrainingMinStatGain}
+                                    onValueChange={(value) => updateTrainingSetting("riskyTrainingMinStatGain", value)}
+                                    min={20}
+                                    max={100}
+                                    step={5}
+                                    label="Minimum Stat Gain Threshold"
+                                    labelUnit=""
+                                    showValue={true}
+                                    showLabels={true}
+                                    description="When a training's main stat gain meets or exceeds this value, it will be considered for risky training."
+                                />
+                                <CustomSlider
+                                    value={riskyTrainingMaxFailureChance || defaultSettings.training.riskyTrainingMaxFailureChance}
+                                    placeholder={defaultSettings.training.riskyTrainingMaxFailureChance}
+                                    onValueChange={(value) => updateTrainingSetting("riskyTrainingMaxFailureChance", value)}
+                                    min={5}
+                                    max={95}
+                                    step={5}
+                                    label="Risky Training Maximum Failure Chance"
+                                    labelUnit="%"
+                                    showValue={true}
+                                    showLabels={true}
+                                    description="Set the maximum acceptable failure chance for risky training sessions with high main stat gains."
+                                />
+                            </>
+                        )}
+                    </View>
+
+                    <View style={styles.section}>
+                        <CustomCheckbox
                             id="focus-on-spark-stat-targets"
                             checked={focusOnSparkStatTarget}
                             onCheckedChange={(checked) => updateTrainingSetting("focusOnSparkStatTarget", checked)}
@@ -325,7 +376,18 @@ const TrainingSettings = () => {
                             checked={mustRestBeforeSummer}
                             onCheckedChange={(checked) => updateTrainingSetting("mustRestBeforeSummer", checked)}
                             label="Must Rest before Summer"
-                            description="Forces the bot to rest during June Early and Late phases in Classic and Senior Years to ensure full energy for Summer Training in July."
+                            description="Forces the bot to rest during June Late Phase in Classic and Senior Years to ensure enough energy for Summer Training in July."
+                            className="my-2"
+                        />
+                    </View>
+
+                    <View style={styles.section}>
+                        <CustomCheckbox
+                            id="enable-rainbow-training-bonus"
+                            checked={enableRainbowTrainingBonus}
+                            onCheckedChange={(checked) => updateTrainingSetting("enableRainbowTrainingBonus", checked)}
+                            label="Enable Rainbow Training Bonus"
+                            description="When enabled (Year 2+), rainbow trainings receive a significant bonus to their score, making them more likely to be selected. This is highly dependent on device configuration and may result in false positives."
                             className="my-2"
                         />
                     </View>
