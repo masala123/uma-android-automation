@@ -1,4 +1,4 @@
-import { useState, useContext } from "react"
+import { useState } from "react"
 import * as DocumentPicker from "expo-document-picker"
 import * as Sharing from "expo-sharing"
 import { useSettings } from "../context/SettingsContext"
