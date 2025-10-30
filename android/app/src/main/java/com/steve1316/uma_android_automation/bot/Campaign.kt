@@ -63,28 +63,26 @@ open class Campaign(val game: Game) {
 
 					// If force racing is enabled, skip all other activities and go straight to racing
 					if (game.racing.enableForceRacing) {
-						game.printToLog("\n[INFO] Force racing enabled - skipping all other activities and going straight to racing.", tag = tag)
+						game.printToLog("[INFO] Force racing enabled - skipping all other activities and going straight to racing.", tag = tag)
 						needToRace = true
 					} else {
 						// Check if we need to rest before Summer Training (June Early/Late in Classic/Senior Year).
 						if (mustRestBeforeSummer && (game.currentDate.year == 2 || game.currentDate.year == 3) && game.currentDate.month == 6 && game.currentDate.phase == "Late") {
-							game.printToLog("\n[INFO] Forcing rest during June ${game.currentDate.phase} in Year ${game.currentDate.year} in preparation for Summer Training.", tag = tag)
+							game.printToLog("[INFO] Forcing rest during June ${game.currentDate.phase} in Year ${game.currentDate.year} in preparation for Summer Training.", tag = tag)
 							game.recoverEnergy()
 							game.racing.skipRacing = false
 						} else if (game.checkInjury() && !game.checkFinals()) {
-							game.printToLog("[INFO] A infirmary visit was attempted in order to heal an injury.", tag = tag)
 							game.findAndTapImage("ok", region = game.imageUtils.regionMiddle)
 							game.wait(3.0)
 							game.racing.skipRacing = false
 						} else if (game.recoverMood() && !game.checkFinals()) {
-							game.printToLog("[INFO] Mood has recovered.", tag = tag)
 							game.racing.skipRacing = false
 						} else if (!game.racing.isExtraRaceEligible()) {
 							game.printToLog("[INFO] Training due to it not being an extra race day.", tag = tag)
 							game.training.handleTraining()
 							game.racing.skipRacing = false
 						} else {
-							game.printToLog("[INFO] Bot has no injuries, mood is sufficient and today is extra race day. Setting needToRace to true.", tag = tag)
+							game.printToLog("[INFO] Bot has no injuries, mood is sufficient and extra races can be run today. Setting needToRace to true.", tag = tag)
 							needToRace = true
 						}
 					}
@@ -106,15 +104,12 @@ open class Campaign(val game: Game) {
 				}
 			} else if (game.checkTrainingEventScreen()) {
 				// If the bot is at the Training Event screen, that means there are selectable options for rewards.
-				game.printToLog("[INFO] Detected a Training Event on screen.", tag = tag)
 				handleTrainingEvent()
 				game.racing.skipRacing = false
 			} else if (game.handleInheritanceEvent()) {
 				// If the bot is at the Inheritance screen, then accept the inheritance.
-				game.printToLog("[INFO] Accepted the Inheritance.", tag = tag)
 				game.racing.skipRacing = false
 			} else if (game.checkMandatoryRacePrepScreen()) {
-				game.printToLog("[INFO] There is a Mandatory race to be run.", tag = tag)
 				// If the bot is at the Main screen with the button to select a race visible, that means the bot needs to handle a mandatory race.
 				if (!handleRaceEvents() && game.racing.detectedMandatoryRaceCheck) {
 					game.printToLog("\n[END] Stopping bot due to detection of Mandatory Race.", tag = tag)
@@ -123,7 +118,6 @@ open class Campaign(val game: Game) {
 				}
 			} else if (game.checkRacingScreen()) {
 				// If the bot is already at the Racing screen, then complete this standalone race.
-				game.printToLog("[INFO] There is a standalone race ready to be run.", tag = tag)
 				game.racing.handleStandaloneRace()
 				game.racing.skipRacing = false
 			} else if (game.checkEndScreen()) {

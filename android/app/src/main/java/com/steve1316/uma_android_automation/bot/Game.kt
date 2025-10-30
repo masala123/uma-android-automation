@@ -323,10 +323,11 @@ class Game(val myContext: Context) {
 	 * @return True if the bot is at the Main screen. Otherwise false.
 	 */
 	fun checkMainScreen(): Boolean {
-		printToLog("[INFO] Checking if the bot is sitting at the Main screen.")
+		// Current date should be printed here to section off the tasks undertaken for this date.
+		printToLog("\n[INFO] Checking if the bot is sitting at the Main screen.")
 		return if (imageUtils.findImage("tazuna", tries = 1, region = imageUtils.regionTopHalf).first != null &&
 			imageUtils.findImage("race_select_mandatory", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true).first == null) {
-			printToLog("\n[INFO] Current bot location is at Main screen.")
+			printToLog("[INFO] Bot is at the Main screen.")
 
 			// Perform updates here if necessary.
 			updateDate()
@@ -340,6 +341,7 @@ class Game(val myContext: Context) {
 			racing.skipRacing = false
 			true
 		} else {
+			printToLog("[INFO] Bot is not at the Main screen.")
 			false
 		}
 	}
@@ -350,11 +352,12 @@ class Game(val myContext: Context) {
 	 * @return True if the bot is at the Training Event screen. Otherwise false.
 	 */
 	fun checkTrainingEventScreen(): Boolean {
-		printToLog("[INFO] Checking if the bot is sitting on the Training Event screen.")
+		printToLog("\n[INFO] Checking if the bot is sitting on the Training Event screen.")
 		return if (imageUtils.findImage("training_event_active", tries = 1, region = imageUtils.regionMiddle).first != null) {
-			printToLog("\n[INFO] Current bot location is at Training Event screen.")
+			printToLog("[INFO] Bot is at the Training Event screen.")
 			true
 		} else {
+			printToLog("[INFO] Bot is not at the Training Event screen.")
 			false
 		}
 	}
@@ -365,19 +368,20 @@ class Game(val myContext: Context) {
 	 * @return True if the bot is at the Main screen with a mandatory race. Otherwise false.
 	 */
 	fun checkMandatoryRacePrepScreen(): Boolean {
-		printToLog("[INFO] Checking if the bot is sitting on the Race Preparation screen.")
+		printToLog("\n[INFO] Checking if the bot is sitting on the Race Preparation screen for a mandatory race.")
 		return if (imageUtils.findImage("race_select_mandatory", tries = 1, region = imageUtils.regionBottomHalf).first != null) {
-			printToLog("\n[INFO] Current bot location is at the preparation screen with a mandatory race ready to be completed.")
+			printToLog("[INFO] Bot is at the preparation screen with a mandatory race ready to be completed.")
 			true
 		} else if (imageUtils.findImage("race_select_mandatory_goal", tries = 1, region = imageUtils.regionMiddle).first != null) {
 			// Most likely the user started the bot here so a delay will need to be placed to allow the start banner of the Service to disappear.
 			wait(2.0)
-			printToLog("\n[INFO] Current bot location is at the Race Selection screen with a mandatory race needing to be selected.")
+			printToLog("[INFO] Bot is at the Race Selection screen with a mandatory race needing to be selected.")
 			// Walk back to the preparation screen.
 			findAndTapImage("back", tries = 1, region = imageUtils.regionBottomHalf)
 			wait(1.0)
 			true
 		} else {
+			printToLog("[INFO] Bot is not at the Race Preparation screen for a mandatory race.")
 			false
 		}
 	}
@@ -388,11 +392,12 @@ class Game(val myContext: Context) {
 	 * @return True if the bot is at the Racing screen. Otherwise, false.
 	 */
 	fun checkRacingScreen(): Boolean {
-		printToLog("[INFO] Checking if the bot is sitting on the Racing screen.")
+		printToLog("\n[INFO] Checking if the bot is sitting on the Racing screen.")
 		return if (imageUtils.findImage("race_change_strategy", tries = 1, region = imageUtils.regionBottomHalf).first != null) {
-			printToLog("\n[INFO] Current bot location is at the Racing screen waiting to be skipped or done manually.")
+			printToLog("[INFO] Bot is at the Racing screen waiting to be skipped or done manually.")
 			true
 		} else {
+			printToLog("[INFO] Bot is not at the Racing screen.")
 			false
 		}
 	}
@@ -403,10 +408,11 @@ class Game(val myContext: Context) {
 	 * @return True if the bot is at the Ending screen. Otherwise false.
 	 */
 	fun checkEndScreen(): Boolean {
+		printToLog("\n[INFO] Checking if the bot is sitting on the End screen.")
 		return if (imageUtils.findImage("complete_career", tries = 1, region = imageUtils.regionBottomHalf).first != null) {
-			printToLog("\n[END] Bot has reached the End screen.")
 			true
 		} else {
+			printToLog("[INFO] Bot is not at the End screen and can keep going.")
 			false
 		}
 	}
@@ -417,11 +423,13 @@ class Game(val myContext: Context) {
 	 * @return True if the bot is at Finals. Otherwise false.
 	 */
 	fun checkFinals(): Boolean {
+		printToLog("\n[INFO] Checking if the bot is at the Finals.")
 		val finalsLocation = imageUtils.findImage("race_select_extra_locked_uma_finals", tries = 1, suppressError = true, region = imageUtils.regionBottomHalf).first
 		return if (finalsLocation != null) {
-			printToLog("[INFO] Finals detected.")
+			printToLog("[INFO] It is currently the Finals.")
 			true
 		} else {
+			printToLog("[INFO] It is not the Finals yet.")
 			false
 		}
 	}
@@ -432,6 +440,7 @@ class Game(val myContext: Context) {
 	 * @return True if the bot has a injury. Otherwise false.
 	 */
 	fun checkInjury(): Boolean {
+		printToLog("\n[INJURY] Checking if there is an injury that needs healing on ${printFormattedDate()}.")
 		val recoverInjuryLocation = imageUtils.findImage("recover_injury", tries = 1, region = imageUtils.regionBottomHalf).first
 		return if (recoverInjuryLocation != null && imageUtils.checkColorAtCoordinates(
 				recoverInjuryLocation.x.toInt(),
@@ -442,17 +451,17 @@ class Game(val myContext: Context) {
 			if (findAndTapImage("recover_injury", tries = 1, region = imageUtils.regionBottomHalf)) {
 				wait(0.3)
 				if (imageUtils.findImage("recover_injury_header", tries = 1, region = imageUtils.regionMiddle).first != null) {
-					printToLog("\n[INFO] Injury detected and attempted to heal.")
+					printToLog("[INJURY] Injury detected and attempted to heal.")
 					true
 				} else {
 					false
 				}
 			} else {
-				printToLog("\n[WARNING] Injury detected but attempt to rest failed.")
+				printToLog("[WARNING] Injury detected but attempt to rest failed.")
 				false
 			}
 		} else {
-			printToLog("\n[INFO] No injury detected.")
+			printToLog("[INJURY] No injury detected.")
 			false
 		}
 	}
@@ -463,12 +472,12 @@ class Game(val myContext: Context) {
 	 * @return True if the game is still loading or is awaiting for a server response. Otherwise, false.
 	 */
 	fun checkLoading(): Boolean {
-		printToLog("[INFO] Now checking if the game is still loading...")
+		printToLog("[LOADING] Now checking if the game is still loading...")
 		return if (imageUtils.findImage("connecting", tries = 1, region = imageUtils.regionTopHalf, suppressError = true).first != null) {
-			printToLog("[INFO] Detected that the game is awaiting a response from the server from the \"Connecting\" text at the top of the screen. Waiting...")
+			printToLog("[LOADING] Detected that the game is awaiting a response from the server from the \"Connecting\" text at the top of the screen. Waiting...")
 			true
 		} else if (imageUtils.findImage("now_loading", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true).first != null) {
-			printToLog("[INFO] Detected that the game is still loading from the \"Now Loading\" text at the bottom of the screen. Waiting...")
+			printToLog("[LOADING] Detected that the game is still loading from the \"Now Loading\" text at the bottom of the screen. Waiting...")
 			true
 		} else {
 			false
@@ -508,7 +517,6 @@ class Game(val myContext: Context) {
 		training.currentStatsMap.forEach { it ->
 			printToLog("[STATS] ${it.key}: ${it.value}")
 		}
-		printToLog("[STATS] Stat value mapping updated.\n")
 	}
 
 	/**
@@ -518,7 +526,7 @@ class Game(val myContext: Context) {
 		printToLog("\n[DATE] Updating the current date.")
 		val dateString = imageUtils.determineDayString()
 		currentDate = gameDateParser.parseDateString(dateString, imageUtils, this)
-		printToLog("\n[DATE] It is currently $currentDate.")
+		printToLog("[DATE] It is currently ${printFormattedDate()}.")
 	}
 
 	/**
@@ -529,6 +537,7 @@ class Game(val myContext: Context) {
 	fun handleInheritanceEvent(): Boolean {
 		return if (inheritancesDone < 2) {
 			if (findAndTapImage("inheritance", tries = 1, region = imageUtils.regionBottomHalf)) {
+				printToLog("\n[INFO] Claimed an inheritance on ${printFormattedDate()}.")
 				inheritancesDone++
 				true
 			} else {
@@ -545,7 +554,7 @@ class Game(val myContext: Context) {
 	 * @return True if the bot successfully recovered energy. Otherwise false.
 	 */
     fun recoverEnergy(): Boolean {
-		printToLog("\n[ENERGY] Now starting attempt to recover energy.")
+		printToLog("\n[ENERGY] Now starting attempt to recover energy on ${printFormattedDate()}.")
 		return when {
 			findAndTapImage("recover_energy", tries = 1, imageUtils.regionBottomHalf) -> {
 				findAndTapImage("ok")
@@ -572,7 +581,7 @@ class Game(val myContext: Context) {
 	 * @return True if the bot successfully recovered mood. Otherwise false.
 	 */
 	fun recoverMood(): Boolean {
-		printToLog("\n[MOOD] Detecting current mood.")
+		printToLog("\n[MOOD] Detecting current mood on ${printFormattedDate()}.")
 
 		// Detect what Mood the bot is at.
 		val currentMood: String = when {
@@ -623,7 +632,7 @@ class Game(val myContext: Context) {
 	 * @return True if the checks passed. Otherwise false if the bot encountered a warning popup and needs to exit.
 	 */
 	fun performMiscChecks(): Boolean {
-		printToLog("\n[INFO] Beginning check for misc cases...")
+		printToLog("\n[MISC] Beginning check for misc cases...")
 
 		if (enablePopupCheck && imageUtils.findImage("cancel", tries = 1, region = imageUtils.regionBottomHalf).first != null &&
 			imageUtils.findImage("recover_mood_date", tries = 1, region = imageUtils.regionMiddle).first == null) {
@@ -632,6 +641,7 @@ class Game(val myContext: Context) {
 			return false
 		} else if (findAndTapImage("next", tries = 1, region = imageUtils.regionBottomHalf)) {
 			// Now confirm the completion of a Training Goal popup.
+			printToLog("[MISC] Popup detected that needs to be dismissed with the \"Next\" button.")
 			wait(2.0)
 			findAndTapImage("next", tries = 1, region = imageUtils.regionBottomHalf)
 			wait(1.0)
@@ -641,27 +651,29 @@ class Game(val myContext: Context) {
 			notificationMessage = "Bot will stop due to the detection of the Crane Game Event. Please complete it and restart the bot."
 			return false
 		} else if (findAndTapImage("race_retry", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
-			printToLog("[INFO] There is a race retry popup.")
+			printToLog("[MISC] There is a race retry popup.")
 			wait(5.0)
 		} else if (findAndTapImage("race_accept_trophy", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
-			printToLog("[INFO] There is a possible popup to accept a trophy.")
+			printToLog("[MISC] There is a possible popup to accept a trophy.")
 			racing.finishRace(true, isExtra = true)
 		} else if (findAndTapImage("race_end", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
-			printToLog("[INFO] Ended a leftover race.")
+			printToLog("[MISC] Ended a leftover race.")
 		} else if (imageUtils.findImage("connection_error", tries = 1, region = imageUtils.regionMiddle, suppressError = true).first != null) {
 			printToLog("\n[END] Bot will stop due to detecting a connection error.")
 			notificationMessage = "Bot will stop due to detecting a connection error."
 			return false
 		} else if (imageUtils.findImage("race_not_enough_fans", tries = 1, region = imageUtils.regionMiddle, suppressError = true).first != null) {
-			printToLog("[INFO] There was a popup about insufficient fans.")
+			printToLog("[MISC] There was a popup about insufficient fans.")
 			racing.encounteredRacingPopup = true
 			findAndTapImage("cancel", region = imageUtils.regionBottomHalf)
 		} else if (findAndTapImage("back", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
+			printToLog("[MISC] Navigating back a screen since all the other misc checks have been completed.")
 			wait(1.0)
 		} else if (!BotService.isRunning) {
+			printToLog("\n[END] BotService is not running. Exiting now...")
 			throw InterruptedException()
 		} else {
-			printToLog("[INFO] Did not detect any popups or the Crane Game on the screen. Moving on...")
+			printToLog("[MISC] Did not detect any popups or the Crane Game on the screen. Moving on...")
 		}
 
 		return true

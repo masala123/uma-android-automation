@@ -25,7 +25,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 	private var character = ""
 	
 	// Define event matching patterns to filter false positives during detection.
-	private val eventPatterns = mapOf(
+	val eventPatterns = mapOf(
 		"New Year's Resolutions" to listOf("New Year's Resolutions", "Resolutions"),
 		"New Year's Shrine Visit" to listOf("New Year's Shrine Visit", "Shrine Visit"),
 		"Victory!" to listOf("Victory!"),
@@ -43,7 +43,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		val characterDataString = SettingsHelper.getStringSetting("trainingEvent", "characterEventData")
 		if (characterDataString.isNotEmpty()) {
 			val jsonObject = JSONObject(characterDataString)
-			game.printToLog("[TRAINING_EVENT_RECOGNIZER] Character event data length: ${jsonObject.length()}.", tag = tag)
+			if (game.debugMode) game.printToLog("[DEBUG] Character event data length: ${jsonObject.length()}.", tag = tag)
 			jsonObject
 		} else {
 			null
@@ -57,7 +57,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		val supportDataString = SettingsHelper.getStringSetting("trainingEvent", "supportEventData")
 		if (supportDataString.isNotEmpty()) {
 			val jsonObject = JSONObject(supportDataString)
-			game.printToLog("[TRAINING_EVENT_RECOGNIZER] Support event data length: ${jsonObject.length()}.", tag = tag)
+			if (game.debugMode) game.printToLog("[DEBUG] Support event data length: ${jsonObject.length()}.", tag = tag)
 			jsonObject
 		} else {
 			null
@@ -81,16 +81,15 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 	private val minimumConfidence = SettingsHelper.getIntSetting("ocr", "ocrConfidence").toDouble() / 100.0
 	private val threshold = SettingsHelper.getIntSetting("ocr", "ocrThreshold").toDouble()
 	private val enableAutomaticRetry = SettingsHelper.getBooleanSetting("ocr", "enableAutomaticOCRRetry")
-	
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+
 	/**
 	 * Attempt to find the most similar string from data compared to the string returned by OCR.
 	 */
 	private fun findMostSimilarString() {
-		if (!hideComparisonResults) {
-			game.printToLog("\n[TRAINING_EVENT_RECOGNIZER] Now starting process to find most similar string to: $result\n", tag = tag)
-		} else {
-			game.printToLog("\n[TRAINING_EVENT_RECOGNIZER] Now starting process to find most similar string to: $result", tag = tag)
-		}
+		game.printToLog("[TRAINING_EVENT_RECOGNIZER] Now starting process to find most similar string to: $result", tag = tag)
 		
 		// Check if this matches any special event patterns first to filter false positives.
 		var matchedSpecialEvent: String? = null
@@ -241,14 +240,13 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 				}
 			}
 		}
-		
-		if (!hideComparisonResults) {
-			game.printToLog("\n[TRAINING_EVENT_RECOGNIZER] Finished process to find similar string.", tag = tag)
-		} else {
-			game.printToLog("[TRAINING_EVENT_RECOGNIZER] Finished process to find similar string.", tag = tag)
-		}
+
+		game.printToLog("${if (!hideComparisonResults) "\n" else ""}[TRAINING_EVENT_RECOGNIZER] Finished process to find similar string.", tag = tag)
 		game.printToLog("[TRAINING_EVENT_RECOGNIZER] Event data fetched for \"${eventTitle}\".", tag = tag)
 	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	/**
 	 * Starts the training event recognition process by performing OCR on the event title
@@ -257,6 +255,8 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 	 * @return A triple containing the event option rewards, confidence score, and event title.
 	 */
 	fun start(): Triple<ArrayList<String>, Double, String> {
+		game.printToLog("\n********************", tag = tag)
+
 		// Reset to default values.
 		result = ""
 		confidence = 0.0
@@ -282,19 +282,10 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 				
 				when (category) {
 					"character" -> {
-						if (!hideComparisonResults) {
-							game.printToLog("\n[RESULT] Character $character Event Name = $eventTitle with confidence = $confidence", tag = tag)
-						}
-					}
-					"character-shared" -> {
-						if (!hideComparisonResults) {
-							game.printToLog("\n[RESULT] Character Shared Event Name = $eventTitle with confidence = $confidence", tag = tag)
-						}
+						game.printToLog("\n[RESULT] Character $character Event Name = $eventTitle with confidence = $confidence", tag = tag)
 					}
 					"support" -> {
-						if (!hideComparisonResults) {
-							game.printToLog("\n[RESULT] Support $supportCardTitle Event Name = $eventTitle with confidence = $confidence", tag = tag)
-						}
+						game.printToLog("\n[RESULT] Support $supportCardTitle Event Name = $eventTitle with confidence = $confidence", tag = tag)
 					}
 				}
 				
@@ -314,6 +305,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		
 		val endTime: Long = System.currentTimeMillis()
 		Log.d(tag, "Total Runtime for recognizing training event: ${endTime - startTime}ms")
+		game.printToLog("********************", tag = tag)
 		
 		return Triple(eventOptionRewards, confidence, eventTitle)
 	}

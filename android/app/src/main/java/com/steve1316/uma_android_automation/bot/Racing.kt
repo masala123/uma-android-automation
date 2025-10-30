@@ -754,8 +754,8 @@ class Racing (private val game: Game) {
         
         // Opportunity Cost logic.
         val minimumQualityThreshold = 70.0  // Don't race anything scoring below this.
-        val timeDecayFactor = 0.90  // Future races are worth this percentage of their score.
-        val improvementThreshold = 25.0  // Only wait if improvement is greater than this.
+        val timeDecayFactor = 0.90          // Future races are worth this percentage of their score.
+        val improvementThreshold = 25.0     // Only wait if improvement is greater than this.
 
         // Apply time decay to upcoming race score.
         val discountedUpcomingScore = bestUpcomingRace.score * timeDecayFactor
@@ -852,7 +852,6 @@ class Racing (private val game: Game) {
             true  // Return true to fall back to screen checks.
         }
     }
-
 
     /**
      * Handles extra races using Smart Racing logic for Senior Year (Year 3).
@@ -1000,7 +999,7 @@ class Racing (private val game: Game) {
      */
     fun isExtraRaceEligible(): Boolean {
         val dayNumber = game.imageUtils.determineDayForExtraRace()
-        game.printToLog("\n[INFO] Current remaining number of days before the next mandatory race: $dayNumber.", tag = tag)
+        game.printToLog("[RACE] Current remaining number of days before the next mandatory race: $dayNumber.", tag = tag)
 
         // If the setting to force racing extra races is enabled, always return true.
         if (enableForceRacing) return true
@@ -1187,7 +1186,8 @@ class Racing (private val game: Game) {
      * @return True if the mandatory/extra race was completed successfully. Otherwise false.
      */
     fun handleRaceEvents(): Boolean {
-        game.printToLog("\n[RACE] Starting Racing process...", tag = tag)
+        game.printToLog("\n********************", tag = tag)
+        game.printToLog("[RACE] Starting Racing process on ${game.printFormattedDate()}.", tag = tag)
         if (encounteredRacingPopup) {
             // Dismiss the insufficient fans popup here and head to the Race Selection screen.
             game.findAndTapImage("race_confirm", tries = 1, region = game.imageUtils.regionBottomHalf)
@@ -1198,6 +1198,7 @@ class Racing (private val game: Game) {
         // If there are no races available, cancel the racing process.
         if (game.imageUtils.findImage("race_none_available", tries = 1, region = game.imageUtils.regionMiddle, suppressError = true).first != null) {
             game.printToLog("[RACE] There are no races to compete in. Canceling the racing process and doing something else.", tag = tag)
+            game.printToLog("********************", tag = tag)
             return false
         }
 
@@ -1207,9 +1208,10 @@ class Racing (private val game: Game) {
         // Note: If there is a mandatory race, the bot would be on the Home screen.
         // Otherwise, it would have found itself at the Race Selection screen already (by way of the insufficient fans popup).
         if (game.findAndTapImage("race_select_mandatory", tries = 1, region = game.imageUtils.regionBottomHalf)) {
-            game.printToLog("\n[RACE] Starting process for handling a mandatory race.", tag = tag)
+            game.printToLog("[RACE] Starting process for handling a mandatory race.", tag = tag)
 
             if (enableStopOnMandatoryRace) {
+                game.printToLog("********************", tag = tag)
                 detectedMandatoryRaceCheck = true
                 return false
             }
@@ -1242,16 +1244,18 @@ class Racing (private val game: Game) {
             finishRace(resultCheck)
 
             game.printToLog("[RACE] Racing process for Mandatory Race is completed.", tag = tag)
+            game.printToLog("********************", tag = tag)
             return true
         } else if (game.currentDate.phase != "Pre-Debut" && game.findAndTapImage("race_select_extra", tries = 1, region = game.imageUtils.regionBottomHalf)) {
-            game.printToLog("\n[RACE] Starting process for handling a extra race.", tag = tag)
+            game.printToLog("[RACE] Starting process for handling a extra race.", tag = tag)
 
             // If there is a popup warning about repeating races 3+ times, stop the process and do something else other than racing.
             if (game.imageUtils.findImage("race_repeat_warning").first != null) {
                 if (!enableForceRacing) {
                     raceRepeatWarningCheck = true
-                    game.printToLog("\n[RACE] Closing popup warning of doing more than 3+ races and setting flag to prevent racing for now. Canceling the racing process and doing something else.", tag = tag)
+                    game.printToLog("[RACE] Closing popup warning of doing more than 3+ races and setting flag to prevent racing for now. Canceling the racing process and doing something else.", tag = tag)
                     game.findAndTapImage("cancel", region = game.imageUtils.regionBottomHalf)
+                    game.printToLog("********************", tag = tag)
                     return false
                 } else {
                     game.findAndTapImage("ok", tries = 1, region = game.imageUtils.regionMiddle)
@@ -1263,12 +1267,14 @@ class Racing (private val game: Game) {
             val statusLocation = game.imageUtils.findImage("race_status").first
             if (statusLocation == null) {
                 game.printToLog("[ERROR] Unable to determine existence of list of extra races. Canceling the racing process and doing something else.", tag = tag, isError = true)
+                game.printToLog("********************", tag = tag)
                 return false
             }
 
             val maxCount = game.imageUtils.findAll("race_selection_fans", region = game.imageUtils.regionBottomHalf).size
             if (maxCount == 0) {
                 game.printToLog("[WARNING] Was unable to find any extra races to select. Canceling the racing process and doing something else.", tag = tag, isError = true)
+                game.printToLog("********************", tag = tag)
                 return false
             } else {
                 game.printToLog("[RACE] There are $maxCount extra race options currently on screen.", tag = tag)
@@ -1339,9 +1345,11 @@ class Racing (private val game: Game) {
             nextSmartRaceDay = null
 
             game.printToLog("[RACE] Racing process for Extra Race is completed.", tag = tag)
+            game.printToLog("********************", tag = tag)
             return true
         }
 
+        game.printToLog("********************", tag = tag)
         return false
     }
 
@@ -1349,7 +1357,8 @@ class Racing (private val game: Game) {
      * The entry point for handling standalone races if the user started the bot on the Racing screen.
      */
     fun handleStandaloneRace() {
-        game.printToLog("\n[RACE] Starting Standalone Racing process...", tag = tag)
+        game.printToLog("\n********************", tag = tag)
+        game.printToLog("[RACE] Starting Standalone Racing process...", tag = tag)
 
         // Skip the race if possible, otherwise run it manually.
         val resultCheck: Boolean = if (game.imageUtils.findImage("race_skip_locked", tries = 5, region = game.imageUtils.regionBottomHalf).first == null) {
@@ -1361,6 +1370,7 @@ class Racing (private val game: Game) {
         finishRace(resultCheck)
 
         game.printToLog("[RACE] Racing process for Standalone Race is completed.", tag = tag)
+        game.printToLog("********************", tag = tag)
     }
 
     /**
@@ -1385,6 +1395,7 @@ class Racing (private val game: Game) {
             if (game.imageUtils.findImage("race_retry", tries = 5, region = game.imageUtils.regionBottomHalf, suppressError = true).first != null) {
                 if (disableRaceRetries) {
                     game.printToLog("\n[END] Stopping the bot due to failing a mandatory race.", tag = tag)
+                    game.printToLog("********************", tag = tag)
                     game.notificationMessage = "Stopping the bot due to failing a mandatory race."
                     throw IllegalStateException()
                 }
@@ -1463,6 +1474,7 @@ class Racing (private val game: Game) {
             if (game.imageUtils.findImage("race_retry", tries = 5, region = game.imageUtils.regionBottomHalf, suppressError = true).first != null) {
                 if (disableRaceRetries) {
                     game.printToLog("\n[END] Stopping the bot due to failing a mandatory race.", tag = tag)
+                    game.printToLog("********************", tag = tag)
                     game.notificationMessage = "Stopping the bot due to failing a mandatory race."
                     throw IllegalStateException()
                 }

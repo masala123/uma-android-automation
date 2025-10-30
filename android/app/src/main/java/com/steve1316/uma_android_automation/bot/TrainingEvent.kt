@@ -10,7 +10,7 @@ class TrainingEvent(private val game: Game) {
 
     private val trainingEventRecognizer: TrainingEventRecognizer = TrainingEventRecognizer(game, game.imageUtils)
 
-    val enablePrioritizeEnergyOptions: Boolean = SettingsHelper.getBooleanSetting("trainingEvent", "enablePrioritizeEnergyOptions")
+    private val enablePrioritizeEnergyOptions: Boolean = SettingsHelper.getBooleanSetting("trainingEvent", "enablePrioritizeEnergyOptions")
     
     private val positiveStatuses = listOf("Charming", "Fast Learner", "Practice Practice")
     private val negativeStatuses = listOf("Practice Poor", "Migraine", "Night Owl", "Slow Metabolism", "Slacker")
@@ -45,33 +45,19 @@ class TrainingEvent(private val game: Game) {
 
     /**
      * Check if the given event title matches any special event overrides.
-     * 
+     *
      * @param eventTitle The detected event title from OCR
      * @return Pair of (optionIndex, requiresConfirmation) if match found, null otherwise
      */
     private fun checkSpecialEventOverride(eventTitle: String): Pair<Int, Boolean>? {
-        // Define event matching patterns.
-        val eventPatterns = mapOf(
-            "New Year's Resolutions" to listOf("New Year's Resolutions", "Resolutions"),
-            "New Year's Shrine Visit" to listOf("New Year's Shrine Visit", "Shrine Visit"),
-            "Victory!" to listOf("Victory!"),
-            "Solid Showing" to listOf("Solid Showing"),
-            "Defeat" to listOf("Defeat"),
-            "Get Well Soon!" to listOf("Get Well Soon"),
-            "Don't Overdo It!" to listOf("Don't Overdo It"),
-            "Extra Training" to listOf("Extra Training"),
-            "Acupuncture (Just an Acupuncturist, No Worries! ☆)" to listOf("Acupuncture", "Just an Acupuncturist"),
-            "Etsuko's Exhaustive Coverage" to listOf("Etsuko", "Exhaustive Coverage")
-        )
-        
-        for ((eventName, patterns) in eventPatterns) {
+        for ((eventName, patterns) in trainingEventRecognizer.eventPatterns) {
             val override = specialEventOverrides[eventName]
             if (override != null) {
                 // Check if any pattern matches the event title.
                 val matches = patterns.any { pattern -> eventTitle.contains(pattern) }
                 if (matches) {
                     game.printToLog("[TRAINING_EVENT] Detected special event: $eventName", tag = tag)
-                    
+
                     // Parse the option number from the setting (e.g., "Option 5: Energy +10" -> 5)
                     val optionMatch = Regex("Option (\\d+)").find(override.selectedOption)
                     val optionIndex = if (optionMatch != null) {
@@ -82,12 +68,12 @@ class TrainingEvent(private val game: Game) {
                         game.printToLog("[WARNING] Could not parse option number from setting: ${override.selectedOption}. Using option 1 by default.", tag = tag)
                         0
                     }
-                    
+
                     return Pair(optionIndex, override.requiresConfirmation)
                 }
             }
         }
-        
+
         return null
     }
 
@@ -96,17 +82,20 @@ class TrainingEvent(private val game: Game) {
      * It will then select the best option according to the user's preferences. By default, it will choose the first option.
      */
     fun handleTrainingEvent() {
-        game.printToLog("\n[TRAINING_EVENT] Starting Training Event process...", tag = tag)
+        game.printToLog("\n********************", tag = tag)
+        game.printToLog("[TRAINING_EVENT] Starting Training Event process on ${game.printFormattedDate()}.", tag = tag)
+
+        // Double check if the bot is at the Main screen or not.
+        if (game.checkMainScreen()) {
+            game.printToLog("[TRAINING_EVENT] Bot is at the Main Screen. Ending the Training Event process.", tag = tag)
+            game.printToLog("********************", tag = tag)
+            return
+        }
 
         val (eventRewards, confidence, eventTitle) = trainingEventRecognizer.start()
 
         val regex = Regex("[a-zA-Z]+")
         var optionSelected = 0
-
-        // Double check if the bot is at the Main screen or not.
-        if (game.checkMainScreen()) {
-            return
-        }
 
         if (eventRewards.isNotEmpty() && eventRewards[0] != "") {
             // Check for special event overrides.
@@ -320,7 +309,7 @@ class TrainingEvent(private val game: Game) {
 
             game.printToLog(resultString, tag = tag)
         } else {
-            game.printToLog("[TRAINING_EVENT] First option will be selected since OCR failed to detect anything.", tag = tag)
+            game.printToLog("[WARNING] First option will be selected since OCR failed to match the event title.", tag = tag)
             optionSelected = 0
         }
 
@@ -364,5 +353,6 @@ class TrainingEvent(private val game: Game) {
         }
 
         game.printToLog("[TRAINING_EVENT] Process to handle detected Training Event completed.", tag = tag)
+        game.printToLog("********************", tag = tag)
     }
 }
