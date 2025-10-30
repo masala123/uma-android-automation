@@ -213,6 +213,36 @@ class Game(val myContext: Context) {
 		}
 	}
 
+	/**
+	 * Prints the current date as a formatted string.
+	 *
+	 * @return Formatted date string.
+	 */
+	fun printFormattedDate(): String {
+		val formattedYear = when (currentDate.year) {
+			1 -> "Junior Year"
+			2 -> "Classic Year"
+			3 -> "Senior Year"
+            else -> "Null Year"
+		}
+		val formattedMonth = when (currentDate.month) {
+			1 -> "Jan"
+			2 -> "Feb"
+			3 -> "Mar"
+			4 -> "Apr"
+			5 -> "May"
+			6 -> "Jun"
+			7 -> "Jul"
+			8 -> "Aug"
+			9 -> "Sep"
+			10 -> "Oct"
+			11 -> "Nov"
+			12 -> "Dec"
+            else -> "Null Month"
+		}
+		return "$formattedYear ${currentDate.phase} $formattedMonth / Turn Number ${currentDate.turnNumber}"
+	}
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////////////
     // Helper functions to test behavior and results of various workflows.
