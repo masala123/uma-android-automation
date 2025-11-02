@@ -129,7 +129,7 @@ const RacingSettings = () => {
                             style={styles.input}
                             value={daysToRunExtraRaces.toString()}
                             onChangeText={(text) => {
-                                const value = parseInt(text)
+                                const value = parseInt(text) || 0
                                 updateRacingSetting("daysToRunExtraRaces", value)
                             }}
                             keyboardType="numeric"
