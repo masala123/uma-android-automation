@@ -9,6 +9,17 @@ import net.ricecode.similarity.StringSimilarityServiceImpl
  */
 class GameDateParser {
 	/**
+	 * Compute the next day's date from the current date by advancing the turn number.
+	 */
+	private fun computeNextDayDate(currentDate: Game.Date): Game.Date {
+		val nextTurn = (currentDate.turnNumber + 1).coerceAtMost(72)
+		val year = ((nextTurn - 1) / 24) + 1
+		val month = (((nextTurn - 1) % 24) / 2) + 1
+		val phase = if (((nextTurn - 1) % 2) == 0) "Early" else "Late"
+		return Game.Date(year, phase, month, nextTurn)
+	}
+
+	/**
 	 * Parses a date string from the game and converts it to a structured Game.Date object.
 	 * 
 	 * This function handles two types of date formats: Pre-Debut and regular date strings.
