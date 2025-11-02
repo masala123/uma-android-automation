@@ -219,6 +219,17 @@ class Game(val myContext: Context) {
 	 * @return Formatted date string.
 	 */
 	fun printFormattedDate(): String {
+		// Handle Finals dates (turns 73, 74, 75).
+		val finalsLabel = when (currentDate.turnNumber) {
+			73 -> "Finale Qualifier"
+			74 -> "Finale Semifinal"
+			75 -> "Finale Finals"
+			else -> null
+		}
+		if (finalsLabel != null) {
+			return "$finalsLabel / Turn Number ${currentDate.turnNumber}"
+		}
+
 		val formattedYear = when (currentDate.year) {
 			1 -> "Junior Year"
 			2 -> "Classic Year"
@@ -303,7 +314,8 @@ class Game(val myContext: Context) {
 	fun startDateOCRTest() {
 		printToLog("\n[TEST] Now beginning the Date OCR test on the Main screen.")
 		printToLog("[TEST] Note that this test is dependent on having the correct scale.")
-		updateDate()
+        val finalsLocation = imageUtils.findImage("race_select_extra_locked_uma_finals", tries = 1, suppressError = true, region = imageUtils.regionBottomHalf).first
+        updateDate(isFinals = (finalsLocation != null))
 	}
 
 	fun startAptitudesDetectionTest() {
@@ -330,7 +342,8 @@ class Game(val myContext: Context) {
 			printToLog("[INFO] Bot is at the Main screen.")
 
 			// Perform updates here if necessary.
-			updateDate()
+            val finalsLocation = imageUtils.findImage("race_select_extra_locked_uma_finals", tries = 1, suppressError = true, region = imageUtils.regionBottomHalf).first
+            updateDate(isFinals = (finalsLocation != null))
 			if (currentDate.turnNumber % 10 == 0) updateAptitudes()
 			true
 		} else if (!enablePopupCheck && imageUtils.findImage("cancel", tries = 1, region = imageUtils.regionBottomHalf).first != null &&
@@ -427,6 +440,7 @@ class Game(val myContext: Context) {
 		val finalsLocation = imageUtils.findImage("race_select_extra_locked_uma_finals", tries = 1, suppressError = true, region = imageUtils.regionBottomHalf).first
 		return if (finalsLocation != null) {
 			printToLog("[INFO] It is currently the Finals.")
+			updateDate(isFinals = true)
 			true
 		} else {
 			printToLog("[INFO] It is not the Finals yet.")
@@ -521,11 +535,39 @@ class Game(val myContext: Context) {
 
 	/**
 	 * Updates the stored date in memory by keeping track of the current year, phase, month and current turn number.
+	 *
+	 * @param isFinals If true, checks for Finals date images instead of parsing a date string. Defaults to false.
 	 */
-	fun updateDate() {
+	fun updateDate(isFinals: Boolean = false) {
 		printToLog("\n[DATE] Updating the current date.")
-		val dateString = imageUtils.determineDayString()
-		currentDate = gameDateParser.parseDateString(dateString, imageUtils, this)
+		if (isFinals) {
+			// During Finals, check for Finals-specific date images.
+			// The Finals occur at turns 73, 74, and 75.
+			// Date will be kept at Senior Year Late Dec, only the turn number will be updated.
+			val turnNumber = when {
+				imageUtils.findImage("date_final_qualifier", tries = 1, suppressError = true, region = imageUtils.regionTopHalf).first != null -> {
+					printToLog("[DATE] Detected Finals Qualifier (Turn 73).")
+					73
+				}
+				imageUtils.findImage("date_final_semifinal", tries = 1, suppressError = true, region = imageUtils.regionTopHalf).first != null -> {
+					printToLog("[DATE] Detected Finals Semifinal (Turn 74).")
+					74
+				}
+				imageUtils.findImage("date_final_finals", tries = 1, suppressError = true, region = imageUtils.regionTopHalf).first != null -> {
+					printToLog("[DATE] Detected Finals Finals (Turn 75).")
+					75
+				}
+				else -> {
+					printToLog("[WARNING] Could not determine Finals date. Defaulting to turn 73.", isError = true)
+					73
+				}
+			}
+			// Keep the date at Senior Year Late Dec and only update the turn number.
+			currentDate = Date(3, "Late", 12, turnNumber)
+		} else {
+			val dateString = imageUtils.determineDayString()
+			currentDate = gameDateParser.parseDateString(dateString, imageUtils, this)
+		}
 		printToLog("[DATE] It is currently ${printFormattedDate()}.")
 	}
 
