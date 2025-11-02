@@ -447,7 +447,7 @@ class Training(private val game: Game) {
 	 * - Ignores stat gains in favor of relationship development
 	 *
 	 * **Mid/Late Game (Year 2+):**
-	 * - Uses ratio-based scoring via `scoreStatTraining()`
+	 * - Uses ratio-based scoring via `calculateRawTrainingScore()`
 	 * - Scores based on completion percentage (currentStat / targetStat)
 	 * - Trains stats furthest behind their target ratio
 	 * - Priority order only breaks ties when completion percentages are similar
@@ -671,92 +671,13 @@ class Training(private val game: Game) {
             }
 			score += 10.0 * skillHintLocations.size
 
-			return score.coerceIn(0.0, 100.0)
-		}
+		return score.coerceIn(0.0, 100.0)
+	}
 
-		/**
-		 * Performs comprehensive scoring of training options using ratio-based evaluation.
-		 *
-		 * This scoring system combines multiple components:
-		 * - Stat efficiency: Ratio completion toward target distribution
-		 * - Relationship building: Value of friendship bar progress
-		 * - Context bonuses: Skill hints and situational bonuses
-		 * - Rainbow multiplier: Multiplies the score based on the existence of a rainbow training and whether rainbow training bonus is enabled.
-		 *
-		 * @param training The training option to evaluate.
-		 *
-		 * @return A score (0-100) representing overall training value.
-		 */
-		fun scoreStatTraining(training: TrainingOption): Double {
-			if (training.name in blacklist) return 0.0
-
-			// Don't score for stats that are maxed or would be maxed.
-			if ((disableTrainingOnMaxedStat && currentStatsMap[training.name]!! >= currentStatCap) ||
-				(currentStatsMap.getOrDefault(training.name, 0) + training.statGains[trainings.indexOf(training.name)] >= currentStatCap)) {
-				return 0.0
-			}
-
-			game.printToLog("\n[TRAINING] Starting scoring for ${training.name} Training.", tag = tag)
-
-			val target = statTargetsByDistance[preferredDistance] ?: intArrayOf(600, 600, 600, 300, 300)
-
-			var totalScore = 0.0
-
-			// 1. Stat Efficiency scoring
-			val statScore = calculateStatEfficiencyScore(training, target)
-
-			// 2. Friendship scoring
-			val relationshipScore = calculateRelationshipScore(training)
-
-			// 3. Misc-aware scoring
-			val miscScore = calculateMiscScore(training)
-
-			// Define scoring weights based on relationship bars presence.
-			val statWeight = if (training.relationshipBars.isNotEmpty()) 0.4 else 0.6
-			val relationshipWeight = if (training.relationshipBars.isNotEmpty()) 0.3 else 0.0
-			val miscWeight = 0.4
-
-			// Calculate weighted total score.
-			totalScore += statScore * statWeight
-			totalScore += relationshipScore * relationshipWeight
-			totalScore += miscScore * miscWeight
-
-			// 4. Rainbow training multiplier (Year 2+ only).
-			// Rainbow is heavily favored because it improves overall ratio balance.
-			val rainbowMultiplier = if (training.isRainbow && game.currentDate.year >= 2) {
-				if (enableRainbowTrainingBonus) {
-                    game.printToLog("[TRAINING] ${training.name} Training is detected as a rainbow training.", tag = tag)
-					2.0
-				} else {
-                    game.printToLog("[TRAINING] ${training.name} Training is detected as a rainbow training, but rainbow training bonus is not enabled.", tag = tag)
-					1.5
-				}
-			} else {
-                game.printToLog("[TRAINING] ${training.name} Training is not detected as a rainbow training.", tag = tag)
-				1.0
-			}
-
-			// Apply rainbow multiplier to total score.
-			totalScore *= rainbowMultiplier
-
-			game.printToLog(
-				"[TRAINING] Scores | Current Stat: ${currentStatsMap[training.name]}, Target Stat: ${target[trainings.indexOf(training.name)]}, " +
-					"Stat Efficiency: ${game.decimalFormat.format(statScore)}, Relationship: ${game.decimalFormat.format(relationshipScore)}, " +
-					"Misc: ${game.decimalFormat.format(miscScore)}, Rainbow Multiplier: ${game.decimalFormat.format(rainbowMultiplier)}",
-				tag = tag
-			)
-
-			val finalScore = totalScore.coerceIn(0.0, 100.0)
-
-			game.printToLog("[TRAINING] Enhanced final score for ${training.name} Training: ${game.decimalFormat.format(finalScore)}/100.0", tag = tag)
-
-			return finalScore
-		}
-
-		/**
+	/**
 		 * Calculates raw training score without normalization.
 		 *
-		 * This function contains the same logic as scoreStatTraining but returns raw scores
+		 * This function calculates raw training scores
 		 * that will be normalized based on the actual maximum score in the current session.
 		 *
 		 * @param training The training option to evaluate.
