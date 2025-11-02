@@ -791,7 +791,7 @@ class Training(private val game: Game) {
 	private fun printTrainingMap() {
 		game.printToLog("\n[INFO] Stat Gains by Training:", tag = tag)
 		trainingMap.forEach { name, training ->
-			game.printToLog("[INFO] $name Training stat gains: ${training.statGains.contentToString()}, failure chance: ${training.failureChance}%.", tag = tag)
+			game.printToLog("[INFO] $name Training stat gains: ${training.statGains.contentToString()}, failure chance: ${training.failureChance}%, rainbow: ${training.isRainbow}.", tag = tag)
 		}
 	}
 }
