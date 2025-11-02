@@ -1,7 +1,9 @@
+import { NativeOnlyAnimatedView } from "@/src/components/ui/native-only-animated-view"
 import { TextClassContext } from "@/src/components/ui/text"
 import { cn } from "@/src/lib/utils"
 import { cva, type VariantProps } from "class-variance-authority"
 import { Platform, Pressable } from "react-native"
+import { useSharedValue, useAnimatedStyle, withTiming } from "react-native-reanimated"
 
 const buttonVariants = cva(
     cn(
@@ -69,10 +71,48 @@ const buttonTextVariants = cva(cn("text-foreground text-sm font-medium", Platfor
 
 type ButtonProps = React.ComponentProps<typeof Pressable> & React.RefAttributes<typeof Pressable> & VariantProps<typeof buttonVariants>
 
-function Button({ className, variant, size, ...props }: ButtonProps) {
+function Button({ className, variant, size, disabled, onPressIn, onPressOut, ...props }: ButtonProps) {
+    const opacity = useSharedValue(1)
+
+    const animatedStyle = useAnimatedStyle(() => {
+        return {
+            opacity: disabled ? 0.5 : opacity.value,
+        }
+    })
+
+    const handlePressIn = (event: any) => {
+        if (!disabled) {
+            opacity.value = withTiming(0.6, { duration: 100 })
+        }
+        onPressIn?.(event)
+    }
+
+    const handlePressOut = (event: any) => {
+        if (!disabled) {
+            opacity.value = withTiming(1, { duration: 100 })
+        }
+        onPressOut?.(event)
+    }
+
     return (
         <TextClassContext.Provider value={buttonTextVariants({ variant, size })}>
-            <Pressable className={cn(props.disabled && "opacity-50", buttonVariants({ variant, size }), className)} role="button" {...props} />
+            <NativeOnlyAnimatedView style={animatedStyle}>
+                <Pressable
+                    className={cn(buttonVariants({ variant, size }), className)}
+                    style={({ pressed }) =>
+                        Platform.OS === "web"
+                            ? {
+                                  opacity: disabled ? 0.5 : pressed ? 0.6 : 1,
+                              }
+                            : undefined
+                    }
+                    role="button"
+                    disabled={disabled}
+                    onPressIn={handlePressIn}
+                    onPressOut={handlePressOut}
+                    {...props}
+                />
+            </NativeOnlyAnimatedView>
         </TextClassContext.Provider>
     )
 }
