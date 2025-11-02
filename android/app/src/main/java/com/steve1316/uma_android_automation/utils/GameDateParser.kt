@@ -45,8 +45,10 @@ class GameDateParser {
 		tag: String = "GameDateParser"
 	): Game.Date {
 		if (dateString == "") {
-			game.printToLog("[ERROR] Received date string from OCR was empty. Defaulting to \"Senior Year Early Jan\" at turn number 49.", tag = tag)
-			return Game.Date(3, "Early", 1, 49)
+			// OCR failed to produce a date string. Assume it is the next day.
+			val nextDate = computeNextDayDate(game.currentDate)
+			game.printToLog("[ERROR] Received empty date string from OCR. Defaulting to next day: year=${nextDate.year}, phase=\"${nextDate.phase}\", month=${nextDate.month}, turn=${nextDate.turnNumber}.", tag = tag)
+			return nextDate
 		} else if (dateString.lowercase().contains("debut")) {
 			// Special handling for the Pre-Debut phase.
 			val turnsRemaining = imageUtils.determineDayForExtraRace()
@@ -54,7 +56,12 @@ class GameDateParser {
 			// Pre-Debut ends on Early July (turn 13), so we calculate backwards.
 			// This includes the Race day.
 			val totalTurnsInPreDebut = 12
-			val currentTurnInPreDebut = totalTurnsInPreDebut - turnsRemaining + 1
+			val currentTurnInPreDebut = if (turnsRemaining == -1) {
+				// OCR failed to detect the day number. Assume it is the next day.
+				minOf(game.currentDate.turnNumber + 1, 13)
+			} else {
+				(totalTurnsInPreDebut - turnsRemaining + 1).coerceIn(1, 13)
+			}
 
 			val month = ((currentTurnInPreDebut - 1) / 2) + 1
 			return Game.Date(1, "Pre-Debut", month, currentTurnInPreDebut)
@@ -84,8 +91,10 @@ class GameDateParser {
 		// Split the input string by whitespace.
 		val parts = dateString.trim().split(" ")
 		if (parts.size < 3) {
-			game.printToLog("[DATE-PARSER] Invalid date string format: $dateString", tag = tag)
-			return Game.Date(3, "Early", 1, 49)
+			// Invalid date format detected. Assume it is the next day.
+			val nextDate = computeNextDayDate(game.currentDate)
+			game.printToLog("[DATE-PARSER] Invalid date string format: $dateString. Defaulting to next day: year=${nextDate.year}, phase=\"${nextDate.phase}\", month=${nextDate.month}, turn=${nextDate.turnNumber}.", tag = tag)
+			return nextDate
 		}
  
 		// Extract the parts with safe indexing using default values.
