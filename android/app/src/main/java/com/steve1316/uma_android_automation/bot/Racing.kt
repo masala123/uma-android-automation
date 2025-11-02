@@ -33,6 +33,7 @@ class Racing (private val game: Game) {
     var skipRacing = false
     var firstTimeRacing = true
     var hasFanRequirement = false  // Indicates that a fan requirement has been detected on the main screen.
+    var hasTrophyRequirement = false  // Indicates that a trophy requirement has been detected on the main screen.
     private var nextSmartRaceDay: Int? = null  // Tracks the specific day to race based on opportunity cost analysis.
 
     private val enableStopOnMandatoryRace: Boolean = SettingsHelper.getBooleanSetting("racing", "enableStopOnMandatoryRaces")
@@ -367,6 +368,25 @@ class Racing (private val game: Game) {
         return bestMatch
     }
 
+    /**
+     * Check if there are fan or trophy requirements that need to be satisfied.
+     */
+    fun checkForRacingRequirements() {
+        // Check for fan requirement on the main screen.
+        val needsFanRequirement = game.imageUtils.findImage("race_fans_criteria", tries = 1, region = game.imageUtils.regionTopHalf).first != null
+        if (needsFanRequirement) {
+            hasFanRequirement = true
+            game.printToLog("[RACE] Fan requirement criteria detected on main screen. Forcing racing to fulfill requirement.", tag = tag)
+        } else {
+            // Check for trophy requirement on the main screen.
+            val needsTrophyRequirement = game.imageUtils.findImage("race_trophies_criteria", tries = 1, region = game.imageUtils.regionTopHalf).first != null
+            if (needsTrophyRequirement) {
+                hasTrophyRequirement = true
+                game.printToLog("[RACE] Trophy requirement criteria detected on main screen. Forcing racing to fulfill requirement.", tag = tag)
+            }
+        }
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     // Smart Racing Plan Functionality
@@ -535,7 +555,47 @@ class Racing (private val game: Game) {
     }
 
     /**
-     * Filters the given list of races according to the user’s Racing Plan settings.
+     * Checks if any G1 races exist at the specified turn number in the database.
+     *
+     * @param turnNumber The turn number to check for G1 races.
+     * @return True if at least one G1 race exists at the specified turn, false otherwise.
+     */
+    private fun hasG1RacesAtTurn(turnNumber: Int): Boolean {
+        val settingsManager = SQLiteSettingsManager(game.myContext)
+        if (!settingsManager.initialize()) {
+            game.printToLog("[ERROR] Database not available for G1 race check.", tag = tag, isError = true)
+            return false
+        }
+
+        return try {
+            val database = settingsManager.getDatabase()
+            if (database == null) {
+                game.printToLog("[ERROR] Database is null for G1 race check.", tag = tag, isError = true)
+                return false
+            }
+
+            val cursor = database.query(
+                TABLE_RACES,
+                arrayOf(RACES_COLUMN_GRADE),
+                "$RACES_COLUMN_TURN_NUMBER = ? AND $RACES_COLUMN_GRADE = ?",
+                arrayOf(turnNumber.toString(), "G1"),
+                null, null, null
+            )
+
+            val hasG1 = cursor.count > 0
+            cursor.close()
+            settingsManager.close()
+            
+            hasG1
+        } catch (e: Exception) {
+            game.printToLog("[ERROR] Error checking for G1 races: ${e.message}", tag = tag, isError = true)
+            settingsManager.close()
+            false
+        }
+    }
+
+    /**
+     * Filters the given list of races according to the user's Racing Plan settings.
      *
      * The filtering criteria are loaded from the Racing Plan configuration and include:
      * - **Minimum fans threshold:** Races must have at least this number of fans.
@@ -543,9 +603,10 @@ class Racing (private val game: Game) {
      * - **Preferred grades:** Races must match one of the preferred grade values.
      *
      * @param races The list of [RaceData] entries to filter.
+     * @param bypassMinFans If true, bypasses the minimum fans threshold check (useful for trophy requirement).
      * @return A list of [RaceData] objects that satisfy all Racing Plan filter criteria.
      */
-    fun filterRacesBySettings(races: List<RaceData>): List<RaceData> {
+    fun filterRacesBySettings(races: List<RaceData>, bypassMinFans: Boolean = false): List<RaceData> {
         // Parse preferred grades from JSON array string.
         game.printToLog("[RACE] Raw preferred grades string: \"$preferredGradesString\".", tag = tag)
         val preferredGrades = try {
@@ -565,7 +626,7 @@ class Racing (private val game: Game) {
         else Log.d(tag, "[DEBUG] Filter criteria: Min fans: $minFansThreshold, terrain: $preferredTerrain, grades: $preferredGrades")
         
         val filteredRaces = races.filter { race ->
-            val meetsFansThreshold = race.fans >= minFansThreshold
+            val meetsFansThreshold = bypassMinFans || race.fans >= minFansThreshold
             val meetsTerrainPreference = preferredTerrain == "Any" || race.terrain == preferredTerrain
             val meetsGradePreference = preferredGrades.isEmpty() || preferredGrades.contains(race.grade)
             
@@ -901,8 +962,24 @@ class Racing (private val game: Game) {
         }
         game.printToLog("[RACE] Successfully matched ${currentRaces.size} races in database.", tag = tag)
 
+        // If trophy requirement is active, filter to only G1 races.
+        // Trophy requirement is independent of racing plan and farming fans settings.
+        val racesForSelection = if (hasTrophyRequirement) {
+            val g1Races = currentRaces.filter { it.grade == "G1" }
+            if (g1Races.isEmpty()) {
+                // No G1 races available. Cancel since trophy requirement specifically needs G1 races.
+                game.printToLog("[RACE] Trophy requirement active but no G1 races available. Canceling racing process (independent of racing plan/farming fans).", tag = tag)
+                return false
+            } else {
+                game.printToLog("[RACE] Trophy requirement active. Filtering to ${g1Races.size} G1 races: ${g1Races.map { it.name }}.", tag = tag)
+                g1Races
+            }
+        } else {
+            currentRaces
+        }
+
         // Separate matched races into planned vs unplanned.
-        val (plannedRaces, regularRaces) = currentRaces.partition { race ->
+        val (plannedRaces, regularRaces) = racesForSelection.partition { race ->
             userPlannedRaces.any { it.raceName == race.name }
         }
 
@@ -911,8 +988,18 @@ class Racing (private val game: Game) {
         game.printToLog("[RACE] Found ${regularRaces.size} regular races on screen: ${regularRaces.map { it.name }}.", tag = tag)
 
         // Filter both lists by user Racing Plan settings.
-        val filteredPlannedRaces = filterRacesBySettings(plannedRaces)
-        val filteredRegularRaces = filterRacesBySettings(regularRaces)
+        // If trophy requirement is active, bypass min fan filtering but still apply other filters.
+        val filteredPlannedRaces = if (hasTrophyRequirement) {
+            game.printToLog("[RACE] Trophy requirement active. Bypassing min fan threshold for G1 races.", tag = tag)
+            filterRacesBySettings(plannedRaces, bypassMinFans = true)
+        } else {
+            filterRacesBySettings(plannedRaces)
+        }
+        val filteredRegularRaces = if (hasTrophyRequirement) {
+            filterRacesBySettings(regularRaces, bypassMinFans = true)
+        } else {
+            filterRacesBySettings(regularRaces)
+        }
         game.printToLog("[RACE] After filtering: ${filteredPlannedRaces.size} planned races and ${filteredRegularRaces.size} regular races remain.", tag = tag)
 
         // Combine all filtered races for Opportunity Cost analysis.
@@ -923,7 +1010,10 @@ class Racing (private val game: Game) {
         }
 
         // Evaluate whether the bot should race now using Opportunity Cost logic.
-        if (!calculateOpportunityCost(allFilteredRaces, lookAheadDays)) {
+        // If trophy requirement is active, bypass opportunity cost to prioritize clearing the requirement.
+        if (hasTrophyRequirement) {
+            game.printToLog("[RACE] Bypassing opportunity cost analysis to prioritize G1 race due to trophy requirement.", tag = tag)
+        } else if (!calculateOpportunityCost(allFilteredRaces, lookAheadDays)) {
             game.printToLog("[RACE] Smart racing suggests waiting for better opportunities. Canceling racing process.", tag = tag)
             return false
         }
@@ -1033,9 +1123,27 @@ class Racing (private val game: Game) {
             }
         }
 
-        // If fan requirement is detected, bypass smart racing logic to force racing.
+        // If fan or trophy requirement is detected, bypass smart racing logic to force racing.
+        // Both requirements are independent of racing plan and farming fans settings.
         if (hasFanRequirement) {
             game.printToLog("[RACE] Fan requirement detected. Bypassing smart racing logic to fulfill requirement.", tag = tag)
+        } else if (hasTrophyRequirement) {
+            // Trophy requirement: Check if G1 races exist at current turn before proceeding.
+            // If no G1 races are available, still allow regular racing if it's a regular race day or smart racing day.
+            if (!hasG1RacesAtTurn(game.currentDate.turnNumber)) {
+                // Check if regular racing is allowed (farming fans enabled and it's a regular race day, or it's a smart racing day).
+                val isRegularRacingDay = enableFarmingFans && isEligibleRacingDay(dayNumber)
+                val isSmartRacingDay = enableRacingPlan && enableFarmingFans && nextSmartRaceDay == dayNumber
+                
+                if (isRegularRacingDay || isSmartRacingDay) {
+                    game.printToLog("[RACE] Trophy requirement detected but no G1 races at turn ${game.currentDate.turnNumber}. Allowing regular racing on eligible day.", tag = tag)
+                } else {
+                    game.printToLog("[RACE] Trophy requirement detected but no G1 races available at turn ${game.currentDate.turnNumber} and not a regular/smart racing day. Skipping racing.", tag = tag)
+                    return false
+                }
+            } else {
+                game.printToLog("[RACE] Trophy requirement detected. G1 races available at turn ${game.currentDate.turnNumber}. Proceeding to racing screen.", tag = tag)
+            }
         } else if (enableRacingPlan && enableFarmingFans) {
             // Smart racing: Check turn-based eligibility before screen checks.
             // Only run opportunity cost analysis with smartRacingCheckInterval.
@@ -1074,9 +1182,13 @@ class Racing (private val game: Game) {
 
         // For smart racing, if we got here, the turn-based check passed, so we should race.
         // For standard racing, use the interval check.
-        // If fan requirement exists, always allow racing.
+        // Both fan and trophy requirements are independent of racing plan and farming fans settings.
         if (hasFanRequirement) {
-            game.printToLog("[RACE] Fan requirement detected. Allowing racing on any eligible day.", tag = tag)
+            game.printToLog("[RACE] Fan requirement detected. Allowing racing on any eligible day (independent of racing plan/farming fans).", tag = tag)
+            return !raceRepeatWarningCheck
+        } else if (hasTrophyRequirement) {
+            // Trophy requirement: G1 race availability was already checked above via database query.
+            // If no G1 races were found, regular racing eligibility was also checked.
             return !raceRepeatWarningCheck
         } else if (enableRacingPlan && enableFarmingFans) {
             // Check if current day matches the optimal race day or falls on the interval.
@@ -1122,21 +1234,44 @@ class Racing (private val game: Game) {
             return false
         }
 
-        // 2. If only one race has double predictions, selects it immediately.
-        if (doublePredictionLocations.size == 1) {
-            game.printToLog("[RACE] Only one race with double predictions. Selecting it.", tag = tag)
-            game.tap(doublePredictionLocations[0].x, doublePredictionLocations[0].y, "race_extra_double_prediction", ignoreWaiting = true)
-            return true
+        // 2. If only one race has double predictions, check if it's G1 when trophy requirement is active.
+        if (maxCount == 1) {
+            if (hasTrophyRequirement) {
+                game.updateDate()
+                val raceName = game.imageUtils.extractRaceName(doublePredictionLocations[0])
+                val raceData = getRaceByTurnAndName(game.currentDate.turnNumber, raceName)
+                if (raceData?.grade == "G1") {
+                    game.printToLog("[RACE] Only one race with double predictions and it's G1. Selecting it.", tag = tag)
+                    game.tap(doublePredictionLocations[0].x, doublePredictionLocations[0].y, "race_extra_double_prediction", ignoreWaiting = true)
+                    return true
+                } else {
+                    // Not G1. Trophy requirement specifically needs G1 races, so cancel.
+                    // Trophy requirement is independent of racing plan and farming fans settings.
+                    game.printToLog("[RACE] Trophy requirement active but only non-G1 race available. Canceling racing process (independent of racing plan/farming fans).", tag = tag)
+                    return false
+                }
+            } else {
+                game.printToLog("[RACE] Only one race with double predictions. Selecting it.", tag = tag)
+                game.tap(doublePredictionLocations[0].x, doublePredictionLocations[0].y, "race_extra_double_prediction", ignoreWaiting = true)
+                return true
+            }
         }
 
         // 3. Otherwise, iterates through each extra race to determine fan gain and double prediction status.
         val (sourceBitmap, templateBitmap) = game.imageUtils.getBitmaps("race_extra_double_prediction")
         val listOfRaces = ArrayList<RaceDetails>()
         val extraRaceLocations = ArrayList<Point>()
+        val raceNamesList = ArrayList<String>()
 
         for (count in 0 until maxCount) {
             val selectedExtraRace = game.imageUtils.findImage("race_extra_selection", region = game.imageUtils.regionBottomHalf).first ?: break
             extraRaceLocations.add(selectedExtraRace)
+
+            // Extract race name for G1 filtering if trophy requirement is active.
+            if (hasTrophyRequirement && count < doublePredictionLocations.size) {
+                val raceName = game.imageUtils.extractRaceName(doublePredictionLocations[count])
+                raceNamesList.add(raceName)
+            }
 
             val raceDetails = game.imageUtils.determineExtraRaceFans(selectedExtraRace, sourceBitmap, templateBitmap!!, forceRacing = enableForceRacing)
             listOfRaces.add(raceDetails)
@@ -1160,21 +1295,46 @@ class Racing (private val game: Game) {
             game.wait(0.5)
         }
 
+        // If trophy requirement is active, filter to only G1 races.
+        val (filteredRaces, filteredLocations, filteredRaceNames) = if (hasTrophyRequirement) {
+            game.updateDate()
+            val racePlanData = getRacePlanData()
+            val g1Indices = raceNamesList.mapIndexedNotNull { index, raceName ->
+                val raceData = getRaceByTurnAndName(game.currentDate.turnNumber, raceName)
+                if (raceData?.grade == "G1") index else null
+            }
+            
+            if (g1Indices.isEmpty()) {
+                // No G1 races available. Cancel since trophy requirement specifically needs G1 races.
+                // Trophy requirement is independent of racing plan and farming fans settings.
+                game.printToLog("[RACE] Trophy requirement active but no G1 races available. Canceling racing process (independent of racing plan/farming fans).", tag = tag)
+                return false
+            } else {
+                game.printToLog("[RACE] Trophy requirement active. Filtering to ${g1Indices.size} G1 races.", tag = tag)
+                val filtered = g1Indices.map { listOfRaces[it] }
+                val filteredLocs = g1Indices.map { extraRaceLocations[it] }
+                val filteredNames = g1Indices.map { raceNamesList[it] }
+                Triple(filtered, filteredLocs, filteredNames)
+            }
+        } else {
+            Triple(listOfRaces, extraRaceLocations, raceNamesList)
+        }
+
         // Determine max fans and select the appropriate race.
-        val maxFans = listOfRaces.maxOfOrNull { it.fans } ?: -1
+        val maxFans = filteredRaces.maxOfOrNull { it.fans } ?: -1
         if (maxFans == -1) return false
-        game.printToLog("[RACE] Number of fans detected for each extra race are: ${listOfRaces.joinToString(", ") { it.fans.toString() }}", tag = tag)
+        game.printToLog("[RACE] Number of fans detected for each extra race are: ${filteredRaces.joinToString(", ") { it.fans.toString() }}", tag = tag)
 
         // 4. Evaluates which race to select based on maximum fans and double prediction priority (if force racing is enabled).
         val index = if (!enableForceRacing) {
-            listOfRaces.indexOfFirst { it.fans == maxFans }
+            filteredRaces.indexOfFirst { it.fans == maxFans }
         } else {
-            listOfRaces.indexOfFirst { it.hasDoublePredictions }.takeIf { it != -1 } ?: listOfRaces.indexOfFirst { it.fans == maxFans }
+            filteredRaces.indexOfFirst { it.hasDoublePredictions }.takeIf { it != -1 } ?: filteredRaces.indexOfFirst { it.fans == maxFans }
         }
 
         // 5. Selects the determined race on screen.
         game.printToLog("[RACE] Selecting extra race at option #${index + 1}.", tag = tag)
-        val target = extraRaceLocations[index]
+        val target = filteredLocations[index]
         game.tap(target.x - game.imageUtils.relWidth((100 * 1.36).toInt()), target.y - game.imageUtils.relHeight(70), "race_extra_selection", ignoreWaiting = true)
 
         return true
@@ -1193,6 +1353,9 @@ class Racing (private val game: Game) {
             game.findAndTapImage("race_confirm", tries = 1, region = game.imageUtils.regionBottomHalf)
             encounteredRacingPopup = false
             game.wait(1.0)
+            
+            // Now check if there is a racing requirement.
+            checkForRacingRequirements()
         }
 
         // If there are no races available, cancel the racing process.
@@ -1280,12 +1443,17 @@ class Racing (private val game: Game) {
                 game.printToLog("[RACE] There are $maxCount extra race options currently on screen.", tag = tag)
             }
 
-            if (hasFanRequirement) game.printToLog("[RACE] Fan requirement criteria detected. This race must be completed to meet the fan requirement.", tag = tag)
+            if (hasFanRequirement) game.printToLog("[RACE] Fan requirement criteria detected. This race must be completed to meet the requirement.", tag = tag)
+            if (hasTrophyRequirement) game.printToLog("[RACE] Trophy requirement criteria detected. Only G1 races will be selected to meet the requirement.", tag = tag)
 
             // Determine whether to use smart racing with user-selected races or standard racing.
             val useSmartRacing = if (hasFanRequirement) {
                 // If fan requirement is needed, force standard racing to ensure the race proceeds.
                 false
+            } else if (hasTrophyRequirement) {
+                // Trophy requirement can use smart racing as it filters to G1 races internally.
+                // Use smart racing for all years except Year 1 (Junior Year).
+                game.currentDate.year != 1
             } else if (game.currentDate.year == 3) {
                 // Year 3 (Senior Year): Use smart racing if conditions are met.
                 enableFarmingFans && !enableForceRacing && enableRacingPlan
@@ -1306,7 +1474,7 @@ class Racing (private val game: Game) {
             } else {
                 // Use the standard racing logic.
                 // If needed, print the reason(s) to why the smart racing logic was not started.
-                if (enableRacingPlan && !hasFanRequirement) {
+                if (enableRacingPlan && !hasFanRequirement && !hasTrophyRequirement) {
                     game.printToLog("[RACE] Smart racing conditions not met due to current settings, using traditional racing logic...", tag = tag)
                     game.printToLog("[RACE] Reason: One or more conditions failed:", tag = tag)
                     if (game.currentDate.year == 3) {
@@ -1540,6 +1708,7 @@ class Racing (private val game: Game) {
 
             firstTimeRacing = false
             hasFanRequirement = false  // Reset fan requirement flag after race completion.
+            hasTrophyRequirement = false  // Reset trophy requirement flag after race completion.
         } else {
             game.printToLog("[ERROR] Cannot start the cleanup process for finishing the race. Moving on...", tag = tag, isError = true)
         }

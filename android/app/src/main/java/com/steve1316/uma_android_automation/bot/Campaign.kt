@@ -47,12 +47,8 @@ open class Campaign(val game: Game) {
 					// Refresh the stat values in memory.
 					game.updateStatValueMapping()
 
-					// Check for fan requirement on the main screen.
-					val needsFanRequirement = game.imageUtils.findImage("race_fans_criteria", tries = 1, region = game.imageUtils.regionTopHalf).first != null
-					if (needsFanRequirement) {
-						game.racing.hasFanRequirement = true
-						game.printToLog("[RACE] Fan requirement criteria detected on main screen. Forcing racing to fulfill requirement.", tag = tag)
-					}
+                    // Check if there are fan or trophy requirements that need to be met with racing.
+					game.racing.checkForRacingRequirements()
 
 					// If the required skill points has been reached, stop the bot.
 					if (game.enableSkillPointCheck && game.imageUtils.determineSkillPoints() >= game.skillPointsRequired) {
@@ -88,20 +84,20 @@ open class Campaign(val game: Game) {
 					}
 				}
 
-				 if (game.racing.encounteredRacingPopup || needToRace) {
-					game.printToLog("[INFO] Racing by default.", tag = tag)
-					 // The !game.racing.skipRacing was removed due to possibility of getting stuck in a loop.
-					if (!handleRaceEvents()) {
-						if (game.racing.detectedMandatoryRaceCheck) {
-							game.printToLog("\n[END] Stopping bot due to detection of Mandatory Race.", tag = tag)
-							game.notificationMessage = "Stopping bot due to detection of Mandatory Race."
-							break
-						}
-						game.findAndTapImage("back", tries = 1, region = game.imageUtils.regionBottomHalf)
-						game.racing.skipRacing = !game.racing.enableForceRacing
-						game.training.handleTraining()
-					}
-				}
+                if (game.racing.encounteredRacingPopup || needToRace) {
+                    game.printToLog("[INFO] Racing by default.", tag = tag)
+                    // The !game.racing.skipRacing was removed due to possibility of getting stuck in a loop.
+                    if (!handleRaceEvents()) {
+                        if (game.racing.detectedMandatoryRaceCheck) {
+                            game.printToLog("\n[END] Stopping bot due to detection of Mandatory Race.", tag = tag)
+                            game.notificationMessage = "Stopping bot due to detection of Mandatory Race."
+                            break
+                        }
+                        game.findAndTapImage("back", tries = 1, region = game.imageUtils.regionBottomHalf)
+                        game.racing.skipRacing = !game.racing.enableForceRacing
+                        game.training.handleTraining()
+                    }
+                }
 			} else if (game.checkTrainingEventScreen()) {
 				// If the bot is at the Training Event screen, that means there are selectable options for rewards.
 				handleTrainingEvent()
