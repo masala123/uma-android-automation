@@ -226,7 +226,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			val cleanedResult = detectedText.replace("%", "").replace(Regex("[^0-9]"), "").trim()
 			cleanedResult.toInt()
 		} catch (_: NumberFormatException) {
-			game.printToLog("[ERROR] Could not convert \"$detectedText\" to integer.", tag = tag, isError = true)
+			game.printToLog("[ERROR] Could not convert \"$detectedText\" to integer for training failure chance.", tag = tag, isError = true)
 			-1
 		}
 
@@ -283,7 +283,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 				game.printToLog("[INFO] Detected day for extra racing: $detectedText", tag = tag)
 				cleanedResult.toInt()
 			} catch (_: NumberFormatException) {
-				game.printToLog("[ERROR] Could not convert \"$detectedText\" to integer.", tag = tag, isError = true)
+				game.printToLog("[ERROR] Could not convert \"$detectedText\" to integer for the turns remaining.", tag = tag, isError = true)
 				-1
 			}
 
@@ -1279,7 +1279,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			Log.d(tag, "[DEBUG] Successfully constructed integer value: $result from \"$constructedString\".")
 			result
 		} catch (e: NumberFormatException) {
-			Log.e(tag, "[ERROR] Could not convert \"$constructedString\" to integer: ${e.stackTraceToString()}")
+			Log.e(tag, "[ERROR] Could not convert \"$constructedString\" to integer for stat gain: ${e.stackTraceToString()}")
 			0
 		}
 	}
