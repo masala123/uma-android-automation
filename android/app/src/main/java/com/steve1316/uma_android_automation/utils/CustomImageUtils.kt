@@ -1008,12 +1008,6 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 				"[DEBUG] Artificially increased $mainStatName stat gain from $originalGain to ${boostedResults[mainStatIndex]} due to possible OCR failure. " +
 				"Side-effect stats had higher gains: ${sideEffectIndices.joinToString(", ") { "${statNames[it]} = ${boostedResults[it]}" }}"
 			)
-		} else if (mainStatGain == 0) {
-			// Set main stat to be 10 points higher than the highest side-effect stat when main stat is 0.
-			boostedResults[mainStatIndex] = maxSideEffectGain + 10
-			Log.d(tag, "[DEBUG] Artificially increased $mainStatName stat gain to ${boostedResults[mainStatIndex]} due to possible OCR failure of 0 gains for the main stat. " +
-				"Based on highest side-effect: ${sideEffectIndices.joinToString(", ") { "${statNames[it]} = ${boostedResults[it]}" }}"
-			)
 		}
 
 		// If the side-effect stat gains were zeroes, boost them to half of the main stat gain.
