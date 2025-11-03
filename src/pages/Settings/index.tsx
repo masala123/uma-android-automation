@@ -234,22 +234,22 @@ const Settings = () => {
 
                 <CustomTitle title="Settings Management" description="Import and export settings from JSON file or access the app's data directory." />
 
-                <View style={{ flexDirection: "row", gap: 12 }}>
-                    <CustomButton onPress={handleImportSettings} variant="default" style={{ flex: 1 }}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                    <CustomButton onPress={handleImportSettings} variant="default" style={{ width: 150 }}>
                         📥 Import Settings
                     </CustomButton>
 
-                    <CustomButton onPress={handleExportSettings} variant="default" style={{ flex: 1 }}>
+                    <CustomButton onPress={handleExportSettings} variant="default" style={{ width: 150 }}>
                         📤 Export Settings
                     </CustomButton>
                 </View>
 
-                <View style={{ flexDirection: "row", gap: 12, marginTop: 16 }}>
-                    <CustomButton onPress={openDataDirectory} variant="default" style={{ flex: 1 }} fontSize={12}>
+                <View style={{ flexDirection: "row", marginTop: 16, justifyContent: "space-between" }}>
+                    <CustomButton onPress={openDataDirectory} variant="default" style={{ width: 150 }} fontSize={12}>
                         📁 Open Data Directory
                     </CustomButton>
 
-                    <CustomButton onPress={() => setShowResetDialog(true)} variant="destructive" style={{ flex: 1 }}>
+                    <CustomButton onPress={() => setShowResetDialog(true)} variant="destructive" style={{ width: 150 }}>
                         🔄 Reset Settings
                     </CustomButton>
                 </View>
