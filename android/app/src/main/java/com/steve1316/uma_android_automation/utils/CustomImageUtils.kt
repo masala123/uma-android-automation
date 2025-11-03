@@ -94,6 +94,33 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		return arrayListOf()
 	}
 
+	/**
+	 * Find a single occurrence of the specified image in the images folder using a provided source bitmap. Useful for parallel processing to avoid exceeding the maxImages buffer.
+	 *
+	 * @param templateName File name of the template image.
+	 * @param sourceBitmap The source bitmap to search in.
+	 * @param region Specify the region consisting of (x, y, width, height) of the source screenshot to template match. Defaults to (0, 0, 0, 0) which is equivalent to searching the full image.
+	 * @param customConfidence Set a custom confidence for the template matching. Defaults to 0.0 which will use the confidence set in the app.
+     * @param suppressError Whether to suppress error logging if image is not found. Defaults to false.
+	 * @return A Point object containing the location of the first occurrence, or null if not found.
+	 */
+	fun findImageWithBitmap(templateName: String, sourceBitmap: Bitmap, region: IntArray = intArrayOf(0, 0, 0, 0), customConfidence: Double = 0.0, suppressError: Boolean = false): Point? {
+		var templateBitmap: Bitmap?
+		context.assets?.open("images/$templateName.png").use { inputStream ->
+			templateBitmap = BitmapFactory.decodeStream(inputStream)
+		}
+
+		if (templateBitmap != null) {
+            val matchLocation = match(sourceBitmap, templateBitmap, templateName, region = region, customConfidence = customConfidence).second
+            if (matchLocation == null && !suppressError) {
+                if (debugMode) game.printToLog("[DEBUG] Could not find $templateName in the provided source bitmap.", tag = tag)
+                else Log.d(tag, "[DEBUG] Could not find $templateName in the provided source bitmap.")
+            }
+            return matchLocation
+		}
+		return null
+	}
+
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
 
