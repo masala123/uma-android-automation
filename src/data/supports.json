@@ -1,4 +1,22 @@
 {
+    "Nice Nature": {
+        "(❯❯) Irrepressible Feelings": [
+            "Energy +10\nNice Nature bond +5",
+            "Energy -5\nSpeed +5\nPower +5\nNice Nature bond +5\nHeal all negative status effects"
+        ],
+        "Not like Meow": [
+            "Energy +20\nNice Nature bond +5",
+            "Energy +10\nWit +5\nNice Nature bond +5"
+        ],
+        "(Delicious) Burden": [
+            "Ramp Up hint +1\nNice Nature bond +5",
+            "Mood +1\nMaximum Energy +4\nNice Nature bond +5"
+        ],
+        "(❯) Chasing Their Backs": [
+            "Energy +5\nWit +3\nNice Nature bond +5",
+            "Nice Nature bond +20"
+        ]
+    },
     "Sweep Tosho": {
         "(❯) Fickle Genius Magical Girl Sweepy ☆": [
             "Randomly either\n----------\nMood +1\nStraightaway Spurt hint +2\nSweep Tosho bond +5\n----------\nMood -1\nWit +5\nSweep Tosho bond +5",
@@ -40,13 +58,13 @@
             "Speed +3\nPower +3\nWit +3\nDaiwa Scarlet bond +5",
             "Energy +15\nEvent chain ended"
         ],
-        "This Is Nothing!": [
-            "Stamina to Spare hint +1\nDaiwa Scarlet bond +5",
-            "Energy +20\nMood +1\nDaiwa Scarlet bond +5"
-        ],
         "I'm Going to Win Tomorrow!": [
             "Wit +10\nDaiwa Scarlet bond +5",
             "Mood +1\nSkill points +15\nDaiwa Scarlet bond +5"
+        ],
+        "This Is Nothing!": [
+            "Stamina to Spare hint +1\nDaiwa Scarlet bond +5",
+            "Energy +20\nMood +1\nDaiwa Scarlet bond +5"
         ]
     },
     "Narita Brian": {
@@ -388,6 +406,10 @@
         ]
     },
     "Grass Wonder": {
+        "(❯❯) A Moment's Respite": [
+            "Energy +15\nGrass Wonder bond +5",
+            "Randomly either\n----------\nEnergy -10\nPower +5\nGuts +5\nWit +5\nGrass Wonder bond +5\n----------\nPower +5\nGuts +5\nWit +10\nGrass Wonder bond +5"
+        ],
         "Library Vexation": [
             "Wit +10\nGrass Wonder bond +5",
             "Guts +5\nWit +5\nGrass Wonder bond +5"
@@ -398,6 +420,10 @@
         ]
     },
     "El Condor Pasa": {
+        "(❯❯) Uma-me": [
+            "Energy +30\nEl Condor Pasa bond +5",
+            "Stamina to Spare hint +1\nEl Condor Pasa bond +5\nEvent chain ended"
+        ],
         "Blazing Fire!": [
             "Stamina +10\nEl Condor Pasa bond +5",
             "Energy -10\nPower +20\nEl Condor Pasa bond +5"
@@ -463,13 +489,13 @@
         ]
     },
     "Sakura Bakushin O": {
-        "Genius Efficiency!": [
-            "Speed +15\nSakura Bakushin O bond +5",
-            "Speed +5\nPower +10\nSakura Bakushin O bond +5"
-        ],
         "Enough to Break into a Dash!": [
             "Gap Closer hint +1\nSakura Bakushin O bond +5",
             "Energy -10\nSpeed +10\nPower +5\nSakura Bakushin O bond +5"
+        ],
+        "Genius Efficiency!": [
+            "Speed +15\nSakura Bakushin O bond +5",
+            "Speed +5\nPower +10\nSakura Bakushin O bond +5"
         ]
     },
     "Super Creek": {
@@ -551,6 +577,24 @@
             "Stamina +10\nRice Shower bond +5"
         ]
     },
+    "Tosen Jordan": {
+        "(❯) Nail Artist on the Turf": [
+            "Randomly either\n----------\nSkill points +40\nTosen Jordan bond +5\n----------\nSkill points +10\nMood -1",
+            "Stamina +10\nTosen Jordan bond +5"
+        ],
+        "(❯❯) Not Just for Show": [
+            "Randomly either\n----------\nEnergy +10\nRamp Up hint +3\nTosen Jordan bond +5\n----------\nRamp Up hint +1",
+            "Energy -5\nStamina +20\nTosen Jordan bond +5"
+        ],
+        "Doomscrolling the Time Away": [
+            "Mood +1\nSpeed +5\nTosen Jordan bond +5",
+            "Stamina +10\nTosen Jordan bond +5"
+        ],
+        "Sponsored Posts Can Be Low-Key Sus": [
+            "Energy +10\nMood +1\nTosen Jordan bond +5",
+            "Lucky Seven hint +1\nTosen Jordan bond +5"
+        ]
+    },
     "Mejiro Ardan": {
         "(❯) Special Drinks Made with Friends ♪": [
             "Randomly either\n----------\nEnergy +10\nSpeed +5\nWit +5\nSkill points +10\n----------\nWit +10",
@@ -608,20 +652,6 @@
             "Medium Straightaways ○ hint +1\nZenno Rob Roy bond +5"
         ]
     },
-    "Nice Nature": {
-        "(❯) Chasing Their Backs": [
-            "Energy +5\nWit +3\nNice Nature bond +5",
-            "Nice Nature bond +20"
-        ],
-        "Not like Meow": [
-            "Energy +20\nNice Nature bond +5",
-            "Energy +10\nWit +5\nNice Nature bond +5"
-        ],
-        "(Delicious) Burden": [
-            "Ramp Up hint +1\nNice Nature bond +5",
-            "Mood +1\nMaximum Energy +4\nNice Nature bond +5"
-        ]
-    },
     "Ikuno Dictus": {
         "(❯❯) Ikuno-Style Support": [
             "Wit +15\nFrenzied Front Runners hint +3\nIkuno Dictus bond +5",
@@ -665,33 +695,33 @@
         ]
     },
     "Hishi Amazon": {
-        "Hishiama's Struggles: Problem Children": [
-            "Energy +10\nWit +5\nHishi Amazon bond +5",
-            "Energy -10\nSpeed +10\nGuts +5\nHishi Amazon bond +5"
-        ],
         "Hishiama's Struggles: Final Stretch": [
             "Hesitant End Closers hint +1\nHishi Amazon bond +5",
             "Power +5\nSkill points +15\nHishi Amazon bond +5"
+        ],
+        "Hishiama's Struggles: Problem Children": [
+            "Energy +10\nWit +5\nHishi Amazon bond +5",
+            "Energy -10\nSpeed +10\nGuts +5\nHishi Amazon bond +5"
         ]
     },
     "Air Groove": {
-        "Strict but Gracious": [
-            "Go with the Flow hint +1\nAir Groove bond +5",
-            "Energy +10\nWit +10"
-        ],
         "Agile but Strong": [
             "Power +15\nAir Groove bond +5",
             "Speed +10\nStamina +5\nAir Groove bond +5"
+        ],
+        "Strict but Gracious": [
+            "Go with the Flow hint +1\nAir Groove bond +5",
+            "Energy +10\nWit +10"
         ]
     },
     "Agnes Digital": {
-        "Heavy Romance": [
-            "Rainy Days ○ hint +1\nAgnes Digital bond +5",
-            "Wet Conditions ○ hint +1\nAgnes Digital bond +5"
-        ],
         "Umamusume Deficiency!": [
             "Energy +5\nSpeed +5\nAgnes Digital bond +5",
             "Speed +5\nPower +5\nAgnes Digital bond +5"
+        ],
+        "Heavy Romance": [
+            "Rainy Days ○ hint +1\nAgnes Digital bond +5",
+            "Wet Conditions ○ hint +1\nAgnes Digital bond +5"
         ]
     },
     "Biwa Hayahide": {
@@ -705,12 +735,12 @@
         ]
     },
     "Mayano Top Gun": {
-        "Snack Advice for Mayano!": [
-            "Stamina +5\nGuts +5\nMayano Top Gun bond +5",
-            "Stamina +10\nMayano Top Gun bond +5"
-        ],
         "Fashion Advice for Mayano!": [
             "Straightaway Adept hint +1\nMayano Top Gun bond +5",
+            "Stamina +10\nMayano Top Gun bond +5"
+        ],
+        "Snack Advice for Mayano!": [
+            "Stamina +5\nGuts +5\nMayano Top Gun bond +5",
             "Stamina +10\nMayano Top Gun bond +5"
         ]
     },
@@ -729,13 +759,13 @@
             "Guts +10\nSkill points +15\nMihono Bourbon bond +5",
             "Energy -10\nCorner Recovery ○ hint +1\n(random) Mihono Bourbon bond -5\nEvent chain ended"
         ],
-        "Orders Must Be Followed": [
-            "Focus hint +1\nMihono Bourbon bond +5",
-            "Speed +10\nSkill points +15\nMihono Bourbon bond +5"
-        ],
         "Do No Harm": [
             "Energy -10\nStamina +5\nPower +15\nMihono Bourbon bond +5",
             "Energy +10\nWit +5\nMihono Bourbon bond +5"
+        ],
+        "Orders Must Be Followed": [
+            "Focus hint +1\nMihono Bourbon bond +5",
+            "Speed +10\nSkill points +15\nMihono Bourbon bond +5"
         ]
     },
     "Agnes Tachyon": {
@@ -749,13 +779,13 @@
         ]
     },
     "Eishin Flash": {
-        "Responding to the Unforeseen": [
-            "Guts +10\nEishin Flash bond +5",
-            "Target in Sight ○ hint +1\nEishin Flash bond +5"
-        ],
         "Unforeseen Lunch": [
             "Energy +15\nEishin Flash bond +5",
             "Speed +5\nGuts +5\nEishin Flash bond +5"
+        ],
+        "Responding to the Unforeseen": [
+            "Guts +10\nEishin Flash bond +5",
+            "Target in Sight ○ hint +1\nEishin Flash bond +5"
         ]
     },
     "Narita Taishin": {
@@ -769,16 +799,20 @@
         ]
     },
     "Marvelous Sunday": {
-        "Marvelous, No Question ☆": [
-            "Energy +10\nSpeed +5\nMarvelous Sunday bond +5",
-            "Mood +1\nSpeed +5\nMarvelous Sunday bond +5"
-        ],
         "How To Be More Marvelous ☆": [
             "Energy +10\nMood +1\nMarvelous Sunday bond +5",
             "Hanshin Racecourse ○ hint +1\nMarvelous Sunday bond +5"
+        ],
+        "Marvelous, No Question ☆": [
+            "Energy +10\nSpeed +5\nMarvelous Sunday bond +5",
+            "Mood +1\nSpeed +5\nMarvelous Sunday bond +5"
         ]
     },
     "Matikanefukukitaru": {
+        "(❯❯) Guidance and Friends": [
+            "Skill points +45\nMatikanefukukitaru bond +5",
+            "Randomly either\n----------\nEnergy +10\nMood +1\nRight-Handed ○ hint +3\nMatikanefukukitaru bond +5\n----------\nEnergy -20\nRight-Handed ○ hint +1\nMatikanefukukitaru bond +5"
+        ],
         "Maximum Spirituality": [
             "Wit +5\nSkill points +15\nMatikanefukukitaru bond +5",
             "Energy -10\nSpeed +5\nStamina +5\nPower +5\nMatikanefukukitaru bond +5"
@@ -804,15 +838,15 @@
     },
     "Aoi Kiryuin": {
         "(❯❯) How I Play at the Park": [
-            "Energy +32\nWit +6\nAoi Kiryuin bond +5\n(random) Mood +1",
-            "Randomly either\n----------\nSkill points +18\nAoi Kiryuin bond +5\n----------\nSpeed +6\nSkill points +54\nMood +1\nAoi Kiryuin bond +5"
+            "Energy +35\nWit +6\nAoi Kiryuin bond +5\n(random) Mood +1",
+            "Randomly either\n----------\nSkill points +18\nAoi Kiryuin bond +5\n----------\nSpeed +6\nSkill points +56\nMood +1\nAoi Kiryuin bond +5"
         ],
         "Trainer Tip: Always Improve Your Coaching": [
-            "Energy +13\nSkill points +18\nAoi Kiryuin bond +5",
+            "Energy +14\nSkill points +18\nAoi Kiryuin bond +5",
             "Speed +6\nWit +6\nAoi Kiryuin bond +5"
         ],
         "The Search for a Hobby\nDating starts": [
-            "Energy +26\nSkill points +18\nMood +1\nAoi Kiryuin bond +5\nCan start dating",
+            "Energy +28\nSkill points +18\nMood +1\nAoi Kiryuin bond +5\nCan start dating",
             "Mood -1\nMaverick ○ hint +1\nAoi Kiryuin bond -5\nEvent chain ended"
         ]
     },
