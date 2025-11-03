@@ -1,6 +1,7 @@
 package com.steve1316.uma_android_automation.bot
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.util.Log
 import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.bot.campaigns.AoHaru
@@ -171,18 +172,23 @@ class Game(val myContext: Context) {
 	 * Find and tap the specified image.
 	 *
 	 * @param imageName Name of the button image file in the /assets/images/ folder.
+     * @param sourceBitmap The source bitmap to find the image on. This is optional and defaults to null which will fetch its own source bitmap.
 	 * @param tries Number of tries to find the specified button. Defaults to 3.
 	 * @param region Specify the region consisting of (x, y, width, height) of the source screenshot to template match. Defaults to (0, 0, 0, 0) which is equivalent to searching the full image.
 	 * @param taps Specify the number of taps on the specified image. Defaults to 1.
 	 * @param suppressError Whether or not to suppress saving error messages to the log in failing to find the button. Defaults to false.
 	 * @return True if the button was found and clicked. False otherwise.
 	 */
-	fun findAndTapImage(imageName: String, tries: Int = 3, region: IntArray = intArrayOf(0, 0, 0, 0), taps: Int = 1, suppressError: Boolean = false): Boolean {
+	fun findAndTapImage(imageName: String, sourceBitmap: Bitmap? = null, tries: Int = 3, region: IntArray = intArrayOf(0, 0, 0, 0), taps: Int = 1, suppressError: Boolean = false): Boolean {
 		if (debugMode) {
 			printToLog("[DEBUG] Now attempting to find and click the \"$imageName\" button.")
 		}
 
-		val tempLocation: Point? = imageUtils.findImage(imageName, tries = tries, region = region, suppressError = suppressError).first
+		val tempLocation: Point? = if (sourceBitmap == null) {
+            imageUtils.findImage(imageName, tries = tries, region = region, suppressError = suppressError).first
+        } else {
+            imageUtils.findImageWithBitmap(imageName, sourceBitmap, region = region, suppressError = suppressError)
+        }
 
 		return if (tempLocation != null) {
 			Log.d(tag, "Found and going to tap: $imageName")
