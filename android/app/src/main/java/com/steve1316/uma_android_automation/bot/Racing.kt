@@ -1723,7 +1723,7 @@ class Racing (private val game: Game) {
     private fun handleRaceStrategyOverride() {
         if (!enableRaceStrategyOverride) {
             return
-        } else if (enableRaceStrategyOverride && !firstTimeRacing && !hasAppliedStrategyOverride && game.currentDate.year != 1) {
+        } else if (!firstTimeRacing && !hasAppliedStrategyOverride && game.currentDate.year != 1) {
             return
         }
 
