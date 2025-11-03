@@ -147,6 +147,16 @@ const Settings = () => {
         )
     }
 
+    const renderEventLogVisualizerLink = () => {
+        return (
+            <NavigationLink
+                title="Go to Event Log Visualizer (Beta)"
+                description="Import logs and view a day-by-day timeline of actions."
+                onPress={() => navigation.navigate("EventLogVisualizer" as never)}
+            />
+        )
+    }
+
     const renderMiscSettings = () => {
         return (
             <View style={{ marginTop: 16 }}>
@@ -534,6 +544,7 @@ const Settings = () => {
                     {renderTrainingEventLink()}
                     {renderOCRLink()}
                     {renderRacingLink()}
+                    {renderEventLogVisualizerLink()}
                     {renderMiscSettings()}
                     {renderDebugSettings()}
                 </View>
