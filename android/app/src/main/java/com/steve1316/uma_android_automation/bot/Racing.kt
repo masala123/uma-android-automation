@@ -866,10 +866,9 @@ class Racing (private val game: Game) {
      * and uses opportunity cost logic to determine if racing is better than waiting.
      * 
      * @param currentTurnNumber The current turn number in the game.
-     * @param dayNumber The current day number for extra races.
      * @return True if we should race based on turn analysis, false otherwise.
      */
-    private fun shouldRaceSmartCheck(currentTurnNumber: Int, dayNumber: Int): Boolean {
+    private fun shouldRaceSmartCheck(currentTurnNumber: Int): Boolean {
         return try {
             game.printToLog("[RACE] Checking eligibility for racing at turn $currentTurnNumber...", tag = tag)
             
@@ -1152,7 +1151,7 @@ class Racing (private val game: Game) {
             if (isCheckInterval) {
                 game.printToLog("[RACE] Running opportunity cost analysis at turn ${game.currentDate.turnNumber} (smartRacingCheckInterval: every $smartRacingCheckInterval turns)...", tag = tag)
                 
-                val shouldRaceFromTurnCheck = shouldRaceSmartCheck(game.currentDate.turnNumber, dayNumber)
+                val shouldRaceFromTurnCheck = shouldRaceSmartCheck(game.currentDate.turnNumber)
                 if (!shouldRaceFromTurnCheck) {
                     game.printToLog("[RACE] No suitable races at turn ${game.currentDate.turnNumber} based on opportunity cost analysis.", tag = tag)
                     return false
@@ -1296,9 +1295,8 @@ class Racing (private val game: Game) {
         }
 
         // If trophy requirement is active, filter to only G1 races.
-        val (filteredRaces, filteredLocations, filteredRaceNames) = if (hasTrophyRequirement) {
+        val (filteredRaces, filteredLocations, _) = if (hasTrophyRequirement) {
             game.updateDate()
-            val racePlanData = getRacePlanData()
             val g1Indices = raceNamesList.mapIndexedNotNull { index, raceName ->
                 val raceData = getRaceByTurnAndName(game.currentDate.turnNumber, raceName)
                 if (raceData?.grade == "G1") index else null
@@ -1312,9 +1310,9 @@ class Racing (private val game: Game) {
             } else {
                 game.printToLog("[RACE] Trophy requirement active. Filtering to ${g1Indices.size} G1 races.", tag = tag)
                 val filtered = g1Indices.map { listOfRaces[it] }
-                val filteredLocs = g1Indices.map { extraRaceLocations[it] }
+                val filteredLocations = g1Indices.map { extraRaceLocations[it] }
                 val filteredNames = g1Indices.map { raceNamesList[it] }
-                Triple(filtered, filteredLocs, filteredNames)
+                Triple(filtered, filteredLocations, filteredNames)
             }
         } else {
             Triple(listOfRaces, extraRaceLocations, raceNamesList)

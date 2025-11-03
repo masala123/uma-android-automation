@@ -277,12 +277,11 @@ class TrainingEvent(private val game: Game) {
                 }
 
                 // Select the best option that aligns with the stat prioritization made in the Training options.
-                var max: Int? = selectionWeight.maxOrNull()
-                if (max == null) {
-                    max = 0
-                    optionSelected = 0
+                val max: Int? = selectionWeight.maxOrNull()
+                optionSelected = if (max == null) {
+                    0
                 } else {
-                    optionSelected = selectionWeight.indexOf(max)
+                    selectionWeight.indexOf(max)
                 }
 
                 // Print the selection weights.

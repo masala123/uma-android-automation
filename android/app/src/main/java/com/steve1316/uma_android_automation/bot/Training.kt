@@ -684,8 +684,8 @@ class Training(private val game: Game) {
 			var score = 50.0
 
 			// Bonuses for skill hints.
-			val skillHintLocations = game.imageUtils.findAll(
-				"stat_skill_hint",
+            val skillHintLocations = game.imageUtils.findAll(
+                "stat_skill_hint",
 				region = intArrayOf(
 					SharedData.displayWidth - (SharedData.displayWidth / 3),
 					0,
@@ -769,11 +769,9 @@ class Training(private val game: Game) {
 			trainingMap.values.maxByOrNull { scoreFriendshipTraining(it) }
 		} else {
 			// For Year 2+, calculate all scores first, then normalize based on actual maximum.
-			val trainingScores = trainingMap.values.map { training ->
-				training to calculateRawTrainingScore(training)
-			}.toMap()
+			val trainingScores = trainingMap.values.associateWith { training -> calculateRawTrainingScore(training) }
 
-			val maxScore = trainingScores.values.maxOrNull() ?: 0.0
+            val maxScore = trainingScores.values.maxOrNull() ?: 0.0
 			
 			// Normalize scores to 0-100 scale based on actual maximum.
 			val normalizedScores = trainingScores.mapValues { (_, score) ->
