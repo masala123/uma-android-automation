@@ -392,7 +392,7 @@ const RacingPlanSettings = () => {
                             id="enable-racing-plan"
                             checked={enableRacingPlan}
                             onCheckedChange={(checked) => updateRacingSetting("enableRacingPlan", checked)}
-                            label="Enable Racing Plan (BETA)"
+                            label="Enable Racing Plan (Beta)"
                             description={"When enabled, the bot will use smart race planning to optimize race selection."}
                         />
                     </View>

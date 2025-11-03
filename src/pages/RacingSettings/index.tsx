@@ -10,7 +10,7 @@ import NavigationLink from "../../components/NavigationLink"
 import { ArrowLeft } from "lucide-react-native"
 
 const RacingSettings = () => {
-    const { colors, theme } = useTheme()
+    const { colors } = useTheme()
     const navigation = useNavigation()
     const bsc = useContext(BotStateContext)
 
@@ -88,16 +88,16 @@ const RacingSettings = () => {
             marginTop: 4,
         },
         warningContainer: {
-            backgroundColor: theme === "dark" ? "#3B2A1A" : "#FFF3CD",
+            backgroundColor: colors.warningBg,
             borderLeftWidth: 4,
-            borderLeftColor: "#FFA500",
+            borderLeftColor: colors.warningBorder,
             padding: 12,
             marginTop: 12,
             borderRadius: 8,
         },
         warningText: {
             fontSize: 14,
-            color: theme === "dark" ? "#FFE4B5" : "#856404",
+            color: colors.warningText,
             lineHeight: 20,
         },
     })

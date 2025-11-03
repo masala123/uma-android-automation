@@ -47,16 +47,16 @@ const Settings = () => {
             color: colors.foreground,
         },
         errorContainer: {
-            backgroundColor: "#FFF3CD",
+            backgroundColor: colors.warningBg,
             borderLeftWidth: 4,
-            borderLeftColor: "#FFA500",
+            borderLeftColor: colors.warningBorder,
             padding: 12,
             marginTop: 12,
             borderRadius: 8,
         },
         errorText: {
             fontSize: 14,
-            color: "#856404",
+            color: colors.warningText,
             lineHeight: 20,
         },
     })
@@ -246,7 +246,7 @@ const Settings = () => {
 
                 <View style={styles.errorContainer}>
                     <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-                        <Text style={{ fontWeight: "bold" }}>⚠️ File Explorer Note:</Text>
+                        <Text style={{ fontWeight: "bold", color: colors.warningText }}>⚠️ File Explorer Note:</Text>
                         <Text style={styles.errorText}>
                             To manually access files, you need a file explorer app that can access the /Android/data folder (like CX File Explorer). Standard file managers will not work.
                         </Text>
