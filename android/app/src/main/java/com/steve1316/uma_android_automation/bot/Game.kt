@@ -343,17 +343,18 @@ class Game(val myContext: Context) {
 	fun checkMainScreen(): Boolean {
 		// Current date should be printed here to section off the tasks undertaken for this date.
 		printToLog("\n[INFO] Checking if the bot is sitting at the Main screen.")
-		return if (imageUtils.findImage("tazuna", tries = 1, region = imageUtils.regionTopHalf).first != null &&
-			imageUtils.findImage("race_select_mandatory", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true).first == null) {
+        val sourceBitmap = imageUtils.getSourceBitmap()
+		return if (imageUtils.findImageWithBitmap("tazuna", sourceBitmap, region = imageUtils.regionTopHalf, suppressError = true) != null &&
+			imageUtils.findImageWithBitmap("race_select_mandatory", sourceBitmap, region = imageUtils.regionBottomHalf, suppressError = true) == null) {
 			printToLog("[INFO] Bot is at the Main screen.")
 
 			// Perform updates here if necessary.
-            val finalsLocation = imageUtils.findImage("race_select_extra_locked_uma_finals", tries = 1, suppressError = true, region = imageUtils.regionBottomHalf).first
+            val finalsLocation = imageUtils.findImageWithBitmap("race_select_extra_locked_uma_finals", sourceBitmap, suppressError = true, region = imageUtils.regionBottomHalf)
             updateDate(isFinals = (finalsLocation != null))
-			if (currentDate.turnNumber % 10 == 0) updateAptitudes()
+            if (currentDate.turnNumber % 10 == 0) updateAptitudes()
 			true
-		} else if (!enablePopupCheck && imageUtils.findImage("cancel", tries = 1, region = imageUtils.regionBottomHalf).first != null &&
-			imageUtils.findImage("race_confirm", tries = 1, region = imageUtils.regionBottomHalf).first != null) {
+		} else if (!enablePopupCheck && imageUtils.findImageWithBitmap("cancel", sourceBitmap, region = imageUtils.regionBottomHalf) != null &&
+			imageUtils.findImageWithBitmap("race_confirm", sourceBitmap, region = imageUtils.regionBottomHalf) != null) {
 			// This popup is most likely the insufficient fans popup. Force an extra race to catch up on the required fans.
 			printToLog("[INFO] There is a possible insufficient fans or maiden race popup.")
 			racing.encounteredRacingPopup = true
@@ -388,10 +389,11 @@ class Game(val myContext: Context) {
 	 */
 	fun checkMandatoryRacePrepScreen(): Boolean {
 		printToLog("\n[INFO] Checking if the bot is sitting on the Race Preparation screen for a mandatory race.")
-		return if (imageUtils.findImage("race_select_mandatory", tries = 1, region = imageUtils.regionBottomHalf).first != null) {
+        val sourceBitmap = imageUtils.getSourceBitmap()
+		return if (imageUtils.findImageWithBitmap("race_select_mandatory", sourceBitmap, region = imageUtils.regionBottomHalf) != null) {
 			printToLog("[INFO] Bot is at the preparation screen with a mandatory race ready to be completed.")
 			true
-		} else if (imageUtils.findImage("race_select_mandatory_goal", tries = 1, region = imageUtils.regionMiddle).first != null) {
+		} else if (imageUtils.findImageWithBitmap("race_select_mandatory_goal", sourceBitmap, region = imageUtils.regionMiddle) != null) {
 			// Most likely the user started the bot here so a delay will need to be placed to allow the start banner of the Service to disappear.
 			wait(2.0)
 			printToLog("[INFO] Bot is at the Race Selection screen with a mandatory race needing to be selected.")
@@ -461,14 +463,15 @@ class Game(val myContext: Context) {
 	 */
 	fun checkInjury(): Boolean {
 		printToLog("\n[INJURY] Checking if there is an injury that needs healing on ${printFormattedDate()}.")
-		val recoverInjuryLocation = imageUtils.findImage("recover_injury", tries = 1, region = imageUtils.regionBottomHalf).first
+        val sourceBitmap = imageUtils.getSourceBitmap()
+		val recoverInjuryLocation = imageUtils.findImageWithBitmap("recover_injury", sourceBitmap, region = imageUtils.regionBottomHalf)
 		return if (recoverInjuryLocation != null && imageUtils.checkColorAtCoordinates(
 				recoverInjuryLocation.x.toInt(),
 				recoverInjuryLocation.y.toInt() + 15,
 				intArrayOf(151, 105, 243),
 				10
 			)) {
-			if (findAndTapImage("recover_injury", tries = 1, region = imageUtils.regionBottomHalf)) {
+			if (findAndTapImage("recover_injury", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf)) {
 				wait(0.3)
 				if (imageUtils.findImage("recover_injury_header", tries = 1, region = imageUtils.regionMiddle).first != null) {
 					printToLog("[INJURY] Injury detected and attempted to heal.")
@@ -493,10 +496,11 @@ class Game(val myContext: Context) {
 	 */
 	fun checkLoading(): Boolean {
 		printToLog("[LOADING] Now checking if the game is still loading...")
-		return if (imageUtils.findImage("connecting", tries = 1, region = imageUtils.regionTopHalf, suppressError = true).first != null) {
+        val sourceBitmap = imageUtils.getSourceBitmap()
+		return if (imageUtils.findImageWithBitmap("connecting", sourceBitmap, region = imageUtils.regionTopHalf, suppressError = true) != null) {
 			printToLog("[LOADING] Detected that the game is awaiting a response from the server from the \"Connecting\" text at the top of the screen. Waiting...")
 			true
-		} else if (imageUtils.findImage("now_loading", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true).first != null) {
+		} else if (imageUtils.findImageWithBitmap("now_loading", sourceBitmap, region = imageUtils.regionBottomHalf, suppressError = true) != null) {
 			printToLog("[LOADING] Detected that the game is still loading from the \"Now Loading\" text at the bottom of the screen. Waiting...")
 			true
 		} else {
@@ -550,16 +554,17 @@ class Game(val myContext: Context) {
 			// During Finals, check for Finals-specific date images.
 			// The Finals occur at turns 73, 74, and 75.
 			// Date will be kept at Senior Year Late Dec, only the turn number will be updated.
+            val sourceBitmap = imageUtils.getSourceBitmap()
 			val turnNumber = when {
-				imageUtils.findImage("date_final_qualifier", tries = 1, suppressError = true, region = imageUtils.regionTopHalf).first != null -> {
+				imageUtils.findImageWithBitmap("date_final_qualifier", sourceBitmap, suppressError = true, region = imageUtils.regionTopHalf, customConfidence = 0.9) != null -> {
 					printToLog("[DATE] Detected Finals Qualifier (Turn 73).")
 					73
 				}
-				imageUtils.findImage("date_final_semifinal", tries = 1, suppressError = true, region = imageUtils.regionTopHalf).first != null -> {
+				imageUtils.findImageWithBitmap("date_final_semifinal", sourceBitmap, suppressError = true, region = imageUtils.regionTopHalf, customConfidence = 0.9) != null -> {
 					printToLog("[DATE] Detected Finals Semifinal (Turn 74).")
 					74
 				}
-				imageUtils.findImage("date_final_finals", tries = 1, suppressError = true, region = imageUtils.regionTopHalf).first != null -> {
+				imageUtils.findImageWithBitmap("date_final_finals", sourceBitmap, suppressError = true, region = imageUtils.regionTopHalf, customConfidence = 0.9) != null -> {
 					printToLog("[DATE] Detected Finals Finals (Turn 75).")
 					75
 				}
@@ -603,14 +608,15 @@ class Game(val myContext: Context) {
 	 */
     fun recoverEnergy(): Boolean {
 		printToLog("\n[ENERGY] Now starting attempt to recover energy on ${printFormattedDate()}.")
+        val sourceBitmap = imageUtils.getSourceBitmap()
 		return when {
-			findAndTapImage("recover_energy", tries = 1, imageUtils.regionBottomHalf) -> {
+			findAndTapImage("recover_energy", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf) -> {
 				findAndTapImage("ok")
 				printToLog("[ENERGY] Successfully recovered energy.")
 				racing.raceRepeatWarningCheck = false
 				true
 			}
-			findAndTapImage("recover_energy_summer", tries = 1, imageUtils.regionBottomHalf) -> {
+			findAndTapImage("recover_energy_summer", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf) -> {
 				findAndTapImage("ok")
 				printToLog("[ENERGY] Successfully recovered energy for the Summer.")
 				racing.raceRepeatWarningCheck = false
@@ -632,14 +638,15 @@ class Game(val myContext: Context) {
 		printToLog("\n[MOOD] Detecting current mood on ${printFormattedDate()}.")
 
 		// Detect what Mood the bot is at.
+        val sourceBitmap = imageUtils.getSourceBitmap()
 		val currentMood: String = when {
-			imageUtils.findImage("mood_normal", tries = 1, region = imageUtils.regionTopHalf, suppressError = true).first != null -> {
+			imageUtils.findImageWithBitmap("mood_normal", sourceBitmap, region = imageUtils.regionTopHalf, suppressError = true) != null -> {
 				"Normal"
 			}
-			imageUtils.findImage("mood_good", tries = 1, region = imageUtils.regionTopHalf, suppressError = true).first != null -> {
+			imageUtils.findImageWithBitmap("mood_good", sourceBitmap, region = imageUtils.regionTopHalf, suppressError = true) != null -> {
 				"Good"
 			}
-			imageUtils.findImage("mood_great", tries = 1, region = imageUtils.regionTopHalf, suppressError = true).first != null -> {
+			imageUtils.findImageWithBitmap("mood_great", sourceBitmap, region = imageUtils.regionTopHalf, suppressError = true) != null -> {
 				"Great"
 			}
 			else -> {
@@ -650,13 +657,13 @@ class Game(val myContext: Context) {
 		printToLog("[MOOD] Detected mood to be $currentMood.")
 
 		// Only recover mood if its below Good mood and its not Summer.
-		return if (training.firstTrainingCheck && currentMood == "Normal" && imageUtils.findImage("recover_energy_summer", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true).first == null) {
+		return if (training.firstTrainingCheck && currentMood == "Normal" && imageUtils.findImageWithBitmap("recover_energy_summer", sourceBitmap, region = imageUtils.regionBottomHalf, suppressError = true) == null) {
 			printToLog("[MOOD] Current mood is Normal. Not recovering mood due to firstTrainingCheck flag being active. Will need to complete a training first before being allowed to recover mood.")
 			false
-		} else if ((currentMood == "Bad/Awful" || currentMood == "Normal") && imageUtils.findImage("recover_energy_summer", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true).first == null) {
+		} else if ((currentMood == "Bad/Awful" || currentMood == "Normal") && imageUtils.findImageWithBitmap("recover_energy_summer", sourceBitmap, region = imageUtils.regionBottomHalf, suppressError = true) == null) {
 			printToLog("[MOOD] Current mood is not good. Recovering mood now.")
-			if (!findAndTapImage("recover_mood", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
-				findAndTapImage("recover_energy_summer", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)
+			if (!findAndTapImage("recover_mood", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
+				findAndTapImage("recover_energy_summer", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)
 			}
 
 			// Do the date if it is unlocked.
@@ -682,35 +689,37 @@ class Game(val myContext: Context) {
 	fun performMiscChecks(): Boolean {
 		printToLog("\n[MISC] Beginning check for misc cases...")
 
-		if (enablePopupCheck && imageUtils.findImage("cancel", tries = 1, region = imageUtils.regionBottomHalf).first != null &&
-			imageUtils.findImage("recover_mood_date", tries = 1, region = imageUtils.regionMiddle).first == null) {
+        val sourceBitmap = imageUtils.getSourceBitmap()
+
+		if (enablePopupCheck && imageUtils.findImageWithBitmap("cancel", sourceBitmap, region = imageUtils.regionBottomHalf) != null &&
+			imageUtils.findImageWithBitmap("recover_mood_date", sourceBitmap, region = imageUtils.regionMiddle) == null) {
 			printToLog("\n[END] Bot may have encountered a warning popup. Exiting now...")
 			notificationMessage = "Bot may have encountered a warning popup"
 			return false
-		} else if (findAndTapImage("next", tries = 1, region = imageUtils.regionBottomHalf)) {
+		} else if (findAndTapImage("next", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf)) {
 			// Now confirm the completion of a Training Goal popup.
 			printToLog("[MISC] Popup detected that needs to be dismissed with the \"Next\" button.")
 			wait(2.0)
 			findAndTapImage("next", tries = 1, region = imageUtils.regionBottomHalf)
 			wait(1.0)
-		} else if (imageUtils.findImage("crane_game", tries = 1, region = imageUtils.regionBottomHalf).first != null) {
+		} else if (imageUtils.findImageWithBitmap("crane_game", sourceBitmap, region = imageUtils.regionBottomHalf) != null) {
 			// Stop when the bot has reached the Crane Game Event.
 			printToLog("\n[END] Bot will stop due to the detection of the Crane Game Event. Please complete it and restart the bot.")
 			notificationMessage = "Bot will stop due to the detection of the Crane Game Event. Please complete it and restart the bot."
 			return false
-		} else if (findAndTapImage("race_retry", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
+		} else if (findAndTapImage("race_retry", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
 			printToLog("[MISC] There is a race retry popup.")
 			wait(5.0)
-		} else if (findAndTapImage("race_accept_trophy", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
+		} else if (findAndTapImage("race_accept_trophy", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
 			printToLog("[MISC] There is a possible popup to accept a trophy.")
 			racing.finishRace(true, isExtra = true)
-		} else if (findAndTapImage("race_end", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
+		} else if (findAndTapImage("race_end", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
 			printToLog("[MISC] Ended a leftover race.")
-		} else if (imageUtils.findImage("connection_error", tries = 1, region = imageUtils.regionMiddle, suppressError = true).first != null) {
+		} else if (imageUtils.findImageWithBitmap("connection_error", sourceBitmap, region = imageUtils.regionMiddle, suppressError = true) != null) {
 			printToLog("\n[END] Bot will stop due to detecting a connection error.")
 			notificationMessage = "Bot will stop due to detecting a connection error."
 			return false
-		} else if (imageUtils.findImage("race_not_enough_fans", tries = 1, region = imageUtils.regionMiddle, suppressError = true).first != null) {
+		} else if (imageUtils.findImageWithBitmap("race_not_enough_fans", sourceBitmap, region = imageUtils.regionMiddle, suppressError = true) != null) {
 			printToLog("[MISC] There was a popup about insufficient fans.")
 			racing.encounteredRacingPopup = true
 			findAndTapImage("cancel", region = imageUtils.regionBottomHalf)

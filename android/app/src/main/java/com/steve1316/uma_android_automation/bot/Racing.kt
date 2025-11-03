@@ -373,13 +373,14 @@ class Racing (private val game: Game) {
      */
     fun checkForRacingRequirements() {
         // Check for fan requirement on the main screen.
-        val needsFanRequirement = game.imageUtils.findImage("race_fans_criteria", tries = 1, region = game.imageUtils.regionTopHalf).first != null
+        val sourceBitmap = game.imageUtils.getSourceBitmap()
+        val needsFanRequirement = game.imageUtils.findImageWithBitmap("race_fans_criteria", sourceBitmap, region = game.imageUtils.regionTopHalf) != null
         if (needsFanRequirement) {
             hasFanRequirement = true
             game.printToLog("[RACE] Fan requirement criteria detected on main screen. Forcing racing to fulfill requirement.", tag = tag)
         } else {
             // Check for trophy requirement on the main screen.
-            val needsTrophyRequirement = game.imageUtils.findImage("race_trophies_criteria", tries = 1, region = game.imageUtils.regionTopHalf).first != null
+            val needsTrophyRequirement = game.imageUtils.findImageWithBitmap("race_trophies_criteria", sourceBitmap, region = game.imageUtils.regionTopHalf) != null
             if (needsTrophyRequirement) {
                 hasTrophyRequirement = true
                 game.printToLog("[RACE] Trophy requirement criteria detected on main screen. Forcing racing to fulfill requirement.", tag = tag)
@@ -1164,9 +1165,10 @@ class Racing (private val game: Game) {
         }
 
         // Check for common restrictions that apply to both smart and standard racing.
-        val isUmaFinalsLocked = game.imageUtils.findImage("race_select_extra_locked_uma_finals", tries = 1, region = game.imageUtils.regionBottomHalf).first != null
-        val isLocked = game.imageUtils.findImage("race_select_extra_locked", tries = 1, region = game.imageUtils.regionBottomHalf).first != null
-        val isSummer = game.imageUtils.findImage("recover_energy_summer", tries = 1, region = game.imageUtils.regionBottomHalf).first != null
+        val sourceBitmap = game.imageUtils.getSourceBitmap()
+        val isUmaFinalsLocked = game.imageUtils.findImageWithBitmap("race_select_extra_locked_uma_finals", sourceBitmap, region = game.imageUtils.regionBottomHalf) != null
+        val isLocked = game.imageUtils.findImageWithBitmap("race_select_extra_locked", sourceBitmap, region = game.imageUtils.regionBottomHalf) != null
+        val isSummer = game.imageUtils.findImageWithBitmap("recover_energy_summer", sourceBitmap, region = game.imageUtils.regionBottomHalf) != null
         
         if (isUmaFinalsLocked) {
             game.printToLog("[RACE] It is UMA Finals right now so there will be no extra races. Stopping extra race check.", tag = tag)
