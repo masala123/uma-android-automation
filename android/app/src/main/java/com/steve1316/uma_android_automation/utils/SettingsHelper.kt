@@ -63,25 +63,10 @@ object SettingsHelper {
     }
 
     /**
-     * Save a setting value.
-     */
-    fun saveSetting(category: String, key: String, value: String): Boolean {
-        return settingsManager?.saveSetting(category, key, value) ?: false
-    }
-
-    /**
      * Check if the settings manager is available.
      */
     fun isAvailable(): Boolean {
         return settingsManager != null && settingsManager?.isDatabaseAvailable() == true
-    }
-
-    /**
-     * Close the settings manager.
-     */
-    fun close() {
-        settingsManager?.close()
-        settingsManager = null
     }
 }
 

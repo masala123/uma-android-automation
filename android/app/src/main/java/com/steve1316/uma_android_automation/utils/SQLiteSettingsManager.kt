@@ -259,29 +259,6 @@ class SQLiteSettingsManager(private val context: Context) {
     }
 
     /**
-     * Save a setting to the database.
-     */
-    fun saveSetting(category: String, key: String, value: String): Boolean {
-        if (!isAvailable()) {
-            Log.e(TAG, "Database not available.")
-            return false
-        }
-
-        return try {
-            Log.d(TAG, "Saving setting: category='$category', key='$key', value='$value'")
-            database?.execSQL(
-                "INSERT OR REPLACE INTO $TABLE_SETTINGS ($COLUMN_CATEGORY, `$COLUMN_KEY`, $COLUMN_VALUE, $COLUMN_UPDATED_AT) VALUES (?, ?, ?, CURRENT_TIMESTAMP)",
-                arrayOf(category, key, value)
-            )
-            Log.d(TAG, "Successfully saved setting: $category.$key = '$value'")
-            true
-        } catch (e: Exception) {
-            Log.e(TAG, "Error saving setting $category.$key: ${e.message}", e)
-            false
-        }
-    }
-
-    /**
      * Check if the database file exists and is accessible.
      */
     fun isDatabaseAvailable(): Boolean {
