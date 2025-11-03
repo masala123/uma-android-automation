@@ -888,6 +888,9 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			val statLatch = CountDownLatch(5)
 			for (i in 0 until 5) {
 				Thread {
+					var sourceMat: Mat? = null
+					var sourceGray: Mat? = null
+					var workingMat: Mat? = null
 					try {
 						// Stop the Thread early if the selected Training would not offer stats for the stat to be checked.
 						// Speed gives Speed and Power
@@ -897,6 +900,11 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 						// Wits gives Speed and Wits
 						val validIndices = trainingToStatIndices[trainingName] ?: return@Thread
 						if (i !in validIndices) return@Thread
+
+						// Check if bot is still running before starting work.
+						if (!BotService.isRunning) {
+							return@Thread
+						}
 
 						val statName = statNames[i]
 						val xOffset = i * 180 // All stats are evenly spaced at 180 pixel intervals.
@@ -909,13 +917,19 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 							return@Thread
 						}
 
+						// Check again before expensive operations.
+						if (!BotService.isRunning) {
+							statLatch.countDown()
+							return@Thread
+						}
+
 						// Convert to Mat and then turn it to grayscale.
-						val sourceMat = Mat()
+						sourceMat = Mat()
 						Utils.bitmapToMat(croppedBitmap, sourceMat)
-						val sourceGray = Mat()
+						sourceGray = Mat()
 						Imgproc.cvtColor(sourceMat, sourceGray, Imgproc.COLOR_BGR2GRAY)
 
-						val workingMat = Mat()
+						workingMat = Mat()
 						sourceGray.copyTo(workingMat)
 
 						var matchResults = mutableMapOf<String, MutableList<Point>>()
@@ -923,7 +937,17 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 							matchResults[template] = mutableListOf()
 						}
 
+						// Check again before starting template processing loop.
+						if (!BotService.isRunning) {
+							threadSafeResults[i] = 0
+							return@Thread
+						}
+
 						for (templateName in templates) {
+							// Check before each template processing operation.
+							if (!BotService.isRunning) {
+								break
+							}
 							val templateBitmap = templateBitmaps[templateName]
 							if (templateBitmap != null) {
 								matchResults = processStatGainTemplateWithTransparency(templateName, templateBitmap, workingMat, matchResults)
@@ -941,7 +965,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 						if (debugMode) {
 							val resultMat = Mat()
 							Utils.bitmapToMat(croppedBitmap, resultMat)
-							templates.forEachIndexed { index, templateName ->
+							templates.forEachIndexed { _, templateName ->
 								matchResults[templateName]?.forEach { point ->
 									val templateBitmap = templateBitmaps[templateName]
 									if (templateBitmap != null) {
@@ -965,14 +989,14 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
 							Imgcodecs.imwrite("$matchFilePath/debug_${trainingName}TrainingStatGain_${statNames[i]}.png", resultMat)
 						}
-
-						sourceMat.release()
-						sourceGray.release()
-						workingMat.release()
 					} catch (e: Exception) {
 						Log.e(tag, "[ERROR] Error processing stat ${statNames[i]} for $trainingName training: ${e.stackTraceToString()}")
 						threadSafeResults[i] = 0
 					} finally {
+						// Always clean up resources, even if interrupted.
+						sourceMat?.release()
+						sourceGray?.release()
+						workingMat?.release()
 						statLatch.countDown()
 					}
 				}.start()
@@ -1116,135 +1140,138 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		var xOffset = 0
 		workingMat.copyTo(searchMat)
 
-		while (continueSearching) {
-			var failedPixelMatchRatio = false
-			var failedPixelCorrelation = false
+		try {
+			while (continueSearching) {
+				var failedPixelMatchRatio = false
+				var failedPixelCorrelation = false
 
-			// Template match with the alpha mask.
-			val result = Mat()
-			Imgproc.matchTemplate(searchMat, templateGray, result, Imgproc.TM_CCORR_NORMED, alphaMask)
-			val mmr = Core.minMaxLoc(result)
-			val matchVal = mmr.maxVal
-			val matchLocation = mmr.maxLoc
+				// Template match with the alpha mask.
+				val result = Mat()
+				Imgproc.matchTemplate(searchMat, templateGray, result, Imgproc.TM_CCORR_NORMED, alphaMask)
+				val mmr = Core.minMaxLoc(result)
+				val matchVal = mmr.maxVal
+				val matchLocation = mmr.maxLoc
 
-			if (matchVal >= matchConfidence) {
-				val x = matchLocation.x.toInt()
-				val y = matchLocation.y.toInt()
-				val h = templateGray.rows()
-				val w = templateGray.cols()
+				if (matchVal >= matchConfidence) {
+					val x = matchLocation.x.toInt()
+					val y = matchLocation.y.toInt()
+					val h = templateGray.rows()
+					val w = templateGray.cols()
 
-				// Validate that the match location is within bounds.
-				if (x >= 0 && y >= 0 && x + w <= searchMat.cols() && y + h <= searchMat.rows()) {
-					// Extract the matched region from the source image.
-					val matchedRegion = Mat(searchMat, Rect(x, y, w, h))
+					// Validate that the match location is within bounds.
+					if (x >= 0 && y >= 0 && x + w <= searchMat.cols() && y + h <= searchMat.rows()) {
+						// Extract the matched region from the source image.
+						val matchedRegion = Mat(searchMat, Rect(x, y, w, h))
 
-					// Create masked versions of the template and matched region using only non-transparent pixels.
-					val templateValid = Mat()
-					val regionValid = Mat()
-					templateGray.copyTo(templateValid, validPixels)
-					matchedRegion.copyTo(regionValid, validPixels)
+						// Create masked versions of the template and matched region using only non-transparent pixels.
+						val templateValid = Mat()
+						val regionValid = Mat()
+						templateGray.copyTo(templateValid, validPixels)
+						matchedRegion.copyTo(regionValid, validPixels)
 
-					// For the first test, compare pixel-by-pixel equality between the matched region and template to calculate match ratio.
-					val templateComparison = Mat()
-					Core.compare(matchedRegion, templateGray, templateComparison, Core.CMP_EQ)
-					val matchingPixels = Core.countNonZero(templateComparison)
-					val pixelMatchRatio = matchingPixels.toDouble() / (w * h)
-					if (pixelMatchRatio < minPixelMatchRatio) {
-						failedPixelMatchRatio = true
-					}
-
-					// Extract pixel values into double arrays for correlation calculation.
-					val templateValidMat = Mat()
-					val regionValidMat = Mat()
-					templateValid.convertTo(templateValidMat, CvType.CV_64F)
-					regionValid.convertTo(regionValidMat, CvType.CV_64F)
-					val templateArray = DoubleArray(templateValid.total().toInt())
-					val regionArray = DoubleArray(regionValid.total().toInt())
-					templateValidMat.get(0, 0, templateArray)
-					regionValidMat.get(0, 0, regionArray)
-
-					// For the second test, validate the match quality by performing correlation calculation.
-					val pixelCorrelation = calculateCorrelation(templateArray, regionArray)
-					if (pixelCorrelation < minPixelCorrelation) {
-						failedPixelCorrelation = true
-					}
-
-					// If both tests passed, then the match is valid.
-					if (!failedPixelMatchRatio && !failedPixelCorrelation) {
-						val centerX = (x + xOffset) + (w / 2)
-						val centerY = y + (h / 2)
-
-						// Check for overlap with existing matches within 10 pixels on both axes.
-						val hasOverlap = matchResults.values.flatten().any { existingPoint ->
-							val existingX = existingPoint.x
-							val existingY = existingPoint.y
-
-							// Check if the new match overlaps with existing match within 10 pixels.
-							val xOverlap = kotlin.math.abs(centerX - existingX) < 10
-							val yOverlap = kotlin.math.abs(centerY - existingY) < 10
-
-							xOverlap && yOverlap
+						// For the first test, compare pixel-by-pixel equality between the matched region and template to calculate match ratio.
+						val templateComparison = Mat()
+						Core.compare(matchedRegion, templateGray, templateComparison, Core.CMP_EQ)
+						val matchingPixels = Core.countNonZero(templateComparison)
+						val pixelMatchRatio = matchingPixels.toDouble() / (w * h)
+						if (pixelMatchRatio < minPixelMatchRatio) {
+							failedPixelMatchRatio = true
 						}
 
-						if (!hasOverlap) {
-							Log.d(tag, "[DEBUG] Found valid match for template \"$templateName\" at ($centerX, $centerY).")
-							matchResults[templateName]?.add(Point(centerX.toDouble(), centerY.toDouble()))
-						}
-					}
+						// Extract pixel values into double arrays for correlation calculation.
+						val templateValidMat = Mat()
+						val regionValidMat = Mat()
+						templateValid.convertTo(templateValidMat, CvType.CV_64F)
+						regionValid.convertTo(regionValidMat, CvType.CV_64F)
+						val templateArray = DoubleArray(templateValid.total().toInt())
+						val regionArray = DoubleArray(regionValid.total().toInt())
+						templateValidMat.get(0, 0, templateArray)
+						regionValidMat.get(0, 0, regionArray)
 
-					// Draw a box to prevent re-detection in the next loop iteration.
-					Imgproc.rectangle(searchMat, Point(x.toDouble(), y.toDouble()), Point((x + w).toDouble(), (y + h).toDouble()), Scalar(0.0, 0.0, 0.0), 10)
-
-					templateComparison.release()
-					matchedRegion.release()
-					templateValid.release()
-					regionValid.release()
-					templateValidMat.release()
-					regionValidMat.release()
-
-					// Crop the Mat horizontally to exclude the supposed matched area.
-					val cropX = x + w
-					val remainingWidth = searchMat.cols() - cropX
-					when {
-						remainingWidth < templateGray.cols() -> {
-							continueSearching = false
+						// For the second test, validate the match quality by performing correlation calculation.
+						val pixelCorrelation = calculateCorrelation(templateArray, regionArray)
+						if (pixelCorrelation < minPixelCorrelation) {
+							failedPixelCorrelation = true
 						}
-						else -> {
-							val newSearchMat = Mat(searchMat, Rect(cropX, 0, remainingWidth, searchMat.rows()))
-							searchMat.release()
-							searchMat = newSearchMat
-							xOffset += cropX
+
+						// If both tests passed, then the match is valid.
+						if (!failedPixelMatchRatio && !failedPixelCorrelation) {
+							val centerX = (x + xOffset) + (w / 2)
+							val centerY = y + (h / 2)
+
+							// Check for overlap with existing matches within 10 pixels on both axes.
+							val hasOverlap = matchResults.values.flatten().any { existingPoint ->
+								val existingX = existingPoint.x
+								val existingY = existingPoint.y
+
+								// Check if the new match overlaps with existing match within 10 pixels.
+								val xOverlap = kotlin.math.abs(centerX - existingX) < 10
+								val yOverlap = kotlin.math.abs(centerY - existingY) < 10
+
+								xOverlap && yOverlap
+							}
+
+							if (!hasOverlap) {
+								Log.d(tag, "[DEBUG] Found valid match for template \"$templateName\" at ($centerX, $centerY).")
+								matchResults[templateName]?.add(Point(centerX.toDouble(), centerY.toDouble()))
+							}
 						}
+
+						// Draw a box to prevent re-detection in the next loop iteration.
+						Imgproc.rectangle(searchMat, Point(x.toDouble(), y.toDouble()), Point((x + w).toDouble(), (y + h).toDouble()), Scalar(0.0, 0.0, 0.0), 10)
+
+						templateComparison.release()
+						matchedRegion.release()
+						templateValid.release()
+						regionValid.release()
+						templateValidMat.release()
+						regionValidMat.release()
+
+						// Crop the Mat horizontally to exclude the supposed matched area.
+						val cropX = x + w
+						val remainingWidth = searchMat.cols() - cropX
+						when {
+							remainingWidth < templateGray.cols() -> {
+								continueSearching = false
+							}
+							else -> {
+								val newSearchMat = Mat(searchMat, Rect(cropX, 0, remainingWidth, searchMat.rows()))
+								searchMat.release()
+								searchMat = newSearchMat
+								xOffset += cropX
+							}
+						}
+					} else {
+						// Stop searching when the source has been traversed.
+						continueSearching = false
 					}
 				} else {
-					// Stop searching when the source has been traversed.
+					// No match found above threshold, stop searching for this template.
 					continueSearching = false
 				}
-			} else {
-				// No match found above threshold, stop searching for this template.
-				continueSearching = false
-			}
 
-			result.release()
+				result.release()
 
-			// Safety check to prevent infinite loops.
-			if ((matchResults[templateName]?.size ?: 0) > 10) {
-				continueSearching = false
+				// Safety check to prevent infinite loops.
+				if ((matchResults[templateName]?.size ?: 0) > 10) {
+					continueSearching = false
+				}
+				if (!BotService.isRunning) {
+					throw InterruptedException()
+				}
 			}
-			if (!BotService.isRunning) {
-				throw InterruptedException()
-			}
+		} finally {
+			// Always clean up resources, even if InterruptedException is thrown.
+			searchMat.release()
+			alphaChannels.forEach { it.release() }
+			validPixels.release()
+			alphaMask.release()
+			templateMat.release()
+			templateGray.release()
 		}
 
 		////////////////////////////////////////////////////////////////////
 		////////////////////////////////////////////////////////////////////
-
-		searchMat.release()
-		alphaChannels.forEach { it.release() }
-		validPixels.release()
-		alphaMask.release()
-		templateMat.release()
-		templateGray.release()
 
 		return matchResults
 	}

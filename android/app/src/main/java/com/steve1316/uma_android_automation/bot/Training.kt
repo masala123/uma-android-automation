@@ -5,6 +5,7 @@ import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.utils.SettingsHelper
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
 import com.steve1316.automation_library.data.SharedData
+import com.steve1316.automation_library.utils.BotService
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.intArrayOf
@@ -319,6 +320,9 @@ class Training(private val game: Game) {
 								ignoreWaiting = true
 							)
 						}
+						
+						// Wait briefly for UI to update after tapping training button.
+						game.wait(0.2)
 					}
 
 					// Update the object in the training map.
@@ -332,62 +336,85 @@ class Training(private val game: Game) {
 					var isRainbow = false
 
 					// Get the Points and source Bitmap beforehand before starting the threads to make them safe for parallel processing.
-					val (skillPointsLocation, sourceBitmap) = game.imageUtils.findImage("skill_points", tries = 1, region = game.imageUtils.regionMiddle)
-					val (trainingSelectionLocation, _) = game.imageUtils.findImage("training_failure_chance", tries = 1, region = game.imageUtils.regionBottomHalf)
+                    val sourceBitmap = game.imageUtils.getSourceBitmap()
+                    val skillPointsLocation = game.imageUtils.findImageWithBitmap("skill_points", sourceBitmap, region = game.imageUtils.regionMiddle)
+                    val trainingSelectionLocation = game.imageUtils.findImageWithBitmap("training_failure_chance", sourceBitmap, region = game.imageUtils.regionBottomHalf)
 
-					// Thread 1: Determine stat gains.
-					Thread {
-						try {
-							statGains = game.imageUtils.determineStatGainFromTraining(training, sourceBitmap, skillPointsLocation!!)
-						} catch (e: Exception) {
-							Log.e(tag, "[ERROR] Error in determineStatGainFromTraining: ${e.stackTraceToString()}")
-							statGains = intArrayOf(0, 0, 0, 0, 0)
-						} finally {
-							latch.countDown()
-						}
-					}.start()
+					// Record start time for elapsed time measurement.
+					val startTime = System.currentTimeMillis()
 
-					// Thread 2: Find failure chance.
-					Thread {
-						try {
-							failureChance = game.imageUtils.findTrainingFailureChance(sourceBitmap, trainingSelectionLocation!!)
-						} catch (e: Exception) {
-							game.printToLog("[ERROR] Error in findTrainingFailureChance: ${e.stackTraceToString()}", tag = tag, isError = true)
-							failureChance = -1
-						} finally {
-							latch.countDown()
-						}
-					}.start()
+					// Check if bot is still running before starting parallel threads.
+					if (!BotService.isRunning) {
+						game.printToLog("[INFO] Bot stopped before training analysis could complete.", tag = tag)
+						statGains = intArrayOf(0, 0, 0, 0, 0)
+						failureChance = -1
+						relationshipBars = arrayListOf()
+						isRainbow = false
+					} else {
+						// Thread 1: Determine stat gains.
+                        Thread {
+                            val startTimeStatGains = System.currentTimeMillis()
+                            try {
+                                statGains = game.imageUtils.determineStatGainFromTraining(training, sourceBitmap, skillPointsLocation!!)
+                            } catch (e: Exception) {
+                                Log.e(tag, "[ERROR] Error in determineStatGainFromTraining: ${e.stackTraceToString()}")
+                                statGains = intArrayOf(0, 0, 0, 0, 0)
+                            } finally {
+                                latch.countDown()
+                                Log.d(tag, "Total time to determine stat gains for $training: ${System.currentTimeMillis() - startTimeStatGains}ms")
+                            }
+                        }.start()
 
-					// Thread 3: Analyze relationship bars.
-					Thread {
-						try {
-							relationshipBars = game.imageUtils.analyzeRelationshipBars(sourceBitmap)
-						} catch (e: Exception) {
-							Log.e(tag, "[ERROR] Error in analyzeRelationshipBars: ${e.stackTraceToString()}")
-							relationshipBars = arrayListOf()
-						} finally {
-							latch.countDown()
-						}
-					}.start()
+                        // Thread 2: Find failure chance.
+                        Thread {
+                            val startTimeFailureChance = System.currentTimeMillis()
+                            try {
+                                failureChance = game.imageUtils.findTrainingFailureChance(sourceBitmap, trainingSelectionLocation!!)
+                            } catch (e: Exception) {
+                                game.printToLog("[ERROR] Error in findTrainingFailureChance: ${e.stackTraceToString()}", tag = tag, isError = true)
+                                failureChance = -1
+                            } finally {
+                                latch.countDown()
+                                Log.d(tag, "Total time to determine failure chance for $training: ${System.currentTimeMillis() - startTimeFailureChance}ms")
+                            }
+                        }.start()
 
-					// Thread 4: Detect rainbow training.
-                    Thread {
+                        // Thread 3: Analyze relationship bars.
+                        Thread {
+                            val startTimeRelationshipBars = System.currentTimeMillis()
+                            try {
+                                relationshipBars = game.imageUtils.analyzeRelationshipBars(sourceBitmap)
+                            } catch (e: Exception) {
+                                Log.e(tag, "[ERROR] Error in analyzeRelationshipBars: ${e.stackTraceToString()}")
+                                relationshipBars = arrayListOf()
+                            } finally {
+                                latch.countDown()
+                                Log.d(tag, "Total time to analyze relationship bars for $training: ${System.currentTimeMillis() - startTimeRelationshipBars}ms")
+                            }
+                        }.start()
+
+                        // Thread 4: Detect rainbow training.
+                        Thread {
+                            val startTimeRainbow = System.currentTimeMillis()
+                            try {
+                                isRainbow = game.imageUtils.findImageWithBitmap("training_rainbow", sourceBitmap, region = game.imageUtils.regionBottomHalf, suppressError = true) != null
+                            } catch (e: Exception) {
+                                Log.e(tag, "[ERROR] Error in rainbow detection: ${e.stackTraceToString()}")
+                                isRainbow = false
+                            } finally {
+                                latch.countDown()
+                                Log.d(tag, "Total time to detect rainbow for $training: ${System.currentTimeMillis() - startTimeRainbow}ms")
+                            }
+                        }.start()
                         try {
-                            isRainbow = game.imageUtils.findImage("training_rainbow", tries = 2, confidence = 0.9, suppressError = true, region = game.imageUtils.regionBottomHalf).first != null
-                        } catch (e: Exception) {
-                            Log.e(tag, "[ERROR] Error in rainbow detection: ${e.stackTraceToString()}")
-                            isRainbow = false
+                            latch.await(3, TimeUnit.SECONDS)
+                        } catch (_: InterruptedException) {
+                            Log.e(tag, "[ERROR] Parallel training analysis timed out")
                         } finally {
-                            latch.countDown()
+                            val elapsedTime = System.currentTimeMillis() - startTime
+                            Log.d(tag, "Total time for $training training analysis: ${elapsedTime}ms")
+                            game.printToLog("[INFO] All 5 stat regions processed for $training training. Results: ${statGains.toList()}", tag = tag)
                         }
-                    }.start()
-					try {
-						latch.await(10, TimeUnit.SECONDS)
-					} catch (_: InterruptedException) {
-						Log.e(tag, "[ERROR] Parallel training analysis timed out")
-					} finally {
-						game.printToLog("[INFO] All 5 stat regions processed for $training training. Results: ${statGains.toList()}", tag = tag)
 					}
 
 					// Check if risky training logic should apply based on main stat gain.
@@ -416,8 +443,8 @@ class Training(private val game: Game) {
 						relationshipBars = relationshipBars,
                         isRainbow = isRainbow
 					)
-					trainingMap.put(training, newTraining)
-					if (singleTraining) {
+                    trainingMap[training] = newTraining
+                    if (singleTraining) {
 						break
 					}
 				}
