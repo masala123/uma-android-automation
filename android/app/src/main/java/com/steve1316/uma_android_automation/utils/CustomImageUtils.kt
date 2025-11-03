@@ -61,6 +61,10 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		SharedData.templateSubfolderPathName = "images/"
 	}
 
+    public override fun getSourceBitmap(): Bitmap {
+        return super.getSourceBitmap()
+    }
+
 	/**
 	 * Find all occurrences of the specified image in the images folder using a provided source bitmap. Useful for parallel processing to avoid exceeding the maxImages buffer.
 	 *
