@@ -1,0 +1,613 @@
+import scenarios from "../../data/scenarios.json"
+import { useContext, useEffect, useState } from "react"
+import { BotStateContext } from "../../context/BotStateContext"
+import { ScrollView, StyleSheet, Text, View } from "react-native"
+import { Snackbar } from "react-native-paper"
+import { useNavigation } from "@react-navigation/native"
+import ThemeToggle from "../../components/ThemeToggle"
+import { useTheme } from "../../context/ThemeContext"
+import CustomSelect from "../../components/CustomSelect"
+import NavigationLink from "../../components/NavigationLink"
+import CustomCheckbox from "../../components/CustomCheckbox"
+import CustomSlider from "../../components/CustomSlider"
+import CustomTitle from "../../components/CustomTitle"
+import CustomButton from "../../components/CustomButton"
+import { Separator } from "../../components/ui/separator"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../../components/ui/alert-dialog"
+import { useSettings } from "../../context/SettingsContext"
+import { useSettingsFileManager } from "../../hooks/useSettingsFileManager"
+
+const Settings = () => {
+    const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false)
+
+    const bsc = useContext(BotStateContext)
+    const { colors } = useTheme()
+    const navigation = useNavigation()
+
+    const { openDataDirectory, resetSettings } = useSettings()
+    const { handleImportSettings, handleExportSettings, showImportDialog, setShowImportDialog, showResetDialog, setShowResetDialog } = useSettingsFileManager()
+
+    const styles = StyleSheet.create({
+        root: {
+            flex: 1,
+            flexDirection: "column",
+            justifyContent: "center",
+            margin: 10,
+            backgroundColor: colors.background,
+        },
+        header: {
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 20,
+        },
+        title: {
+            fontSize: 24,
+            fontWeight: "bold",
+            color: colors.foreground,
+        },
+        errorContainer: {
+            backgroundColor: colors.warningBg,
+            borderLeftWidth: 4,
+            borderLeftColor: colors.warningBorder,
+            padding: 12,
+            marginTop: 12,
+            borderRadius: 8,
+        },
+        errorText: {
+            fontSize: 14,
+            color: colors.warningText,
+            lineHeight: 20,
+        },
+    })
+
+    //////////////////////////////////////////////////
+    //////////////////////////////////////////////////
+    // Callbacks
+
+    useEffect(() => {
+        // Manually set this flag to false as the snackbar autohiding does not set this to false automatically.
+        setSnackbarOpen(true)
+        setTimeout(() => setSnackbarOpen(false), 2500)
+    }, [bsc.readyStatus])
+
+    const handleResetSettings = async () => {
+        const success = await resetSettings()
+        if (success) {
+            setSnackbarOpen(true)
+            setTimeout(() => setSnackbarOpen(false), 2500)
+        }
+    }
+
+    //////////////////////////////////////////////////
+    //////////////////////////////////////////////////
+    // Rendering
+
+    const renderCampaignPicker = () => {
+        return (
+            <View>
+                <CustomSelect
+                    placeholder="Select a Scenario"
+                    width="100%"
+                    groupLabel="Scenarios"
+                    options={scenarios}
+                    value={bsc.settings.general.scenario}
+                    onValueChange={(value) => {
+                        const newScenario = value || ""
+                        bsc.setSettings({ ...bsc.settings, general: { ...bsc.settings.general, scenario: newScenario } })
+                        bsc.setReadyStatus(newScenario !== "")
+                    }}
+                />
+                {!bsc.settings.general.scenario && (
+                    <View style={styles.errorContainer}>
+                        <Text style={styles.errorText}>⚠️ A scenario must be selected before starting the bot.</Text>
+                    </View>
+                )}
+            </View>
+        )
+    }
+
+    const renderTrainingLink = () => {
+        return (
+            <NavigationLink
+                title="Go to Training Settings"
+                description="Configure which stats to train, set priorities, and customize training behavior."
+                onPress={() => navigation.navigate("TrainingSettings" as never)}
+            />
+        )
+    }
+
+    const renderTrainingEventLink = () => {
+        return (
+            <NavigationLink
+                title="Go to Training Event Settings"
+                description="Configure training event preferences and event selection behavior."
+                onPress={() => navigation.navigate("TrainingEventSettings" as never)}
+            />
+        )
+    }
+
+    const renderOCRLink = () => {
+        return (
+            <NavigationLink
+                title="Go to OCR Settings"
+                description="Configure OCR text detection parameters, threshold settings, and retry behavior."
+                onPress={() => navigation.navigate("OCRSettings" as never)}
+            />
+        )
+    }
+
+    const renderRacingLink = () => {
+        return (
+            <NavigationLink
+                title="Go to Racing Settings"
+                description="Configure racing behavior, retry settings, mandatory race handling, and more."
+                onPress={() => navigation.navigate("RacingSettings" as never)}
+            />
+        )
+    }
+
+    const renderEventLogVisualizerLink = () => {
+        return (
+            <NavigationLink
+                title="Go to Event Log Visualizer (Beta)"
+                description="Import logs and view a day-by-day timeline of actions."
+                onPress={() => navigation.navigate("EventLogVisualizer" as never)}
+            />
+        )
+    }
+
+    const renderMiscSettings = () => {
+        return (
+            <View style={{ marginTop: 16 }}>
+                <Separator style={{ marginVertical: 16 }} />
+
+                <CustomTitle title="Misc Settings" description="General settings for the bot that don't fit into the other categories." />
+
+                <CustomCheckbox
+                    checked={bsc.settings.general.enableSkillPointCheck}
+                    onCheckedChange={(checked) => {
+                        bsc.setSettings({
+                            ...bsc.settings,
+                            general: { ...bsc.settings.general, enableSkillPointCheck: checked },
+                        })
+                    }}
+                    label="Enable Skill Point Check"
+                    description="Enables check for a certain skill point threshold. If reached, the bot will stop so you can spend the skill points."
+                />
+
+                {bsc.settings.general.enableSkillPointCheck && (
+                    <View style={{ marginTop: 8, marginLeft: 20 }}>
+                        <CustomSlider
+                            value={bsc.settings.general.skillPointCheck}
+                            placeholder={bsc.defaultSettings.general.skillPointCheck}
+                            onValueChange={(value) => {
+                                bsc.setSettings({
+                                    ...bsc.settings,
+                                    general: { ...bsc.settings.general, skillPointCheck: value },
+                                })
+                            }}
+                            onSlidingComplete={(value) => {
+                                bsc.setSettings({
+                                    ...bsc.settings,
+                                    general: { ...bsc.settings.general, skillPointCheck: value },
+                                })
+                            }}
+                            min={100}
+                            max={2000}
+                            step={10}
+                            label="Skill Point Threshold"
+                            labelUnit=""
+                            showValue={true}
+                            showLabels={true}
+                        />
+                    </View>
+                )}
+
+                <CustomCheckbox
+                    checked={bsc.settings.general.enablePopupCheck}
+                    onCheckedChange={(checked) => {
+                        bsc.setSettings({
+                            ...bsc.settings,
+                            general: { ...bsc.settings.general, enablePopupCheck: checked },
+                        })
+                    }}
+                    label="Enable Popup Check"
+                    description="Enables check for warning popups like lack of fans or lack of trophies gained. Stops the bot if detected for the user to deal with them manually."
+                    className="mt-4"
+                />
+
+                <CustomCheckbox
+                    checked={bsc.settings.misc.enableSettingsDisplay}
+                    onCheckedChange={(checked) => {
+                        bsc.setSettings({
+                            ...bsc.settings,
+                            misc: { ...bsc.settings.misc, enableSettingsDisplay: checked },
+                        })
+                    }}
+                    label="Enable Settings Display in Message Log"
+                    description="Shows current bot configuration settings at the top of the message log."
+                    className="mt-4"
+                />
+
+                <Separator style={{ marginVertical: 16 }} />
+
+                <CustomTitle title="Settings Management" description="Import and export settings from JSON file or access the app's data directory." />
+
+                <View style={{ flexDirection: "row", justifyContent: "space-between" }}>
+                    <CustomButton onPress={handleImportSettings} variant="default" style={{ width: 150 }}>
+                        📥 Import Settings
+                    </CustomButton>
+
+                    <CustomButton onPress={handleExportSettings} variant="default" style={{ width: 150 }}>
+                        📤 Export Settings
+                    </CustomButton>
+                </View>
+
+                <View style={{ flexDirection: "row", marginTop: 16, justifyContent: "space-between" }}>
+                    <CustomButton onPress={openDataDirectory} variant="default" style={{ width: 150 }} fontSize={12}>
+                        📁 Open Data Directory
+                    </CustomButton>
+
+                    <CustomButton onPress={() => setShowResetDialog(true)} variant="destructive" style={{ width: 150 }}>
+                        🔄 Reset Settings
+                    </CustomButton>
+                </View>
+
+                <View style={styles.errorContainer}>
+                    <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                        <Text style={{ fontWeight: "bold", color: colors.warningText }}>⚠️ File Explorer Note:</Text>
+                        <Text style={styles.errorText}>
+                            To manually access files, you need a file explorer app that can access the /Android/data folder (like CX File Explorer). Standard file managers will not work.
+                        </Text>
+                    </View>
+                </View>
+            </View>
+        )
+    }
+
+    const renderDebugSettings = () => {
+        return (
+            <View style={{ marginTop: 16 }}>
+                <Separator style={{ marginVertical: 16 }} />
+                <CustomTitle title="Debug Settings" description="Debug mode, template matching settings, and diagnostic tests for bot troubleshooting." />
+
+                <CustomCheckbox
+                    checked={bsc.settings.debug.enableDebugMode}
+                    onCheckedChange={(checked) => {
+                        bsc.setSettings({
+                            ...bsc.settings,
+                            debug: { ...bsc.settings.debug, enableDebugMode: checked },
+                        })
+                    }}
+                    label="Enable Debug Mode"
+                    description="Allows debugging messages in the log and test images to be created in the /temp/ folder."
+                />
+
+                {bsc.settings.debug.enableDebugMode && (
+                    <View style={[styles.errorContainer, { marginTop: 8 }]}>
+                        <Text style={styles.errorText}>⚠️ Significantly extends the average runtime of the bot due to increased IO operations.</Text>
+                    </View>
+                )}
+
+                <CustomSlider
+                    value={bsc.settings.debug.templateMatchConfidence}
+                    placeholder={bsc.defaultSettings.debug.templateMatchConfidence}
+                    onValueChange={(value) => {
+                        bsc.setSettings({
+                            ...bsc.settings,
+                            debug: { ...bsc.settings.debug, templateMatchConfidence: value },
+                        })
+                    }}
+                    onSlidingComplete={(value) => {
+                        bsc.setSettings({
+                            ...bsc.settings,
+                            debug: { ...bsc.settings.debug, templateMatchConfidence: value },
+                        })
+                    }}
+                    min={0.5}
+                    max={1.0}
+                    step={0.01}
+                    label="Adjust Confidence for Template Matching"
+                    labelUnit=""
+                    showValue={true}
+                    showLabels={true}
+                    description="Sets the minimum confidence level for template matching with 1080p as the baseline. Consider lowering this to something like 0.7 or 70% at lower resolutions. Making it too low will cause the bot to match on too many things as false positives."
+                />
+
+                <CustomSlider
+                    value={bsc.settings.debug.templateMatchCustomScale}
+                    placeholder={bsc.defaultSettings.debug.templateMatchCustomScale}
+                    onValueChange={(value) => {
+                        bsc.setSettings({
+                            ...bsc.settings,
+                            debug: { ...bsc.settings.debug, templateMatchCustomScale: value },
+                        })
+                    }}
+                    onSlidingComplete={(value) => {
+                        bsc.setSettings({
+                            ...bsc.settings,
+                            debug: { ...bsc.settings.debug, templateMatchCustomScale: value },
+                        })
+                    }}
+                    min={0.5}
+                    max={3.0}
+                    step={0.01}
+                    label="Set the Custom Image Scale for Template Matching"
+                    labelUnit=""
+                    showValue={true}
+                    showLabels={true}
+                    description="Manually set the scale to do template matching. The Basic Template Matching Test can help find your recommended scale. Making it too low or too high will cause the bot to match on too little or too many things as false positives."
+                />
+
+                <Separator style={{ marginVertical: 16 }} />
+
+                <CustomTitle title="Debug Tests" description="Run diagnostic tests to verify template matching and OCR functionality. Only one test can be enabled at a time." />
+
+                {/* Warning message for debug tests */}
+                <View style={[styles.errorContainer, { marginBottom: 16 }]}>
+                    <Text style={styles.errorText}>
+                        {"⚠️ Only one debug test can be enabled at a time. Enabling a test will automatically disable the others.\n\nIn addition, it is recommended to enable Debug Mode when testing."}
+                    </Text>
+                </View>
+
+                <CustomCheckbox
+                    checked={bsc.settings.debug.debugMode_startTemplateMatchingTest}
+                    onCheckedChange={(checked) => {
+                        if (checked) {
+                            // Disable other tests when enabling this one.
+                            bsc.setSettings({
+                                ...bsc.settings,
+                                debug: {
+                                    ...bsc.settings.debug,
+                                    debugMode_startTemplateMatchingTest: true,
+                                    debugMode_startSingleTrainingOCRTest: false,
+                                    debugMode_startComprehensiveTrainingOCRTest: false,
+                                    debugMode_startDateOCRTest: false,
+                                    debugMode_startRaceListDetectionTest: false,
+                                    debugMode_startAptitudesDetectionTest: false,
+                                },
+                            })
+                        } else {
+                            bsc.setSettings({
+                                ...bsc.settings,
+                                debug: { ...bsc.settings.debug, debugMode_startTemplateMatchingTest: false },
+                            })
+                        }
+                    }}
+                    label="Start Basic Template Matching Test"
+                    description="Disables normal bot operations and starts the template match test. Only on the Home screen and will check if it can find certain essential buttons on the screen. It will also output what scale it had the most success with."
+                    style={{ marginTop: 10 }}
+                />
+
+                <CustomCheckbox
+                    checked={bsc.settings.debug.debugMode_startSingleTrainingOCRTest}
+                    onCheckedChange={(checked) => {
+                        if (checked) {
+                            // Disable other tests when enabling this one.
+                            bsc.setSettings({
+                                ...bsc.settings,
+                                debug: {
+                                    ...bsc.settings.debug,
+                                    debugMode_startTemplateMatchingTest: false,
+                                    debugMode_startSingleTrainingOCRTest: true,
+                                    debugMode_startComprehensiveTrainingOCRTest: false,
+                                    debugMode_startDateOCRTest: false,
+                                    debugMode_startRaceListDetectionTest: false,
+                                    debugMode_startAptitudesDetectionTest: false,
+                                },
+                            })
+                        } else {
+                            bsc.setSettings({
+                                ...bsc.settings,
+                                debug: { ...bsc.settings.debug, debugMode_startSingleTrainingOCRTest: false },
+                            })
+                        }
+                    }}
+                    label="Start Single Training OCR Test"
+                    description="Disables normal bot operations and starts the single training OCR test. Only on the Training screen and tests the current training on display for stat gains and failure chances."
+                    style={{ marginTop: 10 }}
+                />
+
+                <CustomCheckbox
+                    checked={bsc.settings.debug.debugMode_startComprehensiveTrainingOCRTest}
+                    onCheckedChange={(checked) => {
+                        if (checked) {
+                            // Disable other tests when enabling this one.
+                            bsc.setSettings({
+                                ...bsc.settings,
+                                debug: {
+                                    ...bsc.settings.debug,
+                                    debugMode_startTemplateMatchingTest: false,
+                                    debugMode_startSingleTrainingOCRTest: false,
+                                    debugMode_startComprehensiveTrainingOCRTest: true,
+                                    debugMode_startDateOCRTest: false,
+                                    debugMode_startRaceListDetectionTest: false,
+                                    debugMode_startAptitudesDetectionTest: false,
+                                },
+                            })
+                        } else {
+                            bsc.setSettings({
+                                ...bsc.settings,
+                                debug: { ...bsc.settings.debug, debugMode_startComprehensiveTrainingOCRTest: false },
+                            })
+                        }
+                    }}
+                    label="Start Comprehensive Training OCR Test"
+                    description="Disables normal bot operations and starts the comprehensive training OCR test. Only on the Training screen and tests all 5 trainings for their stat gains and failure chances."
+                    style={{ marginTop: 10 }}
+                />
+
+                <CustomCheckbox
+                    checked={bsc.settings.debug.debugMode_startDateOCRTest}
+                    onCheckedChange={(checked) => {
+                        if (checked) {
+                            // Disable other tests when enabling this one.
+                            bsc.setSettings({
+                                ...bsc.settings,
+                                debug: {
+                                    ...bsc.settings.debug,
+                                    debugMode_startTemplateMatchingTest: false,
+                                    debugMode_startSingleTrainingOCRTest: false,
+                                    debugMode_startComprehensiveTrainingOCRTest: false,
+                                    debugMode_startDateOCRTest: true,
+                                    debugMode_startRaceListDetectionTest: false,
+                                    debugMode_startAptitudesDetectionTest: false,
+                                },
+                            })
+                        } else {
+                            bsc.setSettings({
+                                ...bsc.settings,
+                                debug: { ...bsc.settings.debug, debugMode_startDateOCRTest: false },
+                            })
+                        }
+                    }}
+                    label="Start Date OCR Test"
+                    description="Disables normal bot operations and starts the date OCR test. Only on the Main screen and the Race List screen and tests detecting the current date."
+                    style={{ marginTop: 10 }}
+                />
+
+                <CustomCheckbox
+                    checked={bsc.settings.debug.debugMode_startRaceListDetectionTest}
+                    onCheckedChange={(checked) => {
+                        if (checked) {
+                            // Disable other tests when enabling this one.
+                            bsc.setSettings({
+                                ...bsc.settings,
+                                debug: {
+                                    ...bsc.settings.debug,
+                                    debugMode_startTemplateMatchingTest: false,
+                                    debugMode_startSingleTrainingOCRTest: false,
+                                    debugMode_startComprehensiveTrainingOCRTest: false,
+                                    debugMode_startDateOCRTest: false,
+                                    debugMode_startRaceListDetectionTest: true,
+                                    debugMode_startAptitudesDetectionTest: false,
+                                },
+                            })
+                        } else {
+                            bsc.setSettings({
+                                ...bsc.settings,
+                                debug: { ...bsc.settings.debug, debugMode_startRaceListDetectionTest: false },
+                            })
+                        }
+                    }}
+                    label="Start Race List Detection Test"
+                    description="Disables normal bot operations and starts the Race List detection test. Only on the Race List screen and tests detecting the races with double star predictions currently on display."
+                    style={{ marginTop: 10 }}
+                />
+
+                <CustomCheckbox
+                    checked={bsc.settings.debug.debugMode_startAptitudesDetectionTest}
+                    onCheckedChange={(checked) => {
+                        if (checked) {
+                            // Disable other tests when enabling this one.
+                            bsc.setSettings({
+                                ...bsc.settings,
+                                debug: {
+                                    ...bsc.settings.debug,
+                                    debugMode_startTemplateMatchingTest: false,
+                                    debugMode_startSingleTrainingOCRTest: false,
+                                    debugMode_startComprehensiveTrainingOCRTest: false,
+                                    debugMode_startDateOCRTest: false,
+                                    debugMode_startRaceListDetectionTest: false,
+                                    debugMode_startAptitudesDetectionTest: true,
+                                },
+                            })
+                        } else {
+                            bsc.setSettings({
+                                ...bsc.settings,
+                                debug: { ...bsc.settings.debug, debugMode_startAptitudesDetectionTest: false },
+                            })
+                        }
+                    }}
+                    label="Start Aptitudes Detection Test"
+                    description="Disables normal bot operations and starts the Aptitudes detection test. Only on the Main screen and tests detecting the current aptitudes."
+                    style={{ marginTop: 10 }}
+                />
+            </View>
+        )
+    }
+
+    //////////////////////////////////////////////////
+    //////////////////////////////////////////////////
+
+    return (
+        <View style={styles.root}>
+            <View style={styles.header}>
+                <Text style={styles.title}>Settings</Text>
+                <ThemeToggle />
+            </View>
+            <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
+                <View className="m-1">
+                    {renderCampaignPicker()}
+                    {renderTrainingLink()}
+                    {renderTrainingEventLink()}
+                    {renderOCRLink()}
+                    {renderRacingLink()}
+                    {renderEventLogVisualizerLink()}
+                    {renderMiscSettings()}
+                    {renderDebugSettings()}
+                </View>
+            </ScrollView>
+
+            <Snackbar
+                visible={snackbarOpen}
+                onDismiss={() => setSnackbarOpen(false)}
+                action={{
+                    label: "Close",
+                    onPress: () => {
+                        setSnackbarOpen(false)
+                    },
+                }}
+                style={{ backgroundColor: bsc.readyStatus ? "green" : "red", borderRadius: 10 }}
+            >
+                {bsc.readyStatus ? "Bot is ready!" : "Bot is not ready!"}
+            </Snackbar>
+
+            {/* Restart Dialog */}
+            <AlertDialog open={showImportDialog} onOpenChange={setShowImportDialog}>
+                <AlertDialogContent style={{ backgroundColor: "black" }}>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            <Text style={{ color: "white" }}>Settings Imported</Text>
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            <Text style={{ color: "white" }}>Settings have been imported successfully.</Text>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogAction style={{ backgroundColor: "white" }}>
+                            <Text style={{ color: "black" }}>OK</Text>
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
+            {/* Reset Settings Dialog */}
+            <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
+                <AlertDialogContent style={{ backgroundColor: "black" }}>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            <Text style={{ color: "white" }}>Reset Settings to Default</Text>
+                        </AlertDialogTitle>
+                        <AlertDialogDescription style={{ height: 50 }}>
+                            <Text style={{ color: "white" }}>
+                                Are you sure you want to reset all settings to their default values? This action cannot be undone and will overwrite your current configuration.
+                            </Text>
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel onPress={() => setShowResetDialog(false)} style={{ backgroundColor: "black" }}>
+                            <Text style={{ color: "white" }}>Cancel</Text>
+                        </AlertDialogCancel>
+                        <AlertDialogAction onPress={handleResetSettings} style={{ backgroundColor: "white" }}>
+                            <Text style={{ color: "black" }}>Reset</Text>
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+        </View>
+    )
+}
+
+export default Settings

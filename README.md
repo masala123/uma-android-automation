@@ -17,7 +17,7 @@ This project is purely for educational purposes to learn about Android automatio
 -   Android Device or Emulator (Nougat 7.0+)
     -   For the best performance and stability on phones, the device needs to be at 1080p display resolution. The speed is also best at 1080p and for other resolutions, it becomes dependent on the manual scale that you can set in the settings. Right now it defaults to 1.0 which uses 1080p as the baseline. You can determine what scales may be good for you with the template match test that you can enable in the settings as well.
         -   If you change the display resolution while the overlay button is still active, you will need to restart the app in order for the display changes to persist to the `MediaProjection` service.
-    -   Tested emulator was on Bluestacks 5 (Pie 64-bit). The following setup is required:
+    -   Tested emulator was on Bluestacks 5 (Pie 64-bit). Later versions of Bluestacks also should work. The following setup is required:
         -   Portrait Mode needs to be forced on always.
         -   Bluestacks itself needs to be updated to the latest version to avoid Uma Musume crashing.
         -   In the Bluestacks Settings > Phone, the predefined profile needs to be set to a modern high-end phone like the Samsung Galaxy S22.
@@ -26,6 +26,10 @@ This project is purely for educational purposes to learn about Android automatio
             -   4GB Memory
             -   Display resolution set to Portrait 1080 x 1920
             -   Pixel density 240 DPI (Medium)
+    -   Note that other emulators like MuMu may have their 1080p at a different DPI other than 240. MuMu by default uses 480 DPI which will throw template matching and OCR off. It is highly recommended to force it to 240 DPI in the emulator settings for the best performance. The following are tested resolutions + DPIs:
+        -   1080x1920 240 DPI (from Bluestacks emulator default settings)
+        -   1080x2340 450 DPI (from native Samsung phone)
+-   The in-game graphics need to be set to `Standard` instead of `Basic` for best performance.
 
 # Features
 
@@ -88,24 +92,11 @@ Make sure to use 1.0 scaling, as well as 80% confidence for best results in 1080
 
 1. Download and extract the project repository.
 2. Go to `https://opencv.org/releases/` and download OpenCV (make sure to download the Android version of OpenCV) and extract it. As of 2025-07-20, the OpenCV version used in this project is 4.12.0.
-3. Create a new folder inside the root of the project repository named `opencv` and copy the extracted files in `/OpenCV-android-sdk/sdk/` from Step 2 into it.
-4. Open the project repository in `Android Studio`.
-5. Open up the `opencv` module's `build.gradle`. At the end of the file, paste the following JVM Toolchain block:
-
-```kotlin
-// Explicitly set Kotlin JVM toolchain to Java 17 to match the OpenCV module's Java target.
-// Without this, Kotlin defaults to JVM 21 (especially with Kotlin 2.x), which causes a build failure:
-// "Inconsistent JVM Target Compatibility Between Java and Kotlin Tasks".
-// See: https://kotl.in/gradle/jvm/toolchain for details.
-kotlin {
-    jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
-    }
-}
-```
-
-6. You can now build and run on your Android Device or build your own .apk file.
-7. You can set `universalApk` to `true` in the app's `build.gradle` to build a one-for-all .apk file or adjust the `include 'arm64-v8a'` to customize which ABI to build the .apk file for.
+3. Create a new folder inside the `/android` folder named `opencv` and copy the extracted files in `/OpenCV-android-sdk/sdk/` from Step 2 into it.
+4. Open up the root of the folder in your preferred IDE/terminal and execute `yarn install` to install the React Native dependencies from the `package.json`.
+5. Your dev environment should now be set up. You can run the app on your connected Android device/emulator to have hot-reload changes for the frontend via the Metro HTTP server with `yarn android`. You can also now build the APK with `yarn build` or `yarn build:clean` if you encounter problems.
+6. You can set `universalApk` to `true` in the app's `build.gradle` to build a one-for-all .apk file or adjust the `include 'arm64-v8a'` to customize which ABI to build the .apk file for.
+7. Note: New to React Native, you should not run the app directly from Android Studio. Have the Metro bundler run the app for you.
 
 # Technologies Used
 
@@ -117,3 +108,4 @@ kotlin {
 6. [Tesseract4Android - For performing OCR on the screen](https://github.com/adaptech-cz/Tesseract4Android)
 7. [string-similarity - For comparing string similarities during text detection](https://github.com/rrice/java-string-similarity)
 8. [AppUpdater - For automatically checking and notifying the user for new app updates](https://github.com/javiersantos/AppUpdater)
+9. [React Native - Used as the frontend](https://reactnative.dev/)

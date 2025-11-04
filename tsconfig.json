@@ -1,0 +1,14 @@
+{
+    "extends": "@react-native/typescript-config",
+    "compilerOptions": {
+        "jsx": "react-jsx",
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "baseUrl": ".",
+        "paths": {
+            "*": ["src/*"],
+            "@/*": ["./*"]
+        },
+        "types": []
+    }
+}

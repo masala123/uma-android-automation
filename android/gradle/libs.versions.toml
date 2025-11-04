@@ -1,0 +1,29 @@
+[versions]
+# The Android Studio warning about these not being used in any build scripts is wrong and can be ignored.
+# https://issuetracker.google.com/issues/343889864
+app-compileSdk = "36"
+app-buildToolsVersion = "36.0.0"
+app-minSdk = "24"
+#noinspection ExpiredTargetSdkVersion
+app-targetSdk = "30"
+app-versionCode = "28"
+app-versionName = "4.0.0"
+app-jvm-toolchain = "17"
+
+
+androidGradleBuildTools = "8.13.0"
+kotlinGradlePlugin = "2.2.0"
+androidCvAutomationLibrary = "2.0.18"
+lottie = "6.6.9"
+
+[libraries]
+androidGradleBuildTools = { group = "com.android.tools.build", name = "gradle", version.ref = "androidGradleBuildTools" }
+kotlinGradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlinGradlePlugin" }
+lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
+react-native-gradle-plugin = { module = "com.facebook.react:react-native-gradle-plugin" }
+android-cv-automation-library = { module = "com.github.steve1316:android-cv-automation-library", version.ref = "androidCvAutomationLibrary" }
+react-android = { module = "com.facebook.react:react-android" }
+hermes-android = { module = "com.facebook.react:hermes-android" }
+
+[plugins]
+foojayJDKResolver = { id = "org.gradle.toolchains.foojay-resolver-convention", version = "1.0.0" }
