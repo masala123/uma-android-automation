@@ -6,8 +6,8 @@ app-buildToolsVersion = "36.0.0"
 app-minSdk = "24"
 #noinspection ExpiredTargetSdkVersion
 app-targetSdk = "30"
-app-versionCode = "27"
-app-versionName = "3.0.3"
+app-versionCode = "28"
+app-versionName = "4.0.0"
 app-jvm-toolchain = "17"
 
 

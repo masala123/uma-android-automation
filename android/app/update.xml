@@ -1,23 +1,54 @@
 <AppUpdater>
   <update>
-    <latestVersion>3.0.3</latestVersion>
+    <latestVersion>4.0.0</latestVersion>
     <url>https://github.com/steve1316/uma-android-automation/releases</url>
     <releaseNotes>
-v3.0.3 - Changelog
+v4.0.0 - Changelog
+
+> This most likely will need a full reinstall of the app due to the sheer amount of changes made to the backend.
+
+New Features
+---
+- Frontend rewritten from Android XML to using React Native under Expo. UI base elements are from React Native Reusables.
+- Existing UI settings have been migrated to the new frontend along with updated descriptions where applicable.
+- App settings are to be saved to a SQLite database and they are now able to be imported/exported to a JSON file.
+- Added a new option to reset back to the default settings under the `Settings` page in the app.
+- Added a simple animated splash screen created using Jitter and Lottie.
+- Added an experimental `Racing Plan` feature under the `Racing Settings` page in the app. This will attempt to optimize extra race selection using customized parameters that you set. Additional details can be read from its page in the `Racing Settings` page.
+- Added additional debug tests to check for proper functionality of the app: `Date OCR Test`, `Race List Detection Test` and `Aptitudes Detection Test`.
+- Added a new setting to set the preferred distance for stat target calculations.
+- Added a new setting to forcibly set the racing strategy for Junior Year races.
+- Added a new setting to forcibly rest during June Late Phase of Classic and Senior Years to prepare for the Summer Training in July.
+- Added several settings to select which option to pick for specific special events like Acupuncture, Extra Training, New Year's, etc.
+- Added positive and negative weights to training event options that give statuses like `Charming` and `Slacker`.
+- Added back rainbow training detection and added a setting in the `Training Settings` page to enable this. Not exactly 100% accurate but it was enough on the default device configurations.
+- Added a new setting in the `Training Settings` page to enable risky training which is separate from the regular training settings. This will allow the bot to do trainings with higher main stat gains but with a separate higher maximum failure chance than the regular failure chance setting. For example, a Speed training of +60 on Speed but with a failure chance of 40% could be attempted if you wish.
+- Added a new `Event Log Visualizer` feature under the `Settings` page in the app. Selecting logs for a particular run will show you either a day-by-day timeline of actions taken from Junior to the Finals or a Yearly Summary of what happened.
 
 Adjustments
 ---
-- Removed rainbow detection during training analysis. It was too unreliable according to reports
-- Print error stack traces whenever possible
-- Adjust logging during training analysis
-- Increase minimum required match confidence and pixel correlation values during training analysis of stat gains
-- Add a bonus to priority weight during training analysis for the top 3 prioritized stats to prevent overriding large stat gains over the target stat
-- Slight speed up of training analysis
+- Use my Automation Library for standardized functionality and major backend refactoring as a result.
+- Updated backend and gradle files to support React Native and the usage of native modules.
+- Generated APKs will now be of `release` build instead of `debug`. Found this to be more performant than `debug` builds.
+- Updated game data up to Eishin Flash (2025-10-29).
+- Game data will be loaded by the frontend and then passed to the backend via SQLite.
+- Updated README regarding usage on other emulators like MuMu.
+- Aptitudes like track and race strategies are now tracked and used in various areas of the bot like race selection.
+- Removed the upward swipe when starting the process to handle the list of races on the screen to be run or skipped.
+- Formatting made to existing log messages to properly mark which section is the Training process, which is the Racing process, etc. to better support the Event Log Visualizer feature.
+- Made sure that the warning popup about racing too many times when doing a mandatory race is dismissed.
+- Added more logging messages to be more descriptive about why it is doing or not doing something (why it chose to skip racing for example).
+- Improved the handling of situations where the bot needs to satisfy a fan/trophy requirement (like Oguri Cap needing first place two times in G1 races).
+- Updated the default blacklist to include `Guts`.
+- The bot will not waste time recovering injuries or mood if it is the Finals.
+- Reworked the scoring system for the `Training` process to hopefully have it maintain a better distribution of stats according to the stat targets. Specifically maintaining a balanced distribution of stats instead of gunning for the stat targets specifically.
+- The training analysis will now apply an artificial boost to main stat gains when they appear lower than side-effect stats, addressing potential OCR reading failures. Also boosts side-effect stats if they are zero.
 
 Fixed
 ---
-- Fix OCR bug where 90 skill points were being read as 920
-- Mitigate misc check loops by backing out of a screen when possible
+- Fix possible infinite loop due to the bot needing to race but a flag was set to skip racing so it defaults to misc checks instead.
+- Updated the Automation Library to fix a bug where the bot would be stuck performing tap gestures on the screen if the device was put to sleep with the power button.
+- Fix possible crash when stopping the bot while it was in the middle of analyzing trainings through parallel processing.
 
     </releaseNotes>
   </update>
