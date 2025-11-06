@@ -9,7 +9,7 @@ import com.steve1316.uma_android_automation.utils.SettingsHelper
  * By default, URA Finale is handled by this base class.
  */
 open class Campaign(val game: Game) {
-	protected val tag: String = "[${MainActivity.Companion.loggerTag}]Normal"
+	protected open val TAG: String = "[${MainActivity.Companion.loggerTag}]Normal"
 
 	val mustRestBeforeSummer: Boolean = SettingsHelper.getBooleanSetting("training", "mustRestBeforeSummer")
 
@@ -52,19 +52,19 @@ open class Campaign(val game: Game) {
 
 					// If the required skill points has been reached, stop the bot.
 					if (game.enableSkillPointCheck && game.imageUtils.determineSkillPoints() >= game.skillPointsRequired) {
-						game.printToLog("\n[END] Bot has acquired the set amount of skill points. Exiting now...", tag = tag)
+						MessageLog.i(tag, "\n[END] Bot has acquired the set amount of skill points. Exiting now...")
 						game.notificationMessage = "Bot has acquired the set amount of skill points."
 						break
 					}
 
 					// If force racing is enabled, skip all other activities and go straight to racing
 					if (game.racing.enableForceRacing) {
-						game.printToLog("[INFO] Force racing enabled - skipping all other activities and going straight to racing.", tag = tag)
+						MessageLog.i(tag, "Force racing enabled - skipping all other activities and going straight to racing.")
 						needToRace = true
 					} else {
 						// Check if we need to rest before Summer Training (June Early/Late in Classic/Senior Year).
 						if (mustRestBeforeSummer && (game.currentDate.year == 2 || game.currentDate.year == 3) && game.currentDate.month == 6 && game.currentDate.phase == "Late") {
-							game.printToLog("[INFO] Forcing rest during June ${game.currentDate.phase} in Year ${game.currentDate.year} in preparation for Summer Training.", tag = tag)
+							MessageLog.i(tag, "Forcing rest during June ${game.currentDate.phase} in Year ${game.currentDate.year} in preparation for Summer Training.")
 							game.recoverEnergy()
 							game.racing.skipRacing = false
 						} else if (game.checkInjury() && !game.checkFinals()) {
@@ -74,22 +74,22 @@ open class Campaign(val game: Game) {
 						} else if (game.recoverMood() && !game.checkFinals()) {
 							game.racing.skipRacing = false
 						} else if (!game.racing.isExtraRaceEligible()) {
-							game.printToLog("[INFO] Training due to it not being an extra race day.", tag = tag)
+							MessageLog.i(tag, "Training due to it not being an extra race day.")
 							game.training.handleTraining()
 							game.racing.skipRacing = false
 						} else {
-							game.printToLog("[INFO] Bot has no injuries, mood is sufficient and extra races can be run today. Setting needToRace to true.", tag = tag)
+							MessageLog.i(tag, "Bot has no injuries, mood is sufficient and extra races can be run today. Setting needToRace to true.")
 							needToRace = true
 						}
 					}
 				}
 
                 if (game.racing.encounteredRacingPopup || needToRace) {
-                    game.printToLog("[INFO] Racing by default.", tag = tag)
+                    MessageLog.i(tag, "Racing by default.")
                     // The !game.racing.skipRacing was removed due to possibility of getting stuck in a loop.
                     if (!handleRaceEvents()) {
                         if (game.racing.detectedMandatoryRaceCheck) {
-                            game.printToLog("\n[END] Stopping bot due to detection of Mandatory Race.", tag = tag)
+                            MessageLog.i(tag, "\n[END] Stopping bot due to detection of Mandatory Race.")
                             game.notificationMessage = "Stopping bot due to detection of Mandatory Race."
                             break
                         }
@@ -108,7 +108,7 @@ open class Campaign(val game: Game) {
 			} else if (game.checkMandatoryRacePrepScreen()) {
 				// If the bot is at the Main screen with the button to select a race visible, that means the bot needs to handle a mandatory race.
 				if (!handleRaceEvents() && game.racing.detectedMandatoryRaceCheck) {
-					game.printToLog("\n[END] Stopping bot due to detection of Mandatory Race.", tag = tag)
+					MessageLog.i(tag, "\n[END] Stopping bot due to detection of Mandatory Race.")
 					game.notificationMessage = "Stopping bot due to detection of Mandatory Race."
 					break
 				}
@@ -118,15 +118,15 @@ open class Campaign(val game: Game) {
 				game.racing.skipRacing = false
 			} else if (game.checkEndScreen()) {
 				// Stop when the bot has reached the screen where it details the overall result of the run.
-				game.printToLog("\n[END] Bot has reached the end of the run. Exiting now...", tag = tag)
+				MessageLog.i(tag, "\n[END] Bot has reached the end of the run. Exiting now...")
 				game.notificationMessage = "Bot has reached the end of the run"
 				break
 			} else if (checkCampaignSpecificConditions()) {
-				game.printToLog("[INFO] Campaign-specific checks complete.", tag = tag)
+				MessageLog.i(tag, "Campaign-specific checks complete.")
 				game.racing.skipRacing = false
 				continue
 			} else {
-				game.printToLog("[INFO] Did not detect the bot being at the following screens: Main, Training Event, Inheritance, Mandatory Race Preparation, Racing and Career End.", tag = tag)
+				MessageLog.i(tag, "Did not detect the bot being at the following screens: Main, Training Event, Inheritance, Mandatory Race Preparation, Racing and Career End.")
 			}
 
 			// Various miscellaneous checks

@@ -1,6 +1,7 @@
 package com.steve1316.uma_android_automation.utils
 
 import com.steve1316.uma_android_automation.bot.Game
+import com.steve1316.automation_library.utils.MessageLog
 import net.ricecode.similarity.JaroWinklerStrategy
 import net.ricecode.similarity.StringSimilarityServiceImpl
 
@@ -8,6 +9,10 @@ import net.ricecode.similarity.StringSimilarityServiceImpl
  * Utility class for parsing game date strings and converting them to structured Game.Date objects.
  */
 class GameDateParser {
+    companion object {
+        private const val TAG = "GameDateParser"
+    }
+    
 	/**
 	 * Compute the next day's date from the current date by advancing the turn number.
 	 */
@@ -47,7 +52,7 @@ class GameDateParser {
 		if (dateString == "") {
 			// OCR failed to produce a date string. Assume it is the next day.
 			val nextDate = computeNextDayDate(game.currentDate)
-			game.printToLog("[ERROR] Received empty date string from OCR. Defaulting to next day: year=${nextDate.year}, phase=\"${nextDate.phase}\", month=${nextDate.month}, turn=${nextDate.turnNumber}.", tag = tag)
+			MessageLog.e(tag, "Received empty date string from OCR. Defaulting to next day: year=${nextDate.year}, phase=\"${nextDate.phase}\", month=${nextDate.month}, turn=${nextDate.turnNumber}.")
 			return nextDate
 		} else if (dateString.lowercase().contains("debut")) {
 			// Special handling for the Pre-Debut phase.
@@ -93,7 +98,7 @@ class GameDateParser {
 		if (parts.size < 3) {
 			// Invalid date format detected. Assume it is the next day.
 			val nextDate = computeNextDayDate(game.currentDate)
-			game.printToLog("[DATE-PARSER] Invalid date string format: $dateString. Defaulting to next day: year=${nextDate.year}, phase=\"${nextDate.phase}\", month=${nextDate.month}, turn=${nextDate.turnNumber}.", tag = tag)
+			MessageLog.i(tag, "[DATE-PARSER] Invalid date string format: $dateString. Defaulting to next day: year=${nextDate.year}, phase=\"${nextDate.phase}\", month=${nextDate.month}, turn=${nextDate.turnNumber}.")
 			return nextDate
 		}
  
@@ -119,7 +124,7 @@ class GameDateParser {
 				}
 			}
 			year = bestYear
-			game.printToLog("[DATE-PARSER] Year not found in mapping, using best match: $yearPart -> $year", tag = tag)
+			MessageLog.i(tag, "[DATE-PARSER] Year not found in mapping, using best match: $yearPart -> $year")
 		}
 
 		// Find the best match for month using Jaro Winkler if not found in mapping.
@@ -137,7 +142,7 @@ class GameDateParser {
 				}
 			}
 			month = bestMonth
-			game.printToLog("[DATE-PARSER] Month not found in mapping, using best match: $monthPart -> $month", tag = tag)
+			MessageLog.i(tag, "[DATE-PARSER] Month not found in mapping, using best match: $monthPart -> $month")
 		}
 
 		// Calculate the turn number.

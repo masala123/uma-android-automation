@@ -34,7 +34,7 @@ import androidx.core.net.toUri
  * Loaded into the React PackageList via MainApplication's instantiation of the StartPackage.
  */
 class StartModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext), ActivityEventListener {
-    private val tag = "[${MainActivity.loggerTag}]StartModule"
+    private val TAG = "[${MainActivity.loggerTag}]StartModule"
     
     companion object {
         private var reactContext: ReactApplicationContext? = null
@@ -310,10 +310,10 @@ class StartModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
     @Subscribe
     fun onSubscriberExceptionEvent(event: SubscriberExceptionEvent) {
         Log.e(tag, "Received exception event to send: ${event.throwable}")
-        MessageLog.printToLog(event.throwable.toString(), MainActivity.loggerTag, isWarning = false, isError = true, skipPrintTime = false)
+        MessageLog.e(MainActivity.loggerTag, event.throwable.toString())
         for (line in event.throwable.stackTrace) {
-            MessageLog.printToLog("\t${line}", MainActivity.loggerTag, isWarning = false, isError = true, skipPrintTime = true)
+            MessageLog.e(MainActivity.loggerTag, "\t${line}", skipPrintTime = true)
         }
-        MessageLog.printToLog("", MainActivity.loggerTag, isWarning = false, isError = false, skipPrintTime = true)
+        MessageLog.d(MainActivity.loggerTag, "", skipPrintTime = true)
     }
 }

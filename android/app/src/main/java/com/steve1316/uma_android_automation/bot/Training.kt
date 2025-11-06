@@ -6,12 +6,13 @@ import com.steve1316.uma_android_automation.utils.SettingsHelper
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
 import com.steve1316.automation_library.data.SharedData
 import com.steve1316.automation_library.utils.BotService
+import com.steve1316.automation_library.utils.MessageLog
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.intArrayOf
 
 class Training(private val game: Game) {
-	private val tag: String = "[${MainActivity.loggerTag}]Training"
+	private val TAG: String = "[${MainActivity.loggerTag}]Training"
 
 	data class TrainingOption(
 		val name: String,
@@ -91,12 +92,12 @@ class Training(private val game: Game) {
 	 * 3. If no S or A aptitude found, default to "Medium"
 	 */
 	fun updatePreferredDistance() {
-		game.printToLog("\n[TRAINING] Updating preferred distance...", tag = tag)
+		MessageLog.i(tag, "\n[TRAINING] Updating preferred distance...")
 		
 		// If manual override is set and not "Auto", use the manual value.
 		if (preferredDistanceOverride != "Auto") {
 			preferredDistance = preferredDistanceOverride
-			game.printToLog("[TRAINING] Using manual override: $preferredDistance.", tag = tag)
+			MessageLog.i(tag, "[TRAINING] Using manual override: $preferredDistance.")
 			return
 		}
 		
@@ -128,7 +129,7 @@ class Training(private val game: Game) {
 			preferredDistance = "Medium"
 		}
 		
-		game.printToLog("[TRAINING] Determined preferred distance: $preferredDistance (Sprint: ${aptitudes.sprint}, Mile: ${aptitudes.mile}, Medium: ${aptitudes.medium}, Long: ${aptitudes.long})", tag = tag)
+		MessageLog.i(tag, "[TRAINING] Determined preferred distance: $preferredDistance (Sprint: ${aptitudes.sprint}, Mile: ${aptitudes.mile}, Medium: ${aptitudes.medium}, Long: ${aptitudes.long})")
 	}
 
 	/**
@@ -171,8 +172,8 @@ class Training(private val game: Game) {
 	 * Handles the test to perform OCR on the current training on display for stat gains and failure chance.
 	 */
 	fun startSingleTrainingOCRTest() {
-		game.printToLog("\n[TEST] Now beginning Single Training OCR test on the Training screen for the current training on display.", tag = tag)
-		game.printToLog("[TEST] Note that this test is dependent on having the correct scale.", tag = tag)
+		MessageLog.i(tag, "\n[TEST] Now beginning Single Training OCR test on the Training screen for the current training on display.")
+		MessageLog.i(tag, "[TEST] Note that this test is dependent on having the correct scale.")
 		analyzeTrainings(test = true, singleTraining = true)
 		printTrainingMap()
 	}
@@ -181,8 +182,8 @@ class Training(private val game: Game) {
 	 * Handles the test to perform OCR on all 5 trainings on display for stat gains and failure chances.
 	 */
 	fun startComprehensiveTrainingOCRTest() {
-		game.printToLog("\n[TEST] Now beginning Comprehensive Training OCR test on the Training screen for all 5 trainings on display.", tag = tag)
-		game.printToLog("[TEST] Note that this test is dependent on having the correct scale.", tag = tag)
+		MessageLog.i(tag, "\n[TEST] Now beginning Comprehensive Training OCR test on the Training screen for all 5 trainings on display.")
+		MessageLog.i(tag, "[TEST] Note that this test is dependent on having the correct scale.")
 		analyzeTrainings(test = true)
 		printTrainingMap()
 	}
@@ -194,8 +195,8 @@ class Training(private val game: Game) {
 	 * The entry point for handling Training.
 	 */
 	fun handleTraining() {
-		game.printToLog("\n********************", tag = tag)
-		game.printToLog("[TRAINING] Starting Training process on ${game.printFormattedDate()}.", tag = tag)
+		MessageLog.i(tag, "\n********************")
+		MessageLog.i(tag, "[TRAINING] Starting Training process on ${game.printFormattedDate()}.")
 
 		// Enter the Training screen.
 		if (game.findAndTapImage("training_option", region = game.imageUtils.regionBottomHalf)) {
@@ -204,15 +205,15 @@ class Training(private val game: Game) {
 			analyzeTrainings()
 
 			if (trainingMap.isEmpty()) {
-				game.printToLog("[TRAINING] Backing out of Training and returning on the Main screen.", tag = tag)
+				MessageLog.i(tag, "[TRAINING] Backing out of Training and returning on the Main screen.")
 				game.findAndTapImage("back", region = game.imageUtils.regionBottomHalf)
 				game.wait(1.0)
 
 				if (game.checkMainScreen()) {
-					game.printToLog("[TRAINING] Will recover energy due to either failure chance was high enough to do so or no failure chances were detected via OCR.", tag = tag)
+					MessageLog.i(tag, "[TRAINING] Will recover energy due to either failure chance was high enough to do so or no failure chances were detected via OCR.")
 					game.recoverEnergy()
 				} else {
-					game.printToLog("[ERROR] Could not head back to the Main screen in order to recover energy.", tag = tag)
+					MessageLog.i(tag, "[ERROR] Could not head back to the Main screen in order to recover energy.")
 				}
 			} else {
 				// Now select the training option with the highest weight.
@@ -221,11 +222,11 @@ class Training(private val game: Game) {
 			}
 
 			game.racing.raceRepeatWarningCheck = false
-			game.printToLog("[TRAINING] Training process completed.", tag = tag)
+			MessageLog.i(tag, "[TRAINING] Training process completed.")
 		} else {
-			game.printToLog("[ERROR] Cannot start the Training process. Moving on...", tag = tag, isError = true)
+			MessageLog.e(tag, "Cannot start the Training process. Moving on...")
 		}
-		game.printToLog("********************", tag = tag)
+		MessageLog.i(tag, "********************")
 	}
 
 	/**
@@ -235,8 +236,8 @@ class Training(private val game: Game) {
 	 * @param singleTraining Flag that forces only singular training analysis for the current training on the screen.
 	 */
 	private fun analyzeTrainings(test: Boolean = false, singleTraining: Boolean = false) {
-		if (singleTraining) game.printToLog("\n[TRAINING] Now starting process to analyze the training on screen.", tag = tag)
-		else game.printToLog("\n[TRAINING] Now starting process to analyze all 5 Trainings.", tag = tag)
+		if (singleTraining) MessageLog.i(tag, "\n[TRAINING] Now starting process to analyze the training on screen.")
+		else MessageLog.i(tag, "\n[TRAINING] Now starting process to analyze all 5 Trainings.")
 
 		// Acquire the position of the speed stat text.
 		val (speedStatTextLocation, _) = if (game.campaign == "Ao Haru") {
@@ -254,17 +255,17 @@ class Training(private val game: Game) {
 
 			val failureChance: Int = game.imageUtils.findTrainingFailureChance()
 			if (failureChance == -1) {
-				game.printToLog("[WARNING] Skipping training due to not being able to confirm whether or not the bot is at the Training screen.", tag = tag)
+				MessageLog.w(tag, "Skipping training due to not being able to confirm whether or not the bot is at the Training screen.")
 				return
 			}
 
 			if (test || failureChance <= maximumFailureChance) {
-				if (!test) game.printToLog("[TRAINING] $failureChance% within acceptable range of ${maximumFailureChance}%. Proceeding to acquire all other percentages and total stat increases...", tag = tag)
+				if (!test) MessageLog.i(tag, "[TRAINING] $failureChance% within acceptable range of ${maximumFailureChance}%. Proceeding to acquire all other percentages and total stat increases...")
 
 				// Iterate through every training that is not blacklisted.
 				for ((index, training) in trainings.withIndex()) {
 					if (!test && blacklist.getOrElse(index) { "" } == training) {
-						game.printToLog("[TRAINING] Skipping $training training due to being blacklisted.", tag = tag)
+						MessageLog.i(tag, "[TRAINING] Skipping $training training due to being blacklisted.")
 						continue
 					}
 
@@ -273,7 +274,7 @@ class Training(private val game: Game) {
 							// Keep iterating until the current training is found.
 							continue
 						}
-						game.printToLog("[TRAINING] The $training training is currently selected on the screen.", tag = tag)
+						MessageLog.i(tag, "[TRAINING] The $training training is currently selected on the screen.")
 					}
 
 					// Select the Training to make it active except Speed Training since that is already selected at the start.
@@ -345,7 +346,7 @@ class Training(private val game: Game) {
 
 					// Check if bot is still running before starting parallel threads.
 					if (!BotService.isRunning) {
-						game.printToLog("[INFO] Bot stopped before training analysis could complete.", tag = tag)
+						MessageLog.i(tag, "Bot stopped before training analysis could complete.")
 						statGains = intArrayOf(0, 0, 0, 0, 0)
 						failureChance = -1
 						relationshipBars = arrayListOf()
@@ -371,7 +372,7 @@ class Training(private val game: Game) {
                             try {
                                 failureChance = game.imageUtils.findTrainingFailureChance(sourceBitmap, trainingSelectionLocation!!)
                             } catch (e: Exception) {
-                                game.printToLog("[ERROR] Error in findTrainingFailureChance: ${e.stackTraceToString()}", tag = tag, isError = true)
+                                MessageLog.e(tag, "Error in findTrainingFailureChance: ${e.stackTraceToString()}")
                                 failureChance = -1
                             } finally {
                                 latch.countDown()
@@ -413,7 +414,7 @@ class Training(private val game: Game) {
                         } finally {
                             val elapsedTime = System.currentTimeMillis() - startTime
                             Log.d(tag, "Total time for $training training analysis: ${elapsedTime}ms")
-                            game.printToLog("[INFO] All 5 stat regions processed for $training training. Results: ${statGains.toList()}", tag = tag)
+                            MessageLog.i(tag, "All 5 stat regions processed for $training training. Results: ${statGains.toList()}")
                         }
 					}
 
@@ -429,9 +430,9 @@ class Training(private val game: Game) {
 					// Filter out trainings that exceed the effective failure chance threshold.
 					if (!test && failureChance > effectiveFailureChance) {
 						if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
-							game.printToLog("[TRAINING] Skipping $training training due to failure chance ($failureChance%) exceeding risky threshold (${riskyTrainingMaxFailureChance}%) despite high main stat gain of $mainStatGain.", tag = tag)
+							MessageLog.i(tag, "[TRAINING] Skipping $training training due to failure chance ($failureChance%) exceeding risky threshold (${riskyTrainingMaxFailureChance}%) despite high main stat gain of $mainStatGain.")
 						} else {
-							game.printToLog("[TRAINING] Skipping $training training due to failure chance ($failureChance%) exceeding threshold (${maximumFailureChance}%).", tag = tag)
+							MessageLog.i(tag, "[TRAINING] Skipping $training training due to failure chance ($failureChance%) exceeding threshold (${maximumFailureChance}%).")
 						}
 						continue
 					}
@@ -450,13 +451,13 @@ class Training(private val game: Game) {
 				}
 
 				if (singleTraining) {
-					game.printToLog("[TRAINING] Process to analyze the singular Training complete.", tag = tag)
+					MessageLog.i(tag, "[TRAINING] Process to analyze the singular Training complete.")
 				} else {
-					game.printToLog("[TRAINING] Process to analyze all 5 Trainings complete.", tag = tag)
+					MessageLog.i(tag, "[TRAINING] Process to analyze all 5 Trainings complete.")
 				}
 			} else {
 				// Clear the Training map if the bot failed to have enough energy to conduct the training.
-				game.printToLog("[TRAINING] $failureChance% is not within acceptable range of ${maximumFailureChance}%. Proceeding to recover energy.", tag = tag)
+				MessageLog.i(tag, "[TRAINING] $failureChance% is not within acceptable range of ${maximumFailureChance}%. Proceeding to recover energy.")
 				trainingMap.clear()
 			}
 		}
@@ -501,7 +502,7 @@ class Training(private val game: Game) {
 		 */
 		fun scoreFriendshipTraining(training: TrainingOption): Double {
 			// Ignore the blacklist in favor of making sure we build up the relationship bars as fast as possible.
-			game.printToLog("\n[TRAINING] Starting process to score ${training.name} Training with a focus on building relationship bars.", tag = tag)
+			MessageLog.i(tag, "\n[TRAINING] Starting process to score ${training.name} Training with a focus on building relationship bars.")
 
 			val barResults = training.relationshipBars
 			if (barResults.isEmpty()) return Double.NEGATIVE_INFINITY
@@ -517,7 +518,7 @@ class Training(private val game: Game) {
 				score += contribution
 			}
 
-			game.printToLog("[TRAINING] ${training.name} Training has a score of ${game.decimalFormat.format(score)} with a focus on building relationship bars.")
+			MessageLog.i(tag, "[TRAINING] ${training.name} Training has a score of ${game.decimalFormat.format(score)} with a focus on building relationship bars.")
 			return score
 		}
 
@@ -595,7 +596,7 @@ class Training(private val game: Game) {
 					val isStamina = stat == "Stamina"
 					val staminaBelowMinimum = isStamina && currentStat < 600
 					val lateGameStaminaBonus = if (isLateGame && staminaBelowMinimum) {
-						game.printToLog("[TRAINING] Stamina of $currentStat is currently less than 600 so bringing its score higher for Senior Year.", tag = tag)
+						MessageLog.i(tag, "[TRAINING] Stamina of $currentStat is currently less than 600 so bringing its score higher for Senior Year.")
 						2.0
 					} else 1.0
 					
@@ -603,7 +604,7 @@ class Training(private val game: Game) {
                     val isSparkStat = stat in listOf("Speed", "Stamina", "Power")
                     val canTriggerSpark = currentStat < 600
                     val sparkBonus = if (focusOnSparkStatTarget && isSparkStat && canTriggerSpark) {
-                        game.printToLog("[TRAINING] $stat is at $currentStat (< 600). Prioritizing this training for potential spark event to get above 600.", tag = tag)
+                        MessageLog.i(tag, "[TRAINING] $stat is at $currentStat (< 600). Prioritizing this training for potential spark event to get above 600.")
                         2.5
                     } else {
                         1.0
@@ -613,12 +614,13 @@ class Training(private val game: Game) {
                         val bonusNote = if (isMainStat && statGain >= 30) " [HIGH MAIN STAT]" else ""
                         val staminaNote = if (isLateGame && staminaBelowMinimum) " [LATE GAME MINIMUM]" else ""
                         val sparkNote = if (focusOnSparkStatTarget && isSparkStat && canTriggerSpark) " [SPARK PRIORITY]" else ""
-						game.printToLog("[DEBUG] $stat: gain=$statGain, completion=${game.decimalFormat.format(completionPercent)}%, " +
+						MessageLog.d(
+                            tag,
+                            "$stat: gain=$statGain, completion=${game.decimalFormat.format(completionPercent)}%, " +
 							"ratioMult=${game.decimalFormat.format(ratioMultiplier)}, priorityMult=${game.decimalFormat.format(priorityMultiplier)}$bonusNote$staminaNote$sparkNote",
-							tag = tag
 						)
 					} else {
-						Log.d(tag, "[DEBUG] $stat: gain=$statGain, completion=${game.decimalFormat.format(completionPercent)}%, ratioMult=$ratioMultiplier, priorityMult=$priorityMultiplier")
+						Log.d(tag, "$stat: gain=$statGain, completion=${game.decimalFormat.format(completionPercent)}%, ratioMult=$ratioMultiplier, priorityMult=$priorityMultiplier")
 					}
 					
 					// Calculate final score for this stat.
@@ -706,7 +708,7 @@ class Training(private val game: Game) {
 				)
 			)
             if (skillHintLocations.isNotEmpty()) {
-                game.printToLog("[TRAINING] Skill hint(s) detected for ${training.name} Training.", tag = tag)
+                MessageLog.i(tag, "[TRAINING] Skill hint(s) detected for ${training.name} Training.")
             }
 			score += 10.0 * skillHintLocations.size
 
@@ -759,10 +761,10 @@ class Training(private val game: Game) {
 			// Rainbow is heavily favored because it improves overall ratio balance.
 			val rainbowMultiplier = if (training.isRainbow && game.currentDate.year >= 2) {
 				if (enableRainbowTrainingBonus) {
-                    game.printToLog("[TRAINING] ${training.name} Training is detected as a rainbow training. Adding multiplier to score.", tag = tag)
+                    MessageLog.i(tag, "[TRAINING] ${training.name} Training is detected as a rainbow training. Adding multiplier to score.")
 					2.0
 				} else {
-                    game.printToLog("[TRAINING] ${training.name} Training is detected as a rainbow training, but rainbow training bonus is not enabled.", tag = tag)
+                    MessageLog.i(tag, "[TRAINING] ${training.name} Training is detected as a rainbow training, but rainbow training bonus is not enabled.")
 					1.5
 				}
 			} else {
@@ -792,7 +794,7 @@ class Training(private val game: Game) {
 			
 			// Log normalized scores for debugging.
 			normalizedScores.forEach { (training, score) ->
-				game.printToLog("[TRAINING] ${training.name}: ${game.decimalFormat.format(score)}/100", tag = tag)
+				MessageLog.i(tag, "[TRAINING] ${training.name}: ${game.decimalFormat.format(score)}/100")
 			}
 			
 			trainingScores.keys.maxByOrNull { normalizedScores[it] ?: 0.0 }
@@ -806,16 +808,16 @@ class Training(private val game: Game) {
 	 */
 	private fun executeTraining() {
 
-		game.printToLog("[TRAINING] Now starting process to execute training...", tag = tag)
+		MessageLog.i(tag, "[TRAINING] Now starting process to execute training...")
 		val trainingSelected = recommendTraining()
 
 		if (trainingSelected != "") {
 			printTrainingMap()
-			game.printToLog("[TRAINING] Executing the $trainingSelected Training.", tag = tag)
+			MessageLog.i(tag, "[TRAINING] Executing the $trainingSelected Training.")
 			game.findAndTapImage("training_${trainingSelected.lowercase()}", region = game.imageUtils.regionBottomHalf, taps = 3)
-			game.printToLog("[TRAINING] Process to execute training completed.", tag = tag)
+			MessageLog.i(tag, "[TRAINING] Process to execute training completed.")
 		} else {
-			game.printToLog("[TRAINING] Conditions have not been met so training will not be done.", tag = tag)
+			MessageLog.i(tag, "[TRAINING] Conditions have not been met so training will not be done.")
 		}
 
 		// Now reset the Training map.
@@ -826,9 +828,9 @@ class Training(private val game: Game) {
 	 * Prints the training map object for informational purposes.
 	 */
 	private fun printTrainingMap() {
-		game.printToLog("\n[INFO] Stat Gains by Training:", tag = tag)
+		MessageLog.i(tag, "\nStat Gains by Training:")
 		trainingMap.forEach { name, training ->
-			game.printToLog("[INFO] $name Training stat gains: ${training.statGains.contentToString()}, failure chance: ${training.failureChance}%, rainbow: ${training.isRainbow}.", tag = tag)
+			MessageLog.i(tag, "$name Training stat gains: ${training.statGains.contentToString()}, failure chance: ${training.failureChance}%, rainbow: ${training.isRainbow}.")
 		}
 	}
 }

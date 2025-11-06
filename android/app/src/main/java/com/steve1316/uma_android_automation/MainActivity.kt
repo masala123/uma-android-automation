@@ -18,6 +18,7 @@ import com.steve1316.automation_library.utils.ScreenStateReceiver
 import org.opencv.android.OpenCVLoader
 import java.util.Locale
 
+val START_TIME_MS = System.currentTimeMillis()
 
 class MainActivity : ReactActivity() {
 	companion object {

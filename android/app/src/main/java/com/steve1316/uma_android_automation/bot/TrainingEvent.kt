@@ -2,11 +2,12 @@ package com.steve1316.uma_android_automation.bot
 
 import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.utils.SettingsHelper
+import com.steve1316.automation_library.utils.MessageLog
 import org.opencv.core.Point
 import org.json.JSONObject
 
 class TrainingEvent(private val game: Game) {
-    private val tag: String = "[${MainActivity.loggerTag}]TrainingEvent"
+    private val TAG: String = "[${MainActivity.loggerTag}]TrainingEvent"
 
     private val trainingEventRecognizer: TrainingEventRecognizer = TrainingEventRecognizer(game, game.imageUtils)
 
@@ -33,7 +34,7 @@ class TrainingEvent(private val game: Game) {
             emptyMap()
         }
     } catch (e: Exception) {
-        game.printToLog("[WARNING] Could not parse special event overrides: ${e.message}", tag = tag)
+        MessageLog.w(tag, "Could not parse special event overrides: ${e.message}")
         emptyMap()
     }
     
@@ -56,16 +57,16 @@ class TrainingEvent(private val game: Game) {
                 // Check if any pattern matches the event title.
                 val matches = patterns.any { pattern -> eventTitle.contains(pattern) }
                 if (matches) {
-                    game.printToLog("[TRAINING_EVENT] Detected special event: $eventName", tag = tag)
+                    MessageLog.i(tag, "[TRAINING_EVENT] Detected special event: $eventName")
 
                     // Parse the option number from the setting (e.g., "Option 5: Energy +10" -> 5)
                     val optionMatch = Regex("Option (\\d+)").find(override.selectedOption)
                     val optionIndex = if (optionMatch != null) {
                         val optionNumber = optionMatch.groupValues[1].toInt()
-                        game.printToLog("[TRAINING_EVENT] Using setting: ${override.selectedOption} (Option $optionNumber)", tag = tag)
+                        MessageLog.i(tag, "[TRAINING_EVENT] Using setting: ${override.selectedOption} (Option $optionNumber)")
                         optionNumber - 1
                     } else {
-                        game.printToLog("[WARNING] Could not parse option number from setting: ${override.selectedOption}. Using option 1 by default.", tag = tag)
+                        MessageLog.w(tag, "Could not parse option number from setting: ${override.selectedOption}. Using option 1 by default.")
                         0
                     }
 
@@ -82,13 +83,13 @@ class TrainingEvent(private val game: Game) {
      * It will then select the best option according to the user's preferences. By default, it will choose the first option.
      */
     fun handleTrainingEvent() {
-        game.printToLog("\n********************", tag = tag)
-        game.printToLog("[TRAINING_EVENT] Starting Training Event process on ${game.printFormattedDate()}.", tag = tag)
+        MessageLog.i(tag, "\n********************")
+        MessageLog.i(tag, "[TRAINING_EVENT] Starting Training Event process on ${game.printFormattedDate()}.")
 
         // Double check if the bot is at the Main screen or not.
         if (game.checkMainScreen()) {
-            game.printToLog("[TRAINING_EVENT] Bot is at the Main Screen. Ending the Training Event process.", tag = tag)
-            game.printToLog("********************", tag = tag)
+            MessageLog.i(tag, "[TRAINING_EVENT] Bot is at the Main Screen. Ending the Training Event process.")
+            MessageLog.i(tag, "********************")
             return
         }
 
@@ -106,11 +107,11 @@ class TrainingEvent(private val game: Game) {
                 
                 // Ensure the selected option is within bounds.
                 if (optionSelected >= eventRewards.size) {
-                    game.printToLog("[WARNING] Selected special event option $optionSelected is out of bounds. Using last option.", tag = tag)
+                    MessageLog.w(tag, "Selected special event option $optionSelected is out of bounds. Using last option.")
                     optionSelected = eventRewards.size - 1
                 }
                 
-                game.printToLog("[TRAINING_EVENT] Special event override applied: option ${optionSelected + 1}: \"${eventRewards[optionSelected]}\"", tag = tag)
+                MessageLog.i(tag, "[TRAINING_EVENT] Special event override applied: option ${optionSelected + 1}: \"${eventRewards[optionSelected]}\"")
             } else {
                 // Initialize the List for normal event processing.
                 val selectionWeight = List(eventRewards.size) { 0 }.toMutableList()
@@ -127,8 +128,8 @@ class TrainingEvent(private val game: Game) {
                             .trim()
                             .lowercase()
 
-                        game.printToLog("[TRAINING_EVENT] Original line is \"$line\".", tag = tag)
-                        game.printToLog("[TRAINING_EVENT] Formatted line is \"$formattedLine\".", tag = tag)
+                        MessageLog.i(tag, "[TRAINING_EVENT] Original line is \"$line\".")
+                        MessageLog.i(tag, "[TRAINING_EVENT] Formatted line is \"$formattedLine\".")
 
                         var priorityStatCheck = false
                         if (line.lowercase().contains("energy")) {
@@ -140,7 +141,7 @@ class TrainingEvent(private val game: Game) {
                                         sum += try {
                                             split.trim().toInt()
                                         } catch (_: NumberFormatException) {
-                                            game.printToLog("[WARNING] Could not convert $formattedLine to a number for energy with a forward slash.", tag = tag)
+                                            MessageLog.w(tag, "Could not convert $formattedLine to a number for energy with a forward slash.")
                                             20
                                         }
                                     }
@@ -155,35 +156,35 @@ class TrainingEvent(private val game: Game) {
                                     energyValue * 3
                                 }
                             } catch (_: NumberFormatException) {
-                                game.printToLog("[WARNING] Could not convert $formattedLine to a number for energy.", tag = tag)
+                                MessageLog.w(tag, "Could not convert $formattedLine to a number for energy.")
                                 20
                             }
-                            game.printToLog("[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of $finalEnergyValue for energy.", tag = tag)
+                            MessageLog.i(tag, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of $finalEnergyValue for energy.")
                             selectionWeight[optionSelected] += finalEnergyValue
                         } else if (line.lowercase().contains("mood")) {
                             val moodWeight = if (formattedLine.contains("-")) -50 else 50
-                            game.printToLog("[TRAINING-EVENT] Adding weight for option#${optionSelected + 1} of $moodWeight for ${if (moodWeight > 0) "positive" else "negative"} mood gain.", tag = tag)
+                            MessageLog.i(tag, "[TRAINING-EVENT] Adding weight for option#${optionSelected + 1} of $moodWeight for ${if (moodWeight > 0) "positive" else "negative"} mood gain.")
                             selectionWeight[optionSelected] += moodWeight
                         } else if (line.lowercase().contains("bond")) {
-                            game.printToLog("[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 20 for bond.", tag = tag)
+                            MessageLog.i(tag, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 20 for bond.")
                             selectionWeight[optionSelected] += 20
                         } else if (line.lowercase().contains("event chain ended")) {
-                            game.printToLog("[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of -50 for event chain ending.", tag = tag)
+                            MessageLog.i(tag, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of -50 for event chain ending.")
                             selectionWeight[optionSelected] += -50
                         } else if (line.lowercase().contains("(random)")) {
-                            game.printToLog("[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of -10 for random reward.", tag = tag)
+                            MessageLog.i(tag, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of -10 for random reward.")
                             selectionWeight[optionSelected] += -10
                         } else if (line.lowercase().contains("randomly")) {
-                            game.printToLog("[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 50 for random options.", tag = tag)
+                            MessageLog.i(tag, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 50 for random options.")
                             selectionWeight[optionSelected] += 50
                         } else if (line.lowercase().contains("hint")) {
-                            game.printToLog("[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 25 for skill hint(s).", tag = tag)
+                            MessageLog.i(tag, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 25 for skill hint(s).")
                             selectionWeight[optionSelected] += 25
                         } else if (positiveStatuses.any { status -> line.contains(status) }) {
-                            game.printToLog("[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 25 for positive status effect.", tag = tag)
+                            MessageLog.i(tag, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 25 for positive status effect.")
                             selectionWeight[optionSelected] += 25
                         } else if (negativeStatuses.any { status -> line.contains(status) }) {
-                            game.printToLog("[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of -25 for negative status effect.", tag = tag)
+                            MessageLog.i(tag, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of -25 for negative status effect.")
                             selectionWeight[optionSelected] += -25
                         } else if (line.lowercase().contains("skill")) {
                             val finalSkillPoints = if (formattedLine.contains("/")) {
@@ -193,7 +194,7 @@ class TrainingEvent(private val game: Game) {
                                     sum += try {
                                         split.trim().toInt()
                                     } catch (_: NumberFormatException) {
-                                        game.printToLog("[WARNING] Could not convert $formattedLine to a number for skill points with a forward slash.", tag = tag)
+                                        MessageLog.w(tag, "Could not convert $formattedLine to a number for skill points with a forward slash.")
                                         10
                                     }
                                 }
@@ -201,7 +202,7 @@ class TrainingEvent(private val game: Game) {
                             } else {
                                 formattedLine.toInt()
                             }
-                            game.printToLog("[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of $finalSkillPoints for skill points.", tag = tag)
+                            MessageLog.i(tag, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of $finalSkillPoints for skill points.")
                             selectionWeight[optionSelected] += finalSkillPoints
                         } else {
                             // Apply inflated weights to the prioritized stats based on their order.
@@ -225,7 +226,7 @@ class TrainingEvent(private val game: Game) {
                                                 sum += try {
                                                     split.trim().toInt()
                                                 } catch (_: NumberFormatException) {
-                                                    game.printToLog("[WARNING] Could not convert $formattedLine to a number for a priority stat with a forward slash.", tag = tag)
+                                                    MessageLog.w(tag, "Could not convert $formattedLine to a number for a priority stat with a forward slash.")
                                                     10
                                                 }
                                             }
@@ -234,11 +235,11 @@ class TrainingEvent(private val game: Game) {
                                             formattedLine.toInt() + priorityBonus
                                         }
                                     } catch (_: NumberFormatException) {
-                                        game.printToLog("[WARNING] Could not convert $formattedLine to a number for a priority stat.", tag = tag)
+                                        MessageLog.w(tag, "Could not convert $formattedLine to a number for a priority stat.")
                                         priorityStatCheck = false
                                         10
                                     }
-                                    game.printToLog("[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of $finalStatValue for prioritized stat.", tag = tag)
+                                    MessageLog.i(tag, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of $finalStatValue for prioritized stat.")
                                     selectionWeight[optionSelected] += finalStatValue
                                 }
                             }
@@ -253,7 +254,7 @@ class TrainingEvent(private val game: Game) {
                                             sum += try {
                                                 split.trim().toInt()
                                             } catch (_: NumberFormatException) {
-                                                game.printToLog("[WARNING] Could not convert $formattedLine to a number for non-prioritized stat with a forward slash.", tag = tag)
+                                                MessageLog.w(tag, "Could not convert $formattedLine to a number for non-prioritized stat with a forward slash.")
                                                 10
                                             }
                                         }
@@ -262,15 +263,15 @@ class TrainingEvent(private val game: Game) {
                                         formattedLine.toInt()
                                     }
                                 } catch (_: NumberFormatException) {
-                                    game.printToLog("[WARNING] Could not convert $formattedLine to a number for non-prioritized stat.", tag = tag)
+                                    MessageLog.w(tag, "Could not convert $formattedLine to a number for non-prioritized stat.")
                                     10
                                 }
-                                game.printToLog("[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of $finalStatValue for non-prioritized stat.", tag = tag)
+                                MessageLog.i(tag, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of $finalStatValue for non-prioritized stat.")
                                 selectionWeight[optionSelected] += finalStatValue
                             }
                         }
 
-                        game.printToLog("[TRAINING_EVENT] Final weight for option #${optionSelected + 1} is: ${selectionWeight[optionSelected]}.", tag = tag)
+                        MessageLog.i(tag, "[TRAINING_EVENT] Final weight for option #${optionSelected + 1} is: ${selectionWeight[optionSelected]}.")
                     }
 
                     optionSelected++
@@ -285,9 +286,9 @@ class TrainingEvent(private val game: Game) {
                 }
 
                 // Print the selection weights.
-                game.printToLog("[TRAINING_EVENT] Selection weights for each option:", tag = tag)
+                MessageLog.i(tag, "[TRAINING_EVENT] Selection weights for each option:")
                 selectionWeight.forEachIndexed { index, weight ->
-                    game.printToLog("Option ${index + 1}: $weight", tag = tag)
+                    MessageLog.i(tag, "Option ${index + 1}: $weight")
                 }
             }
 
@@ -306,9 +307,9 @@ class TrainingEvent(private val game: Game) {
                 "[TRAINING_EVENT] Since the confidence was less than the set minimum, first option will be selected."
             }
 
-            game.printToLog(resultString, tag = tag)
+            MessageLog.i(tag, resultString)
         } else {
-            game.printToLog("[WARNING] First option will be selected since OCR failed to match the event title.", tag = tag)
+            MessageLog.w(tag, "First option will be selected since OCR failed to match the event title.")
             optionSelected = 0
         }
 
@@ -333,7 +334,7 @@ class TrainingEvent(private val game: Game) {
             if (specialEventResult != null) {
                 val (_, requiresConfirmation) = specialEventResult
                 if (requiresConfirmation) {
-                    game.printToLog("[TRAINING_EVENT] Special event requires confirmation, waiting for dialog...", tag = tag)
+                    MessageLog.i(tag, "[TRAINING_EVENT] Special event requires confirmation, waiting for dialog...")
                     
                     // Wait a moment for the confirmation dialog to appear.
                     game.wait(1.0)
@@ -343,15 +344,15 @@ class TrainingEvent(private val game: Game) {
                     if (confirmationLocations.isNotEmpty()) {
                         val confirmLocation = confirmationLocations[0]
                         game.tap(confirmLocation.x + game.imageUtils.relWidth(100), confirmLocation.y, "training_event_active")
-                        game.printToLog("[TRAINING_EVENT] Special event confirmed.", tag = tag)
+                        MessageLog.i(tag, "[TRAINING_EVENT] Special event confirmed.")
                     } else {
-                        game.printToLog("[WARNING] Could not find confirmation options for special event.", tag = tag)
+                        MessageLog.w(tag, "Could not find confirmation options for special event.")
                     }
                 }
             }
         }
 
-        game.printToLog("[TRAINING_EVENT] Process to handle detected Training Event completed.", tag = tag)
-        game.printToLog("********************", tag = tag)
+        MessageLog.i(tag, "[TRAINING_EVENT] Process to handle detected Training Event completed.")
+        MessageLog.i(tag, "********************")
     }
 }

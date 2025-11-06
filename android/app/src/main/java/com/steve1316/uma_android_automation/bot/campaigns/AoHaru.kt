@@ -3,10 +3,11 @@ package com.steve1316.uma_android_automation.bot.campaigns
 import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.bot.Campaign
 import com.steve1316.uma_android_automation.bot.Game
+import com.steve1316.automation_library.utils.MessageLog
 import org.opencv.core.Point
 
 class AoHaru(game: Game) : Campaign(game) {
-	private val aoHaruTag: String = "[${MainActivity.loggerTag}]AoHaru"
+    override val TAG: String = "[${MainActivity.loggerTag}]AoHaru"
 	private var tutorialChances = 3
 	private var aoHaruRaceFirstTime: Boolean = true
 
@@ -39,7 +40,7 @@ class AoHaru(game: Game) : Campaign(game) {
 	private fun handleTrainingEventAoHaru() {
 		if (tutorialChances > 0) {
 			if (game.imageUtils.findImage("aoharu_tutorial_header", tries = 2).first != null) {
-				game.printToLog("\n[AOHARU] Detected tutorial for Ao Haru. Closing it now...", tag = aoHaruTag)
+				MessageLog.i(aoHaruTag, "\n[AOHARU] Detected tutorial for Ao Haru. Closing it now...")
 				
 				// If the tutorial is detected, select the second option to close it.
 				val trainingOptionLocations: ArrayList<Point> = game.imageUtils.findAll("training_event_active")
@@ -58,7 +59,7 @@ class AoHaru(game: Game) : Campaign(game) {
 	 * Handles the Ao Haru's race event.
 	 */
 	private fun handleRaceEventsAoHaru() {
-		game.printToLog("\n[AOHARU] Starting process to handle Ao Haru race...", tag = aoHaruTag)
+		MessageLog.i(aoHaruTag, "\n[AOHARU] Starting process to handle Ao Haru race...")
 		aoHaruRaceFirstTime = false
 		
 		// Head to the next screen with the 3 racing options.
@@ -66,7 +67,7 @@ class AoHaru(game: Game) : Campaign(game) {
 		game.wait(7.0)
 		
 		if (game.findAndTapImage("aoharu_final_race", tries = 10)) {
-			game.printToLog("\n[AOHARU] Final race detected. Racing it now...", tag = aoHaruTag)
+			MessageLog.i(aoHaruTag, "\n[AOHARU] Final race detected. Racing it now...")
 			game.findAndTapImage("aoharu_select_race")
 		} else {
 			// Run the first option if it has more than 3 double circles and if not, run the second option.
@@ -78,10 +79,10 @@ class AoHaru(game: Game) : Campaign(game) {
 			
 			val doubleCircles = game.imageUtils.findAll("race_prediction_double_circle")
 			if (doubleCircles.size >= 3) {
-				game.printToLog("[AOHARU] First race has sufficient double circle predictions. Selecting it now...", tag = aoHaruTag)
+				MessageLog.i(aoHaruTag, "[AOHARU] First race has sufficient double circle predictions. Selecting it now...")
 				game.findAndTapImage("aoharu_select_race", tries = 10)
 			} else {
-				game.printToLog("[AOHARU] First race did not have the sufficient double circle predictions. Selecting the 2nd race now...", tag = aoHaruTag)
+				MessageLog.i(aoHaruTag, "[AOHARU] First race did not have the sufficient double circle predictions. Selecting the 2nd race now...")
 				game.findAndTapImage("cancel", tries = 10)
 				game.wait(1.0)
 				
