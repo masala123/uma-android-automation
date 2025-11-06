@@ -9,10 +9,8 @@ import net.ricecode.similarity.StringSimilarityServiceImpl
  * Utility class for parsing game date strings and converting them to structured Game.Date objects.
  */
 class GameDateParser {
-    companion object {
-        private const val TAG = "GameDateParser"
-    }
-    
+    private val TAG: String = "GameDateParser"
+
 	/**
 	 * Compute the next day's date from the current date by advancing the turn number.
 	 */
