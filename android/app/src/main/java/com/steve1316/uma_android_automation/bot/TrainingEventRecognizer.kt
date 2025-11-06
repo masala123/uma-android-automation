@@ -44,7 +44,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		val characterDataString = SettingsHelper.getStringSetting("trainingEvent", "characterEventData")
 		if (characterDataString.isNotEmpty()) {
 			val jsonObject = JSONObject(characterDataString)
-			if (game.debugMode) MessageLog.d(tag, "Character event data length: ${jsonObject.length()}.")
+			if (game.debugMode) MessageLog.d(TAG, "Character event data length: ${jsonObject.length()}.")
 			jsonObject
 		} else {
 			null
@@ -58,7 +58,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		val supportDataString = SettingsHelper.getStringSetting("trainingEvent", "supportEventData")
 		if (supportDataString.isNotEmpty()) {
 			val jsonObject = JSONObject(supportDataString)
-			if (game.debugMode) MessageLog.d(tag, "Support event data length: ${jsonObject.length()}.")
+			if (game.debugMode) MessageLog.d(TAG, "Support event data length: ${jsonObject.length()}.")
 			jsonObject
 		} else {
 			null
@@ -90,7 +90,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 	 * Attempt to find the most similar string from data compared to the string returned by OCR.
 	 */
 	private fun findMostSimilarString() {
-		MessageLog.i(tag, "[TRAINING_EVENT_RECOGNIZER] Now starting process to find most similar string to: $result")
+		MessageLog.i(TAG, "[TRAINING_EVENT_RECOGNIZER] Now starting process to find most similar string to: $result")
 		
 		// Check if this matches any special event patterns first to filter false positives.
 		var matchedSpecialEvent: String? = null
@@ -102,7 +102,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		}
 		val isSpecialEvent = matchedSpecialEvent != null
 		if (isSpecialEvent) {
-			MessageLog.i(tag, "[TRAINING_EVENT_RECOGNIZER] Detected special event pattern: $matchedSpecialEvent. Will restrict search to this event.")
+			MessageLog.i(TAG, "[TRAINING_EVENT_RECOGNIZER] Detected special event pattern: $matchedSpecialEvent. Will restrict search to this event.")
 			eventTitle = matchedSpecialEvent
 		}
 		
@@ -132,7 +132,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 						
 						val score = service.score(result, eventName)
 						if (!hideComparisonResults) {
-							MessageLog.i(tag, "[CHARA] $characterKey \"${result}\" vs. \"${eventName}\" confidence: ${game.decimalFormat.format(score)}")
+							MessageLog.i(TAG, "[CHARA] $characterKey \"${result}\" vs. \"${eventName}\" confidence: ${game.decimalFormat.format(score)}")
 						}
 						
 						if (score >= confidence) {
@@ -162,7 +162,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 						
 						val score = service.score(result, eventName)
 						if (!hideComparisonResults) {
-							MessageLog.i(tag, "[CHARA] $character \"${result}\" vs. \"${eventName}\" confidence: $score")
+							MessageLog.i(TAG, "[CHARA] $character \"${result}\" vs. \"${eventName}\" confidence: $score")
 						}
 						
 						if (score >= confidence) {
@@ -196,7 +196,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 							
 							val score = service.score(result, eventName)
 							if (!hideComparisonResults) {
-								MessageLog.i(tag, "[SUPPORT] $supportCardName \"${result}\" vs. \"${eventName}\" confidence: $score")
+								MessageLog.i(TAG, "[SUPPORT] $supportCardName \"${result}\" vs. \"${eventName}\" confidence: $score")
 							}
 							
 							if (score >= confidence) {
@@ -227,7 +227,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 						
 						val score = service.score(result, eventName)
 						if (!hideComparisonResults) {
-							MessageLog.i(tag, "[SUPPORT] $supportName \"${result}\" vs. \"${eventName}\" confidence: $score")
+							MessageLog.i(TAG, "[SUPPORT] $supportName \"${result}\" vs. \"${eventName}\" confidence: $score")
 						}
 						
 						if (score >= confidence) {
@@ -242,8 +242,8 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 			}
 		}
 
-		MessageLog.i(tag, "${if (!hideComparisonResults) "\n" else ""}[TRAINING_EVENT_RECOGNIZER] Finished process to find similar string.")
-		MessageLog.i(tag, "[TRAINING_EVENT_RECOGNIZER] Event data fetched for \"${eventTitle}\".")
+		MessageLog.i(TAG, "${if (!hideComparisonResults) "\n" else ""}[TRAINING_EVENT_RECOGNIZER] Finished process to find similar string.")
+		MessageLog.i(TAG, "[TRAINING_EVENT_RECOGNIZER] Event data fetched for \"${eventTitle}\".")
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -256,7 +256,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 	 * @return A triple containing the event option rewards, confidence score, and event title.
 	 */
 	fun start(): Triple<ArrayList<String>, Double, String> {
-		MessageLog.i(tag, "\n********************")
+		MessageLog.i(TAG, "\n********************")
 
 		// Reset to default values.
 		result = ""
@@ -283,15 +283,15 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 				
 				when (category) {
 					"character" -> {
-						MessageLog.i(tag, "\n[RESULT] Character $character Event Name = $eventTitle with confidence = $confidence")
+						MessageLog.i(TAG, "\n[RESULT] Character $character Event Name = $eventTitle with confidence = $confidence")
 					}
 					"support" -> {
-						MessageLog.i(tag, "\n[RESULT] Support $supportCardTitle Event Name = $eventTitle with confidence = $confidence")
+						MessageLog.i(TAG, "\n[RESULT] Support $supportCardTitle Event Name = $eventTitle with confidence = $confidence")
 					}
 				}
 				
 				if (enableAutomaticRetry && !hideComparisonResults) {
-					MessageLog.i(tag, "\n[RESULT] Threshold incremented by $increment")
+					MessageLog.i(TAG, "\n[RESULT] Threshold incremented by $increment")
 				}
 				
 				if (confidence < minimumConfidence && enableAutomaticRetry) {
@@ -305,8 +305,8 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		}
 		
 		val endTime: Long = System.currentTimeMillis()
-		Log.d(tag, "Total Runtime for recognizing training event: ${endTime - startTime}ms")
-		MessageLog.i(tag, "********************")
+		Log.d(TAG, "Total Runtime for recognizing training event: ${endTime - startTime}ms")
+		MessageLog.i(TAG, "********************")
 		
 		return Triple(eventOptionRewards, confidence, eventTitle)
 	}

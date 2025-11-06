@@ -47,7 +47,7 @@ class GameDateParser {
 		dateString: String,
 		imageUtils: CustomImageUtils,
 		game: Game,
-		tag: String = "GameDateParser"
+		tag: String = TAG
 	): Game.Date {
 		if (dateString == "") {
 			// OCR failed to produce a date string. Assume it is the next day.
