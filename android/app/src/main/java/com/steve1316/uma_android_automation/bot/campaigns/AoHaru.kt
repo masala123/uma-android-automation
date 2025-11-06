@@ -40,7 +40,7 @@ class AoHaru(game: Game) : Campaign(game) {
 	private fun handleTrainingEventAoHaru() {
 		if (tutorialChances > 0) {
 			if (game.imageUtils.findImage("aoharu_tutorial_header", tries = 2).first != null) {
-				MessageLog.i(aoHaruTag, "\n[AOHARU] Detected tutorial for Ao Haru. Closing it now...")
+				MessageLog.i(TAG, "\n[AOHARU] Detected tutorial for Ao Haru. Closing it now...")
 				
 				// If the tutorial is detected, select the second option to close it.
 				val trainingOptionLocations: ArrayList<Point> = game.imageUtils.findAll("training_event_active")
@@ -59,7 +59,7 @@ class AoHaru(game: Game) : Campaign(game) {
 	 * Handles the Ao Haru's race event.
 	 */
 	private fun handleRaceEventsAoHaru() {
-		MessageLog.i(aoHaruTag, "\n[AOHARU] Starting process to handle Ao Haru race...")
+		MessageLog.i(TAG, "\n[AOHARU] Starting process to handle Ao Haru race...")
 		aoHaruRaceFirstTime = false
 		
 		// Head to the next screen with the 3 racing options.
@@ -67,7 +67,7 @@ class AoHaru(game: Game) : Campaign(game) {
 		game.wait(7.0)
 		
 		if (game.findAndTapImage("aoharu_final_race", tries = 10)) {
-			MessageLog.i(aoHaruTag, "\n[AOHARU] Final race detected. Racing it now...")
+			MessageLog.i(TAG, "\n[AOHARU] Final race detected. Racing it now...")
 			game.findAndTapImage("aoharu_select_race")
 		} else {
 			// Run the first option if it has more than 3 double circles and if not, run the second option.
@@ -79,10 +79,10 @@ class AoHaru(game: Game) : Campaign(game) {
 			
 			val doubleCircles = game.imageUtils.findAll("race_prediction_double_circle")
 			if (doubleCircles.size >= 3) {
-				MessageLog.i(aoHaruTag, "[AOHARU] First race has sufficient double circle predictions. Selecting it now...")
+				MessageLog.i(TAG, "[AOHARU] First race has sufficient double circle predictions. Selecting it now...")
 				game.findAndTapImage("aoharu_select_race", tries = 10)
 			} else {
-				MessageLog.i(aoHaruTag, "[AOHARU] First race did not have the sufficient double circle predictions. Selecting the 2nd race now...")
+				MessageLog.i(TAG, "[AOHARU] First race did not have the sufficient double circle predictions. Selecting the 2nd race now...")
 				game.findAndTapImage("cancel", tries = 10)
 				game.wait(1.0)
 				
