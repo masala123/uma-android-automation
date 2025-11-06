@@ -2,6 +2,7 @@ package com.steve1316.uma_android_automation.bot
 
 import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.utils.SettingsHelper
+import com.steve1316.automation_library.utils.MessageLog
 
 /**
  * Base campaign class that contains all shared logic for campaign automation.
