@@ -5,9 +5,41 @@ import org.opencv.core.Point
 
 import com.steve1316.automation_library.data.SharedData
 import com.steve1316.automation_library.utils.ImageUtils
-import com.steve1316.automation_library.utils.TextUtils
+//import com.steve1316.automation_library.utils.TextUtils
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
 import com.steve1316.uma_android_automation.utils.components.ComponentInterface
+
+/* Example usage:
+
+import com.steve1316.uma_android_automation.utils.components.DialogUtils
+import com.steve1316.uma_android_automation.utils.components.DialogInterface
+
+fun handleDialogs() {
+    val dialog: DialogInterface? = DialogUtils.getDialog(imageUtils=game.imageUtils)
+    if (dialog == null) {
+        game.printToLog("\n[DIALOG] No dialog found.", tag = tag)
+        return
+    }
+
+    when (dialog.name) {
+        "open_soon" -> {
+            dialog.close(imageUtils=game.imageUtils)
+            game.notificationMessage = "open_soon"
+            game.printToLog("\n[DIALOG] Open Soon!")
+        }
+        "continue_career" -> {
+            dialog.close(imageUtils=game.imageUtils)
+            //ButtonClose.click(imageUtils=game.imageUtils)
+            game.printToLog("\n[DIALOG] Continue Career")
+        }
+        else -> {
+            game.printToLog("\n[DIALOG] ${dialog.name}")
+            game.notificationMessage = "${dialog.name}"
+            dialog.close(imageUtils=game.imageUtils)
+        }
+    }
+}
+*/
 
 object DialogUtils {
     private val titleGradientTemplates = listOf<String>(
@@ -15,6 +47,13 @@ object DialogUtils {
         "components/dialog/dialog_title_gradient_1",
     )
 
+    /** Checks if any dialog is on screen.
+    *
+    * @param imageUtils The CustomImageUtils instance used to find the dialog.
+    * @param tries The number of times to attempt to find the image.
+    *
+    * @return Whether a dialog was detected.
+    */
     fun check(imageUtils: CustomImageUtils, tries: Int = 1): Boolean {
         var loc: Point? = null
         for (template in titleGradientTemplates) {
@@ -26,7 +65,34 @@ object DialogUtils {
         return loc != null
     }
 
-    fun getTitle(imageUtils: CustomImageUtils, titleLocation: Point): String? {
+    /** Gets the title bar text of any dialog current on screen.
+    *
+    * @param imageUtils The CustomImageUtils instance used to find the dialog.
+    * @param titleLocation Optional location of the title bar gradient.
+    * @param tries The number of times to attempt to find the image.
+    *
+    * @return The text of the dialog's title bar if one was found, else NULL.
+    */
+    fun getTitle(imageUtils: CustomImageUtils, titleLocation: Point? = null, tries: Int = 1): String? {
+        // If the title location isn't passed, try to find it.
+        val titleLocation: Point? = if (titleLocation == null) {
+            var loc: Point? = null
+            for (template in titleGradientTemplates) {
+                loc = imageUtils.findImage(template, tries=tries).first
+                if (loc != null) {
+                    break
+                }
+            }
+            loc
+        } else {
+            titleLocation
+        }
+
+        // If titleLocation is still null, then just return.
+        if (titleLocation == null) {
+            return null
+        }
+
         var sourceBitmap = imageUtils.getSourceBitmap()
         var templateBitmap: Bitmap? = null
         for (template in titleGradientTemplates) {
@@ -45,27 +111,12 @@ object DialogUtils {
         val x = titleLocation.x - (templateBitmap.width / 2.0)
         val y = titleLocation.y - (templateBitmap.height / 2.0)
 
-        /*
-        val bbox = BoundingBox(
-            imageUtils.relX(x, 0),
-            imageUtils.relY(y, 0),
-            imageUtils.relWidth((SharedData.displayWidth - (x * 2)).toInt()),
-            imageUtils.relHeight(templateBitmap.height),
-        )
-        */
-
         val result: String = imageUtils.performOCROnRegion(
             sourceBitmap,
             imageUtils.relX(x, 0),
             imageUtils.relY(y, 0),
             imageUtils.relWidth((SharedData.displayWidth - (x * 2)).toInt()),
             imageUtils.relHeight(templateBitmap.height),
-            /*
-            bbox.x,
-            bbox.y,
-            bbox.w,
-            bbox.h,
-            */
             useThreshold=true,
             useGrayscale=true,
             scaleUp=1,
@@ -80,6 +131,13 @@ object DialogUtils {
         return result
     }
 
+    /** Detect and return a DialogInterface on screen.
+    *
+    * @param imageUtils The CustomImageUtils instance used to find the dialog.
+    * @param tries The number of times to attempt to find the image.
+    *
+    * @return The DialogInterface if one was found, else NULL.
+    */
     fun getDialog(imageUtils: CustomImageUtils, tries: Int = 1): DialogInterface? {
         var loc: Point? = null
         for (template in titleGradientTemplates) {
@@ -97,7 +155,8 @@ object DialogUtils {
             return null
         }
 
-        val match = TextUtils.matchStringInList(title, DialogObjects.map.keys.toList())
+        //val match = TextUtils.matchStringInList(title, DialogObjects.map.keys.toList())
+        val match = if (DialogObjects.map.keys.toList().contains(title)) title else null
         if (match == null) {
             return null
         }
@@ -119,11 +178,11 @@ interface DialogInterface {
     // The close button is just which ever button is used primarily to close the dialog
     // If not specified, the first button in Buttons will be used.
     val closeButton: ComponentInterface?
-    // The ok button is typically used in a dialog with two primary buttons
+    // The OK button is typically used in a dialog with two primary buttons
     // and it closes the dialog while accepting the dialog.
     // If not specified, no default is selected unlike the closeButton.
-    // This is because some dialogs may have a close button and a checkbox, but no
-    // ok button.
+    // This is because some dialogs may have a close button and a checkbox,
+    // but no OK button.
     // If there is only one button in the dialog, then okButton will be set to that.
     val okButton: ComponentInterface?
 
