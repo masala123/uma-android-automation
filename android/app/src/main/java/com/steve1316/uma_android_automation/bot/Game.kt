@@ -61,6 +61,8 @@ class Game(val myContext: Context) {
 		style = Style("B", "B", "B", "B")
 	)
 	private var inheritancesDone = 0
+    // Flag used to force check aptitudes. Always true when bot starts.
+    var bNeedToCheckAptitudes: Boolean = true
 
 	data class Date(
 		val year: Int,
@@ -351,7 +353,9 @@ class Game(val myContext: Context) {
 			// Perform updates here if necessary.
             val finalsLocation = imageUtils.findImageWithBitmap("race_select_extra_locked_uma_finals", sourceBitmap, suppressError = true, region = imageUtils.regionBottomHalf)
             updateDate(isFinals = (finalsLocation != null))
-            if (currentDate.turnNumber % 10 == 0) updateAptitudes()
+            if (bNeedToCheckAptitudes) {
+                updateAptitudes()
+            }
 			true
 		} else if (!enablePopupCheck && imageUtils.findImageWithBitmap("cancel", sourceBitmap, region = imageUtils.regionBottomHalf) != null &&
 			imageUtils.findImageWithBitmap("race_confirm", sourceBitmap, region = imageUtils.regionBottomHalf) != null) {
@@ -528,6 +532,9 @@ class Game(val myContext: Context) {
 			
 			// Update preferred distance based on new aptitudes.
 			training.updatePreferredDistance()
+
+            // Reset this flag since we just updated the aptitudes.
+            bNeedToCheckAptitudes = false
 		}
 	}
 
@@ -592,6 +599,7 @@ class Game(val myContext: Context) {
 			if (findAndTapImage("inheritance", tries = 1, region = imageUtils.regionBottomHalf)) {
 				printToLog("\n[INFO] Claimed an inheritance on ${printFormattedDate()}.")
 				inheritancesDone++
+                bNeedToCheckAptitudes = true
 				true
 			} else {
 				false
@@ -771,6 +779,9 @@ class Game(val myContext: Context) {
 		printToLog("[INFO] Bot version: ${packageInfo.versionName} (${packageInfo.versionCode})\n\n")
 
 		val startTime: Long = System.currentTimeMillis()
+
+        // Set this flag since we always want to check aptitudes when the bot starts.
+        bNeedToCheckAptitudes = true
 
 		// Start debug tests here if enabled. Otherwise, proceed with regular bot operations.
 		if (SettingsHelper.getBooleanSetting("debug", "debugMode_startTemplateMatchingTest")) {
