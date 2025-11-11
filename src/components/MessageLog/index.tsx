@@ -165,20 +165,6 @@ const MessageLog = () => {
         return `🏁 Campaign Selected: ${settings.general.scenario !== "" ? `${settings.general.scenario}` : "Please select one in the Select Campaign option"}
 
 ---------- Training Event Options ----------
-👤 Character Selected: ${
-            settings.trainingEvent.selectAllCharacters
-                ? `All ${Object.keys(settings.trainingEvent.characterEventData).length} Characters Selected`
-                : Object.keys(settings.trainingEvent.characterEventData).length > 0
-                ? `${Object.keys(settings.trainingEvent.characterEventData).length} Characters Selected`
-                : "Please select one in the Training Event Settings"
-        }
-🃏 Support(s) Selected: ${
-            settings.trainingEvent.selectAllSupportCards
-                ? `All ${Object.keys(settings.trainingEvent.supportEventData).length} Support Cards Selected`
-                : Object.keys(settings.trainingEvent.supportEventData).length > 0
-                ? `${Object.keys(settings.trainingEvent.supportEventData).length} Support Cards Selected`
-                : "Please select one in the Training Event Settings"
-        }
 🎭 Special Event Overrides: ${
             Object.keys(settings.trainingEvent.specialEventOverrides).length === 0
                 ? "No Special Event Overrides"
