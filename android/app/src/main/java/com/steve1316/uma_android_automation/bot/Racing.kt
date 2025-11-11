@@ -26,6 +26,9 @@ class Racing (private val game: Game) {
     private val preferredTerrain = SettingsHelper.getStringSetting("racing", "preferredTerrain")
     private val preferredGradesString = SettingsHelper.getStringSetting("racing", "preferredGrades")
     private val racingPlanJson = SettingsHelper.getStringSetting("racing", "racingPlan")
+    private val minimumQualityThreshold = SettingsHelper.getDoubleSetting("racing", "minimumQualityThreshold")
+    private val timeDecayFactor = SettingsHelper.getDoubleSetting("racing", "timeDecayFactor")
+    private val improvementThreshold = SettingsHelper.getDoubleSetting("racing", "improvementThreshold")
 
     private var raceRetries = 3
     var raceRepeatWarningCheck = false
@@ -1604,11 +1607,6 @@ class Racing (private val game: Game) {
         
         game.printToLog("[RACE] Best upcoming race: ${bestUpcomingRace.raceData.name} (score: ${game.decimalFormat.format(bestUpcomingRace.score)}).", tag = tag)
         
-        // Opportunity Cost logic.
-        val minimumQualityThreshold = 70.0  // Don't race anything scoring below this.
-        val timeDecayFactor = 0.90          // Future races are worth this percentage of their score.
-        val improvementThreshold = 25.0     // Only wait if improvement is greater than this.
-
         // Apply time decay to upcoming race score.
         val discountedUpcomingScore = bestUpcomingRace.score * timeDecayFactor
         
