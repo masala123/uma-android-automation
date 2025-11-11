@@ -1,10 +1,10 @@
-package com.steve1316.uma_android_automation.utils.components
+package com.steve1316.uma_android_automation.components
 
 import android.graphics.Bitmap
 import androidx.core.graphics.createBitmap
 import org.opencv.core.Point
 
-import com.steve1316.uma_android_automation.utils.components.ComponentUtils
+import com.steve1316.uma_android_automation.components.ComponentUtils
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
 
 enum class TemplateComparisonMode {AND, OR}

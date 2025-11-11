@@ -1,4 +1,4 @@
-package com.steve1316.uma_android_automation.utils.components
+package com.steve1316.uma_android_automation.components
 
 import android.graphics.Bitmap
 import org.opencv.core.Point
@@ -7,12 +7,12 @@ import com.steve1316.automation_library.data.SharedData
 import com.steve1316.automation_library.utils.ImageUtils
 //import com.steve1316.automation_library.utils.TextUtils
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
-import com.steve1316.uma_android_automation.utils.components.ComponentInterface
+import com.steve1316.uma_android_automation.components.ComponentInterface
 
 /* Example usage:
 
-import com.steve1316.uma_android_automation.utils.components.DialogUtils
-import com.steve1316.uma_android_automation.utils.components.DialogInterface
+import com.steve1316.uma_android_automation.components.DialogUtils
+import com.steve1316.uma_android_automation.components.DialogInterface
 
 fun handleDialogs() {
     val dialog: DialogInterface? = DialogUtils.getDialog(imageUtils=game.imageUtils)
@@ -93,7 +93,7 @@ object DialogUtils {
             return null
         }
 
-        var sourceBitmap = imageUtils.getSourceBitmap()
+        val sourceBitmap = imageUtils.getSourceBitmap()
         var templateBitmap: Bitmap? = null
         for (template in titleGradientTemplates) {
             templateBitmap = imageUtils.getBitmaps(template).second
