@@ -1577,6 +1577,11 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		)
 	}
 
+    /**
+    * Gets the filled percentage of the energy bar.
+    *
+    * @return If energy bar is detected, returns the filled percentage, else returns null.
+    */
     fun analyzeEnergyBar(): Int? {
         val (sourceBitmap, templateBitmap) = getBitmaps("energy")
         if (templateBitmap == null) {
