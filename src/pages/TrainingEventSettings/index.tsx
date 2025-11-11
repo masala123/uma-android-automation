@@ -304,64 +304,6 @@ const TrainingEventSettings = () => {
                             },
                         ]}
                     />
-
-                    <MultiSelector
-                        title="Character Selection"
-                        description="Choose which characters you have in your current scenario. You can select all characters at once, or pick specific ones individually. When selecting individually, all rarity variants (R/SR/SSR) of the same character are grouped together."
-                        options={characterNames}
-                        selectedOptions={Object.keys(settings.trainingEvent.characterEventData)}
-                        onSelectionChange={(selectedOptions) => {
-                            // Create character event data for selected characters.
-                            const characterEventData: Record<string, Record<string, string[]>> = {}
-                            selectedOptions.forEach((characterName) => {
-                                if (charactersData[characterName as keyof typeof charactersData]) {
-                                    characterEventData[characterName] = charactersData[characterName as keyof typeof charactersData]
-                                }
-                            })
-
-                            setSettings({
-                                ...bsc.settings,
-                                trainingEvent: {
-                                    ...bsc.settings.trainingEvent,
-                                    characterEventData,
-                                    selectAllCharacters: selectedOptions.length === characterNames.length,
-                                },
-                            })
-                        }}
-                        selectAllLabel="Select All Characters"
-                        selectAllDescription="Select all available characters for training events"
-                        selectIndividualLabel="Select Characters"
-                        selectAll={settings.trainingEvent.selectAllCharacters}
-                    />
-
-                    <MultiSelector
-                        title="Support Card Selection"
-                        description="Choose which support cards you have in your current scenario. Same selection behavior applies as above."
-                        options={supportNames}
-                        selectedOptions={Object.keys(settings.trainingEvent.supportEventData)}
-                        onSelectionChange={(selectedOptions) => {
-                            // Create support event data for selected supports.
-                            const supportEventData: Record<string, Record<string, string[]>> = {}
-                            selectedOptions.forEach((supportName) => {
-                                if (supportsData[supportName as keyof typeof supportsData]) {
-                                    supportEventData[supportName] = supportsData[supportName as keyof typeof supportsData]
-                                }
-                            })
-
-                            setSettings({
-                                ...bsc.settings,
-                                trainingEvent: {
-                                    ...bsc.settings.trainingEvent,
-                                    supportEventData,
-                                    selectAllSupportCards: selectedOptions.length === supportNames.length,
-                                },
-                            })
-                        }}
-                        selectAllLabel="Select All Support Cards"
-                        selectAllDescription="Select all available support cards for training events"
-                        selectIndividualLabel="Select Support Cards"
-                        selectAll={settings.trainingEvent.selectAllSupportCards}
-                    />
                 </View>
             </ScrollView>
         </View>
