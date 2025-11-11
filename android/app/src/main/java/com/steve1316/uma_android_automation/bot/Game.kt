@@ -61,6 +61,7 @@ class Game(val myContext: Context) {
 		style = Style("B", "B", "B", "B")
 	)
 	private var inheritancesDone = 0
+    private var needToUpdateAptitudes: Boolean = true
 
 	data class Date(
 		val year: Int,
@@ -351,7 +352,7 @@ class Game(val myContext: Context) {
 			// Perform updates here if necessary.
             val finalsLocation = imageUtils.findImageWithBitmap("race_select_extra_locked_uma_finals", sourceBitmap, suppressError = true, region = imageUtils.regionBottomHalf)
             updateDate(isFinals = (finalsLocation != null))
-            if (currentDate.turnNumber % 10 == 0) updateAptitudes()
+            if (needToUpdateAptitudes) updateAptitudes()
 			true
 		} else if (!enablePopupCheck && imageUtils.findImageWithBitmap("cancel", sourceBitmap, region = imageUtils.regionBottomHalf) != null &&
 			imageUtils.findImageWithBitmap("race_confirm", sourceBitmap, region = imageUtils.regionBottomHalf) != null) {
@@ -528,6 +529,7 @@ class Game(val myContext: Context) {
 			
 			// Update preferred distance based on new aptitudes.
 			training.updatePreferredDistance()
+            needToUpdateAptitudes = false
 		}
 	}
 
@@ -592,6 +594,7 @@ class Game(val myContext: Context) {
 			if (findAndTapImage("inheritance", tries = 1, region = imageUtils.regionBottomHalf)) {
 				printToLog("\n[INFO] Claimed an inheritance on ${printFormattedDate()}.")
 				inheritancesDone++
+                needToUpdateAptitudes = true
 				true
 			} else {
 				false
