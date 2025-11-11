@@ -214,6 +214,7 @@ object DialogObjects {
         DialogBorrowCardConfirmation,       // Career Selection
         DialogCareer,                       // Career
         DialogCareerComplete,               // Career
+        DialogCareerOptions,                // Career
         DialogCompleteCareer,               // Career (yes this is different from above...)
         DialogConcertSkipConfirmation,      // Career
         DialogConfirmAutoSelect,            // Career Selection
@@ -225,6 +226,7 @@ object DialogObjects {
         DialogDailySale,                    // Team Trials, Special Events, Daily Races
         DialogDateChanged,                  // Anywhere
         DialogDisplaySettings,              // Anywhere
+        DialogEpithet,                      // Career End
         DialogExternalLink,                 // Main Screen
         DialogFinalConfirmation,            // Career Selection
         DialogFollowTrainer,                // Career
