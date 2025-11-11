@@ -411,6 +411,8 @@ const TrainingSettings = () => {
                         </View>
                         <Text style={[styles.label, { fontSize: 14, color: colors.foreground, opacity: 0.7, marginTop: 4 }]}>
                             Set the preferred race distance for training targets. "Auto" will automatically determine based on character aptitudes reading from left to right (S {">"} A priority).
+                            {"\n\n"}
+                            For example, if Gold Ship has an aptitude of A for both Medium and Long, Auto will use Medium as the preferred distance. Whereas if Medium is A and Long is S, then Auto will instead use Long as the preferred distance.
                         </Text>
                     </View>
 
