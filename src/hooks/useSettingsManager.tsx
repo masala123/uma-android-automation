@@ -8,7 +8,22 @@ import { startTiming } from "../lib/performanceLogger"
 import { logWithTimestamp, logErrorWithTimestamp } from "../lib/logger"
 
 /**
- * Converts settings object to database batch format
+ * Deep merges two objects, preserving nested structure.
+ */
+const deepMerge = <T extends Record<string, any>>(target: T, source: Partial<T>): T => {
+    const output = { ...target }
+    for (const key in source) {
+        if (source[key] && typeof source[key] === "object" && !Array.isArray(source[key]) && source[key] !== null) {
+            output[key] = deepMerge((target[key] || {}) as Record<string, any>, source[key] as any) as T[Extract<keyof T, string>]
+        } else if (source[key] !== undefined) {
+            output[key] = source[key] as T[Extract<keyof T, string>]
+        }
+    }
+    return output
+}
+
+/**
+ * Converts settings object to database batch format.
  */
 const convertSettingsToBatch = (settings: Settings) => {
     const batch: Array<{ category: string; key: string; value: any }> = []
@@ -98,7 +113,8 @@ export const useSettingsManager = () => {
             let newSettings: Settings = JSON.parse(JSON.stringify(defaultSettings))
             try {
                 const dbSettings = await databaseManager.loadAllSettings()
-                newSettings = { ...defaultSettings, ...dbSettings } as Settings
+                // Use deep merge to preserve nested default values.
+                newSettings = deepMerge(defaultSettings, dbSettings as Partial<Settings>)
                 logWithTimestamp(`[SettingsManager] Settings loaded from SQLite database ${context}.`)
             } catch (sqliteError) {
                 logWithTimestamp(`[SettingsManager] Failed to load from SQLite ${context}, using defaults:`)
