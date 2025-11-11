@@ -82,6 +82,16 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 	private val threshold = SettingsHelper.getIntSetting("ocr", "ocrThreshold").toDouble()
 	private val enableAutomaticRetry = SettingsHelper.getBooleanSetting("ocr", "enableAutomaticOCRRetry")
 
+    /**
+    * Data class to hold a quadruple of values.
+    */
+    data class Quadruple<out A, out B, out C, out D>(
+        val first: A,
+        val second: B,
+        val third: C,
+        val fourth: D
+    )
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -186,9 +196,9 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 	 * Starts the training event recognition process by performing OCR on the event title
 	 * and matching it against known event data.
 	 *
-	 * @return A triple containing the event option rewards, confidence score, and event title.
+	 * @return A quadruple containing the event option rewards, confidence score, event title, and character/support name.
 	 */
-	fun start(): Triple<ArrayList<String>, Double, String> {
+	fun start(): Quadruple<ArrayList<String>, Double, String, String> {
 		game.printToLog("\n********************", tag = tag)
 
 		// Reset to default values.
@@ -241,6 +251,12 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		Log.d(tag, "Total Runtime for recognizing training event: ${endTime - startTime}ms")
 		game.printToLog("********************", tag = tag)
 		
-		return Triple(eventOptionRewards, confidence, eventTitle)
+		val characterOrSupportName = when (category) {
+			"character" -> character
+			"support" -> supportCardTitle
+			else -> ""
+		}
+		
+		return Quadruple(eventOptionRewards, confidence, eventTitle, characterOrSupportName)
 	}
 }
