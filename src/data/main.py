@@ -213,9 +213,9 @@ class BaseScraper:
         """
         options = []
         for tooltip_row in tooltip_rows:
-            td = tooltip_row.find_elements(By.XPATH, ".//td[contains(@class, 'tooltips_ttable_cell')]")[1]
-            td_divs = td.find_elements(By.XPATH, ".//div")
-            text_fragments = [div.text.strip() for div in td_divs]
+            event_option_div = tooltip_row.find_element(By.XPATH, ".//div[contains(@class, 'sc-') and contains(@class, '-2 ')]")
+            event_result_divs = event_option_div.find_elements(By.XPATH, ".//div")
+            text_fragments = [div.text.strip() for div in event_result_divs]
 
             # Handle events where it offers random outcomes.
             if text_fragments and "Randomly either" in text_fragments[0]:
@@ -249,28 +249,28 @@ class BaseScraper:
             item_name (str): The name of the item.
             data_dict (Dict[str, List[str]]): The data dictionary to modify.
         """
-        all_training_events = driver.find_elements(By.XPATH, "//div[contains(@class, 'compatibility_viewer_item')]")
+        all_training_events = driver.find_elements(By.XPATH, "//button[contains(@class, 'sc-') and contains(@class, '-0 ')]")
         logging.info(f"Found {len(all_training_events)} training events for {item_name}.")
 
         ad_banner_closed = False
 
         for j, training_event in enumerate(all_training_events):
             self.safe_click(driver, training_event)
-            time.sleep(0.5)
+            time.sleep(1.0)
 
             tooltip = driver.find_element(By.XPATH, "//div[@data-tippy-root]")
             try:
-                tooltip_title = tooltip.find_element(By.XPATH, ".//div[contains(@class, 'tooltips_ttable_heading')]").text
+                tooltip_title = tooltip.find_element(By.XPATH, ".//div[contains(@class, 'sc-') and contains(@class, '-2 ')]").text
+                if tooltip_title in data_dict:
+                    logging.info(f"Training event {tooltip_title} ({j + 1}/{len(all_training_events)}) was already scraped. Skipping this...")
+                    continue
             except NoSuchElementException:
-                logging.info(f"No tooltip title found for training event ({j + 1}/{len(all_training_events)}).")
+                logging.warning(f"No tooltip title found for training event ({j + 1}/{len(all_training_events)}).")
                 continue
 
-            tooltip_rows = tooltip.find_elements(By.XPATH, ".//tr")
+            tooltip_rows = tooltip.find_elements(By.XPATH, ".//div[contains(@class, 'sc-') and contains(@class, '-0 ')]")
             if len(tooltip_rows) == 0:
-                logging.info(f"No options found for training event {tooltip_title} ({j + 1}/{len(all_training_events)}).")
-                continue
-            elif tooltip_title in data_dict:
-                logging.info(f"Training event {tooltip_title} ({j + 1}/{len(all_training_events)}) already exists.")
+                logging.warning(f"No options found for training event {tooltip_title} ({j + 1}/{len(all_training_events)}).")
                 continue
 
             logging.info(f"Found {len(tooltip_rows)} options for training event {tooltip_title} ({j + 1}/{len(all_training_events)}).")
