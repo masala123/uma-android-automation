@@ -1,6 +1,7 @@
 package com.steve1316.uma_android_automation.utils.components
 
 import android.graphics.Bitmap
+import androidx.core.graphics.createBitmap
 import org.opencv.core.Point
 
 import com.steve1316.uma_android_automation.utils.components.ComponentUtils
@@ -56,7 +57,7 @@ interface MultiStateButtonInterface : ComponentInterface {
                 return Pair(point, bitmap)
             }
         }
-        return Pair(null, Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888))
+        return Pair(null, createBitmap(1, 1))
     }
 
     /** Finds image on screen and returns boolean whether it exists. */
