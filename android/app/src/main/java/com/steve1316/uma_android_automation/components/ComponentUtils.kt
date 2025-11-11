@@ -31,7 +31,7 @@ object ComponentUtils {
     * @param suppressError Whether or not to suppress saving error messages to the log in failing to find the button. Defaults to false.
     * @return True if the button was found and clicked. False otherwise.
     */
-	fun findAndTapImage(imageUtils: CustomImageUtils, imageName: String, tries: Int = 3, region: IntArray = intArrayOf(0, 0, 0, 0), taps: Int = 1, suppressError: Boolean = false, loggingTag: String = "ComponentUtils"): Boolean {
+	fun findAndTapImage(imageUtils: CustomImageUtils, imageName: String, tries: Int = 3, region: IntArray = intArrayOf(0, 0, 0, 0), taps: Int = 1, suppressError: Boolean = false): Boolean {
 		val tempLocation: Point? = imageUtils.findImage(imageName, tries = tries, region = region, suppressError = suppressError).first
 
 		return if (tempLocation != null) {
