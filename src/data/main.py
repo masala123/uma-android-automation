@@ -261,16 +261,16 @@ class BaseScraper:
             tooltip = driver.find_element(By.XPATH, "//div[@data-tippy-root]")
             try:
                 tooltip_title = tooltip.find_element(By.XPATH, ".//div[contains(@class, 'sc-') and contains(@class, '-2 ')]").text
+                if tooltip_title in data_dict:
+                    logging.info(f"Training event {tooltip_title} ({j + 1}/{len(all_training_events)}) was already scraped. Skipping this...")
+                    continue
             except NoSuchElementException:
-                logging.info(f"No tooltip title found for training event ({j + 1}/{len(all_training_events)}).")
+                logging.warning(f"No tooltip title found for training event ({j + 1}/{len(all_training_events)}).")
                 continue
 
             tooltip_rows = tooltip.find_elements(By.XPATH, ".//div[contains(@class, 'sc-') and contains(@class, '-0 ')]")
             if len(tooltip_rows) == 0:
-                logging.info(f"No options found for training event {tooltip_title} ({j + 1}/{len(all_training_events)}).")
-                continue
-            elif tooltip_title in data_dict:
-                logging.info(f"Training event {tooltip_title} ({j + 1}/{len(all_training_events)}) already exists.")
+                logging.warning(f"No options found for training event {tooltip_title} ({j + 1}/{len(all_training_events)}).")
                 continue
 
             logging.info(f"Found {len(tooltip_rows)} options for training event {tooltip_title} ({j + 1}/{len(all_training_events)}).")
