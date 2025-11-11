@@ -169,6 +169,16 @@ const MessageLog = () => {
                 ? "No Special Event Overrides"
                 : `${Object.keys(settings.trainingEvent.specialEventOverrides).length} Special Event Overrides applied`
         }
+👤 Character Event Overrides: ${
+            Object.keys(settings.trainingEvent.characterEventOverrides).length === 0
+                ? "No Character Event Overrides"
+                : `${Object.keys(settings.trainingEvent.characterEventOverrides).length} Character Event Override(s) applied`
+        }
+💪 Support Event Overrides: ${
+            Object.keys(settings.trainingEvent.supportEventOverrides).length === 0
+                ? "No Support Event Overrides"
+                : `${Object.keys(settings.trainingEvent.supportEventOverrides).length} Support Event Override(s) applied`
+        }
 🔋 Prioritize Energy Options: ${settings.trainingEvent.enablePrioritizeEnergyOptions ? "✅" : "❌"}
 
 ---------- Training Options ----------
