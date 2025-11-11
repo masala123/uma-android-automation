@@ -1,7 +1,5 @@
 import { createContext, useState } from "react"
 import { startTiming } from "../lib/performanceLogger"
-import charactersData from "../data/characters.json"
-import supportsData from "../data/supports.json"
 import racesData from "../data/races.json"
 
 export interface Settings {
@@ -37,8 +35,8 @@ export interface Settings {
     trainingEvent: {
         enablePrioritizeEnergyOptions: boolean
         specialEventOverrides: Record<string, { selectedOption: string; requiresConfirmation: boolean }>
-        characterEventData: Record<string, Record<string, string[]>>
-        supportEventData: Record<string, Record<string, string[]>>
+        characterEventOverrides: Record<string, number>
+        supportEventOverrides: Record<string, number>
     }
 
     // Misc settings
@@ -191,8 +189,8 @@ export const defaultSettings: Settings = {
                 requiresConfirmation: false,
             },
         },
-        characterEventData: charactersData as Record<string, Record<string, string[]>>,
-        supportEventData: supportsData as Record<string, Record<string, string[]>>,
+        characterEventOverrides: {},
+        supportEventOverrides: {},
     },
     misc: {
         enableSettingsDisplay: false,
