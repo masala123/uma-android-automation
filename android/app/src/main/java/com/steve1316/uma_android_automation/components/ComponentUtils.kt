@@ -23,12 +23,13 @@ object ComponentUtils {
     /**
     * Find and tap the specified image.
     *
-    * @param imageUtils the CustomImageUtils instance used to find the image.
+    * @param imageUtils The CustomImageUtils instance used to find the image.
     * @param imageName Name of the button image file in the /assets/images/ folder.
     * @param tries Number of tries to find the specified button. Defaults to 3.
     * @param region Specify the region consisting of (x, y, width, height) of the source screenshot to template match. Defaults to (0, 0, 0, 0) which is equivalent to searching the full image.
     * @param taps Specify the number of taps on the specified image. Defaults to 1.
     * @param suppressError Whether or not to suppress saving error messages to the log in failing to find the button. Defaults to false.
+    *
     * @return True if the button was found and clicked. False otherwise.
     */
 	fun findAndTapImage(imageUtils: CustomImageUtils, imageName: String, tries: Int = 3, region: IntArray = intArrayOf(0, 0, 0, 0), taps: Int = 1, suppressError: Boolean = false): Boolean {
