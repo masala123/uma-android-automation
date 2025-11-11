@@ -160,7 +160,6 @@ const MessageLog = () => {
             settings.racing.racingPlan && settings.racing.racingPlan !== "[]" && typeof settings.racing.racingPlan === "string"
                 ? `${JSON.parse(settings.racing.racingPlan).length} Race(s) Selected`
                 : "None Selected"
-        const racingPlanDataString = settings.racing.racingPlanData !== "" ? `${settings.racing.racingPlanData.substring(0, 100)}...` : "None"
 
         return `🏁 Campaign Selected: ${settings.general.scenario !== "" ? `${settings.general.scenario}` : "Please select one in the Select Campaign option"}
 
