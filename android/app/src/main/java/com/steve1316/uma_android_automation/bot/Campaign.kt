@@ -85,7 +85,7 @@ open class Campaign(val game: Game) {
 				}
 
                 if (game.racing.encounteredRacingPopup || needToRace) {
-                    game.printToLog("[INFO] Racing by default.", tag = tag)
+                    game.printToLog("[INFO] All checks are cleared for racing.", tag = tag)
                     // The !game.racing.skipRacing was removed due to possibility of getting stuck in a loop.
                     if (!handleRaceEvents()) {
                         if (game.racing.detectedMandatoryRaceCheck) {
@@ -95,6 +95,7 @@ open class Campaign(val game: Game) {
                         }
                         game.findAndTapImage("back", tries = 1, region = game.imageUtils.regionBottomHalf)
                         game.racing.skipRacing = !game.racing.enableForceRacing
+                        game.wait(1.0)
                         game.training.handleTraining()
                     }
                 }

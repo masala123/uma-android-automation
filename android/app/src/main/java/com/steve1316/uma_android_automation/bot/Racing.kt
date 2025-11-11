@@ -1158,6 +1158,8 @@ class Racing (private val game: Game) {
                     return false
                 }
                 
+                // Opportunity cost analysis determined we should race now, so set the optimal race day to the current day.
+                nextSmartRaceDay = dayNumber
                 game.printToLog("[RACE] Opportunity cost analysis completed, proceeding with screen checks...", tag = tag)
             } else {
                 game.printToLog("[RACE] Skipping opportunity cost analysis (turn ${game.currentDate.turnNumber} does not match smartRacingCheckInterval). Using cached optimal race day.", tag = tag)
@@ -1436,7 +1438,14 @@ class Racing (private val game: Game) {
 
             val maxCount = game.imageUtils.findAll("race_selection_fans", region = game.imageUtils.regionBottomHalf).size
             if (maxCount == 0) {
-                game.printToLog("[WARNING] Was unable to find any extra races to select. Canceling the racing process and doing something else.", tag = tag, isError = true)
+                // If there is a fan/trophy requirement but no races available, reset the flags and proceed with training to advance the day.
+                if (hasFanRequirement || hasTrophyRequirement) {
+                    game.printToLog("[RACE] Fan/trophy requirement detected but no extra races available. Clearing requirement flags and proceeding with training to advance the day.", tag = tag)
+                    hasFanRequirement = false
+                    hasTrophyRequirement = false
+                } else {
+                    game.printToLog("[ERROR] Was unable to find any extra races to select. Canceling the racing process and doing something else.", tag = tag, isError = true)
+                }
                 game.printToLog("********************", tag = tag)
                 return false
             } else {
