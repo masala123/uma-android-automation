@@ -252,7 +252,7 @@ object DialogObjects {
         DialogViewStory,                    // Main Screen, end of career
     )
 
-    val map: Map<String, DialogInterface> = items.map { it.title to it }.toMap()
+    val map: Map<String, DialogInterface> = items.associateBy { it.title }
 }
 
 object DialogAutoSelect : DialogInterface {
@@ -378,11 +378,11 @@ object DialogConnectionError : DialogInterface {
     // The dialog can have either a single button ("Title Screen") or
     // two buttons ("Title Screen" and "Retry").
     override fun ok(imageUtils: CustomImageUtils, tries: Int): Boolean {
-        if (ButtonRetry?.click(imageUtils = imageUtils, tries = tries)) {
+        if (ButtonRetry.click(imageUtils = imageUtils, tries = tries)) {
             return true
         }
         
-        return ButtonTitleScreen?.click(imageUtils = imageUtils, tries = tries)
+        return ButtonTitleScreen.click(imageUtils = imageUtils, tries = tries)
     }
 }
 
@@ -643,11 +643,11 @@ object DialogRaceDetails : DialogInterface {
     // The normal race details dialog has a "Race!" button whereas
     // the career version just has a "Race" button.
     override fun ok(imageUtils: CustomImageUtils, tries: Int): Boolean {
-        if (ButtonRaceExclamation?.click(imageUtils = imageUtils, tries = tries)) {
+        if (ButtonRaceExclamation.click(imageUtils = imageUtils, tries = tries)) {
             return true
         }
         
-        return ButtonRace?.click(imageUtils = imageUtils, tries = tries)
+        return ButtonRace.click(imageUtils = imageUtils, tries = tries)
     }
 }
 

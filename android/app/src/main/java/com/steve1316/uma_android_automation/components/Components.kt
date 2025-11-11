@@ -8,7 +8,25 @@ import com.steve1316.uma_android_automation.components.ComponentUtils
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
 
 enum class TemplateComparisonMode {AND, OR}
-data class Template(val name: String, val region: IntArray = intArrayOf(0, 0, 0, 0))
+data class Template(val name: String, val region: IntArray = intArrayOf(0, 0, 0, 0)) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as Template
+
+        if (name != other.name) return false
+        if (!region.contentEquals(other.region)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = name.hashCode()
+        result = 31 * result + region.contentHashCode()
+        return result
+    }
+}
 
 interface BaseComponentInterface {
     val TAG: String
