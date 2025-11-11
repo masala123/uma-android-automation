@@ -37,8 +37,6 @@ export interface Settings {
     trainingEvent: {
         enablePrioritizeEnergyOptions: boolean
         specialEventOverrides: Record<string, { selectedOption: string; requiresConfirmation: boolean }>
-        selectAllCharacters: boolean
-        selectAllSupportCards: boolean
         characterEventData: Record<string, Record<string, string[]>>
         supportEventData: Record<string, Record<string, string[]>>
     }
@@ -193,8 +191,6 @@ export const defaultSettings: Settings = {
                 requiresConfirmation: false,
             },
         },
-        selectAllCharacters: true,
-        selectAllSupportCards: true,
         characterEventData: charactersData as Record<string, Record<string, string[]>>,
         supportEventData: supportsData as Record<string, Record<string, string[]>>,
     },

@@ -6,6 +6,8 @@ import { useSettings } from "../context/SettingsContext"
 import { logWithTimestamp, logErrorWithTimestamp } from "../lib/logger"
 import { databaseManager, DatabaseRace } from "../lib/database"
 import racesData from "../data/races.json"
+import charactersData from "../data/characters.json"
+import supportsData from "../data/supports.json"
 
 /**
  * Manages app initialization, settings persistence, and message handling.
@@ -37,6 +39,7 @@ export const useBootstrap = () => {
                 logWithTimestamp("[Bootstrap] Initializing database and populating races data...")
                 await databaseManager.initialize()
                 await populateRacesData()
+                await populateEventData()
 
                 // Load settings after database initialization but before marking app as ready.
                 // Skip the initialization check since we know the database is ready.
@@ -56,7 +59,7 @@ export const useBootstrap = () => {
     }, [])
 
     /**
-     * Populate the races table with data from races.json.
+     * Populate race event data from racing.json into SQLite.
      */
     const populateRacesData = async (): Promise<void> => {
         try {
@@ -88,6 +91,28 @@ export const useBootstrap = () => {
             logWithTimestamp(`[Bootstrap] Successfully populated ${races.length} races into database`)
         } catch (error) {
             logErrorWithTimestamp("[Bootstrap] Error populating races data:", error)
+            throw error
+        }
+    }
+
+    /**
+     * Populate character and support event data from JSON files into SQLite.
+     */
+    const populateEventData = async (): Promise<void> => {
+        try {
+            logWithTimestamp("[Bootstrap] Starting event data population...")
+
+            // Save character event data to SQLite.
+            await databaseManager.saveSetting("trainingEvent", "characterEventData", charactersData, true)
+            logWithTimestamp(`[Bootstrap] Successfully saved character event data (${Object.keys(charactersData).length} characters) to SQLite`)
+
+            // Save support event data to SQLite.
+            await databaseManager.saveSetting("trainingEvent", "supportEventData", supportsData, true)
+            logWithTimestamp(`[Bootstrap] Successfully saved support event data (${Object.keys(supportsData).length} supports) to SQLite`)
+
+            logWithTimestamp("[Bootstrap] Event data population complete")
+        } catch (error) {
+            logErrorWithTimestamp("[Bootstrap] Error populating event data:", error)
             throw error
         }
     }

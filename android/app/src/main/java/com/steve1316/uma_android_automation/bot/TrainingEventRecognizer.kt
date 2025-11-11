@@ -4,6 +4,7 @@ import android.util.Log
 import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
 import com.steve1316.uma_android_automation.utils.SettingsHelper
+import com.steve1316.uma_android_automation.utils.SQLiteSettingsManager
 import net.ricecode.similarity.JaroWinklerStrategy
 import net.ricecode.similarity.StringSimilarityServiceImpl
 import org.json.JSONObject
@@ -38,46 +39,45 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		"Etsuko's Exhaustive Coverage" to listOf("Etsuko", "Exhaustive Coverage")
 	)
 	
-	// Get character event data from settings.
+	// The full character event data should be stored in SQLite and will be loaded here.
 	private val characterEventData: JSONObject? = try {
-		val characterDataString = SettingsHelper.getStringSetting("trainingEvent", "characterEventData")
-		if (characterDataString.isNotEmpty()) {
+		val settingsManager = SQLiteSettingsManager(game.myContext)
+		if (!settingsManager.isAvailable()) {
+			settingsManager.initialize()
+		}
+		val characterDataString = settingsManager.loadSetting("trainingEvent", "characterEventData")
+		if (characterDataString != null && characterDataString.isNotEmpty()) {
 			val jsonObject = JSONObject(characterDataString)
 			if (game.debugMode) game.printToLog("[DEBUG] Character event data length: ${jsonObject.length()}.", tag = tag)
 			jsonObject
 		} else {
 			null
 		}
-	} catch (_: Exception) {
+	} catch (e: Exception) {
+		if (game.debugMode) game.printToLog("[DEBUG] Failed to load character event data from SQLite: ${e.message}", tag = tag)
 		null
 	}
 	
-	// Get support event data from settings.
+	// The full support event data should be stored in SQLite and will be loaded here.
 	private val supportEventData: JSONObject? = try {
-		val supportDataString = SettingsHelper.getStringSetting("trainingEvent", "supportEventData")
-		if (supportDataString.isNotEmpty()) {
+		val settingsManager = SQLiteSettingsManager(game.myContext)
+		if (!settingsManager.isAvailable()) {
+			settingsManager.initialize()
+		}
+		val supportDataString = settingsManager.loadSetting("trainingEvent", "supportEventData")
+		if (supportDataString != null && supportDataString.isNotEmpty()) {
 			val jsonObject = JSONObject(supportDataString)
 			if (game.debugMode) game.printToLog("[DEBUG] Support event data length: ${jsonObject.length()}.", tag = tag)
 			jsonObject
 		} else {
 			null
 		}
-	} catch (_: Exception) {
+	} catch (e: Exception) {
+		if (game.debugMode) game.printToLog("[DEBUG] Failed to load support event data from SQLite: ${e.message}", tag = tag)
 		null
 	}
 	
-	private val supportCards: List<String> = try {
-		if (supportEventData != null) {
-			supportEventData.keys().asSequence().toList()
-		} else {
-			emptyList()
-		}
-	} catch (_: Exception) {
-		emptyList()
-	}
 	private val hideComparisonResults: Boolean = SettingsHelper.getBooleanSetting("debug", "enableHideOCRComparisonResults")
-	private val selectAllCharacters: Boolean = SettingsHelper.getBooleanSetting("trainingEvent", "selectAllCharacters")
-	private val selectAllSupportCards: Boolean = SettingsHelper.getBooleanSetting("trainingEvent", "selectAllSupportCards")
 	private val minimumConfidence = SettingsHelper.getIntSetting("ocr", "ocrConfidence").toDouble() / 100.0
 	private val threshold = SettingsHelper.getIntSetting("ocr", "ocrThreshold").toDouble()
 	private val enableAutomaticRetry = SettingsHelper.getBooleanSetting("ocr", "enableAutomaticOCRRetry")
@@ -113,129 +113,63 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		
 		// Attempt to find the most similar string inside the character event data.
 		if (characterEventData != null) {
-			if (selectAllCharacters) {
-				// Check all characters in the event data.
-				characterEventData.keys().forEach { characterKey ->
-					val characterEvents = characterEventData.getJSONObject(characterKey)
-					characterEvents.keys().forEach { eventName ->
-						// Skip if this is a special event and the event name doesn't match our detected pattern.
-						if (isSpecialEvent && eventName != matchedSpecialEvent) {
-							return@forEach
-						}
-						
-						val eventOptionsArray = characterEvents.getJSONArray(eventName)
-						val eventOptions = ArrayList<String>()
-						for (i in 0 until eventOptionsArray.length()) {
-							eventOptions.add(eventOptionsArray.getString(i))
-						}
-						
-						val score = service.score(result, eventName)
-						if (!hideComparisonResults) {
-							game.printToLog("[CHARA] $characterKey \"${result}\" vs. \"${eventName}\" confidence: ${game.decimalFormat.format(score)}", tag = tag)
-						}
-						
-						if (score >= confidence) {
-							confidence = score
-							eventTitle = eventName
-							eventOptionRewards = eventOptions
-							category = "character"
-							character = characterKey
-						}
+			characterEventData.keys().forEach { characterKey ->
+				val characterEvents = characterEventData.getJSONObject(characterKey)
+				characterEvents.keys().forEach { eventName ->
+					// Skip if this is a special event and the event name doesn't match our detected pattern.
+					if (isSpecialEvent && eventName != matchedSpecialEvent) {
+						return@forEach
 					}
-				}
-			} else {
-				// Check only the specific character if it exists in the event data.
-				if (character.isNotEmpty() && characterEventData.has(character)) {
-					val characterEvents = characterEventData.getJSONObject(character)
-					characterEvents.keys().forEach { eventName ->
-						// Skip if this is a special event and the event name doesn't match our detected pattern.
-						if (isSpecialEvent && eventName != matchedSpecialEvent) {
-							return@forEach
-						}
-						
-						val eventOptionsArray = characterEvents.getJSONArray(eventName)
-						val eventOptions = ArrayList<String>()
-						for (i in 0 until eventOptionsArray.length()) {
-							eventOptions.add(eventOptionsArray.getString(i))
-						}
-						
-						val score = service.score(result, eventName)
-						if (!hideComparisonResults) {
-							game.printToLog("[CHARA] $character \"${result}\" vs. \"${eventName}\" confidence: $score", tag = tag)
-						}
-						
-						if (score >= confidence) {
-							confidence = score
-							eventTitle = eventName
-							eventOptionRewards = eventOptions
-							category = "character"
-						}
+					
+					val eventOptionsArray = characterEvents.getJSONArray(eventName)
+					val eventOptions = ArrayList<String>()
+					for (i in 0 until eventOptionsArray.length()) {
+						eventOptions.add(eventOptionsArray.getString(i))
+					}
+					
+					val score = service.score(result, eventName)
+					if (!hideComparisonResults) {
+						game.printToLog("[CHARA] $characterKey \"${result}\" vs. \"${eventName}\" confidence: ${game.decimalFormat.format(score)}", tag = tag)
+					}
+					
+					if (score >= confidence) {
+						confidence = score
+						eventTitle = eventName
+						eventOptionRewards = eventOptions
+						category = "character"
+						character = characterKey
 					}
 				}
 			}
 		}
 		
-		// Finally, do the same with the user-selected Support Cards.
+		// Finally, do the same with all Support Cards.
 		if (supportEventData != null) {
-			if (!selectAllSupportCards) {
-				supportCards.forEach { supportCardName ->
-					if (supportEventData.has(supportCardName)) {
-						val supportEvents = supportEventData.getJSONObject(supportCardName)
-						supportEvents.keys().forEach { eventName ->
-							// Skip if this is a special event and the event name doesn't match our detected pattern.
-							if (isSpecialEvent && eventName != matchedSpecialEvent) {
-								return@forEach
-							}
-							
-							val eventOptionsArray = supportEvents.getJSONArray(eventName)
-							val eventOptions = ArrayList<String>()
-							for (i in 0 until eventOptionsArray.length()) {
-								eventOptions.add(eventOptionsArray.getString(i))
-							}
-							
-							val score = service.score(result, eventName)
-							if (!hideComparisonResults) {
-								game.printToLog("[SUPPORT] $supportCardName \"${result}\" vs. \"${eventName}\" confidence: $score", tag = tag)
-							}
-							
-							if (score >= confidence) {
-								confidence = score
-								eventTitle = eventName
-								supportCardTitle = supportCardName
-								eventOptionRewards = eventOptions
-								category = "support"
-							}
-						}
+			supportEventData.keys().forEach { supportName ->
+				val supportEvents = supportEventData.getJSONObject(supportName)
+				supportEvents.keys().forEach { eventName ->
+					// Skip if this is a special event and the event name doesn't match our detected pattern.
+					if (isSpecialEvent && eventName != matchedSpecialEvent) {
+						return@forEach
 					}
-				}
-			} else {
-				// Check all support cards in the event data.
-				supportEventData.keys().forEach { supportName ->
-					val supportEvents = supportEventData.getJSONObject(supportName)
-					supportEvents.keys().forEach { eventName ->
-						// Skip if this is a special event and the event name doesn't match our detected pattern.
-						if (isSpecialEvent && eventName != matchedSpecialEvent) {
-							return@forEach
-						}
-						
-						val eventOptionsArray = supportEvents.getJSONArray(eventName)
-						val eventOptions = ArrayList<String>()
-						for (i in 0 until eventOptionsArray.length()) {
-							eventOptions.add(eventOptionsArray.getString(i))
-						}
-						
-						val score = service.score(result, eventName)
-						if (!hideComparisonResults) {
-							game.printToLog("[SUPPORT] $supportName \"${result}\" vs. \"${eventName}\" confidence: $score", tag = tag)
-						}
-						
-						if (score >= confidence) {
-							confidence = score
-							eventTitle = eventName
-							supportCardTitle = supportName
-							eventOptionRewards = eventOptions
-							category = "support"
-						}
+					
+					val eventOptionsArray = supportEvents.getJSONArray(eventName)
+					val eventOptions = ArrayList<String>()
+					for (i in 0 until eventOptionsArray.length()) {
+						eventOptions.add(eventOptionsArray.getString(i))
+					}
+					
+					val score = service.score(result, eventName)
+					if (!hideComparisonResults) {
+						game.printToLog("[SUPPORT] $supportName \"${result}\" vs. \"${eventName}\" confidence: $score", tag = tag)
+					}
+					
+					if (score >= confidence) {
+						confidence = score
+						eventTitle = eventName
+						supportCardTitle = supportName
+						eventOptionRewards = eventOptions
+						category = "support"
 					}
 				}
 			}
