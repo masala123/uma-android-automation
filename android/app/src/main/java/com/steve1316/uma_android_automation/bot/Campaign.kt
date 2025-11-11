@@ -95,6 +95,7 @@ open class Campaign(val game: Game) {
                         }
                         game.findAndTapImage("back", tries = 1, region = game.imageUtils.regionBottomHalf)
                         game.racing.skipRacing = !game.racing.enableForceRacing
+                        game.wait(1.0)
                         game.training.handleTraining()
                     }
                 }
