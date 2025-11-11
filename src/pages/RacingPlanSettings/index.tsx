@@ -20,12 +20,14 @@ interface Race {
     distanceType: string
     distanceMeters: number
     fans: number
+    turnNumber: number
 }
 
 interface PlannedRace {
     raceName: string
     date: string
     priority: number
+    turnNumber: number
 }
 
 const RacingPlanSettings = () => {
@@ -68,16 +70,20 @@ const RacingPlanSettings = () => {
 
     const handleRacePress = (race: Race) => {
         // Determine if this should be added to the racing plan or removed.
+        // Use raceName + date + turnNumber to uniquely identify each race instance.
+        const isRaceSelected = parsedRacingPlan.some((planned) => planned.raceName === race.name && planned.date === race.date && planned.turnNumber === race.turnNumber)
+
         let newPlan: PlannedRace[] = []
-        if (parsedRacingPlan.some((planned) => planned.raceName === race.name)) {
+        if (isRaceSelected) {
             // Remove the race from the racing plan.
-            newPlan = parsedRacingPlan.filter((planned) => planned.raceName !== race.name)
+            newPlan = parsedRacingPlan.filter((planned) => !(planned.raceName === race.name && planned.date === race.date && planned.turnNumber === race.turnNumber))
         } else {
             // Add the race to the racing plan.
             const newPlannedRace: PlannedRace = {
                 raceName: race.name,
                 date: race.date,
                 priority: parsedRacingPlan.length,
+                turnNumber: race.turnNumber,
             }
             newPlan = [...parsedRacingPlan, newPlannedRace]
         }
@@ -91,6 +97,7 @@ const RacingPlanSettings = () => {
             raceName: race.name,
             date: race.date,
             priority: index,
+            turnNumber: race.turnNumber,
         }))
 
         updateRacingSetting("racingPlan", JSON.stringify(newPlan))
@@ -344,7 +351,9 @@ const RacingPlanSettings = () => {
                                                     {race.fans} fans • {race.grade} • {race.terrain} • {race.distanceType}
                                                 </Text>
                                             </View>
-                                            {parsedRacingPlan.some((planned) => planned.raceName === race.name) && <CircleCheckBig size={18} color={"green"} />}
+                                            {parsedRacingPlan.some((planned) => planned.raceName === race.name && planned.date === race.date && planned.turnNumber === race.turnNumber) && (
+                                                <CircleCheckBig size={18} color={"green"} />
+                                            )}
                                         </View>
                                     </TouchableOpacity>
                                 ),
