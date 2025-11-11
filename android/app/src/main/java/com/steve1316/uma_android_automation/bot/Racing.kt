@@ -729,7 +729,7 @@ class Racing (private val game: Game) {
      * @return True if the current date is okay to start the extra racing process and false otherwise.
      */
     fun checkEligibilityToStartExtraRacingProcess(): Boolean {
-        game.printToLog("\n[RACE] Now determining if ")
+        game.printToLog("\n[RACE] Now determining eligibility to start the extra racing process...", tag = tag)
         val dayNumber = game.imageUtils.determineDayForExtraRace()
         game.printToLog("[RACE] Current remaining number of days before the next mandatory race: $dayNumber.", tag = tag)
 
@@ -739,60 +739,50 @@ class Racing (private val game: Game) {
         // For Classic and Senior Year, check if planned races are coming up in the look-ahead window and are eligible for racing.
         if (game.currentDate.year != 1 && enableRacingPlan) {
             // Handle the user-selected planned races here.
-            val userPlannedRaces = loadUserPlannedRaces()
             if (userPlannedRaces.isNotEmpty()) {
-                val racePlanData = loadRacePlanData()
-                if (racePlanData.isNotEmpty()) {
-                    val currentTurnNumber = game.currentDate.turnNumber
+                val currentTurnNumber = game.currentDate.turnNumber
 
-                    // Check each planned race for eligibility.
-                    val eligiblePlannedRaces = userPlannedRaces.filter { plannedRace ->
-                        val raceData = racePlanData[plannedRace.raceName]
-                        if (raceData == null) {
-                            game.printToLog("[ERROR] Planned race \"${plannedRace.raceName}\" not found in race plan data.", tag = tag, isError = true)
+                // Check each planned race for eligibility.
+                val eligiblePlannedRaces = userPlannedRaces.filter { plannedRace ->
+                    val raceDetails = raceData[plannedRace.raceName]
+                    if (raceDetails == null) {
+                        game.printToLog("[ERROR] Planned race \"${plannedRace.raceName}\" not found in race data.", tag = tag, isError = true)
+                        false
+                    } else {
+                        val turnDistance = raceDetails.turnNumber - currentTurnNumber
+
+                        // Check if race is within look-ahead window.
+                        if (turnDistance < 0 || turnDistance > lookAheadDays) {
+                            if (turnDistance > lookAheadDays) {
+                                if (game.debugMode) {
+                                    game.printToLog("[DEBUG] Planned race \"${plannedRace.raceName}\" is too far ahead of the look-ahead window (distance $turnDistance > lookAheadDays $lookAheadDays).", tag = tag)
+                                } else {
+                                    Log.d(tag, "[DEBUG] Planned race \"${plannedRace.raceName}\" is too far ahead of the look-ahead window (distance $turnDistance > lookAheadDays $lookAheadDays).")
+                                }
+                            }
                             false
                         } else {
-                            val raceTurnNumber = raceData.turnNumber
-                            val turnDistance = raceTurnNumber - currentTurnNumber
-
-                            // Check if race is within look-ahead window.
-                            if (turnDistance < 0 || turnDistance > lookAheadDays) {
-                                if (turnDistance > lookAheadDays) {
-                                    if (game.debugMode) {
-                                        game.printToLog("[DEBUG] Planned race \"${plannedRace.raceName}\" is too far ahead of the look-ahead window (distance $turnDistance > lookAheadDays $lookAheadDays).", tag = tag)
-                                    } else {
-                                        Log.d(tag, "[DEBUG] Planned race \"${plannedRace.raceName}\" is too far ahead of the look-ahead window (distance $turnDistance > lookAheadDays $lookAheadDays).")
-                                    }
+                            // For Classic Year, check if it's an eligible racing day.
+                            if (game.currentDate.year == 2) {
+                                val isEligible = dayNumber % daysToRunExtraRaces == 0
+                                if (!isEligible) {
+                                    game.printToLog("[RACE] Planned race \"${plannedRace.raceName}\" is not on an eligible racing day (day $dayNumber, interval $daysToRunExtraRaces).", tag = tag)
                                 }
-                                false
+                                isEligible
                             } else {
-                                // For Classic Year, check if it's an eligible racing day.
-                                if (game.currentDate.year == 2) {
-                                    val isEligible = dayNumber % daysToRunExtraRaces == 0
-                                    if (!isEligible) {
-                                        game.printToLog("[RACE] Planned race \"${plannedRace.raceName}\" is not on an eligible racing day (day $dayNumber, interval $daysToRunExtraRaces).", tag = tag)
-                                    }
-                                    isEligible
-                                } else {
-                                    true
-                                }
+                                true
                             }
                         }
                     }
+                }
 
-                    if (eligiblePlannedRaces.isEmpty()) {
-                        game.printToLog("[RACE] No user-selected races are eligible at turn $currentTurnNumber.", tag = tag)
-                        return false
-                    }
-
-                    game.printToLog("[RACE] Found ${eligiblePlannedRaces.size} eligible user-selected races: ${eligiblePlannedRaces.map { it.raceName }}.", tag = tag)
+                if (eligiblePlannedRaces.isEmpty()) {
+                    game.printToLog("[RACE] No user-selected races are eligible at turn $currentTurnNumber. Continuing with other checks.", tag = tag)
                 } else {
-                    game.printToLog("[RACE] No race plan data available for eligibility checking.", tag = tag)
-                    return false
+                    game.printToLog("[RACE] Found ${eligiblePlannedRaces.size} eligible user-selected races: ${eligiblePlannedRaces.map { it.raceName }}.", tag = tag)
                 }
             } else {
-                game.printToLog("[RACE] No user-selected races configured.", tag = tag)
-                return false
+                game.printToLog("[RACE] No user-selected races configured. Continuing with other checks.", tag = tag)
             }
         }
 
