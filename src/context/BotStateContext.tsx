@@ -31,6 +31,9 @@ export interface Settings {
         enableRaceStrategyOverride: boolean
         juniorYearRaceStrategy: string
         originalRaceStrategy: string
+        minimumQualityThreshold: number
+        timeDecayFactor: number
+        improvementThreshold: number
     }
 
     // Training Event settings
@@ -146,6 +149,9 @@ export const defaultSettings: Settings = {
         enableRaceStrategyOverride: false,
         juniorYearRaceStrategy: "Front",
         originalRaceStrategy: "Pace",
+        minimumQualityThreshold: 70.0,
+        timeDecayFactor: 0.80,
+        improvementThreshold: 25.0,
     },
     trainingEvent: {
         enablePrioritizeEnergyOptions: false,
