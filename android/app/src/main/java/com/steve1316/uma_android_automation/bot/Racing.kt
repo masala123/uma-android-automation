@@ -82,6 +82,91 @@ class Racing (private val game: Game) {
         val priority: Int
     )
 
+    /**
+     * Retrieves the user's planned races from saved settings.
+     *
+     * @return A list of [PlannedRace] entries defined by the user, or an empty list if none exist.
+     */
+    private fun loadUserPlannedRaces(): List<PlannedRace> {
+        if (!enableRacingPlan) {
+            game.printToLog("[RACE] Racing plan is disabled, returning empty planned races list.", tag = tag)
+            return emptyList()
+        }
+
+        return try {
+            if (game.debugMode) game.printToLog("[RACE] Raw user-selected racing plan JSON: \"$racingPlanJson\".", tag = tag)
+
+            if (racingPlanJson.isEmpty() || racingPlanJson == "[]") {
+                game.printToLog("[RACE] User-selected racing plan is empty, returning empty list.", tag = tag)
+                return emptyList()
+            }
+
+            val jsonArray = JSONArray(racingPlanJson)
+            val plannedRaces = mutableListOf<PlannedRace>()
+
+            for (i in 0 until jsonArray.length()) {
+                val raceObj = jsonArray.getJSONObject(i)
+                val plannedRace = PlannedRace(
+                    raceName = raceObj.getString("raceName"),
+                    date = raceObj.getString("date"),
+                    priority = raceObj.optInt("priority", 0)
+                )
+                plannedRaces.add(plannedRace)
+            }
+
+            game.printToLog("[RACE] Successfully loaded ${plannedRaces.size} user-selected planned races from settings.", tag = tag)
+            plannedRaces
+        } catch (e: Exception) {
+            game.printToLog("[ERROR] Failed to parse user-selected racing plan JSON: ${e.message}. Returning empty list.", tag = tag, isError = true)
+            emptyList()
+        }
+    }
+
+    /**
+     * Loads the complete race database from saved settings, including all race metadata such as
+     * names, grades, distances, and turn numbers.
+     *
+     * @return A map of race names to their [RaceData] or an empty map if racing plan data is missing or invalid.
+     */
+    private fun loadRacePlanData(): Map<String, RaceData> {
+        return try {
+            val racingPlanDataJson = SettingsHelper.getStringSetting("racing", "racingPlanData")
+            if (game.debugMode) game.printToLog("[RACE] Raw racing plan data JSON length: ${racingPlanDataJson.length}.", tag = tag)
+
+            if (racingPlanDataJson.isEmpty()) {
+                game.printToLog("[RACE] Racing plan data is empty, returning empty map.", tag = tag)
+                return emptyMap()
+            }
+
+            val jsonObject = JSONObject(racingPlanDataJson)
+            val raceDataMap = mutableMapOf<String, RaceData>()
+
+            val keys = jsonObject.keys()
+            while (keys.hasNext()) {
+                val key = keys.next()
+                val raceObj = jsonObject.getJSONObject(key)
+
+                val raceData = RaceData(
+                    name = raceObj.getString("name"),
+                    grade = raceObj.getString("grade"),
+                    terrain = raceObj.getString("terrain"),
+                    distanceType = raceObj.getString("distanceType"),
+                    fans = raceObj.getInt("fans"),
+                    turnNumber = raceObj.getInt("turnNumber"),
+                    nameFormatted = raceObj.getString("nameFormatted")
+                )
+
+                raceDataMap[raceData.name] = raceData
+            }
+
+            game.printToLog("[RACE] Successfully loaded ${raceDataMap.size} race entries from racing plan data.", tag = tag)
+            raceDataMap
+        } catch (e: Exception) {
+            game.printToLog("[ERROR] Failed to parse racing plan data JSON: ${e.message}. Returning empty map.", tag = tag, isError = true)
+            emptyMap()
+        }
+    }
+
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -339,6 +424,279 @@ class Racing (private val game: Game) {
 
         game.printToLog("[RACE] Racing process for Extra Race is completed.", tag = tag)
         game.printToLog("********************", tag = tag)
+        return true
+    }
+
+    /**
+     * Handles extra races using Smart Racing logic.
+     *
+     * @return True if a race was successfully selected and ready to run; false if the process was canceled.
+     */
+    private fun processSmartRacing(): Boolean {
+        game.printToLog("[RACE] Using Smart Racing Plan logic...", tag = tag)
+
+        // Updates the current date and aptitudes for accurate scoring.
+        game.updateDate()
+        game.updateAptitudes()
+
+        // Use cached user planned races and race plan data.
+        game.printToLog("[RACE] Loaded ${userPlannedRaces.size} user-selected races and ${racePlanData.size} race entries.", tag = tag)
+
+        // Detects all double-star race predictions on screen.
+        val doublePredictionLocations = game.imageUtils.findAll("race_extra_double_prediction")
+        game.printToLog("[RACE] Found ${doublePredictionLocations.size} double-star prediction locations.", tag = tag)
+        if (doublePredictionLocations.isEmpty()) {
+            game.printToLog("[RACE] No double-star predictions found. Canceling racing process.", tag = tag)
+            return false
+        }
+
+        // Extracts race names from the screen and matches them with the in-game database.
+        game.printToLog("[RACE] Extracting race names and matching with database...", tag = tag)
+        val currentRaces = doublePredictionLocations.mapNotNull { location ->
+            val raceName = game.imageUtils.extractRaceName(location)
+            val raceData = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
+            if (raceData != null) {
+                game.printToLog("[RACE] ✓ Matched in database: ${raceData.name} (Grade: ${raceData.grade}, Fans: ${raceData.fans}, Terrain: ${raceData.terrain}).", tag = tag)
+                raceData
+            } else {
+                game.printToLog("[RACE] ✗ No match found in database for \"$raceName\".", tag = tag)
+                null
+            }
+        }
+
+        if (currentRaces.isEmpty()) {
+            game.printToLog("[RACE] No races matched in database. Canceling racing process.", tag = tag)
+            return false
+        }
+        game.printToLog("[RACE] Successfully matched ${currentRaces.size} races in database.", tag = tag)
+
+        // If trophy requirement is active, filter to only G1 races.
+        // Trophy requirement is independent of racing plan and farming fans settings.
+        val racesForSelection = if (hasTrophyRequirement) {
+            val g1Races = currentRaces.filter { it.grade == "G1" }
+            if (g1Races.isEmpty()) {
+                // No G1 races available. Cancel since trophy requirement specifically needs G1 races.
+                game.printToLog("[RACE] Trophy requirement active but no G1 races available. Canceling racing process (independent of racing plan/farming fans).", tag = tag)
+                return false
+            } else {
+                game.printToLog("[RACE] Trophy requirement active. Filtering to ${g1Races.size} G1 races: ${g1Races.map { it.name }}.", tag = tag)
+                g1Races
+            }
+        } else {
+            currentRaces
+        }
+
+        // Separate matched races into planned vs unplanned.
+        val (plannedRaces, regularRaces) = racesForSelection.partition { race ->
+            userPlannedRaces.any { it.raceName == race.name }
+        }
+
+        // Log which races are user-selected vs regular.
+        game.printToLog("[RACE] Found ${plannedRaces.size} user-selected races on screen: ${plannedRaces.map { it.name }}.", tag = tag)
+        game.printToLog("[RACE] Found ${regularRaces.size} regular races on screen: ${regularRaces.map { it.name }}.", tag = tag)
+
+        // Filter both lists by user Racing Plan settings.
+        // If trophy requirement is active, bypass min fan filtering but still apply other filters.
+        val filteredPlannedRaces = if (hasTrophyRequirement) {
+            game.printToLog("[RACE] Trophy requirement active. Bypassing min fan threshold for G1 races.", tag = tag)
+            filterRacesByCriteria(plannedRaces, bypassMinFans = true)
+        } else {
+            filterRacesByCriteria(plannedRaces)
+        }
+        val filteredRegularRaces = if (hasTrophyRequirement) {
+            filterRacesByCriteria(regularRaces, bypassMinFans = true)
+        } else {
+            filterRacesByCriteria(regularRaces)
+        }
+        game.printToLog("[RACE] After filtering: ${filteredPlannedRaces.size} planned races and ${filteredRegularRaces.size} regular races remain.", tag = tag)
+
+        // Combine all filtered races for Opportunity Cost analysis.
+        val allFilteredRaces = filteredPlannedRaces + filteredRegularRaces
+        if (allFilteredRaces.isEmpty()) {
+            game.printToLog("[RACE] No races match current settings after filtering. Canceling racing process.", tag = tag)
+            return false
+        }
+
+        // Evaluate whether the bot should race now using Opportunity Cost logic.
+        // If trophy requirement is active, bypass opportunity cost to prioritize clearing the requirement.
+        if (hasTrophyRequirement) {
+            game.printToLog("[RACE] Bypassing opportunity cost analysis to prioritize G1 race due to trophy requirement.", tag = tag)
+        } else if (!evaluateOpportunityCost(allFilteredRaces, lookAheadDays)) {
+            game.printToLog("[RACE] Smart racing suggests waiting for better opportunities. Canceling racing process.", tag = tag)
+            return false
+        }
+
+        // Decide which races to score based on availability.
+        val racesToScore = if (filteredPlannedRaces.isNotEmpty()) {
+            // Prefer planned races, but include regular races for comparison.
+            game.printToLog("[RACE] Prioritizing ${filteredPlannedRaces.size} planned races with ${filteredRegularRaces.size} regular races for comparison.", tag = tag)
+            filteredPlannedRaces + filteredRegularRaces
+        } else {
+            // No planned races available, use regular races only.
+            game.printToLog("[RACE] No planned races available, using ${filteredRegularRaces.size} regular races only.", tag = tag)
+            filteredRegularRaces
+        }
+
+        // Score all eligible races with bonus for planned races.
+        val scoredRaces = racesToScore.map { race ->
+            val baseScore = scoreRace(race)
+            if (plannedRaces.contains(race)) {
+                // Add a bonus for planned races.
+                val bonusScore = baseScore.copy(score = baseScore.score + 50.0)
+                game.printToLog("[RACE] Planned race \"${race.name}\" gets a bonus: ${game.decimalFormat.format(baseScore.score)} -> ${game.decimalFormat.format(bonusScore.score)}.", tag = tag)
+                bonusScore
+            } else {
+                baseScore
+            }
+        }
+
+        // Sort by score and find the best race.
+        val sortedScoredRaces = scoredRaces.sortedByDescending { it.score }
+        val bestRace = sortedScoredRaces.first()
+
+        game.printToLog("[RACE] Best race selected: ${bestRace.raceData.name} (score: ${game.decimalFormat.format(bestRace.score)}).", tag = tag)
+        if (plannedRaces.contains(bestRace.raceData)) {
+            game.printToLog("[RACE] Selected race is from user's planned races list.", tag = tag)
+        } else {
+            game.printToLog("[RACE] Selected race is from regular available races.", tag = tag)
+        }
+
+        // Locates the best race on screen and selects it.
+        game.printToLog("[RACE] Looking for target race \"${bestRace.raceData.name}\" on screen...", tag = tag)
+        val targetRaceLocation = doublePredictionLocations.find { location ->
+            val raceName = game.imageUtils.extractRaceName(location)
+            val raceData = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
+            val matches = raceData?.name == bestRace.raceData.name
+            if (matches) game.printToLog("[RACE] ✓ Found target race at location (${location.x}, ${location.y}).", tag = tag)
+            matches
+        } ?: run {
+            game.printToLog("[RACE] Could not find target race \"${bestRace.raceData.name}\" on screen. Canceling racing process.", tag = tag)
+            return false
+        }
+
+        game.printToLog("[RACE] Selecting smart racing choice: ${bestRace.raceData.name} (score: ${game.decimalFormat.format(bestRace.score)}).", tag = tag)
+        game.tap(targetRaceLocation.x, targetRaceLocation.y, "race_extra_double_prediction", ignoreWaiting = true)
+
+        return true
+    }
+
+    /**
+     * Handles extra races using the standard or traditional racing logic.
+     *
+     * @return True if a race was successfully selected; false if the process was canceled.
+     */
+    private fun processStandardRacing(): Boolean {
+        game.printToLog("[RACE] Using traditional racing logic for extra races...", tag = tag)
+
+        // Detects double-star races on screen.
+        val doublePredictionLocations = game.imageUtils.findAll("race_extra_double_prediction")
+        val maxCount = doublePredictionLocations.size
+        if (maxCount == 0) {
+            game.printToLog("[WARNING] No extra races found on screen. Canceling racing process.", tag = tag)
+            return false
+        }
+
+        // If only one race has double predictions, check if it's G1 when trophy requirement is active.
+        if (maxCount == 1) {
+            if (hasTrophyRequirement) {
+                game.updateDate()
+                val raceName = game.imageUtils.extractRaceName(doublePredictionLocations[0])
+                val raceData = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
+                if (raceData?.grade == "G1") {
+                    game.printToLog("[RACE] Only one race with double predictions and it's G1. Selecting it.", tag = tag)
+                    game.tap(doublePredictionLocations[0].x, doublePredictionLocations[0].y, "race_extra_double_prediction", ignoreWaiting = true)
+                    return true
+                } else {
+                    // Not G1. Trophy requirement specifically needs G1 races, so cancel.
+                    game.printToLog("[RACE] Trophy requirement active but only non-G1 race available. Canceling racing process...", tag = tag)
+                    return false
+                }
+            } else {
+                game.printToLog("[RACE] Only one race with double predictions. Selecting it.", tag = tag)
+                game.tap(doublePredictionLocations[0].x, doublePredictionLocations[0].y, "race_extra_double_prediction", ignoreWaiting = true)
+                return true
+            }
+        }
+
+        // Otherwise, iterates through each extra race to determine fan gain and double prediction status.
+        val (sourceBitmap, templateBitmap) = game.imageUtils.getBitmaps("race_extra_double_prediction")
+        val listOfRaces = ArrayList<RaceDetails>()
+        val extraRaceLocations = ArrayList<Point>()
+        val raceNamesList = ArrayList<String>()
+
+        for (count in 0 until maxCount) {
+            val selectedExtraRace = game.imageUtils.findImage("race_extra_selection", region = game.imageUtils.regionBottomHalf).first ?: break
+            extraRaceLocations.add(selectedExtraRace)
+
+            // Extract race name for G1 filtering if trophy requirement is active.
+            if (hasTrophyRequirement && count < doublePredictionLocations.size) {
+                val raceName = game.imageUtils.extractRaceName(doublePredictionLocations[count])
+                raceNamesList.add(raceName)
+            }
+
+            val raceDetails = game.imageUtils.determineExtraRaceFans(selectedExtraRace, sourceBitmap, templateBitmap!!, forceRacing = enableForceRacing)
+            listOfRaces.add(raceDetails)
+
+            if (count + 1 < maxCount) {
+                val nextX = if (game.imageUtils.isTablet) {
+                    game.imageUtils.relX(selectedExtraRace.x, (-100 * 1.36).toInt())
+                } else {
+                    game.imageUtils.relX(selectedExtraRace.x, -100)
+                }
+
+                val nextY = if (game.imageUtils.isTablet) {
+                    game.imageUtils.relY(selectedExtraRace.y, (150 * 1.50).toInt())
+                } else {
+                    game.imageUtils.relY(selectedExtraRace.y, 150)
+                }
+
+                game.tap(nextX.toDouble(), nextY.toDouble(), "race_extra_selection", ignoreWaiting = true)
+            }
+
+            game.wait(0.5)
+        }
+
+        // If trophy requirement is active, filter to only G1 races.
+        val (filteredRaces, filteredLocations, _) = if (hasTrophyRequirement) {
+            game.updateDate()
+            val g1Indices = raceNamesList.mapIndexedNotNull { index, raceName ->
+                val raceData = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
+                if (raceData?.grade == "G1") index else null
+            }
+
+            if (g1Indices.isEmpty()) {
+                // No G1 races available. Cancel since trophy requirement specifically needs G1 races.
+                // Trophy requirement is independent of racing plan and farming fans settings.
+                game.printToLog("[RACE] Trophy requirement active but no G1 races available. Canceling racing process (independent of racing plan/farming fans).", tag = tag)
+                return false
+            } else {
+                game.printToLog("[RACE] Trophy requirement active. Filtering to ${g1Indices.size} G1 races.", tag = tag)
+                val filtered = g1Indices.map { listOfRaces[it] }
+                val filteredLocations = g1Indices.map { extraRaceLocations[it] }
+                val filteredNames = g1Indices.map { raceNamesList[it] }
+                Triple(filtered, filteredLocations, filteredNames)
+            }
+        } else {
+            Triple(listOfRaces, extraRaceLocations, raceNamesList)
+        }
+
+        // Determine max fans and select the appropriate race.
+        val maxFans = filteredRaces.maxOfOrNull { it.fans } ?: -1
+        if (maxFans == -1) return false
+        game.printToLog("[RACE] Number of fans detected for each extra race are: ${filteredRaces.joinToString(", ") { it.fans.toString() }}", tag = tag)
+
+        // Evaluates which race to select based on maximum fans and double prediction priority (if force racing is enabled).
+        val index = if (!enableForceRacing) {
+            filteredRaces.indexOfFirst { it.fans == maxFans }
+        } else {
+            filteredRaces.indexOfFirst { it.hasDoublePredictions }.takeIf { it != -1 } ?: filteredRaces.indexOfFirst { it.fans == maxFans }
+        }
+
+        // Selects the determined race on screen.
+        game.printToLog("[RACE] Selecting extra race at option #${index + 1}.", tag = tag)
+        val target = filteredLocations[index]
+        game.tap(target.x - game.imageUtils.relWidth((100 * 1.36).toInt()), target.y - game.imageUtils.relHeight(70), "race_extra_selection", ignoreWaiting = true)
+
         return true
     }
 
@@ -856,281 +1214,6 @@ class Racing (private val game: Game) {
     }
 
     /**
-     * Handles extra races using Smart Racing logic.
-     *
-     * @return True if a race was successfully selected and ready to run; false if the process was canceled.
-     */
-    private fun processSmartRacing(): Boolean {
-        game.printToLog("[RACE] Using Smart Racing Plan logic...", tag = tag)
-
-        // Updates the current date and aptitudes for accurate scoring.
-        game.updateDate()
-        game.updateAptitudes()
-
-        // Load user planned races and race plan data.
-        val userPlannedRaces = loadUserPlannedRaces()
-        val racePlanData = loadRacePlanData()
-        game.printToLog("[RACE] Loaded ${userPlannedRaces.size} user-selected races and ${racePlanData.size} race entries.", tag = tag)
-
-        // Detects all double-star race predictions on screen.
-        val doublePredictionLocations = game.imageUtils.findAll("race_extra_double_prediction")
-        game.printToLog("[RACE] Found ${doublePredictionLocations.size} double-star prediction locations.", tag = tag)
-        if (doublePredictionLocations.isEmpty()) {
-            game.printToLog("[RACE] No double-star predictions found. Canceling racing process.", tag = tag)
-            return false
-        }
-
-        // Extracts race names from the screen and matches them with the in-game database.
-        game.printToLog("[RACE] Extracting race names and matching with database...", tag = tag)
-        val currentRaces = doublePredictionLocations.mapNotNull { location ->
-            val raceName = game.imageUtils.extractRaceName(location)
-            val raceData = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
-            if (raceData != null) {
-                game.printToLog("[RACE] ✓ Matched in database: ${raceData.name} (Grade: ${raceData.grade}, Fans: ${raceData.fans}, Terrain: ${raceData.terrain}).", tag = tag)
-                raceData
-            } else {
-                game.printToLog("[RACE] ✗ No match found in database for \"$raceName\".", tag = tag)
-                null
-            }
-        }
-
-        if (currentRaces.isEmpty()) {
-            game.printToLog("[RACE] No races matched in database. Canceling racing process.", tag = tag)
-            return false
-        }
-        game.printToLog("[RACE] Successfully matched ${currentRaces.size} races in database.", tag = tag)
-
-        // If trophy requirement is active, filter to only G1 races.
-        // Trophy requirement is independent of racing plan and farming fans settings.
-        val racesForSelection = if (hasTrophyRequirement) {
-            val g1Races = currentRaces.filter { it.grade == "G1" }
-            if (g1Races.isEmpty()) {
-                // No G1 races available. Cancel since trophy requirement specifically needs G1 races.
-                game.printToLog("[RACE] Trophy requirement active but no G1 races available. Canceling racing process (independent of racing plan/farming fans).", tag = tag)
-                return false
-            } else {
-                game.printToLog("[RACE] Trophy requirement active. Filtering to ${g1Races.size} G1 races: ${g1Races.map { it.name }}.", tag = tag)
-                g1Races
-            }
-        } else {
-            currentRaces
-        }
-
-        // Separate matched races into planned vs unplanned.
-        val (plannedRaces, regularRaces) = racesForSelection.partition { race ->
-            userPlannedRaces.any { it.raceName == race.name }
-        }
-
-        // Log which races are user-selected vs regular.
-        game.printToLog("[RACE] Found ${plannedRaces.size} user-selected races on screen: ${plannedRaces.map { it.name }}.", tag = tag)
-        game.printToLog("[RACE] Found ${regularRaces.size} regular races on screen: ${regularRaces.map { it.name }}.", tag = tag)
-
-        // Filter both lists by user Racing Plan settings.
-        // If trophy requirement is active, bypass min fan filtering but still apply other filters.
-        val filteredPlannedRaces = if (hasTrophyRequirement) {
-            game.printToLog("[RACE] Trophy requirement active. Bypassing min fan threshold for G1 races.", tag = tag)
-            filterRacesByCriteria(plannedRaces, bypassMinFans = true)
-        } else {
-            filterRacesByCriteria(plannedRaces)
-        }
-        val filteredRegularRaces = if (hasTrophyRequirement) {
-            filterRacesByCriteria(regularRaces, bypassMinFans = true)
-        } else {
-            filterRacesByCriteria(regularRaces)
-        }
-        game.printToLog("[RACE] After filtering: ${filteredPlannedRaces.size} planned races and ${filteredRegularRaces.size} regular races remain.", tag = tag)
-
-        // Combine all filtered races for Opportunity Cost analysis.
-        val allFilteredRaces = filteredPlannedRaces + filteredRegularRaces
-        if (allFilteredRaces.isEmpty()) {
-            game.printToLog("[RACE] No races match current settings after filtering. Canceling racing process.", tag = tag)
-            return false
-        }
-
-        // Evaluate whether the bot should race now using Opportunity Cost logic.
-        // If trophy requirement is active, bypass opportunity cost to prioritize clearing the requirement.
-        if (hasTrophyRequirement) {
-            game.printToLog("[RACE] Bypassing opportunity cost analysis to prioritize G1 race due to trophy requirement.", tag = tag)
-        } else if (!evaluateOpportunityCost(allFilteredRaces, lookAheadDays)) {
-            game.printToLog("[RACE] Smart racing suggests waiting for better opportunities. Canceling racing process.", tag = tag)
-            return false
-        }
-
-        // Decide which races to score based on availability.
-        val racesToScore = if (filteredPlannedRaces.isNotEmpty()) {
-            // Prefer planned races, but include regular races for comparison.
-            game.printToLog("[RACE] Prioritizing ${filteredPlannedRaces.size} planned races with ${filteredRegularRaces.size} regular races for comparison.", tag = tag)
-            filteredPlannedRaces + filteredRegularRaces
-        } else {
-            // No planned races available, use regular races only.
-            game.printToLog("[RACE] No planned races available, using ${filteredRegularRaces.size} regular races only.", tag = tag)
-            filteredRegularRaces
-        }
-
-        // Score all eligible races with bonus for planned races.
-        val scoredRaces = racesToScore.map { race ->
-            val baseScore = scoreRace(race)
-            if (plannedRaces.contains(race)) {
-                // Add a bonus for planned races.
-                val bonusScore = baseScore.copy(score = baseScore.score + 50.0)
-                game.printToLog("[RACE] Planned race \"${race.name}\" gets a bonus: ${game.decimalFormat.format(baseScore.score)} -> ${game.decimalFormat.format(bonusScore.score)}.", tag = tag)
-                bonusScore
-            } else {
-                baseScore
-            }
-        }
-
-        // Sort by score and find the best race.
-        val sortedScoredRaces = scoredRaces.sortedByDescending { it.score }
-        val bestRace = sortedScoredRaces.first()
-
-        game.printToLog("[RACE] Best race selected: ${bestRace.raceData.name} (score: ${game.decimalFormat.format(bestRace.score)}).", tag = tag)
-        if (plannedRaces.contains(bestRace.raceData)) {
-            game.printToLog("[RACE] Selected race is from user's planned races list.", tag = tag)
-        } else {
-            game.printToLog("[RACE] Selected race is from regular available races.", tag = tag)
-        }
-
-        // Locates the best race on screen and selects it.
-        game.printToLog("[RACE] Looking for target race \"${bestRace.raceData.name}\" on screen...", tag = tag)
-        val targetRaceLocation = doublePredictionLocations.find { location ->
-            val raceName = game.imageUtils.extractRaceName(location)
-            val raceData = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
-            val matches = raceData?.name == bestRace.raceData.name
-            if (matches) game.printToLog("[RACE] ✓ Found target race at location (${location.x}, ${location.y}).", tag = tag)
-            matches
-        } ?: run {
-            game.printToLog("[RACE] Could not find target race \"${bestRace.raceData.name}\" on screen. Canceling racing process.", tag = tag)
-            return false
-        }
-
-        game.printToLog("[RACE] Selecting smart racing choice: ${bestRace.raceData.name} (score: ${game.decimalFormat.format(bestRace.score)}).", tag = tag)
-        game.tap(targetRaceLocation.x, targetRaceLocation.y, "race_extra_double_prediction", ignoreWaiting = true)
-
-        return true
-    }
-
-    /**
-     * Handles extra races using the standard or traditional racing logic.
-     *
-     * @return True if a race was successfully selected; false if the process was canceled.
-     */
-    private fun processStandardRacing(): Boolean {
-        game.printToLog("[RACE] Using traditional racing logic for extra races...", tag = tag)
-
-        // Detects double-star races on screen.
-        val doublePredictionLocations = game.imageUtils.findAll("race_extra_double_prediction")
-        val maxCount = doublePredictionLocations.size
-        if (maxCount == 0) {
-            game.printToLog("[WARNING] No extra races found on screen. Canceling racing process.", tag = tag)
-            return false
-        }
-
-        // If only one race has double predictions, check if it's G1 when trophy requirement is active.
-        if (maxCount == 1) {
-            if (hasTrophyRequirement) {
-                game.updateDate()
-                val raceName = game.imageUtils.extractRaceName(doublePredictionLocations[0])
-                val raceData = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
-                if (raceData?.grade == "G1") {
-                    game.printToLog("[RACE] Only one race with double predictions and it's G1. Selecting it.", tag = tag)
-                    game.tap(doublePredictionLocations[0].x, doublePredictionLocations[0].y, "race_extra_double_prediction", ignoreWaiting = true)
-                    return true
-                } else {
-                    // Not G1. Trophy requirement specifically needs G1 races, so cancel.
-                    game.printToLog("[RACE] Trophy requirement active but only non-G1 race available. Canceling racing process...", tag = tag)
-                    return false
-                }
-            } else {
-                game.printToLog("[RACE] Only one race with double predictions. Selecting it.", tag = tag)
-                game.tap(doublePredictionLocations[0].x, doublePredictionLocations[0].y, "race_extra_double_prediction", ignoreWaiting = true)
-                return true
-            }
-        }
-
-        // Otherwise, iterates through each extra race to determine fan gain and double prediction status.
-        val (sourceBitmap, templateBitmap) = game.imageUtils.getBitmaps("race_extra_double_prediction")
-        val listOfRaces = ArrayList<RaceDetails>()
-        val extraRaceLocations = ArrayList<Point>()
-        val raceNamesList = ArrayList<String>()
-
-        for (count in 0 until maxCount) {
-            val selectedExtraRace = game.imageUtils.findImage("race_extra_selection", region = game.imageUtils.regionBottomHalf).first ?: break
-            extraRaceLocations.add(selectedExtraRace)
-
-            // Extract race name for G1 filtering if trophy requirement is active.
-            if (hasTrophyRequirement && count < doublePredictionLocations.size) {
-                val raceName = game.imageUtils.extractRaceName(doublePredictionLocations[count])
-                raceNamesList.add(raceName)
-            }
-
-            val raceDetails = game.imageUtils.determineExtraRaceFans(selectedExtraRace, sourceBitmap, templateBitmap!!, forceRacing = enableForceRacing)
-            listOfRaces.add(raceDetails)
-
-            if (count + 1 < maxCount) {
-                val nextX = if (game.imageUtils.isTablet) {
-                    game.imageUtils.relX(selectedExtraRace.x, (-100 * 1.36).toInt())
-                } else {
-                    game.imageUtils.relX(selectedExtraRace.x, -100)
-                }
-
-                val nextY = if (game.imageUtils.isTablet) {
-                    game.imageUtils.relY(selectedExtraRace.y, (150 * 1.50).toInt())
-                } else {
-                    game.imageUtils.relY(selectedExtraRace.y, 150)
-                }
-
-                game.tap(nextX.toDouble(), nextY.toDouble(), "race_extra_selection", ignoreWaiting = true)
-            }
-
-            game.wait(0.5)
-        }
-
-        // If trophy requirement is active, filter to only G1 races.
-        val (filteredRaces, filteredLocations, _) = if (hasTrophyRequirement) {
-            game.updateDate()
-            val g1Indices = raceNamesList.mapIndexedNotNull { index, raceName ->
-                val raceData = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
-                if (raceData?.grade == "G1") index else null
-            }
-            
-            if (g1Indices.isEmpty()) {
-                // No G1 races available. Cancel since trophy requirement specifically needs G1 races.
-                // Trophy requirement is independent of racing plan and farming fans settings.
-                game.printToLog("[RACE] Trophy requirement active but no G1 races available. Canceling racing process (independent of racing plan/farming fans).", tag = tag)
-                return false
-            } else {
-                game.printToLog("[RACE] Trophy requirement active. Filtering to ${g1Indices.size} G1 races.", tag = tag)
-                val filtered = g1Indices.map { listOfRaces[it] }
-                val filteredLocations = g1Indices.map { extraRaceLocations[it] }
-                val filteredNames = g1Indices.map { raceNamesList[it] }
-                Triple(filtered, filteredLocations, filteredNames)
-            }
-        } else {
-            Triple(listOfRaces, extraRaceLocations, raceNamesList)
-        }
-
-        // Determine max fans and select the appropriate race.
-        val maxFans = filteredRaces.maxOfOrNull { it.fans } ?: -1
-        if (maxFans == -1) return false
-        game.printToLog("[RACE] Number of fans detected for each extra race are: ${filteredRaces.joinToString(", ") { it.fans.toString() }}", tag = tag)
-
-        // Evaluates which race to select based on maximum fans and double prediction priority (if force racing is enabled).
-        val index = if (!enableForceRacing) {
-            filteredRaces.indexOfFirst { it.fans == maxFans }
-        } else {
-            filteredRaces.indexOfFirst { it.hasDoublePredictions }.takeIf { it != -1 } ?: filteredRaces.indexOfFirst { it.fans == maxFans }
-        }
-
-        // Selects the determined race on screen.
-        game.printToLog("[RACE] Selecting extra race at option #${index + 1}.", tag = tag)
-        val target = filteredLocations[index]
-        game.tap(target.x - game.imageUtils.relWidth((100 * 1.36).toInt()), target.y - game.imageUtils.relHeight(70), "race_extra_selection", ignoreWaiting = true)
-
-        return true
-    }
-
-    /**
      * Race database lookup using exact and/or fuzzy matching.
      * 
      * @param turnNumber The current turn number to match against.
@@ -1477,94 +1560,6 @@ class Racing (private val game: Game) {
         }
         
         return filteredRaces
-    }
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////
-    ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-    /**
-     * Retrieves the user's planned races from saved settings.
-     *
-     * @return A list of [PlannedRace] entries defined by the user, or an empty list if none exist.
-     */
-    private fun loadUserPlannedRaces(): List<PlannedRace> {
-        if (!enableRacingPlan) {
-            game.printToLog("[RACE] Racing plan is disabled, returning empty planned races list.", tag = tag)
-            return emptyList()
-        }
-        
-        return try {
-            if (game.debugMode) game.printToLog("[RACE] Raw user-selected racing plan JSON: \"$racingPlanJson\".", tag = tag)
-            
-            if (racingPlanJson.isEmpty() || racingPlanJson == "[]") {
-                game.printToLog("[RACE] User-selected racing plan is empty, returning empty list.", tag = tag)
-                return emptyList()
-            }
-            
-            val jsonArray = JSONArray(racingPlanJson)
-            val plannedRaces = mutableListOf<PlannedRace>()
-            
-            for (i in 0 until jsonArray.length()) {
-                val raceObj = jsonArray.getJSONObject(i)
-                val plannedRace = PlannedRace(
-                    raceName = raceObj.getString("raceName"),
-                    date = raceObj.getString("date"),
-                    priority = raceObj.optInt("priority", 0)
-                )
-                plannedRaces.add(plannedRace)
-            }
-            
-            game.printToLog("[RACE] Successfully loaded ${plannedRaces.size} user-selected planned races from settings.", tag = tag)
-            plannedRaces
-        } catch (e: Exception) {
-            game.printToLog("[ERROR] Failed to parse user-selected racing plan JSON: ${e.message}. Returning empty list.", tag = tag, isError = true)
-            emptyList()
-        }
-    }
-
-    /**
-     * Loads the complete race database from saved settings, including all race metadata such as
-     * names, grades, distances, and turn numbers.
-     *
-     * @return A map of race names to their [RaceData] or an empty map if racing plan data is missing or invalid.
-     */
-    private fun loadRacePlanData(): Map<String, RaceData> {
-        return try {
-            val racingPlanDataJson = SettingsHelper.getStringSetting("racing", "racingPlanData")
-            if (game.debugMode) game.printToLog("[RACE] Raw racing plan data JSON length: ${racingPlanDataJson.length}.", tag = tag)
-            
-            if (racingPlanDataJson.isEmpty()) {
-                game.printToLog("[RACE] Racing plan data is empty, returning empty map.", tag = tag)
-                return emptyMap()
-            }
-            
-            val jsonObject = JSONObject(racingPlanDataJson)
-            val raceDataMap = mutableMapOf<String, RaceData>()
-            
-            val keys = jsonObject.keys()
-            while (keys.hasNext()) {
-                val key = keys.next()
-                val raceObj = jsonObject.getJSONObject(key)
-                
-                val raceData = RaceData(
-                    name = raceObj.getString("name"),
-                    grade = raceObj.getString("grade"),
-                    terrain = raceObj.getString("terrain"),
-                    distanceType = raceObj.getString("distanceType"),
-                    fans = raceObj.getInt("fans"),
-                    turnNumber = raceObj.getInt("turnNumber"),
-                    nameFormatted = raceObj.getString("nameFormatted")
-                )
-                
-                raceDataMap[raceData.name] = raceData
-            }
-            
-            game.printToLog("[RACE] Successfully loaded ${raceDataMap.size} race entries from racing plan data.", tag = tag)
-            raceDataMap
-        } catch (e: Exception) {
-            game.printToLog("[ERROR] Failed to parse racing plan data JSON: ${e.message}. Returning empty map.", tag = tag, isError = true)
-            emptyMap()
-        }
     }
 
     /**
