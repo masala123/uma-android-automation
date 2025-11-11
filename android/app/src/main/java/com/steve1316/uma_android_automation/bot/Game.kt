@@ -715,7 +715,7 @@ class Game(val myContext: Context) {
 			wait(5.0)
 		} else if (findAndTapImage("race_accept_trophy", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
 			printToLog("[MISC] There is a possible popup to accept a trophy.")
-			racing.finishRace(true, isExtra = true)
+			racing.finalizeRaceResults(true, isExtra = true)
 		} else if (findAndTapImage("race_end", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
 			printToLog("[MISC] Ended a leftover race.")
 		} else if (imageUtils.findImageWithBitmap("connection_error", sourceBitmap, region = imageUtils.regionMiddle, suppressError = true) != null) {

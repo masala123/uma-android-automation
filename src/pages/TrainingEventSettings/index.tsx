@@ -2,7 +2,7 @@ import { useContext } from "react"
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native"
 import { useNavigation } from "@react-navigation/native"
 import { useTheme } from "../../context/ThemeContext"
-import { BotStateContext } from "../../context/BotStateContext"
+import { BotStateContext, defaultSettings } from "../../context/BotStateContext"
 import CustomAccordion from "../../components/CustomAccordion"
 import CustomCheckbox from "../../components/CustomCheckbox"
 import CustomSelect from "../../components/CustomSelect"
@@ -20,7 +20,9 @@ const TrainingEventSettings = () => {
     const bsc = useContext(BotStateContext)
 
     const { settings, setSettings } = bsc
-    const { enablePrioritizeEnergyOptions, specialEventOverrides } = settings.trainingEvent
+    // Merge current training event settings with defaults to handle missing properties.
+    const trainingEventSettings = { ...defaultSettings.trainingEvent, ...settings.trainingEvent }
+    const { enablePrioritizeEnergyOptions, specialEventOverrides } = trainingEventSettings
 
     // Extract character and support names from the data.
     const characterNames = Object.keys(charactersData)
