@@ -22,12 +22,7 @@ interface BaseComponentInterface {
 interface ComponentInterface: BaseComponentInterface {
     override fun find(imageUtils: CustomImageUtils, tries: Int): Pair<Point?, Bitmap> {
         val template = templates.first()
-        val (point, bitmap) = imageUtils.findImage(template.name, region=template.region, tries=tries)
-        if (point == null) {
-            return Pair(null, bitmap)
-        }
-
-        return Pair(point, bitmap)
+        return imageUtils.findImage(template.name, region=template.region, tries=tries)
     }
 
     override fun check(imageUtils: CustomImageUtils, tries: Int): Boolean {

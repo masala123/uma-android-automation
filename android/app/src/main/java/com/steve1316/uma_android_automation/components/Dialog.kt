@@ -150,23 +150,14 @@ object DialogUtils {
             return null
         }
 
-        val title: String? = getTitle(imageUtils=imageUtils, titleLocation=loc)
-        if (title == null) {
-            return null
-        }
+        val title: String = getTitle(imageUtils=imageUtils, titleLocation=loc) ?: return null
 
         //val match = TextUtils.matchStringInList(title, DialogObjects.map.keys.toList())
-        val match = if (DialogObjects.map.keys.toList().contains(title)) title else null
-        if (match == null) {
-            return null
+        return if (DialogObjects.map.keys.toList().contains(title)) {
+            DialogObjects.map.get(title)
+        } else {
+            null
         }
-
-        val dialog: DialogInterface? = DialogObjects.map.get(match)
-        if (dialog == null) {
-            return null
-        }
-
-        return dialog
     }
 }
 
@@ -387,11 +378,11 @@ object DialogConnectionError : DialogInterface {
     // The dialog can have either a single button ("Title Screen") or
     // two buttons ("Title Screen" and "Retry").
     override fun ok(imageUtils: CustomImageUtils, tries: Int): Boolean {
-        if (ButtonRetry?.click(imageUtils=imageUtils, tries=tries) ?: false) {
+        if (ButtonRetry?.click(imageUtils=imageUtils, tries=tries)) {
             return true
-        } else {
-            return ButtonTitleScreen?.click(imageUtils=imageUtils, tries=tries) ?: false
         }
+        
+        return ButtonTitleScreen?.click(imageUtils=imageUtils, tries=tries)
     }
 }
 
@@ -652,11 +643,11 @@ object DialogRaceDetails : DialogInterface {
     // The normal race details dialog has a "Race!" button whereas
     // the career version just has a "Race" button.
     override fun ok(imageUtils: CustomImageUtils, tries: Int): Boolean {
-        if (ButtonRaceExclamation?.click(imageUtils=imageUtils, tries=tries) ?: false) {
+        if (ButtonRaceExclamation?.click(imageUtils=imageUtils, tries=tries)) {
             return true
-        } else {
-            return ButtonRace?.click(imageUtils=imageUtils, tries=tries) ?: false
         }
+        
+        return ButtonRace?.click(imageUtils=imageUtils, tries=tries)
     }
 }
 
