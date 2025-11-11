@@ -5,14 +5,14 @@ import com.steve1316.uma_android_automation.components.Template
 
 object Checkbox : ComponentInterface {
     override val TAG: String = "Checkbox"
-    override val templates: List<Template> = listOf<Template>(
+    override val templates: List<Template> = listOf(
         Template("components/checkbox/checkbox")
     )
 }
 
 object CheckboxDoNotShowAgain : ComponentInterface {
     override val TAG: String = "CheckboxDoNotShowAgain"
-    override val templates: List<Template> = listOf<Template>(
+    override val templates: List<Template> = listOf(
         Template("components/checkbox/checkbox_do_not_show_again")
     )
 }
