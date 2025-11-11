@@ -46,6 +46,10 @@ class Racing (private val game: Game) {
     private var detectedOriginalStrategy: String? = null
     private var hasAppliedStrategyOverride = false
 
+    // Cached race plan data loaded once per class instance.
+    private val raceData: Map<String, RaceData> = loadRaceData()
+    private val userPlannedRaces: List<PlannedRace> = loadUserPlannedRaces()
+
     companion object {
         private const val TABLE_RACES = "races"
         private const val RACES_COLUMN_NAME = "name"
@@ -123,12 +127,11 @@ class Racing (private val game: Game) {
     }
 
     /**
-     * Loads the complete race database from saved settings, including all race metadata such as
-     * names, grades, distances, and turn numbers.
+     * Loads the complete race database from saved settings, including all race metadata such as names, grades, distances, and turn numbers.
      *
      * @return A map of race names to their [RaceData] or an empty map if racing plan data is missing or invalid.
      */
-    private fun loadRacePlanData(): Map<String, RaceData> {
+    private fun loadRaceData(): Map<String, RaceData> {
         return try {
             val racingPlanDataJson = SettingsHelper.getStringSetting("racing", "racingPlanData")
             if (game.debugMode) game.printToLog("[RACE] Raw racing plan data JSON length: ${racingPlanDataJson.length}.", tag = tag)
@@ -440,7 +443,7 @@ class Racing (private val game: Game) {
         game.updateAptitudes()
 
         // Use cached user planned races and race plan data.
-        game.printToLog("[RACE] Loaded ${userPlannedRaces.size} user-selected races and ${racePlanData.size} race entries.", tag = tag)
+        game.printToLog("[RACE] Loaded ${userPlannedRaces.size} user-selected races and ${raceData.size} race entries.", tag = tag)
 
         // Detects all double-star race predictions on screen.
         val doublePredictionLocations = game.imageUtils.findAll("race_extra_double_prediction")
