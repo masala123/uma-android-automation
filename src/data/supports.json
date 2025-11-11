@@ -305,8 +305,8 @@
     },
     "King Halo": {
         "(❯) A Captivating Invitation": [
-            "Power +10\nStop Right There! hint +1\nKing Halo bond +5",
-            "Guts +10\nUma Stan hint +1\nKing Halo bond +5"
+            "Power +10\nKing Halo bond +5",
+            "Guts +10\nKing Halo bond +5"
         ],
         "(❯❯) Dancer's Pride": [
             "Energy -5\nStamina +15\nPower +15\nSkill points +20\nKing Halo bond +5",
@@ -351,13 +351,13 @@
             "Hanshin Racecourse ○ hint +1\nGold Ship bond +5"
         ],
         "(❯) Fervor! Air Basketball!": [
-            "Energy -10\nStamina +25\nSkill points +10\nEarly Gambit hint +1\nGold Ship bond +5"
+            "Energy -10\nStamina +25\nSkill points +10\nEarly Start hint +1\nGold Ship bond +5"
         ],
         "(❯❯) Respect the Salmon!": [
             "Energy -10\nStamina +10\nGuts +25\nSkill points +10\nEnd Closer Savvy ○ hint +1\nGold Ship bond +5"
         ],
         "(❯❯❯) Can't Spell \"Rival\" without \"Friend\"!": [
-            "Stamina +20\nSkill points +15\nCorner Connoisseur hint +2\nQuestionable Strategy hint +1\nGold Ship bond +5"
+            "Stamina +20\nSkill points +15\nCorner Connoisseur hint +2\nRisky Business hint +1\nGold Ship bond +5"
         ]
     },
     "Bamboo Memory": {
@@ -491,8 +491,8 @@
     },
     "Yukino Bijin": {
         "(❯) Cozy Memories of Wanko Soba": [
-            "Mood +1\nInner Post Proficiency ○ hint +1\nYukino Bijin bond +5",
-            "Maximum Energy +4\nHydrate hint +1\nYukino Bijin bond +5"
+            "Mood +1\nYukino Bijin bond +5",
+            "Maximum Energy +4\nYukino Bijin bond +5"
         ],
         "(❯❯) The Class Rep's Intense Crash Course": [
             "Mood +2\nPower +10\nYukino Bijin bond +5\nHeal a negative status effect",
@@ -539,7 +539,7 @@
     },
     "Satono Diamond": {
         "(❯) Hope Bearer": [
-            "Energy +10\nStamina +2\nGuts +2\nWit +3\nAll That There Is hint +2"
+            "Energy +10\nStamina +2\nGuts +2\nWit +3\nAll I've Got hint +2"
         ],
         "(❯❯) Diamond Fixation": [
             "Wit +15\nSatono Diamond bond +5",
@@ -889,11 +889,11 @@
     },
     "Smart Falcon": {
         "(❯) Always on Stage ☆": [
-            "Wit +10\nGroundwork hint +1\nSmart Falcon bond +5",
+            "Wit +10\nSmart Falcon bond +5",
             "Energy +25\nFocus hint +1\nSmart Falcon bond +5\nEvent chain ended"
         ],
         "(❯❯) Shining Always and Everywhere ☆": [
-            "Speed +10\nPower +10\nTop Pick hint +1"
+            "Speed +5\nPower +5"
         ],
         "(❯❯❯) My Umadol Way ☆": [
             "Randomly either\n----------\nMaximum Energy +4\nStamina +5\nPower +5\nWit +5\nPrudent Positioning hint +1\n----------\n\n----------\nMaximum Energy +4\nStamina +15\nPower +15\nWit +15\nCenter Stage hint +3"
