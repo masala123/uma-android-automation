@@ -739,8 +739,8 @@ class Racing (private val game: Game) {
         // If the setting to force racing extra races is enabled, always return true.
         if (enableForceRacing) return true
 
-        // For years 1-2, check if planned races are eligible before proceeding.
-        if (game.currentDate.year == 2 && enableRacingPlan) {
+        // For Classic and Senior Year, check if planned races are coming up in the look-ahead window and are eligible for racing.
+        if (game.currentDate.year != 1 && enableRacingPlan) {
             // Handle the user-selected planned races here.
             val userPlannedRaces = loadUserPlannedRaces()
             if (userPlannedRaces.isNotEmpty()) {
