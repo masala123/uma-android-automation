@@ -73,7 +73,7 @@ open class Campaign(val game: Game) {
 							game.racing.skipRacing = false
 						} else if (game.recoverMood() && !game.checkFinals()) {
 							game.racing.skipRacing = false
-						} else if (!game.racing.isExtraRaceEligible()) {
+						} else if (game.currentDate.turnNumber >= 16 && !game.racing.checkEligibilityToStartExtraRacingProcess()) {
 							game.printToLog("[INFO] Training due to it not being an extra race day.", tag = tag)
 							game.training.handleTraining()
 							game.racing.skipRacing = false
