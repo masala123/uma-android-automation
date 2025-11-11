@@ -381,13 +381,9 @@ class Racing (private val game: Game) {
             false
         }
 
-        val success = if (useSmartRacing) {
+        val success = if (useSmartRacing && game.currentDate.year != 1) {
             // Use the smart racing logic.
-            if (game.currentDate.year == 3) {
-                game.printToLog("[RACE] Using smart racing for Senior Year.", tag = tag)
-            } else {
-                game.printToLog("[RACE] Using smart racing with user-selected races for Year ${game.currentDate.year}.", tag = tag)
-            }
+            game.printToLog("[RACE] Using smart racing for Year ${game.currentDate.year}.", tag = tag)
             processSmartRacing()
         } else {
             // Use the standard racing logic.
@@ -395,13 +391,11 @@ class Racing (private val game: Game) {
             if (enableRacingPlan && !hasFanRequirement && !hasTrophyRequirement) {
                 game.printToLog("[RACE] Smart racing conditions not met due to current settings, using traditional racing logic...", tag = tag)
                 game.printToLog("[RACE] Reason: One or more conditions failed:", tag = tag)
-                if (game.currentDate.year == 3) {
+                if (game.currentDate.year != 1) {
                     if (!enableFarmingFans) game.printToLog("[RACE]   - enableFarmingFans is false", tag = tag)
                     if (enableForceRacing) game.printToLog("[RACE]   - enableForceRacing is true", tag = tag)
-                } else if (game.currentDate.year == 1) {
-                    game.printToLog("[RACE]   - It is currently the Junior Year.", tag = tag)
                 } else {
-                    game.printToLog("[RACE]   - No eligible user-selected races found for Year ${game.currentDate.year}", tag = tag)
+                    game.printToLog("[RACE]   - It is currently the Junior Year.", tag = tag)
                 }
             }
 
