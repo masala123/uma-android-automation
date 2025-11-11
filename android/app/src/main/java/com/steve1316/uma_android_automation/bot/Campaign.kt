@@ -48,7 +48,7 @@ open class Campaign(val game: Game) {
 					game.updateStatValueMapping()
 
                     // Check if there are fan or trophy requirements that need to be met with racing.
-					game.racing.checkForRacingRequirements()
+					game.racing.checkRacingRequirements()
 
 					// If the required skill points has been reached, stop the bot.
 					if (game.enableSkillPointCheck && game.imageUtils.determineSkillPoints() >= game.skillPointsRequired) {
@@ -78,7 +78,7 @@ open class Campaign(val game: Game) {
 							game.training.handleTraining()
 							game.racing.skipRacing = false
 						} else {
-							game.printToLog("[INFO] Bot has no injuries, mood is sufficient and extra races can be run today. Setting needToRace to true.", tag = tag)
+							game.printToLog("[INFO] Bot has no injuries, mood is sufficient and extra races can be run today. Setting the needToRace flag to true.", tag = tag)
 							needToRace = true
 						}
 					}
@@ -86,7 +86,6 @@ open class Campaign(val game: Game) {
 
                 if (game.racing.encounteredRacingPopup || needToRace) {
                     game.printToLog("[INFO] All checks are cleared for racing.", tag = tag)
-                    // The !game.racing.skipRacing was removed due to possibility of getting stuck in a loop.
                     if (!handleRaceEvents()) {
                         if (game.racing.detectedMandatoryRaceCheck) {
                             game.printToLog("\n[END] Stopping bot due to detection of Mandatory Race.", tag = tag)
