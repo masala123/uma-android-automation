@@ -780,9 +780,6 @@ class Game(val myContext: Context) {
 
 		val startTime: Long = System.currentTimeMillis()
 
-        // Set this flag since we always want to check aptitudes when the bot starts.
-        bNeedToCheckAptitudes = true
-
 		// Start debug tests here if enabled. Otherwise, proceed with regular bot operations.
 		if (SettingsHelper.getBooleanSetting("debug", "debugMode_startTemplateMatchingTest")) {
 			startTemplateMatchingTest()
