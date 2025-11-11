@@ -61,7 +61,6 @@ class Game(val myContext: Context) {
 		style = Style("B", "B", "B", "B")
 	)
 	private var inheritancesDone = 0
-    // Flag used to force check aptitudes. Always true when bot starts.
     var bNeedToCheckAptitudes: Boolean = true
 
 	data class Date(
@@ -530,8 +529,6 @@ class Game(val myContext: Context) {
 			
 			// Update preferred distance based on new aptitudes.
 			training.updatePreferredDistance()
-
-            // Reset this flag since we just updated the aptitudes.
             bNeedToCheckAptitudes = false
 		}
 	}
