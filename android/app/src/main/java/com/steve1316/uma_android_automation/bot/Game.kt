@@ -61,7 +61,7 @@ class Game(val myContext: Context) {
 		style = Style("B", "B", "B", "B")
 	)
 	private var inheritancesDone = 0
-    var bNeedToCheckAptitudes: Boolean = true
+    private var bNeedToCheckAptitudes: Boolean = true
 
 	data class Date(
 		val year: Int,
