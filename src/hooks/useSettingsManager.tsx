@@ -150,16 +150,7 @@ export const useSettingsManager = () => {
 
     // Ensure all required settings fields exist by filling missing ones with defaults.
     const fixSettings = (decoded: Settings): Settings => {
-        let newSettings: Settings = decoded
-        Object.keys(defaultSettings).forEach((key) => {
-            if (decoded[key as keyof Settings] === undefined) {
-                newSettings = {
-                    ...newSettings,
-                    [key as keyof Settings]: defaultSettings[key as keyof Settings],
-                }
-            }
-        })
-        return newSettings
+        return deepMerge(defaultSettings, decoded as Partial<Settings>)
     }
 
     // Import settings from a JSON file and save to SQLite.
