@@ -353,9 +353,7 @@ class Game(val myContext: Context) {
 			// Perform updates here if necessary.
             val finalsLocation = imageUtils.findImageWithBitmap("race_select_extra_locked_uma_finals", sourceBitmap, suppressError = true, region = imageUtils.regionBottomHalf)
             updateDate(isFinals = (finalsLocation != null))
-            if (bNeedToCheckAptitudes) {
-                updateAptitudes()
-            }
+            if (bNeedToCheckAptitudes) updateAptitudes()
 			true
 		} else if (!enablePopupCheck && imageUtils.findImageWithBitmap("cancel", sourceBitmap, region = imageUtils.regionBottomHalf) != null &&
 			imageUtils.findImageWithBitmap("race_confirm", sourceBitmap, region = imageUtils.regionBottomHalf) != null) {
