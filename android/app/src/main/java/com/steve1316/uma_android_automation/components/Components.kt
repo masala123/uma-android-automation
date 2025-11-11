@@ -22,15 +22,15 @@ interface BaseComponentInterface {
 interface ComponentInterface: BaseComponentInterface {
     override fun find(imageUtils: CustomImageUtils, tries: Int): Pair<Point?, Bitmap> {
         val template = templates.first()
-        return imageUtils.findImage(template.name, region=template.region, tries=tries)
+        return imageUtils.findImage(template.name, region = template.region, tries = tries)
     }
 
     override fun check(imageUtils: CustomImageUtils, tries: Int): Boolean {
-        return find(imageUtils=imageUtils, tries=tries).first != null
+        return find(imageUtils = imageUtils, tries = tries).first != null
     }
 
     fun click(imageUtils: CustomImageUtils, tries: Int = 1, taps: Int = 1): Boolean {
-        val point = find(imageUtils=imageUtils, tries=tries).first
+        val point = find(imageUtils = imageUtils, tries = tries).first
         if (point == null) {
             return false
         }
@@ -47,7 +47,7 @@ interface MultiStateButtonInterface : ComponentInterface {
     /** Finds image on screen and returns its location if it exists. */
     override fun find(imageUtils: CustomImageUtils, tries: Int): Pair<Point?, Bitmap> {
         for (template in templates) {
-            val (point, bitmap) = imageUtils.findImage(template.name, region=template.region, tries=tries)
+            val (point, bitmap) = imageUtils.findImage(template.name, region = template.region, tries = tries)
             if (point != null) {
                 return Pair(point, bitmap)
             }
@@ -57,11 +57,11 @@ interface MultiStateButtonInterface : ComponentInterface {
 
     /** Finds image on screen and returns boolean whether it exists. */
     override fun check(imageUtils: CustomImageUtils, tries: Int): Boolean {
-        return find(imageUtils=imageUtils, tries=tries).first != null
+        return find(imageUtils = imageUtils, tries = tries).first != null
     }
 
     override fun click(imageUtils: CustomImageUtils, tries: Int, taps: Int): Boolean {
-        val point = find(imageUtils=imageUtils, tries=tries).first
+        val point = find(imageUtils = imageUtils, tries = tries).first
         if (point == null) {
             return false
         }

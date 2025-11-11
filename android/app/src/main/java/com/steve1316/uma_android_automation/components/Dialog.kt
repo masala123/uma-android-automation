@@ -57,7 +57,7 @@ object DialogUtils {
     fun check(imageUtils: CustomImageUtils, tries: Int = 1): Boolean {
         var loc: Point? = null
         for (template in titleGradientTemplates) {
-            loc = imageUtils.findImage(template, tries=tries).first
+            loc = imageUtils.findImage(template, tries = tries).first
             if (loc != null) {
                 break
             }
@@ -78,7 +78,7 @@ object DialogUtils {
         val titleLocation: Point? = if (titleLocation == null) {
             var loc: Point? = null
             for (template in titleGradientTemplates) {
-                loc = imageUtils.findImage(template, tries=tries).first
+                loc = imageUtils.findImage(template, tries = tries).first
                 if (loc != null) {
                     break
                 }
@@ -141,7 +141,7 @@ object DialogUtils {
     fun getDialog(imageUtils: CustomImageUtils, tries: Int = 1): DialogInterface? {
         var loc: Point? = null
         for (template in titleGradientTemplates) {
-            loc = imageUtils.findImage(template, tries=tries).first
+            loc = imageUtils.findImage(template, tries = tries).first
             if (loc != null) {
                 break
             }
@@ -150,7 +150,7 @@ object DialogUtils {
             return null
         }
 
-        val title: String = getTitle(imageUtils=imageUtils, titleLocation=loc) ?: return null
+        val title: String = getTitle(imageUtils = imageUtils, titleLocation=loc) ?: return null
 
         //val match = TextUtils.matchStringInList(title, DialogObjects.map.keys.toList())
         return if (DialogObjects.map.keys.toList().contains(title)) {
@@ -179,20 +179,20 @@ interface DialogInterface {
 
     fun close(imageUtils: CustomImageUtils, tries: Int = 1): Boolean {
         if (closeButton == null) {
-            return buttons.getOrNull(0)?.click(imageUtils=imageUtils, tries=tries) ?: false
+            return buttons.getOrNull(0)?.click(imageUtils = imageUtils, tries = tries) ?: false
         }
-        return closeButton?.click(imageUtils=imageUtils, tries=tries) ?: false
+        return closeButton?.click(imageUtils = imageUtils, tries = tries) ?: false
     }
 
     fun ok(imageUtils: CustomImageUtils, tries: Int = 1): Boolean {
         if (okButton == null) {
             return if (buttons.size == 1) {
-                close(imageUtils=imageUtils, tries=tries)
+                close(imageUtils = imageUtils, tries = tries)
             } else {
                 false
             }
         }
-        return okButton?.click(imageUtils=imageUtils, tries=tries) ?: false
+        return okButton?.click(imageUtils = imageUtils, tries = tries) ?: false
     }
 }
 
@@ -378,11 +378,11 @@ object DialogConnectionError : DialogInterface {
     // The dialog can have either a single button ("Title Screen") or
     // two buttons ("Title Screen" and "Retry").
     override fun ok(imageUtils: CustomImageUtils, tries: Int): Boolean {
-        if (ButtonRetry?.click(imageUtils=imageUtils, tries=tries)) {
+        if (ButtonRetry?.click(imageUtils = imageUtils, tries = tries)) {
             return true
         }
         
-        return ButtonTitleScreen?.click(imageUtils=imageUtils, tries=tries)
+        return ButtonTitleScreen?.click(imageUtils = imageUtils, tries = tries)
     }
 }
 
@@ -643,11 +643,11 @@ object DialogRaceDetails : DialogInterface {
     // The normal race details dialog has a "Race!" button whereas
     // the career version just has a "Race" button.
     override fun ok(imageUtils: CustomImageUtils, tries: Int): Boolean {
-        if (ButtonRaceExclamation?.click(imageUtils=imageUtils, tries=tries)) {
+        if (ButtonRaceExclamation?.click(imageUtils = imageUtils, tries = tries)) {
             return true
         }
         
-        return ButtonRace?.click(imageUtils=imageUtils, tries=tries)
+        return ButtonRace?.click(imageUtils = imageUtils, tries = tries)
     }
 }
 
