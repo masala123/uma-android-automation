@@ -279,7 +279,10 @@ ${longTargetsString}
 
     // Filter messages based on search query (excluding intro messages).
     const filteredMessages = useMemo(() => {
-        if (!searchQuery.trim()) return processedMessages
+        if (!searchQuery.trim()) {
+            // Always return a new array reference to ensure FlashList detects the change.
+            return [...processedMessages]
+        }
 
         const query = searchQuery.toLowerCase()
         return processedMessages.filter((message) => {
@@ -290,6 +293,10 @@ ${longTargetsString}
             return message.text.toLowerCase().includes(query)
         })
     }, [processedMessages, searchQuery])
+
+    // Force the CustomScrollView to refresh the FlashList when search is cleared by using a key that changes.
+    // This ensures a complete remount when transitioning from searching to having no search query.
+    const listKey = useMemo(() => (searchQuery.trim().length === 0 ? "all-messages" : `search-${searchQuery}`), [searchQuery])
 
     // Font size control functions.
     const increaseFontSize = useCallback(() => {
@@ -381,6 +388,7 @@ ${longTargetsString}
             {/* Log Messages */}
             <View style={styles.logContainer}>
                 <CustomScrollView
+                    key={listKey}
                     targetProps={{
                         data: filteredMessages,
                         renderItem: renderLogItem,

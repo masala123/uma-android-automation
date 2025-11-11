@@ -45,6 +45,15 @@ object SettingsHelper {
     }
 
     /**
+     * Get a double setting value.
+     * Throws exception if setting doesn't exist.
+     */
+    fun getDoubleSetting(category: String, key: String): Double {
+        return settingsManager?.getDoubleSetting(category, key)
+            ?: throw RuntimeException("Setting not found: $category.$key")
+    }
+
+    /**
      * Get a string setting value.
      * Throws exception if setting doesn't exist.
      */

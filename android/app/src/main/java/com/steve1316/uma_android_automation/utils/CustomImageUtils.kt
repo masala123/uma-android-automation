@@ -1316,7 +1316,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
 		// Extract the numeric part and convert to integer.
 		return try {
-            if (constructedString === "+") {
+            if (constructedString == "+") {
                 Log.w(tag, "[WARNING] Constructed string was just the plus sign. Setting the result to 0.")
                 return 0
             }

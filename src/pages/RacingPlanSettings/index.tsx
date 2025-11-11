@@ -1,9 +1,9 @@
-import { useContext, useState } from "react"
+import { useContext, useState, useEffect } from "react"
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native"
 import { useNavigation } from "@react-navigation/native"
 import { Divider } from "react-native-paper"
 import { useTheme } from "../../context/ThemeContext"
-import { BotStateContext } from "../../context/BotStateContext"
+import { BotStateContext, defaultSettings } from "../../context/BotStateContext"
 import CustomCheckbox from "../../components/CustomCheckbox"
 import CustomButton from "../../components/CustomButton"
 import CustomScrollView from "../../components/CustomScrollView"
@@ -36,10 +36,28 @@ const RacingPlanSettings = () => {
     const bsc = useContext(BotStateContext)
     const { settings, setSettings } = bsc
 
-    const { enableRacingPlan, racingPlan, minFansThreshold, preferredTerrain, lookAheadDays, smartRacingCheckInterval } = settings.racing
-    const preferredGrades = (settings.racing as any).preferredGrades ?? ["G1", "G2", "G3"]
+    // Merge current racing settings with defaults to handle missing properties.
+    const racingSettings = { ...defaultSettings.racing, ...settings.racing }
+    const { enableRacingPlan, racingPlan, minFansThreshold, preferredTerrain, lookAheadDays, smartRacingCheckInterval, minimumQualityThreshold, timeDecayFactor, improvementThreshold, preferredGrades } = racingSettings
 
     const [searchQuery, setSearchQuery] = useState("")
+    // Local state for decimal inputs to preserve intermediate values while typing (e.g., "7.").
+    const [minimumQualityThresholdInput, setMinimumQualityThresholdInput] = useState(minimumQualityThreshold.toString())
+    const [timeDecayFactorInput, setTimeDecayFactorInput] = useState(timeDecayFactor.toString())
+    const [improvementThresholdInput, setImprovementThresholdInput] = useState(improvementThreshold.toString())
+
+    // Sync local input state when settings change externally (e.g., settings reset).
+    useEffect(() => {
+        setMinimumQualityThresholdInput(minimumQualityThreshold.toString())
+    }, [minimumQualityThreshold])
+
+    useEffect(() => {
+        setTimeDecayFactorInput(timeDecayFactor.toString())
+    }, [timeDecayFactor])
+
+    useEffect(() => {
+        setImprovementThresholdInput(improvementThreshold.toString())
+    }, [improvementThreshold])
 
     // Parse racing plan from JSON string.
     const parsedRacingPlan: PlannedRace[] = racingPlan && racingPlan !== "[]" && typeof racingPlan === "string" ? JSON.parse(racingPlan) : []
@@ -251,6 +269,87 @@ const RacingPlanSettings = () => {
                         placeholder="2"
                     />
                     <Text style={styles.inputDescription}>How often the bot checks for optimal racing opportunities. Lower values = more frequent checks.</Text>
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.inputLabel}>Minimum Quality Threshold</Text>
+                    <Input
+                        style={styles.input}
+                        value={minimumQualityThresholdInput}
+                        onChangeText={(text) => {
+                            // Allow empty string and intermediate decimal states (e.g., "7.", "-", "0.").
+                            if (text === "" || /^-?\d*\.?\d*$/.test(text)) {
+                                setMinimumQualityThresholdInput(text)
+                            }
+                        }}
+                        onBlur={() => {
+                            // Parse and save when user finishes editing.
+                            const value = parseFloat(minimumQualityThresholdInput) || 0
+                            setMinimumQualityThresholdInput(value.toString())
+                            updateRacingSetting("minimumQualityThreshold", value)
+                        }}
+                        keyboardType="decimal-pad"
+                        placeholder="70.0"
+                    />
+                    <Text style={styles.inputDescription}>
+                        The minimum score a race must have to be considered acceptable. Races scoring below this will be skipped even if no better options are available soon.
+                        {"\n\n"}
+                        Example: If set to 70, a race scoring 65 will be skipped, but a race scoring 75 will be considered.
+                    </Text>
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.inputLabel}>Time Decay Factor</Text>
+                    <Input
+                        style={styles.input}
+                        value={timeDecayFactorInput}
+                        onChangeText={(text) => {
+                            // Allow empty string and intermediate decimal states (e.g., "0.", "-", "0.9").
+                            if (text === "" || /^-?\d*\.?\d*$/.test(text)) {
+                                setTimeDecayFactorInput(text)
+                            }
+                        }}
+                        onBlur={() => {
+                            // Parse and save when user finishes editing.
+                            const value = parseFloat(timeDecayFactorInput) || 0
+                            setTimeDecayFactorInput(value.toString())
+                            updateRacingSetting("timeDecayFactor", value)
+                        }}
+                        keyboardType="decimal-pad"
+                        placeholder="0.90"
+                    />
+                    <Text style={styles.inputDescription}>
+                        Future races are worth this percentage of their raw score. Lower values mean future races are discounted more heavily, making the bot less willing to wait.
+                        {"\n\n"}
+                        Example: If set to 0.90, a future race scoring 100 becomes 90 after discounting. If set to 0.70, the same race becomes 70.
+                    </Text>
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.inputLabel}>Improvement Threshold</Text>
+                    <Input
+                        style={styles.input}
+                        value={improvementThresholdInput}
+                        onChangeText={(text) => {
+                            // Allow empty string and intermediate decimal states (e.g., "25.", "-", "2.5").
+                            if (text === "" || /^-?\d*\.?\d*$/.test(text)) {
+                                setImprovementThresholdInput(text)
+                            }
+                        }}
+                        onBlur={() => {
+                            // Parse and save when user finishes editing.
+                            const value = parseFloat(improvementThresholdInput) || 0
+                            setImprovementThresholdInput(value.toString())
+                            updateRacingSetting("improvementThreshold", value)
+                        }}
+                        keyboardType="decimal-pad"
+                        placeholder="25.0"
+                    />
+                    <Text style={styles.inputDescription}>
+                        The minimum improvement (in points) needed from waiting for a future race to make waiting worthwhile. Only wait if the improvement exceeds this value.
+                        {"\n\n"}
+                        Example: If set to 25, the bot will only wait if the discounted future race score is at least 25 points better than the current best race.
+                    </Text>
                 </View>
 
                 <View style={styles.section}>

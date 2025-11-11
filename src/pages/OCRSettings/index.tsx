@@ -2,7 +2,7 @@ import { useContext } from "react"
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native"
 import { useNavigation } from "@react-navigation/native"
 import { useTheme } from "../../context/ThemeContext"
-import { BotStateContext } from "../../context/BotStateContext"
+import { BotStateContext, defaultSettings } from "../../context/BotStateContext"
 import CustomSlider from "../../components/CustomSlider"
 import CustomCheckbox from "../../components/CustomCheckbox"
 import { ArrowLeft } from "lucide-react-native"
@@ -13,7 +13,9 @@ const OCRSettings = () => {
     const bsc = useContext(BotStateContext)
 
     const { settings, setSettings } = bsc
-    const { ocrThreshold, enableAutomaticOCRRetry, ocrConfidence } = settings.ocr
+    // Merge current OCR settings with defaults to handle missing properties.
+    const ocrSettings = { ...defaultSettings.ocr, ...settings.ocr }
+    const { ocrThreshold, enableAutomaticOCRRetry, ocrConfidence } = ocrSettings
 
     const updateOCRSetting = (key: keyof typeof settings.ocr, value: any) => {
         setSettings({

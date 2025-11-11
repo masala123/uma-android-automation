@@ -3,7 +3,7 @@ import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal, TextInput,
 import { useNavigation } from "@react-navigation/native"
 import { FlashList } from "@shopify/flash-list"
 import { useTheme } from "../../context/ThemeContext"
-import { BotStateContext } from "../../context/BotStateContext"
+import { BotStateContext, defaultSettings } from "../../context/BotStateContext"
 import CustomAccordion from "../../components/CustomAccordion"
 import CustomCheckbox from "../../components/CustomCheckbox"
 import CustomSelect from "../../components/CustomSelect"
@@ -43,7 +43,9 @@ const TrainingEventSettings = () => {
     const bsc = useContext(BotStateContext)
 
     const { settings, setSettings } = bsc
-    const { enablePrioritizeEnergyOptions, specialEventOverrides, characterEventOverrides, supportEventOverrides } = settings.trainingEvent
+    // Merge current training event settings with defaults to handle missing properties.
+    const trainingEventSettings = { ...defaultSettings.trainingEvent, ...settings.trainingEvent }
+    const { enablePrioritizeEnergyOptions, specialEventOverrides } = trainingEventSettings
 
     const [eventOverrideModalVisible, setEventOverrideModalVisible] = useState(false)
     const [eventOverrideSearchQuery, setEventOverrideSearchQuery] = useState("")
