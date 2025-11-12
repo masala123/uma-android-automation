@@ -231,6 +231,20 @@ class SQLiteSettingsManager(private val context: Context) {
     }
 
     /**
+     * Get a double setting value.
+     * Throws exception if setting doesn't exist.
+     */
+    fun getDoubleSetting(category: String, key: String): Double {
+        val value = loadSetting(category, key) 
+            ?: throw RuntimeException("Setting not found: $category.$key")
+        return try {
+            value.toDouble()
+        } catch (e: Exception) {
+            throw RuntimeException("Error parsing double value for $category.$key: $value", e)
+        }
+    }
+
+    /**
      * Get a string setting value.
      * Throws exception if setting doesn't exist.
      */

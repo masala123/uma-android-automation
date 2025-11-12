@@ -72,12 +72,12 @@
     "Maverick ◎": {
         "id": 200271,
         "englishName": "Maverick ◎",
-        "englishDescription": "Increase performance when no other runners are using the same strategy."
+        "englishDescription": "Greatly increase performance when no other runners are using the same strategy."
     },
     "Maverick ○": {
         "id": 200272,
         "englishName": "Maverick ○",
-        "englishDescription": "Moderately increase performance when no other runners are using the same strategy."
+        "englishDescription": "Increase performance when no other runners are using the same strategy."
     },
     "Long Shot ◎": {
         "id": 200301,
@@ -99,10 +99,40 @@
         "englishName": "Lone Wolf",
         "englishDescription": "Moderately increase performance when no other runners have the heart of a lone wolf."
     },
+    "Towards the Scenery I Seek": {
+        "id": 300031,
+        "englishName": "Towards the Scenery I Seek",
+        "englishDescription": "Moderately increase performance in pursuit of that long sought-after scenery."
+    },
+    "Show Me What Lies Beyond!": {
+        "id": 300071,
+        "englishName": "Show Me What Lies Beyond!",
+        "englishDescription": "Moderately increase Silence Suzuka's performance thanks to the desire to see her running reach new heights."
+    },
+    "Chin Up, Derby Umamusume!": {
+        "id": 300111,
+        "englishName": "Chin Up, Derby Umamusume!",
+        "englishDescription": "Feel closer to being Japan's top racer, moderately increasing performance."
+    },
     "Unchanging": {
         "id": 300021,
         "englishName": "Unchanging",
         "englishDescription": "Greatly increase performance with the same ambition of days past."
+    },
+    "Fall Frenzy": {
+        "id": 200194,
+        "englishName": "Fall Frenzy",
+        "englishDescription": "Increase performance in fall, boosting Speed and Power."
+    },
+    "Spring Spectacle": {
+        "id": 200174,
+        "englishName": "Spring Spectacle",
+        "englishDescription": "Increase performance in spring, boosting Speed and Power."
+    },
+    "Right-Handed Demon": {
+        "id": 200014,
+        "englishName": "Right-Handed Demon",
+        "englishDescription": "Increase proficiency in right-handed tracks, increasing Speed and Power."
     },
     "Right-Handed ×": {
         "id": 200013,
@@ -143,6 +173,16 @@
         "id": 200311,
         "englishName": "G1 Averseness",
         "englishDescription": "Moderately decrease performance in G1 or otherwise important races."
+    },
+    "♡ 3D Nail Art": {
+        "id": 201801,
+        "englishName": "♡ 3D Nail Art",
+        "englishDescription": "Moderately decrease performance on firm ground."
+    },
+    "Creeping Anxiety": {
+        "id": 300041,
+        "englishName": "Creeping Anxiety",
+        "englishDescription": "Moderately decrease performance due to Trainer's anxiety."
     },
     "Tokyo Racecourse ◎": {
         "id": 200031,
@@ -279,6 +319,26 @@
         "englishName": "Unquenched Thirst",
         "englishDescription": "Moderately increase performance with the desire to race."
     },
+    "Hoiya! Have a Good Run!": {
+        "id": 300081,
+        "englishName": "Hoiya! Have a Good Run!",
+        "englishDescription": "Moderately increase Silence Suzuka's performance thanks to a charm that guarantees a satisfying run."
+    },
+    "Long Race Enthusiast": {
+        "id": 1200021,
+        "englishName": "Long Race Enthusiast",
+        "englishDescription": "Increase proficiency in Long Turf races. This skill is exclusive to the event."
+    },
+    "Yodo Invicta": {
+        "id": 200064,
+        "englishName": "Yodo Invicta",
+        "englishDescription": "Increase performance at Kyoto Racecourse, boosting Stamina and Wit."
+    },
+    "For the Team": {
+        "id": 300121,
+        "englishName": "For the Team",
+        "englishDescription": "The whole team feels super determined to win this special race, greatly increasing performance."
+    },
     "Tokyo Racecourse ×": {
         "id": 200033,
         "englishName": "Tokyo Racecourse ×",
@@ -372,12 +432,27 @@
     "Competitive Spirit ◎": {
         "id": 200281,
         "englishName": "Competitive Spirit ◎",
-        "englishDescription": "Increase performance when at least 5 other runners are using the same strategy."
+        "englishDescription": "Increase performance when many other runners are using the same strategy."
     },
     "Competitive Spirit ○": {
         "id": 200282,
         "englishName": "Competitive Spirit ○",
-        "englishDescription": "Moderately increase performance when at least 5 other runners are using the same strategy."
+        "englishDescription": "Moderately increase performance when many other runners are using the same strategy."
+    },
+    "As a Friend and Rival": {
+        "id": 300091,
+        "englishName": "As a Friend and Rival",
+        "englishDescription": "Moderately increase Silence Suzuka's performance through the happiness felt seeing a friend find their running style."
+    },
+    "Mile Race Enthusiast": {
+        "id": 1200031,
+        "englishName": "Mile Race Enthusiast",
+        "englishDescription": "Increase proficiency in Mile Turf races. This skill is exclusive to the event."
+    },
+    "Firm Course Menace": {
+        "id": 200154,
+        "englishName": "Firm Course Menace",
+        "englishDescription": "Increase performance on firm ground, boosting Power and Speed."
     },
     "Firm Conditions ×": {
         "id": 200153,
@@ -392,7 +467,7 @@
     "Wallflower": {
         "id": 200283,
         "englishName": "Wallflower",
-        "englishDescription": "Moderately decrease performance when at least 5 other runners are using the same strategy."
+        "englishDescription": "Moderately decrease performance when many other runners are using the same strategy."
     },
     "Sunny Days ◎": {
         "id": 200211,
@@ -449,6 +524,11 @@
         "englishName": "Rainy Days ×",
         "englishDescription": "Moderately decrease performance in rainy weather."
     },
+    "99 Problems": {
+        "id": 202181,
+        "englishName": "99 Problems",
+        "englishDescription": "Get overwhelmed by powerful opponents, moderately decreasing Guts and Wit."
+    },
     "Inner Post Proficiency ◎": {
         "id": 200251,
         "englishName": "Inner Post Proficiency ◎",
@@ -499,6 +579,16 @@
         "englishName": "End Closer Savvy ○",
         "englishDescription": "Moderately increase ability to get into a good position. (End Closer)"
     },
+    "Restraint": {
+        "id": 202161,
+        "englishName": "Restraint",
+        "englishDescription": "Increase Wit and moderately decrease the chance of being Rushed."
+    },
+    "Medium Race Enthusiast": {
+        "id": 1200011,
+        "englishName": "Medium Race Enthusiast",
+        "englishDescription": "Increase proficiency in Medium Turf races. This skill is exclusive to the event."
+    },
     "Inner Post Averseness": {
         "id": 200253,
         "englishName": "Inner Post Averseness",
@@ -517,12 +607,12 @@
     "Introduction to Physiology": {
         "id": 10321,
         "englishName": "Introduction to Physiology",
-        "englishDescription": "Moderately recover endurance when conserving energy on a corner in the second half of the race."
+        "englishDescription": "Moderately recover endurance and slightly increase velocity for a moderate duration when sitting off the pace on a corner in the second half of the race."
     },
     "Clear Heart": {
         "id": 10451,
         "englishName": "Clear Heart",
-        "englishDescription": "Moderately recover endurance when well-positioned mid-race."
+        "englishDescription": "Recover endurance when well-positioned mid-race."
     },
     "Super-Duper Stoked": {
         "id": 10521,
@@ -532,12 +622,12 @@
     "U=ma2": {
         "id": 100321,
         "englishName": "U=ma2",
-        "englishDescription": "Recover endurance when conserving energy on a corner in the second half of the race."
+        "englishDescription": "Recover endurance and moderately increase velocity for a moderate duration when sitting off the pace on a corner in the second half of the race."
     },
     "Pure Heart": {
         "id": 100451,
         "englishName": "Pure Heart",
-        "englishDescription": "Recover endurance when well-positioned mid-race."
+        "englishDescription": "Greatly recover endurance when well-positioned mid-race."
     },
     "Super-Duper Climax": {
         "id": 100521,
@@ -582,12 +672,12 @@
     "Iron Will": {
         "id": 200441,
         "englishName": "Iron Will",
-        "englishDescription": "Recover endurance when the way ahead is jammed early-race."
+        "englishDescription": "Recover endurance when the way ahead is jammed early-race or mid-race."
     },
     "Lay Low": {
         "id": 200442,
         "englishName": "Lay Low",
-        "englishDescription": "Slightly recover endurance when the way ahead is jammed early-race."
+        "englishDescription": "Slightly recover endurance when the way ahead is jammed early-race or mid-race."
     },
     "Indomitable": {
         "id": 200471,
@@ -617,12 +707,12 @@
     "Calm and Collected": {
         "id": 200561,
         "englishName": "Calm and Collected",
-        "englishDescription": "Decrease fatigue early-race. (Pace Chaser)"
+        "englishDescription": "Decrease fatigue upon approaching mid-race. (Pace Chaser)"
     },
     "Stamina to Spare": {
         "id": 200562,
         "englishName": "Stamina to Spare",
-        "englishDescription": "Slightly decrease fatigue early-race. (Pace Chaser)"
+        "englishDescription": "Slightly decrease fatigue upon approaching mid-race. (Pace Chaser)"
     },
     "Race Planner": {
         "id": 200571,
@@ -647,27 +737,27 @@
     "Wait-and-See": {
         "id": 200662,
         "englishName": "Wait-and-See",
-        "englishDescription": "Slightly decrease fatigue when positioned toward the back mid-race. (Sprint)"
+        "englishDescription": "Slightly decrease fatigue and very slightly increase acceleration when positioned toward the back mid-race. (Sprint)"
     },
     "Keen Eye": {
         "id": 200691,
         "englishName": "Keen Eye",
-        "englishDescription": "Decrease fatigue when positioned toward the back early-race. (Mile)"
+        "englishDescription": "Decrease fatigue, then moderately decrease velocity of runners ahead when positioned toward the back upon approaching mid-race. (Mile)"
     },
     "Watchful Eye": {
         "id": 200692,
         "englishName": "Watchful Eye",
-        "englishDescription": "Slightly decrease fatigue when positioned toward the back early-race. (Mile)"
+        "englishDescription": "Slightly decrease fatigue, then very slightly decrease velocity of runners ahead when positioned toward the back upon approaching mid-race. (Mile)"
     },
     "Trackblazer": {
         "id": 200711,
         "englishName": "Trackblazer",
-        "englishDescription": "Decrease fatigue when in the lead mid-race. (Medium)"
+        "englishDescription": "Decrease fatigue when positioned toward the front mid-race. (Medium)"
     },
     "Rosy Outlook": {
         "id": 200712,
         "englishName": "Rosy Outlook",
-        "englishDescription": "Slightly decrease fatigue when in the lead mid-race. (Medium)"
+        "englishDescription": "Slightly decrease fatigue when positioned toward the front mid-race. (Medium)"
     },
     "Cooldown": {
         "id": 200741,
@@ -682,12 +772,12 @@
     "Adrenaline Rush": {
         "id": 200761,
         "englishName": "Adrenaline Rush",
-        "englishDescription": "Regain the energy to run after exhausting strength. (Long)"
+        "englishDescription": "Regain the energy to run when close to exhausting strength. (Long)"
     },
     "Extra Tank": {
         "id": 200762,
         "englishName": "Extra Tank",
-        "englishDescription": "Slightly regain the energy to run after exhausting strength. (Long)"
+        "englishDescription": "Slightly regain the energy to run when close to exhausting strength. (Long)"
     },
     "Miraculous Step": {
         "id": 201141,
@@ -767,12 +857,72 @@
     "Superior Heal": {
         "id": 110111,
         "englishName": "Superior Heal",
-        "englishDescription": "Recover endurance with a gentle light when dropping down toward the back mid-race."
+        "englishDescription": "Greatly recover endurance with a gentle light when overtaken toward the back mid-race."
     },
     "Dazzl'n ♪ Diver": {
         "id": 110011,
         "englishName": "Dazzl'n ♪ Diver",
         "englishDescription": "Recover endurance by relaxing after activating 2 skills mid-race."
+    },
+    "Every Rose Has Its Fangs": {
+        "id": 110301,
+        "englishName": "Every Rose Has Its Fangs",
+        "englishDescription": "Suck endurance from runners ahead when well-positioned and pressured by another runner mid-race."
+    },
+    "Lie in Wait": {
+        "id": 201691,
+        "englishName": "Lie in Wait",
+        "englishDescription": "Recover endurance when positioned toward the back upon approaching mid-race. (Late Surger)"
+    },
+    "Be Still": {
+        "id": 201692,
+        "englishName": "Be Still",
+        "englishDescription": "Slightly recover endurance when positioned toward the back upon approaching mid-race. (Late Surger)"
+    },
+    "VIP Pass": {
+        "id": 201201,
+        "englishName": "VIP Pass",
+        "englishDescription": "Decrease fatigue when determined to pass another runner. (Long)"
+    },
+    "Familiar Ground": {
+        "id": 202002,
+        "englishName": "Familiar Ground",
+        "englishDescription": "Slightly recover endurance when positioned toward the back mid-race. (Dirt)"
+    },
+    "Cheers of a Fellow Dreamer": {
+        "id": 300101,
+        "englishName": "Cheers of a Fellow Dreamer",
+        "englishDescription": "Recover Silence Suzuka's endurance on a corner in the second half of the race through a friend's cheers of support."
+    },
+    "Ready, Go!": {
+        "id": 10621,
+        "englishName": "Ready, Go!",
+        "englishDescription": "Moderately recover endurance and slightly increase velocity with newfound resolve when in midpack around halfway through the race."
+    },
+    "Go, Go, Mun!": {
+        "id": 100621,
+        "englishName": "Go, Go, Mun!",
+        "englishDescription": "Recover endurance and moderately increase velocity with newfound resolve when in midpack around halfway through the race."
+    },
+    "Of Calm Mind": {
+        "id": 202071,
+        "englishName": "Of Calm Mind",
+        "englishDescription": "If positioned in the midpack around when the mid-race starts, slightly decrease velocity and greatly recover endurance. (Long)"
+    },
+    "Free-Spirited": {
+        "id": 202072,
+        "englishName": "Free-Spirited",
+        "englishDescription": "If positioned in the midpack around when the mid-race starts, slightly decrease velocity and moderately recover endurance. (Long)"
+    },
+    "Keep Pushing Ahead": {
+        "id": 100641,
+        "englishName": "Keep Pushing Ahead",
+        "englishDescription": "If positioned toward the front from the start of the race until the second half of the race, good vibes recover endurance and moderately increase velocity steadily."
+    },
+    "Master of the Sands": {
+        "id": 202001,
+        "englishName": "Master of the Sands",
+        "englishDescription": "Recover endurance and increase velocity when positioned toward the back mid-race. (Dirt)"
     },
     "Corner Adept ○": {
         "id": 200332,
@@ -817,7 +967,7 @@
     "Masterful Gambit": {
         "id": 200632,
         "englishName": "Masterful Gambit",
-        "englishDescription": "Slightly move up in preparation to close the gap late-race. (End Closer)"
+        "englishDescription": "Slightly move up in preparation to close the gap when positioned toward the back late-race. (End Closer)"
     },
     "Gap Closer": {
         "id": 200672,
@@ -827,7 +977,7 @@
     "Productive Plan": {
         "id": 200682,
         "englishName": "Productive Plan",
-        "englishDescription": "Slightly widen the margin when in the lead early-race. (Mile)"
+        "englishDescription": "Slightly widen the margin when positioned toward the front early-race. (Mile)"
     },
     "Up-Tempo": {
         "id": 200722,
@@ -942,7 +1092,7 @@
     "Keeping the Lead": {
         "id": 201192,
         "englishName": "Keeping the Lead",
-        "englishDescription": "Slightly increase ability to maintain the lead when leading by a large margin mid-race. (Long)"
+        "englishDescription": "Slightly increase ability to maintain the lead when leading by a fair margin mid-race. (Long)"
     },
     "Pressure": {
         "id": 201212,
@@ -972,7 +1122,7 @@
     "Leader's Pride": {
         "id": 201272,
         "englishName": "Leader's Pride",
-        "englishDescription": "Slightly avoid being passed early-race. (Front Runner)"
+        "englishDescription": "Slightly increase ability to pass or challenge another runner early-race or mid-race. (Front Runner)"
     },
     "Pace Chaser Straightaways ◎": {
         "id": 201311,
@@ -1004,9 +1154,9 @@
         "englishName": "Late Surger Straightaways ○",
         "englishDescription": "Slightly increase velocity on a straight. (Late Surger)"
     },
-    "Later Surger Corners ◎": {
+    "Late Surger Corners ◎": {
         "id": 201391,
-        "englishName": "Later Surger Corners ◎",
+        "englishName": "Late Surger Corners ◎",
         "englishDescription": "Moderately increase velocity on a corner. (Late Surger)"
     },
     "Late Surger Corners ○": {
@@ -1064,6 +1214,66 @@
         "englishName": "Top Pick",
         "englishDescription": "Slightly increase velocity when engaged in a challenge mid-race. (Dirt)"
     },
+    "All I've Got": {
+        "id": 201702,
+        "englishName": "All I've Got",
+        "englishDescription": "Slightly increase velocity when well-positioned on a straight in the last spurt. (Medium)"
+    },
+    "Feature Act": {
+        "id": 202012,
+        "englishName": "Feature Act",
+        "englishDescription": "Slightly increase velocity when positioned toward the front upon approaching late-race. (Long)"
+    },
+    "Early Start": {
+        "id": 202022,
+        "englishName": "Early Start",
+        "englishDescription": "Very slightly increase velocity for a medium duration when positioned toward the back mid-race. (End Closer)"
+    },
+    "Risky Business": {
+        "id": 202032,
+        "englishName": "Risky Business",
+        "englishDescription": "Moderately increase velocity in the second half of the race, but also greatly increase fatigue sometimes."
+    },
+    "Light as a Feather": {
+        "id": 202042,
+        "englishName": "Light as a Feather",
+        "englishDescription": "Slightly increase velocity when positioned toward the front upon approaching late-race. (Sprint)"
+    },
+    "Fighting Spirit": {
+        "id": 202092,
+        "englishName": "Fighting Spirit",
+        "englishDescription": "When engaged in a challenge midpack mid-race, very slightly recover endurance and slightly increase velocity. (Medium)"
+    },
+    "Eager": {
+        "id": 202102,
+        "englishName": "Eager",
+        "englishDescription": "When positioned toward the back mid-race, slightly increase velocity. (Medium)"
+    },
+    "Pumped": {
+        "id": 202112,
+        "englishName": "Pumped",
+        "englishDescription": "When positioned toward the back on the final corner, slightly increase velocity. (Mile)"
+    },
+    "Fearless": {
+        "id": 202122,
+        "englishName": "Fearless",
+        "englishDescription": "When positioned in the midpack during the second half of the race, slightly increase velocity and very minimally increase acceleration. (Late Surger)"
+    },
+    "With All My Soul": {
+        "id": 202132,
+        "englishName": "With All My Soul",
+        "englishDescription": "When positioned toward the front mid-race, slightly increase velocity and minimally decrease the velocity of runners behind the skill user. (Medium)"
+    },
+    "Full Throttle": {
+        "id": 202152,
+        "englishName": "Full Throttle",
+        "englishDescription": "Greatly consume endurance mid-race and moderately increase velocity. (Late Surger)"
+    },
+    "Downhill Speedster": {
+        "id": 202172,
+        "englishName": "Downhill Speedster",
+        "englishDescription": "Slightly increase velocity on downhills."
+    },
     "Professor of Curvature": {
         "id": 200331,
         "englishName": "Professor of Curvature",
@@ -1107,7 +1317,7 @@
     "Sturm und Drang": {
         "id": 200631,
         "englishName": "Sturm und Drang",
-        "englishDescription": "Move up in preparation to close the gap late-race. (End Closer)"
+        "englishDescription": "Move up in preparation to close the gap when positioned toward the back late-race. (End Closer)"
     },
     "Blinding Flash": {
         "id": 200671,
@@ -1117,7 +1327,7 @@
     "Mile Maven": {
         "id": 200681,
         "englishName": "Mile Maven",
-        "englishDescription": "Widen the margin when in the lead early-race. (Mile)"
+        "englishDescription": "Widen the margin when positioned toward the front early-race. (Mile)"
     },
     "Killer Tunes": {
         "id": 200721,
@@ -1152,7 +1362,7 @@
     "Vanguard Spirit": {
         "id": 201191,
         "englishName": "Vanguard Spirit",
-        "englishDescription": "Increase ability to maintain the lead when leading by a large margin mid-race. (Long)"
+        "englishDescription": "Increase ability to maintain the lead when leading by a fair margin mid-race. (Long)"
     },
     "Overwhelming Pressure": {
         "id": 201211,
@@ -1169,15 +1379,115 @@
         "englishName": "Trending in the Charts!",
         "englishDescription": "Increase velocity when engaged in a challenge mid-race. (Dirt)"
     },
+    "Superstan": {
+        "id": 201592,
+        "englishName": "Superstan",
+        "englishDescription": "Increase velocity when close to many runners."
+    },
+    "Come What May": {
+        "id": 201701,
+        "englishName": "Come What May",
+        "englishDescription": "Increase velocity when well-positioned on a straight in the last spurt. (Medium)"
+    },
+    "Tail Nine": {
+        "id": 201612,
+        "englishName": "Tail Nine",
+        "englishDescription": "Increase velocity after activating many skills mid-race."
+    },
+    "Dream Run": {
+        "id": 300061,
+        "englishName": "Dream Run",
+        "englishDescription": "Increase velocity on the final straight due to a strong desire to cross the finish line carrying everyone's hopes and dreams."
+    },
+    "Headliner": {
+        "id": 202011,
+        "englishName": "Headliner",
+        "englishDescription": "Increase velocity when positioned toward the front upon approaching late-race. (Long)"
+    },
+    "Daring Strike": {
+        "id": 202021,
+        "englishName": "Daring Strike",
+        "englishDescription": "Moderately increase velocity for a medium duration when positioned toward the back mid-race. (End Closer)"
+    },
+    "Nothing Ventured": {
+        "id": 202031,
+        "englishName": "Nothing Ventured",
+        "englishDescription": "Greatly increase velocity in the second half of the race, but also greatly increase fatigue sometimes."
+    },
+    "Flash Forward": {
+        "id": 201103,
+        "englishName": "Flash Forward",
+        "englishDescription": "Increase velocity on a straight. (Medium)"
+    },
+    "In High Spirits": {
+        "id": 202041,
+        "englishName": "In High Spirits",
+        "englishDescription": "Increase velocity when positioned toward the front upon approaching late-race. (Sprint)"
+    },
+    "Blast Forward": {
+        "id": 201173,
+        "englishName": "Blast Forward",
+        "englishDescription": "Increase velocity on a straight. (Long)"
+    },
+    "Top Runner": {
+        "id": 201271,
+        "englishName": "Top Runner",
+        "englishDescription": "Increase ability to pass or challenge another runner early-race or mid-race. (Front Runner)"
+    },
+    "Burning Soul": {
+        "id": 202091,
+        "englishName": "Burning Soul",
+        "englishDescription": "When engaged in a challenge midpack mid-race, moderately recover endurance and moderately increase velocity. (Medium)"
+    },
+    "Elated": {
+        "id": 202101,
+        "englishName": "Elated",
+        "englishDescription": "When positioned toward the back mid-race, increase velocity. (Medium)"
+    },
+    "Full of Vigor": {
+        "id": 202111,
+        "englishName": "Full of Vigor",
+        "englishDescription": "When positioned toward the back on the final corner, increase velocity. (Mile)"
+    },
+    "Dauntless": {
+        "id": 202121,
+        "englishName": "Dauntless",
+        "englishDescription": "When positioned in the midpack during the second half of the race, increase velocity and very slightly increase acceleration. (Late Surger)"
+    },
+    "Wild Wind": {
+        "id": 202131,
+        "englishName": "Wild Wind",
+        "englishDescription": "When positioned toward the front mid-race, increase velocity and slightly decrease the velocity of runners behind the skill user. (Medium)"
+    },
+    "See Ya Later!": {
+        "id": 201662,
+        "englishName": "See Ya Later!",
+        "englishDescription": "Increase velocity when followed by another runner directly behind for a long time."
+    },
+    "Keep Going!": {
+        "id": 202151,
+        "englishName": "Keep Going!",
+        "englishDescription": "Greatly consume endurance mid-race and greatly increase velocity. (Late Surger)"
+    },
+    "Moonlit Flash": {
+        "id": 201453,
+        "englishName": "Moonlit Flash",
+        "englishDescription": "Increase velocity on straights. (End Closer)"
+    },
+    "Refraction Arc": {
+        "id": 201113,
+        "englishName": "Refraction Arc",
+        "englishDescription": "Increase velocity on corners. (Medium)"
+    },
     "Certain Victory": {
         "id": 110031,
         "englishName": "Certain Victory",
-        "englishDescription": "Increase velocity with an indomitable fighting spirit when on the heels of another runner toward the front on the final straight."
+        "englishDescription": "Greatly increase velocity with an indomitable fighting spirit on the final straight after being on the heels of another runner toward the front on the final corner or later."
     },
     "Legacy of the Strong": {
         "id": 110131,
         "englishName": "Legacy of the Strong",
-        "englishDescription": "Increase velocity when pressured by another runner and running out of energy toward the front on the final corner or later."
+        "englishDescription": "Increase velocity continuously when pressured by another runner and running out of energy toward the front on the final corner or later."
     },
     "Warning Shot!": {
         "id": 10071,
@@ -1192,7 +1502,7 @@
     "Red Ace": {
         "id": 10091,
         "englishName": "Red Ace",
-        "englishDescription": "Slightly swell with the determination to stay number one in the second half of the race."
+        "englishDescription": "Slightly swell with the determination to be number one when positioned toward the front in the second half of the race."
     },
     "Focused Mind": {
         "id": 10111,
@@ -1207,17 +1517,17 @@
     "Empress's Pride": {
         "id": 10181,
         "englishName": "Empress's Pride",
-        "englishDescription": "Moderately increase velocity with the stride of an empress when passing another runner toward the back on the final corner."
+        "englishDescription": "Moderately increase velocity with the stride of an empress when passing another runner from midpack or further back on the final corner."
     },
     "1st Place Kiss☆": {
         "id": 10241,
         "englishName": "1st Place Kiss☆",
-        "englishDescription": "Slightly increase ability to break out of the pack on the straight after engaging in a challenge toward the front on the final corner."
+        "englishDescription": "Slightly increase ability to break out of the pack on the straight after engaging in a challenge toward the front on the final corner or later."
     },
     "V Is for Victory!": {
         "id": 10351,
         "englishName": "V Is for Victory!",
-        "englishDescription": "Refuse to back down from a challenge, moderately increasing velocity on the final straight."
+        "englishDescription": "Moderately increase velocity with winning ambition when positioned toward the front on the final straight after engaging in a challenge on the final corner or later."
     },
     "Class Rep + Speed = Bakushin": {
         "id": 10411,
@@ -1242,12 +1552,12 @@
     "Shooting Star": {
         "id": 100011,
         "englishName": "Shooting Star",
-        "englishDescription": "Ride the momentum and increase velocity after passing another runner toward the front late-race."
+        "englishDescription": "Ride the momentum to increase velocity and very slightly increase acceleration after passing another runner toward the front late-race."
     },
     "The View from the Lead Is Mine!": {
         "id": 100021,
         "englishName": "The View from the Lead Is Mine!",
-        "englishDescription": "Increase velocity by drawing on all remaining strength when in the lead by a fair margin on the final straight."
+        "englishDescription": "Increase velocity by drawing on all remaining strength when in the lead by a fair margin in the second half of the race."
     },
     "Sky-High Teio Step": {
         "id": 100031,
@@ -1272,7 +1582,7 @@
     "Resplendent Red Ace": {
         "id": 100091,
         "englishName": "Resplendent Red Ace",
-        "englishDescription": "Swell with the determination to stay number one in the second half of the race."
+        "englishDescription": "Swell with the determination to be number one when positioned toward the front in the second half of the race."
     },
     "Where There's a Will, There's a Way": {
         "id": 100111,
@@ -1292,7 +1602,7 @@
     "This Dance Is for Vittoria!": {
         "id": 100151,
         "englishName": "This Dance Is for Vittoria!",
-        "englishDescription": "Increase velocity with royal brilliance when engaged in a challenge toward the front on the final corner."
+        "englishDescription": "Increase velocity with royal brilliance when positioned toward the front and close to the runner ahead or behind on the final corner or later."
     },
     "Behold Thine Emperor's Divine Might": {
         "id": 100171,
@@ -1302,17 +1612,17 @@
     "Blazing Pride": {
         "id": 100181,
         "englishName": "Blazing Pride",
-        "englishDescription": "Increase velocity with the stride of an empress when passing another runner toward the back on the final corner."
+        "englishDescription": "Increase velocity with the stride of an empress when passing another runner from midpack or further back on the final corner."
     },
     "∴win Q.E.D.": {
         "id": 100231,
         "englishName": "∴win Q.E.D.",
-        "englishDescription": "Increase velocity by deriving the winning equation when passing another runner toward the front on the final corner."
+        "englishDescription": "Increase velocity by deriving the winning equation when passing another runner toward the front on the final corner or later."
     },
     "Flashy☆Landing": {
         "id": 100241,
         "englishName": "Flashy☆Landing",
-        "englishDescription": "Increase ability to break out of the pack on the straight after engaging in a challenge toward the front on the final corner."
+        "englishDescription": "Increase ability to break out of the pack on the straight after engaging in a challenge toward the front on the final corner or later."
     },
     "G00 1st. F∞;": {
         "id": 100261,
@@ -1322,12 +1632,12 @@
     "Blue Rose Closer": {
         "id": 100301,
         "englishName": "Blue Rose Closer",
-        "englishDescription": "Increase velocity with strong willpower when breaking out of the pack on the final straight."
+        "englishDescription": "Increase velocity with strong willpower on the final straight after passing another runner in the front part of the pack on the final corner or later."
     },
     "Our Ticket to Win!": {
         "id": 100351,
         "englishName": "Our Ticket to Win!",
-        "englishDescription": "Refuse to back down from a challenge, increasing velocity on the final straight."
+        "englishDescription": "Increase velocity with winning ambition when positioned toward the front on the final straight after engaging in a challenge on the final corner or later."
     },
     "Genius x Bakushin = Victory": {
         "id": 100411,
@@ -1357,17 +1667,17 @@
     "Nemesis": {
         "id": 100501,
         "englishName": "Nemesis",
-        "englishDescription": "Increase velocity with smoldering ambition when moving up from a position toward the back of the pack on the final corner."
+        "englishDescription": "Increase velocity with smoldering ambition when moving up from midpack on the final corner or later."
     },
     "SPARKLY☆STARDOM": {
         "id": 100461,
         "englishName": "SPARKLY☆STARDOM",
-        "englishDescription": "Become empowered against ceding the spotlight when about to lose the lead on a straight mid-race."
+        "englishDescription": "Become empowered to keep the spotlight when positioned toward the front and close to the runner behind on a straight mid-race."
     },
     "Shadow Break": {
         "id": 100161,
         "englishName": "Shadow Break",
-        "englishDescription": "Increase velocity with beastly strength when passing another runner on the outside on the final corner or later."
+        "englishDescription": "Increase velocity with beastly strength when passing another runner on the outside on the final corner or later. If the skill user engaged in a challenge mid-race, greatly increase velocity instead."
     },
     "Eternal Moments": {
         "id": 110181,
@@ -1382,7 +1692,7 @@
     "You and Me! One-on-One!": {
         "id": 100121,
         "englishName": "You and Me! One-on-One!",
-        "englishDescription": "Increase velocity when passing another runner on the outside toward the back on the final straight."
+        "englishDescription": "Increase velocity on the final straight after passing another runner on the outside toward the back on the final corner or later."
     },
     "Lights of Vaudeville": {
         "id": 100051,
@@ -1414,6 +1724,186 @@
         "englishName": "Bountiful Harvest",
         "englishDescription": "Increase velocity with a surge of great fortune when pressured by another runner toward the back in the second half of the race."
     },
+    "YUMMY☆SPEED!": {
+        "id": 100281,
+        "englishName": "YUMMY☆SPEED!",
+        "englishDescription": "Kick forward hard with renewed vigor when starting to get tired while well-positioned halfway through the race."
+    },
+    "OMG! (ﾟ∀ﾟ) The Final Sprint! ☆": {
+        "id": 100191,
+        "englishName": "OMG! (ﾟ∀ﾟ) The Final Sprint! ☆",
+        "englishDescription": "Increase velocity and navigation with the pure euphoria of being within breathing distance of precious waifus after passing another runner 2 times late-race."
+    },
+    "Give Mummy a Hug ♡": {
+        "id": 110451,
+        "englishName": "Give Mummy a Hug ♡",
+        "englishDescription": "Increase ability to break out of the pack when well-positioned and close to the runner ahead on the final straight."
+    },
+    "A Princess Must Seize Victory!": {
+        "id": 100391,
+        "englishName": "A Princess Must Seize Victory!",
+        "englishDescription": "Increase velocity with pretty princess power when engaged in a challenge on the final straight."
+    },
+    "Chasing After You": {
+        "id": 100251,
+        "englishName": "Chasing After You",
+        "englishDescription": "Chase after an unseen friend when in midpack in the second half of the race, moderately increasing velocity steadily and very slightly intimidating runners ahead."
+    },
+    "Arrows Whistle, Shadows Disperse": {
+        "id": 110171,
+        "englishName": "Arrows Whistle, Shadows Disperse",
+        "englishDescription": "Increase velocity with a blazing spirit when pressured by another runner in the front part of the pack on the final corner or later."
+    },
+    "Dancing in the Leaves": {
+        "id": 110401,
+        "englishName": "Dancing in the Leaves",
+        "englishDescription": "Increase ability to break out of the pack when engaged in a challenge in midpack on the final corner."
+    },
+    "Pop & Polish": {
+        "id": 100481,
+        "englishName": "Pop & Polish",
+        "englishDescription": "Get hyped and increase velocity when pressured by or passing another runner while well-positioned on the final straight."
+    },
+    "Festive Miracle": {
+        "id": 110061,
+        "englishName": "Festive Miracle",
+        "englishDescription": "Control breathing and kick forward hard toward victory in the second half of the race after recovering endurance with skills at least 3 times."
+    },
+    "Presents from X": {
+        "id": 110231,
+        "englishName": "Presents from X",
+        "englishDescription": "Increase velocity by deriving a path to victory mid-race after staying well-positioned from the start of the race up until the second half."
+    },
+    "Fairy Tale": {
+        "id": 100221,
+        "englishName": "Fairy Tale",
+        "englishDescription": "Increase velocity with the excitement of running when engaged in a challenge while well-positioned in the second half of the race."
+    },
+    "White Lightning Comin' Through!": {
+        "id": 100211,
+        "englishName": "White Lightning Comin' Through!",
+        "englishDescription": "Bolt down the track like lightning when well-positioned or aiming for the front from midpack on a straight in the second half of the race."
+    },
+    "Barcarole of Blessings": {
+        "id": 110151,
+        "englishName": "Barcarole of Blessings",
+        "englishDescription": "Increase velocity for a moderate duration when in the front part of the pack with 400m remaining. If at least 7 skills have been activated, greatly increase velocity for a moderate duration instead."
+    },
+    "114th Time's the Charm": {
+        "id": 110521,
+        "englishName": "114th Time's the Charm",
+        "englishDescription": "Give max effort when far from the lead on the final corner, moderately increasing velocity steadily for a duration proportional to distance from the lead."
+    },
+    "Ambition to Surpass the Sakura": {
+        "id": 100691,
+        "englishName": "Ambition to Surpass the Sakura",
+        "englishDescription": "Increase velocity with blossoming ambition when well-positioned and close to the runner ahead with 300m or less remaining."
+    },
+    "A Lifelong Dream, A Moment's Flight": {
+        "id": 100711,
+        "englishName": "A Lifelong Dream, A Moment's Flight",
+        "englishDescription": "Seize the moment when close to the runner behind on the final straight, slightly consuming endurance to greatly increase velocity for a moderate duration."
+    },
+    "Operation Cacao": {
+        "id": 110261,
+        "englishName": "Operation Cacao",
+        "englishDescription": "Take a slight breather and increase velocity when in the front part of the pack and detecting another runner coming from behind on a corner mid-race."
+    },
+    "Guten Appetit ♪": {
+        "id": 110371,
+        "englishName": "Guten Appetit ♪",
+        "englishDescription": "Increase velocity continuously with a patissiere's pride on the final straight after passing another runner 3 times on the final corner or later."
+    },
+    "Shooting Star of Dioskouroi": {
+        "id": 100331,
+        "englishName": "Shooting Star of Dioskouroi",
+        "englishDescription": "Increase velocity with guidance from the stars when far from the lead on the final straight. If positioned around the very back, greatly increase velocity instead."
+    },
+    "Victory Cheer!": {
+        "id": 100681,
+        "englishName": "Victory Cheer!",
+        "englishDescription": "Moderately increase velocity when positioned toward the front on the third corner in the second half of the race. Or, kick forward hard when toward the front on the backstretch late-race."
+    },
+    "Eternal Encompassing Shine": {
+        "id": 100671,
+        "englishName": "Eternal Encompassing Shine",
+        "englishDescription": "If well-positioned at the start of the final straight, her strong willpower to win increases velocity. If positioned near the front, greatly increase velocity instead."
+    },
+    "Lovely Spring Breeze": {
+        "id": 100741,
+        "englishName": "Lovely Spring Breeze",
+        "englishDescription": "From the midpack in the second half of the race, slightly increase velocity steadily for a duration based on remaining endurance."
+    },
+    "Ravissant": {
+        "id": 110051,
+        "englishName": "Ravissant",
+        "englishDescription": "When passing another racer at the front part of the pack on the final corner or later, perform a dazzling display that greatly increases velocity for a moderate duration."
+    },
+    "Break It Down!": {
+        "id": 110201,
+        "englishName": "Break It Down!",
+        "englishDescription": "If positioned toward the front on a straight late-race, increase velocity with high spirits. If the straight is on the backstretch, also increase acceleration very slightly."
+    },
+    "Peerless Dance of Flowering Flames": {
+        "id": 100721,
+        "englishName": "Peerless Dance of Flowering Flames",
+        "englishDescription": "If the skill user passes another runner on the final corner or later, increase velocity with fiery fighting spirit when in the front part of the pack with 300m remaining."
+    },
+    "Go☆Go☆Goal!": {
+        "id": 110601,
+        "englishName": "Go☆Go☆Goal!",
+        "englishDescription": "If the skill user passes another runner on the final corner or later, increase velocity from the midpack onward on the final straight. If the skill user isn't one of the top favorites, muster resolve to keep steadily increasing velocity."
+    },
+    "All Charged! It's Go Time!": {
+        "id": 100311,
+        "englishName": "All Charged! It's Go Time!",
+        "englishDescription": "Moderately increase velocity when positioned toward the front with about 300m remaining. If coming out of an uphill, greatly increase velocity instead."
+    },
+    "Best Day Ever": {
+        "id": 110221,
+        "englishName": "Best Day Ever",
+        "englishDescription": "If well-positioned late-race on the final corner or later, increase velocity. If there's a large distance left to the finish, also increase acceleration very slightly with perfect form."
+    },
+    "One True Color": {
+        "id": 110381,
+        "englishName": "One True Color",
+        "englishDescription": "If positioned toward the front with 350m remaining and there is another Umamusume close behind, the determination to stay ahead makes it easier to break out of the pack."
+    },
+    "Now We're Cruisin'!": {
+        "id": 100341,
+        "englishName": "Now We're Cruisin'!",
+        "englishDescription": "When competing for the lead if positioned in the midpack or further for the first half of the race, show off some Edo spirit and greatly increase velocity."
+    },
+    "Victory belongs to me—Strelitzia! ☆": {
+        "id": 100441,
+        "englishName": "Victory belongs to me—Strelitzia! ☆",
+        "englishDescription": "If positioned toward the back until the start of the final corner, when there are 300m remaining, cast a magic spell to increase velocity continuously."
+    },
+    "Joyful Voyage!": {
+        "id": 110101,
+        "englishName": "Joyful Voyage!",
+        "englishDescription": "If positioned toward the front with 200m remaining, increase velocity. Then, if also positioned near the leading Umamusume, gather strength to move slightly forward."
+    },
+    "Wherever This Wonder Leads": {
+        "id": 110591,
+        "englishName": "Wherever This Wonder Leads",
+        "englishDescription": "If positioned midpack on a downhill just before late-race and there's a large distance left to the finish, enjoy the race to the fullest, increasing velocity."
+    },
+    "trigger:BEAT": {
+        "id": 100361,
+        "englishName": "trigger:BEAT",
+        "englishDescription": "When near the inner rail midpack on the final corner or later, calculate the path to victory, increasing velocity and ability to navigate smoothly on the final straight."
+    },
+    "Dreams Donned with Pride!": {
+        "id": 120011,
+        "englishName": "Dreams Donned with Pride!",
+        "englishDescription": "If the skill user activates another skill on the final corner late-race, take the crowd's cheers to heart and moderately increase velocity. If racing at Nakayama Racecourse, greatly increase velocity instead."
+    },
+    "Ruler of Japan": {
+        "id": 300131,
+        "englishName": "Ruler of Japan",
+        "englishDescription": "I'll tackle this with everything I've got!"
+    },
     "Corner Adept ×": {
         "id": 200333,
         "englishName": "Corner Adept ×",
@@ -1428,6 +1918,11 @@
         "id": 200421,
         "englishName": "Reckless",
         "englishDescription": "Moderately increase carelessness when in the lead with around 200m remaining."
+    },
+    "Blatant Fear": {
+        "id": 300051,
+        "englishName": "Blatant Fear",
+        "englishDescription": "Greatly decrease velocity on a corner in the second half of the race due to Trainer's obvious anxiety."
     },
     "Corner Acceleration ○": {
         "id": 200342,
@@ -1477,7 +1972,7 @@
     "Countermeasure": {
         "id": 200992,
         "englishName": "Countermeasure",
-        "englishDescription": "Slightly increase passing ability when positioned toward the front mid-race. (Sprint)"
+        "englishDescription": "Slightly increase passing ability when positioned toward the front upon approaching late-race. (Sprint)"
     },
     "Acceleration": {
         "id": 201062,
@@ -1487,7 +1982,7 @@
     "Second Wind": {
         "id": 201292,
         "englishName": "Second Wind",
-        "englishDescription": "Slightly increase acceleration when positioned toward the back mid-race. (Front Runner)"
+        "englishDescription": "Slightly increase acceleration when not in the lead mid-race. (Front Runner)"
     },
     "Shrewd Step": {
         "id": 201332,
@@ -1507,7 +2002,7 @@
     "Fighter": {
         "id": 201402,
         "englishName": "Fighter",
-        "englishDescription": "Slightly increase passing ability. (Late Surger)"
+        "englishDescription": "Slightly increase acceleration for a medium duration when trying to pass another runner. (Late Surger)"
     },
     "Highlander": {
         "id": 201581,
@@ -1518,6 +2013,16 @@
         "id": 201601,
         "englishName": "Groundwork",
         "englishDescription": "Slightly increase acceleration after activating many skills early-race."
+    },
+    "Head-On": {
+        "id": 201902,
+        "englishName": "Head-On",
+        "englishDescription": "Slightly increase acceleration when positioned toward the front late-race. (Pace Chaser)"
+    },
+    "Take the Chance": {
+        "id": 202082,
+        "englishName": "Take the Chance",
+        "englishDescription": "If positioned toward the back late-race, slightly increase acceleration. (Medium)"
     },
     "Corner Connoisseur": {
         "id": 200341,
@@ -1567,7 +2072,7 @@
     "Plan X": {
         "id": 200991,
         "englishName": "Plan X",
-        "englishDescription": "Increase passing ability when positioned toward the front mid-race. (Sprint)"
+        "englishDescription": "Increase passing ability when positioned toward the front upon approaching late-race. (Sprint)"
     },
     "Step on the Gas!": {
         "id": 201061,
@@ -1577,7 +2082,7 @@
     "Reignition": {
         "id": 201291,
         "englishName": "Reignition",
-        "englishDescription": "Increase acceleration when positioned toward the back mid-race. (Front Runner)"
+        "englishDescription": "Increase acceleration when not in the lead mid-race. (Front Runner)"
     },
     "Technician": {
         "id": 201331,
@@ -1597,7 +2102,17 @@
     "Hard Worker": {
         "id": 201401,
         "englishName": "Hard Worker",
-        "englishDescription": "Moderately increase passing ability. (Late Surger)"
+        "englishDescription": "Moderately increase acceleration for a medium duration when trying to pass another runner. (Late Surger)"
+    },
+    "From the Brink": {
+        "id": 202081,
+        "englishName": "From the Brink",
+        "englishDescription": "If positioned toward the back late-race, increase acceleration. (Medium)"
+    },
+    "Neck and Neck": {
+        "id": 201901,
+        "englishName": "Neck and Neck",
+        "englishDescription": "Increase acceleration when positioned toward the front late-race. (Pace Chaser)"
     },
     "Feel the Burn!": {
         "id": 10271,
@@ -1612,7 +2127,7 @@
     "Shooting for Victory!": {
         "id": 100101,
         "englishName": "Shooting for Victory!",
-        "englishDescription": "Increase acceleration with a pow, a wow, and a bang when well-positioned on the final corner."
+        "englishDescription": "Increase acceleration with a pow, a wow, and a bang when well-positioned upon approaching the final straight."
     },
     "Let's Pump Some Iron!": {
         "id": 100271,
@@ -1629,6 +2144,21 @@
         "englishName": "Condor's Fury",
         "englishDescription": "Increase acceleration with blazing passion when aiming for the front from midpack on the final corner."
     },
+    "Moving Past, and Beyond": {
+        "id": 100591,
+        "englishName": "Moving Past, and Beyond",
+        "englishDescription": "Having run the race calmly, increase acceleration with hardened determination when making a move mid-race, or on a crucial corner late-race whilst in midpack."
+    },
+    "Budding Blossom": {
+        "id": 100511,
+        "englishName": "Budding Blossom",
+        "englishDescription": "If the skill user engaged in a challenge on a mid-race corner, increase acceleration when well-positioned late-race at least halfway through the final corner."
+    },
+    "Louder! Tracen Cheer!": {
+        "id": 110611,
+        "englishName": "Louder! Tracen Cheer!",
+        "englishDescription": "If the skill user stays toward the very back during the first half of the race without being rushed, unleash fighting spirit to increase acceleration on the final straight."
+    },
     "Corner Acceleration ×": {
         "id": 200343,
         "englishName": "Corner Acceleration ×",
@@ -1637,7 +2167,7 @@
     "Prudent Positioning": {
         "id": 200452,
         "englishName": "Prudent Positioning",
-        "englishDescription": "Moderately increase navigation early-race."
+        "englishDescription": "Increase navigation early-race."
     },
     "Go with the Flow": {
         "id": 200502,
@@ -1647,22 +2177,27 @@
     "Meticulous Measures": {
         "id": 201002,
         "englishName": "Meticulous Measures",
-        "englishDescription": "Moderately prepare to make for the finish line mid-race. (Sprint)"
+        "englishDescription": "Moderately prepare to make for the finish line for a medium duration mid-race. (Sprint)"
     },
     "Thunderbolt Step": {
         "id": 201132,
         "englishName": "Thunderbolt Step",
-        "englishDescription": "Moderately avoid becoming surrounded when positioned toward the back mid-race. (Medium)"
+        "englishDescription": "Moderately avoid becoming surrounded for a medium duration when positioned toward the back mid-race. (Medium)"
     },
     "Dodging Danger": {
         "id": 201262,
         "englishName": "Dodging Danger",
         "englishDescription": "Moderately avoid becoming surrounded early-race. (Front Runner)"
     },
+    "Forward, March!": {
+        "id": 201682,
+        "englishName": "Forward, March!",
+        "englishDescription": "Moderately prepare to aim for the front late-race. (Dirt)"
+    },
     "Center Stage": {
         "id": 200451,
         "englishName": "Center Stage",
-        "englishDescription": "Increase navigation early-race."
+        "englishDescription": "Greatly increase navigation early-race."
     },
     "Lane Legerdemain": {
         "id": 200501,
@@ -1672,17 +2207,22 @@
     "Perfect Prep!": {
         "id": 201001,
         "englishName": "Perfect Prep!",
-        "englishDescription": "Prepare to make for the finish line mid-race. (Sprint)"
+        "englishDescription": "Prepare to make for the finish line for a medium duration mid-race. (Sprint)"
     },
     "Lightning Step": {
         "id": 201131,
         "englishName": "Lightning Step",
-        "englishDescription": "Avoid becoming surrounded when positioned toward the back mid-race. (Medium)"
+        "englishDescription": "Avoid becoming surrounded for a medium duration when positioned toward the back mid-race. (Medium)"
     },
     "Sixth Sense": {
         "id": 201261,
         "englishName": "Sixth Sense",
         "englishDescription": "Avoid becoming surrounded early-race. (Front Runner)"
+    },
+    "Lead the Charge!": {
+        "id": 201681,
+        "englishName": "Lead the Charge!",
+        "englishDescription": "Prepare to aim for the front late-race. (Dirt)"
     },
     "Focus": {
         "id": 200432,
@@ -1698,6 +2238,16 @@
         "id": 200433,
         "englishName": "Gatekept",
         "englishDescription": "Moderately increase time lost to slow starts."
+    },
+    "Feelin' a Bit Silly": {
+        "id": 1100011,
+        "englishName": "Feelin' a Bit Silly",
+        "englishDescription": "Greatly decrease the racer's proficiency in starting races. Effects include slow starts and reduced starting acceleration. Removed at the end of the Career playthrough."
+    },
+    "You're Not the Boss of Me!": {
+        "id": 202141,
+        "englishName": "You're Not the Boss of Me!",
+        "englishDescription": "Increase time lost to slow starts and moderately decrease Wit."
     },
     "Hawkeye": {
         "id": 201122,
@@ -1782,12 +2332,22 @@
     "Ignited Spirit WIT": {
         "id": 210052,
         "englishName": "Ignited Spirit WIT",
-        "englishDescription": "Burn bright with team spirit, slightly increasing strategic navigation in proportion to the total Wit of racing team members early-race."
+        "englishDescription": "Burn bright with team spirit, slightly increasing strategic navigation for a medium duration in proportion to the total Wit of racing team members early-race."
     },
     "Burning Spirit WIT": {
         "id": 210051,
         "englishName": "Burning Spirit WIT",
-        "englishDescription": "Burn bright with team spirit, increasing strategic navigation in proportion to the total Wit of racing team members early-race."
+        "englishDescription": "Burn bright with team spirit, increasing strategic navigation for a medium duration in proportion to the total Wit of racing team members early-race."
+    },
+    "Glittering Star": {
+        "id": 210062,
+        "englishName": "Glittering Star",
+        "englishDescription": "Very slightly control breathing and kick forward in the second half of the race. Effect is increased in proportion to number of career wins."
+    },
+    "Radiant Star": {
+        "id": 210061,
+        "englishName": "Radiant Star",
+        "englishDescription": "Control breathing and kick forward in the second half of the race. Effect is increased in proportion to number of career wins."
     },
     "Hesitant Front Runners": {
         "id": 200851,
@@ -1817,7 +2377,7 @@
     "Speed Eater": {
         "id": 201082,
         "englishName": "Speed Eater",
-        "englishDescription": "Slightly steal velocity from runners behind when in the lead mid-race. (Mile)"
+        "englishDescription": "Slightly steal velocity from runners behind when positioned toward the front mid-race. (Mile)"
     },
     "Tether": {
         "id": 201152,
@@ -1832,7 +2392,7 @@
     "Greed for Speed": {
         "id": 201081,
         "englishName": "Greed for Speed",
-        "englishDescription": "Moderately steal velocity from runners behind when in the lead mid-race. (Mile)"
+        "englishDescription": "Moderately steal velocity from runners behind when positioned toward the front mid-race. (Mile)"
     },
     "Dominator": {
         "id": 201151,
@@ -1857,7 +2417,7 @@
     "Restart": {
         "id": 201302,
         "englishName": "Restart",
-        "englishDescription": "Slightly startle runners ahead when failing to get a lead early-race. (Front Runner)"
+        "englishDescription": "Slightly dull movement for runners ahead when not in the lead early-race. (Front Runner)"
     },
     "Battle Formation": {
         "id": 201091,
@@ -1937,7 +2497,7 @@
     "Stop Right There!": {
         "id": 201022,
         "englishName": "Stop Right There!",
-        "englishDescription": "Slightly cause panic in runners ahead when positioned toward the back early-race. (Sprint)"
+        "englishDescription": "Slightly cause panic in and very slightly dull movement for runners ahead when positioned toward the back early-race. (Sprint)"
     },
     "Murmur": {
         "id": 201162,
@@ -1957,7 +2517,7 @@
     "You've Got No Shot": {
         "id": 201021,
         "englishName": "You've Got No Shot",
-        "englishDescription": "Cause panic in runners ahead when positioned toward the back early-race. (Sprint)"
+        "englishDescription": "Cause panic in and moderately dull movement for runners ahead when positioned toward the back early-race. (Sprint)"
     },
     "Mystifying Murmur": {
         "id": 201161,
@@ -1967,12 +2527,17 @@
     "Stamina Siphon": {
         "id": 201221,
         "englishName": "Stamina Siphon",
-        "englishDescription": "Moderately steal endurance from runners ahead when positioned toward the back mid-race. (Long)"
+        "englishDescription": "Slightly steal endurance from runners ahead when positioned toward the back mid-race. (Long)"
     },
     "All-Seeing Eyes": {
         "id": 201441,
         "englishName": "All-Seeing Eyes",
         "englishDescription": "Startle other runners late-race. (Late Surger)"
+    },
+    "Tantalizing Trick": {
+        "id": 200772,
+        "englishName": "Tantalizing Trick",
+        "englishDescription": "Increase fatigue for rushed runners behind when positioned toward the front mid-race."
     },
     "Smoke Screen": {
         "id": 201232,
@@ -1993,5 +2558,20 @@
         "id": 201371,
         "englishName": "Dazzling Disorientation",
         "englishDescription": "Moderately narrow the field of view for runners behind when positioned toward the front late-race. (Pace Chaser)"
+    },
+    "Runaway": {
+        "id": 202051,
+        "englishName": "Runaway",
+        "englishDescription": "Attempt to gain an especially large lead and keep it until the finish. (Front Runner)"
+    },
+    "Carnival Bonus": {
+        "id": 1000011,
+        "englishName": "Carnival Bonus",
+        "englishDescription": "Gain +{0}% Carnival Points. This skill will disappear when the event ends."
+    },
+    "Best in Japan": {
+        "id": 202061,
+        "englishName": "Best in Japan",
+        "englishDescription": "Everyone's expectations strongly inspire the skill user, increasing velocity on the final corner. (Long)"
     }
 }

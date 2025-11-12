@@ -61,6 +61,7 @@ class Game(val myContext: Context) {
 		style = Style("B", "B", "B", "B")
 	)
 	private var inheritancesDone = 0
+    private var needToUpdateAptitudes: Boolean = true
 
 	data class Date(
 		val year: Int,
@@ -322,7 +323,7 @@ class Game(val myContext: Context) {
 			// Perform updates here if necessary.
             val finalsLocation = imageUtils.findImageWithBitmap("race_select_extra_locked_uma_finals", sourceBitmap, suppressError = true, region = imageUtils.regionBottomHalf)
             updateDate(isFinals = (finalsLocation != null))
-            if (currentDate.turnNumber % 10 == 0) updateAptitudes()
+            if (needToUpdateAptitudes) updateAptitudes()
 			true
 		} else if (!enablePopupCheck && imageUtils.findImageWithBitmap("cancel", sourceBitmap, region = imageUtils.regionBottomHalf) != null &&
 			imageUtils.findImageWithBitmap("race_confirm", sourceBitmap, region = imageUtils.regionBottomHalf) != null) {
@@ -500,6 +501,7 @@ class Game(val myContext: Context) {
 			
 			// Update preferred distance based on new aptitudes.
 			training.updatePreferredDistance()
+            needToUpdateAptitudes = false
 		}
 	}
 
@@ -564,6 +566,7 @@ class Game(val myContext: Context) {
 			if (findAndTapImage("inheritance", tries = 1, region = imageUtils.regionBottomHalf)) {
 				MessageLog.i(TAG, "\nClaimed an inheritance on ${printFormattedDate()}.")
 				inheritancesDone++
+                needToUpdateAptitudes = true
 				true
 			} else {
 				false
@@ -683,8 +686,8 @@ class Game(val myContext: Context) {
 			MessageLog.i(TAG, "[MISC] There is a race retry popup.")
 			wait(5.0)
 		} else if (findAndTapImage("race_accept_trophy", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
-			MessageLog.i(TAG, "[MISC] There is a possible popup to accept a trophy.")
-			racing.finishRace(true, isExtra = true)
+			printToLog("[MISC] There is a possible popup to accept a trophy.")
+			racing.finalizeRaceResults(true, isExtra = true)
 		} else if (findAndTapImage("race_end", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
 			MessageLog.i(TAG, "[MISC] Ended a leftover race.")
 		} else if (imageUtils.findImageWithBitmap("connection_error", sourceBitmap, region = imageUtils.regionMiddle, suppressError = true) != null) {

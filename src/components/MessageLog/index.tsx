@@ -160,29 +160,24 @@ const MessageLog = () => {
             settings.racing.racingPlan && settings.racing.racingPlan !== "[]" && typeof settings.racing.racingPlan === "string"
                 ? `${JSON.parse(settings.racing.racingPlan).length} Race(s) Selected`
                 : "None Selected"
-        const racingPlanDataString = settings.racing.racingPlanData !== "" ? `${settings.racing.racingPlanData.substring(0, 100)}...` : "None"
 
         return `🏁 Campaign Selected: ${settings.general.scenario !== "" ? `${settings.general.scenario}` : "Please select one in the Select Campaign option"}
 
 ---------- Training Event Options ----------
-👤 Character Selected: ${
-            settings.trainingEvent.selectAllCharacters
-                ? `All ${Object.keys(settings.trainingEvent.characterEventData).length} Characters Selected`
-                : Object.keys(settings.trainingEvent.characterEventData).length > 0
-                ? `${Object.keys(settings.trainingEvent.characterEventData).length} Characters Selected`
-                : "Please select one in the Training Event Settings"
-        }
-🃏 Support(s) Selected: ${
-            settings.trainingEvent.selectAllSupportCards
-                ? `All ${Object.keys(settings.trainingEvent.supportEventData).length} Support Cards Selected`
-                : Object.keys(settings.trainingEvent.supportEventData).length > 0
-                ? `${Object.keys(settings.trainingEvent.supportEventData).length} Support Cards Selected`
-                : "Please select one in the Training Event Settings"
-        }
 🎭 Special Event Overrides: ${
             Object.keys(settings.trainingEvent.specialEventOverrides).length === 0
                 ? "No Special Event Overrides"
                 : `${Object.keys(settings.trainingEvent.specialEventOverrides).length} Special Event Overrides applied`
+        }
+👤 Character Event Overrides: ${
+            Object.keys(settings.trainingEvent.characterEventOverrides).length === 0
+                ? "No Character Event Overrides"
+                : `${Object.keys(settings.trainingEvent.characterEventOverrides).length} Character Event Override(s) applied`
+        }
+💪 Support Event Overrides: ${
+            Object.keys(settings.trainingEvent.supportEventOverrides).length === 0
+                ? "No Support Event Overrides"
+                : `${Object.keys(settings.trainingEvent.supportEventOverrides).length} Support Event Override(s) applied`
         }
 🔋 Prioritize Energy Options: ${settings.trainingEvent.enablePrioritizeEnergyOptions ? "✅" : "❌"}
 
@@ -293,7 +288,10 @@ ${longTargetsString}
 
     // Filter messages based on search query (excluding intro messages).
     const filteredMessages = useMemo(() => {
-        if (!searchQuery.trim()) return processedMessages
+        if (!searchQuery.trim()) {
+            // Always return a new array reference to ensure FlashList detects the change.
+            return [...processedMessages]
+        }
 
         const query = searchQuery.toLowerCase()
         return processedMessages.filter((message) => {
@@ -304,6 +302,10 @@ ${longTargetsString}
             return message.text.toLowerCase().includes(query)
         })
     }, [processedMessages, searchQuery])
+
+    // Force the CustomScrollView to refresh the FlashList when search is cleared by using a key that changes.
+    // This ensures a complete remount when transitioning from searching to having no search query.
+    const listKey = useMemo(() => (searchQuery.trim().length === 0 ? "all-messages" : `search-${searchQuery}`), [searchQuery])
 
     // Font size control functions.
     const increaseFontSize = useCallback(() => {
@@ -395,6 +397,7 @@ ${longTargetsString}
             {/* Log Messages */}
             <View style={styles.logContainer}>
                 <CustomScrollView
+                    key={listKey}
                     targetProps={{
                         data: filteredMessages,
                         renderItem: renderLogItem,

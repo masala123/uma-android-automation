@@ -1,7 +1,5 @@
 import { createContext, useState } from "react"
 import { startTiming } from "../lib/performanceLogger"
-import charactersData from "../data/characters.json"
-import supportsData from "../data/supports.json"
 import racesData from "../data/races.json"
 
 export interface Settings {
@@ -31,16 +29,17 @@ export interface Settings {
         enableRaceStrategyOverride: boolean
         juniorYearRaceStrategy: string
         originalRaceStrategy: string
+        minimumQualityThreshold: number
+        timeDecayFactor: number
+        improvementThreshold: number
     }
 
     // Training Event settings
     trainingEvent: {
         enablePrioritizeEnergyOptions: boolean
         specialEventOverrides: Record<string, { selectedOption: string; requiresConfirmation: boolean }>
-        selectAllCharacters: boolean
-        selectAllSupportCards: boolean
-        characterEventData: Record<string, Record<string, string[]>>
-        supportEventData: Record<string, Record<string, string[]>>
+        characterEventOverrides: Record<string, number>
+        supportEventOverrides: Record<string, number>
     }
 
     // Misc settings
@@ -148,6 +147,9 @@ export const defaultSettings: Settings = {
         enableRaceStrategyOverride: false,
         juniorYearRaceStrategy: "Front",
         originalRaceStrategy: "Pace",
+        minimumQualityThreshold: 70.0,
+        timeDecayFactor: 0.80,
+        improvementThreshold: 25.0,
     },
     trainingEvent: {
         enablePrioritizeEnergyOptions: false,
@@ -193,10 +195,8 @@ export const defaultSettings: Settings = {
                 requiresConfirmation: false,
             },
         },
-        selectAllCharacters: true,
-        selectAllSupportCards: true,
-        characterEventData: charactersData as Record<string, Record<string, string[]>>,
-        supportEventData: supportsData as Record<string, Record<string, string[]>>,
+        characterEventOverrides: {},
+        supportEventOverrides: {},
     },
     misc: {
         enableSettingsDisplay: false,

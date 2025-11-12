@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useState } from "react"
 import { View, Text, ScrollView, StyleSheet, Modal, TouchableOpacity, Dimensions } from "react-native"
 import { useNavigation } from "@react-navigation/native"
 import { useTheme } from "../../context/ThemeContext"
-import { BotStateContext } from "../../context/BotStateContext"
+import { BotStateContext, defaultSettings } from "../../context/BotStateContext"
 import CustomButton from "../../components/CustomButton"
 import CustomSlider from "../../components/CustomSlider"
 import CustomCheckbox from "../../components/CustomCheckbox"
@@ -19,7 +19,10 @@ const TrainingSettings = () => {
     const [blacklistModalVisible, setBlacklistModalVisible] = useState(false)
     const [prioritizationModalVisible, setPrioritizationModalVisible] = useState(false)
 
-    const { settings, setSettings, defaultSettings } = bsc
+    const { settings, setSettings } = bsc
+    // Merge current training settings with defaults to handle missing properties.
+    const trainingSettings = { ...defaultSettings.training, ...settings.training }
+    const trainingStatTargetSettings = { ...defaultSettings.trainingStatTarget, ...settings.trainingStatTarget }
     const {
         maximumFailureChance,
         disableTrainingOnMaxedStat,
@@ -30,12 +33,12 @@ const TrainingSettings = () => {
         enableRiskyTraining,
         riskyTrainingMinStatGain,
         riskyTrainingMaxFailureChance,
-    } = settings.training
+    } = trainingSettings
 
     const [statPrioritizationItems, setStatPrioritizationItems] = useState<string[]>(
-        settings.training.statPrioritization.length > 0 ? settings.training.statPrioritization : defaultSettings.training.statPrioritization
+        trainingSettings.statPrioritization.length > 0 ? trainingSettings.statPrioritization : defaultSettings.training.statPrioritization
     )
-    const [blacklistItems, setBlacklistItems] = useState<string[]>(settings.training.trainingBlacklist.length > 0 ? settings.training.trainingBlacklist : defaultSettings.training.trainingBlacklist)
+    const [blacklistItems, setBlacklistItems] = useState<string[]>(trainingSettings.trainingBlacklist.length > 0 ? trainingSettings.trainingBlacklist : defaultSettings.training.trainingBlacklist)
 
     useEffect(() => {
         updateTrainingSetting("statPrioritization", statPrioritizationItems)
@@ -411,6 +414,8 @@ const TrainingSettings = () => {
                         </View>
                         <Text style={[styles.label, { fontSize: 14, color: colors.foreground, opacity: 0.7, marginTop: 4 }]}>
                             Set the preferred race distance for training targets. "Auto" will automatically determine based on character aptitudes reading from left to right (S {">"} A priority).
+                            {"\n\n"}
+                            For example, if Gold Ship has an aptitude of A for both Medium and Long, Auto will use Medium as the preferred distance. Whereas if Medium is A and Long is S, then Auto will instead use Long as the preferred distance.
                         </Text>
                     </View>
 
@@ -432,7 +437,7 @@ const TrainingSettings = () => {
                                 children: (
                                     <>
                                         <CustomSlider
-                                            value={settings.trainingStatTarget.trainingSprintStatTarget_speedStatTarget}
+                                            value={trainingStatTargetSettings.trainingSprintStatTarget_speedStatTarget}
                                             placeholder={defaultSettings.trainingStatTarget.trainingSprintStatTarget_speedStatTarget}
                                             onValueChange={(value) => updateTrainingStatTarget("trainingSprintStatTarget_speedStatTarget", value)}
                                             min={100}
@@ -445,7 +450,7 @@ const TrainingSettings = () => {
                                         />
                                         <CustomSlider
                                             placeholder={defaultSettings.trainingStatTarget.trainingSprintStatTarget_staminaStatTarget}
-                                            value={settings.trainingStatTarget.trainingSprintStatTarget_staminaStatTarget}
+                                            value={trainingStatTargetSettings.trainingSprintStatTarget_staminaStatTarget}
                                             onValueChange={(value) => updateTrainingStatTarget("trainingSprintStatTarget_staminaStatTarget", value)}
                                             min={100}
                                             max={1200}
@@ -457,7 +462,7 @@ const TrainingSettings = () => {
                                         />
                                         <CustomSlider
                                             placeholder={defaultSettings.trainingStatTarget.trainingSprintStatTarget_powerStatTarget}
-                                            value={settings.trainingStatTarget.trainingSprintStatTarget_powerStatTarget}
+                                            value={trainingStatTargetSettings.trainingSprintStatTarget_powerStatTarget}
                                             onValueChange={(value) => updateTrainingStatTarget("trainingSprintStatTarget_powerStatTarget", value)}
                                             min={100}
                                             max={1200}
@@ -469,7 +474,7 @@ const TrainingSettings = () => {
                                         />
                                         <CustomSlider
                                             placeholder={defaultSettings.trainingStatTarget.trainingSprintStatTarget_gutsStatTarget}
-                                            value={settings.trainingStatTarget.trainingSprintStatTarget_gutsStatTarget}
+                                            value={trainingStatTargetSettings.trainingSprintStatTarget_gutsStatTarget}
                                             onValueChange={(value) => updateTrainingStatTarget("trainingSprintStatTarget_gutsStatTarget", value)}
                                             min={100}
                                             max={1200}
@@ -481,7 +486,7 @@ const TrainingSettings = () => {
                                         />
                                         <CustomSlider
                                             placeholder={defaultSettings.trainingStatTarget.trainingSprintStatTarget_witStatTarget}
-                                            value={settings.trainingStatTarget.trainingSprintStatTarget_witStatTarget}
+                                            value={trainingStatTargetSettings.trainingSprintStatTarget_witStatTarget}
                                             onValueChange={(value) => updateTrainingStatTarget("trainingSprintStatTarget_witStatTarget", value)}
                                             min={100}
                                             max={1200}
@@ -501,7 +506,7 @@ const TrainingSettings = () => {
                                     <>
                                         <CustomSlider
                                             placeholder={defaultSettings.trainingStatTarget.trainingMileStatTarget_speedStatTarget}
-                                            value={settings.trainingStatTarget.trainingMileStatTarget_speedStatTarget}
+                                            value={trainingStatTargetSettings.trainingMileStatTarget_speedStatTarget}
                                             onValueChange={(value) => updateTrainingStatTarget("trainingMileStatTarget_speedStatTarget", value)}
                                             min={100}
                                             max={1200}
@@ -513,7 +518,7 @@ const TrainingSettings = () => {
                                         />
                                         <CustomSlider
                                             placeholder={defaultSettings.trainingStatTarget.trainingMileStatTarget_staminaStatTarget}
-                                            value={settings.trainingStatTarget.trainingMileStatTarget_staminaStatTarget}
+                                            value={trainingStatTargetSettings.trainingMileStatTarget_staminaStatTarget}
                                             onValueChange={(value) => updateTrainingStatTarget("trainingMileStatTarget_staminaStatTarget", value)}
                                             min={100}
                                             max={1200}
@@ -525,7 +530,7 @@ const TrainingSettings = () => {
                                         />
                                         <CustomSlider
                                             placeholder={defaultSettings.trainingStatTarget.trainingMileStatTarget_powerStatTarget}
-                                            value={settings.trainingStatTarget.trainingMileStatTarget_powerStatTarget}
+                                            value={trainingStatTargetSettings.trainingMileStatTarget_powerStatTarget}
                                             onValueChange={(value) => updateTrainingStatTarget("trainingMileStatTarget_powerStatTarget", value)}
                                             min={100}
                                             max={1200}
@@ -537,7 +542,7 @@ const TrainingSettings = () => {
                                         />
                                         <CustomSlider
                                             placeholder={defaultSettings.trainingStatTarget.trainingMileStatTarget_gutsStatTarget}
-                                            value={settings.trainingStatTarget.trainingMileStatTarget_gutsStatTarget}
+                                            value={trainingStatTargetSettings.trainingMileStatTarget_gutsStatTarget}
                                             onValueChange={(value) => updateTrainingStatTarget("trainingMileStatTarget_gutsStatTarget", value)}
                                             min={100}
                                             max={1200}
@@ -549,7 +554,7 @@ const TrainingSettings = () => {
                                         />
                                         <CustomSlider
                                             placeholder={defaultSettings.trainingStatTarget.trainingMileStatTarget_witStatTarget}
-                                            value={settings.trainingStatTarget.trainingMileStatTarget_witStatTarget}
+                                            value={trainingStatTargetSettings.trainingMileStatTarget_witStatTarget}
                                             onValueChange={(value) => updateTrainingStatTarget("trainingMileStatTarget_witStatTarget", value)}
                                             min={100}
                                             max={1200}
@@ -569,7 +574,7 @@ const TrainingSettings = () => {
                                     <>
                                         <CustomSlider
                                             placeholder={defaultSettings.trainingStatTarget.trainingMediumStatTarget_speedStatTarget}
-                                            value={settings.trainingStatTarget.trainingMediumStatTarget_speedStatTarget}
+                                            value={trainingStatTargetSettings.trainingMediumStatTarget_speedStatTarget}
                                             onValueChange={(value) => updateTrainingStatTarget("trainingMediumStatTarget_speedStatTarget", value)}
                                             min={100}
                                             max={1200}
@@ -581,7 +586,7 @@ const TrainingSettings = () => {
                                         />
                                         <CustomSlider
                                             placeholder={defaultSettings.trainingStatTarget.trainingMediumStatTarget_staminaStatTarget}
-                                            value={settings.trainingStatTarget.trainingMediumStatTarget_staminaStatTarget}
+                                            value={trainingStatTargetSettings.trainingMediumStatTarget_staminaStatTarget}
                                             onValueChange={(value) => updateTrainingStatTarget("trainingMediumStatTarget_staminaStatTarget", value)}
                                             min={100}
                                             max={1200}
@@ -593,7 +598,7 @@ const TrainingSettings = () => {
                                         />
                                         <CustomSlider
                                             placeholder={defaultSettings.trainingStatTarget.trainingMediumStatTarget_powerStatTarget}
-                                            value={settings.trainingStatTarget.trainingMediumStatTarget_powerStatTarget}
+                                            value={trainingStatTargetSettings.trainingMediumStatTarget_powerStatTarget}
                                             onValueChange={(value) => updateTrainingStatTarget("trainingMediumStatTarget_powerStatTarget", value)}
                                             min={100}
                                             max={1200}
@@ -605,7 +610,7 @@ const TrainingSettings = () => {
                                         />
                                         <CustomSlider
                                             placeholder={defaultSettings.trainingStatTarget.trainingMediumStatTarget_gutsStatTarget}
-                                            value={settings.trainingStatTarget.trainingMediumStatTarget_gutsStatTarget}
+                                            value={trainingStatTargetSettings.trainingMediumStatTarget_gutsStatTarget}
                                             onValueChange={(value) => updateTrainingStatTarget("trainingMediumStatTarget_gutsStatTarget", value)}
                                             min={100}
                                             max={1200}
@@ -617,7 +622,7 @@ const TrainingSettings = () => {
                                         />
                                         <CustomSlider
                                             placeholder={defaultSettings.trainingStatTarget.trainingMediumStatTarget_witStatTarget}
-                                            value={settings.trainingStatTarget.trainingMediumStatTarget_witStatTarget}
+                                            value={trainingStatTargetSettings.trainingMediumStatTarget_witStatTarget}
                                             onValueChange={(value) => updateTrainingStatTarget("trainingMediumStatTarget_witStatTarget", value)}
                                             min={100}
                                             max={1200}
@@ -637,7 +642,7 @@ const TrainingSettings = () => {
                                     <>
                                         <CustomSlider
                                             placeholder={defaultSettings.trainingStatTarget.trainingLongStatTarget_speedStatTarget}
-                                            value={settings.trainingStatTarget.trainingLongStatTarget_speedStatTarget}
+                                            value={trainingStatTargetSettings.trainingLongStatTarget_speedStatTarget}
                                             onValueChange={(value) => updateTrainingStatTarget("trainingLongStatTarget_speedStatTarget", value)}
                                             min={100}
                                             max={1200}
@@ -649,7 +654,7 @@ const TrainingSettings = () => {
                                         />
                                         <CustomSlider
                                             placeholder={defaultSettings.trainingStatTarget.trainingLongStatTarget_staminaStatTarget}
-                                            value={settings.trainingStatTarget.trainingLongStatTarget_staminaStatTarget}
+                                            value={trainingStatTargetSettings.trainingLongStatTarget_staminaStatTarget}
                                             onValueChange={(value) => updateTrainingStatTarget("trainingLongStatTarget_staminaStatTarget", value)}
                                             min={100}
                                             max={1200}
@@ -661,7 +666,7 @@ const TrainingSettings = () => {
                                         />
                                         <CustomSlider
                                             placeholder={defaultSettings.trainingStatTarget.trainingLongStatTarget_powerStatTarget}
-                                            value={settings.trainingStatTarget.trainingLongStatTarget_powerStatTarget}
+                                            value={trainingStatTargetSettings.trainingLongStatTarget_powerStatTarget}
                                             onValueChange={(value) => updateTrainingStatTarget("trainingLongStatTarget_powerStatTarget", value)}
                                             min={100}
                                             max={1200}
@@ -673,7 +678,7 @@ const TrainingSettings = () => {
                                         />
                                         <CustomSlider
                                             placeholder={defaultSettings.trainingStatTarget.trainingLongStatTarget_gutsStatTarget}
-                                            value={settings.trainingStatTarget.trainingLongStatTarget_gutsStatTarget}
+                                            value={trainingStatTargetSettings.trainingLongStatTarget_gutsStatTarget}
                                             onValueChange={(value) => updateTrainingStatTarget("trainingLongStatTarget_gutsStatTarget", value)}
                                             min={100}
                                             max={1200}
@@ -685,7 +690,7 @@ const TrainingSettings = () => {
                                         />
                                         <CustomSlider
                                             placeholder={defaultSettings.trainingStatTarget.trainingLongStatTarget_witStatTarget}
-                                            value={settings.trainingStatTarget.trainingLongStatTarget_witStatTarget}
+                                            value={trainingStatTargetSettings.trainingLongStatTarget_witStatTarget}
                                             onValueChange={(value) => updateTrainingStatTarget("trainingLongStatTarget_witStatTarget", value)}
                                             min={100}
                                             max={1200}

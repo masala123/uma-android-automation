@@ -2,7 +2,7 @@ import { useContext } from "react"
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native"
 import { useNavigation } from "@react-navigation/native"
 import { useTheme } from "../../context/ThemeContext"
-import { BotStateContext } from "../../context/BotStateContext"
+import { BotStateContext, defaultSettings } from "../../context/BotStateContext"
 import CustomCheckbox from "../../components/CustomCheckbox"
 import CustomSelect from "../../components/CustomSelect"
 import { Input } from "../../components/ui/input"
@@ -15,8 +15,10 @@ const RacingSettings = () => {
     const bsc = useContext(BotStateContext)
 
     const { settings, setSettings } = bsc
+    // Merge current racing settings with defaults to handle missing properties.
+    const racingSettings = { ...defaultSettings.racing, ...settings.racing }
     const { enableFarmingFans, daysToRunExtraRaces, disableRaceRetries, enableStopOnMandatoryRaces, enableForceRacing, enableRaceStrategyOverride, juniorYearRaceStrategy, originalRaceStrategy } =
-        settings.racing
+        racingSettings
 
     const updateRacingSetting = (key: keyof typeof settings.racing, value: any) => {
         setSettings({

@@ -49,7 +49,7 @@ open class Campaign(val game: Game) {
 					game.updateStatValueMapping()
 
                     // Check if there are fan or trophy requirements that need to be met with racing.
-					game.racing.checkForRacingRequirements()
+					game.racing.checkRacingRequirements()
 
 					// If the required skill points has been reached, stop the bot.
 					if (game.enableSkillPointCheck && game.imageUtils.determineSkillPoints() >= game.skillPointsRequired) {
@@ -74,20 +74,19 @@ open class Campaign(val game: Game) {
 							game.racing.skipRacing = false
 						} else if (game.recoverMood() && !game.checkFinals()) {
 							game.racing.skipRacing = false
-						} else if (!game.racing.isExtraRaceEligible()) {
-							MessageLog.i(TAG, "Training due to it not being an extra race day.")
+						} else if (game.currentDate.turnNumber >= 16 && !game.racing.checkEligibilityToStartExtraRacingProcess()) {
+							game.printToLog("[INFO] Training due to it not being an extra race day.", tag = tag)
 							game.training.handleTraining()
 							game.racing.skipRacing = false
 						} else {
-							MessageLog.i(TAG, "Bot has no injuries, mood is sufficient and extra races can be run today. Setting needToRace to true.")
+							game.printToLog("[INFO] Bot has no injuries, mood is sufficient and extra races can be run today. Setting the needToRace flag to true.", tag = tag)
 							needToRace = true
 						}
 					}
 				}
 
                 if (game.racing.encounteredRacingPopup || needToRace) {
-                    MessageLog.i(TAG, "Racing by default.")
-                    // The !game.racing.skipRacing was removed due to possibility of getting stuck in a loop.
+                    game.printToLog("[INFO] All checks are cleared for racing.", tag = tag)
                     if (!handleRaceEvents()) {
                         if (game.racing.detectedMandatoryRaceCheck) {
                             MessageLog.i(TAG, "\n[END] Stopping bot due to detection of Mandatory Race.")
@@ -96,6 +95,7 @@ open class Campaign(val game: Game) {
                         }
                         game.findAndTapImage("back", tries = 1, region = game.imageUtils.regionBottomHalf)
                         game.racing.skipRacing = !game.racing.enableForceRacing
+                        game.wait(1.0)
                         game.training.handleTraining()
                     }
                 }
