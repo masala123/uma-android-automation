@@ -45,7 +45,7 @@ const TrainingEventSettings = () => {
     const { settings, setSettings } = bsc
     // Merge current training event settings with defaults to handle missing properties.
     const trainingEventSettings = { ...defaultSettings.trainingEvent, ...settings.trainingEvent }
-    const { enablePrioritizeEnergyOptions, specialEventOverrides } = trainingEventSettings
+    const { enablePrioritizeEnergyOptions, specialEventOverrides, characterEventOverrides, supportEventOverrides } = trainingEventSettings
 
     const [eventOverrideModalVisible, setEventOverrideModalVisible] = useState(false)
     const [eventOverrideSearchQuery, setEventOverrideSearchQuery] = useState("")
