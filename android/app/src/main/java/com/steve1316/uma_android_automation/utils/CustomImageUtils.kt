@@ -1461,7 +1461,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	 * @param height The height of the crop region.
 	 * @param useThreshold Whether to apply binary thresholding. Defaults to true.
 	 * @param useGrayscale Whether to convert to grayscale first. Defaults to true.
-	 * @param scaleUp Factor to scale up the cropped image before OCR. Defaults to 1 (no scaling).
+	 * @param scale Scale factor to apply to the processed image. Values > 1 scale up, values < 1 scale down. Defaults to 1.0 (no scaling).
 	 * @param ocrEngine The OCR engine to use ("tesseract", "mlkit", or "tesseract_digits"). Defaults to "tesseract".
 	 * @param debugName Optional name for debug image saving.
 	 * 
@@ -1475,57 +1475,21 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		height: Int,
 		useThreshold: Boolean = true,
 		useGrayscale: Boolean = true,
-		scaleUp: Int = 1,
+		scale: Double = 1.0,
 		ocrEngine: String = "tesseract",
 		debugName: String = ""
 	): String {
-		val croppedBitmap = createSafeBitmap(sourceBitmap, x, y, width, height, debugName) 
-			?: return ""
-		
-		val cvImage = Mat()
-		Utils.bitmapToMat(croppedBitmap, cvImage)
-		
-		// Apply grayscale if needed.
-		if (useGrayscale) {
-			Imgproc.cvtColor(cvImage, cvImage, Imgproc.COLOR_BGR2GRAY)
-			if (debugMode && debugName.isNotEmpty()) {
-				Imgcodecs.imwrite("$matchFilePath/debug_${debugName}_afterGrayscale.png", cvImage)
-			}
-		}
-		
-		// Apply thresholding if needed.
-		val processedImage = if (useThreshold) {
-			val bwImage = Mat()
-			Imgproc.threshold(cvImage, bwImage, threshold.toDouble(), 255.0, Imgproc.THRESH_BINARY)
-			if (debugMode && debugName.isNotEmpty()) {
-				Imgcodecs.imwrite("$matchFilePath/debug_${debugName}_afterThreshold.png", bwImage)
-			}
-			cvImage.release()
-			bwImage
-		} else {
-			cvImage
-		}
-		
-		// Scale up if needed.
-		val finalBitmap = if (scaleUp > 1) {
-			val resultBitmap = createBitmap(processedImage.cols(), processedImage.rows())
-			Utils.matToBitmap(processedImage, resultBitmap)
-			resultBitmap.scale(resultBitmap.width * scaleUp, resultBitmap.height * scaleUp)
-		} else {
-			val resultBitmap = createBitmap(processedImage.cols(), processedImage.rows())
-			Utils.matToBitmap(processedImage, resultBitmap)
-			resultBitmap
-		}
-		
-		// Perform OCR based on selected engine.
-		val result = when (ocrEngine) {
-			"mlkit" -> performMLKitOCR(finalBitmap)
-			"tesseract_digits" -> performTesseractDigitsOCR(finalBitmap)
-			else -> performTesseractOCR(finalBitmap)
-		}
-		
-		processedImage.release()
-		return result
+		// Perform OCR using findText() from ImageUtils.
+		return findText(
+			cropRegion = intArrayOf(x, y, width, height),
+			grayscale = useGrayscale,
+			thresh = useThreshold,
+			threshold = threshold.toDouble(),
+			thresholdMax = 255.0,
+			scale = scale,
+			sourceBitmap = sourceBitmap,
+			detectDigitsOnly = ocrEngine == "tesseract_digits"
+		)
 	}
 
 	/**
