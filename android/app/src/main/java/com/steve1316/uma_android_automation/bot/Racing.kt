@@ -740,8 +740,21 @@ class Racing (private val game: Game) {
         // If the setting to force racing extra races is enabled, always return true.
         if (enableForceRacing) return true
 
+        // Check for common restrictions that apply to both smart and standard racing via screen checks.
+        val sourceBitmap = game.imageUtils.getSourceBitmap()
+        if (game.imageUtils.findImageWithBitmap("race_select_extra_locked_uma_finals", sourceBitmap, region = game.imageUtils.regionBottomHalf) != null) {
+            MessageLog.i(TAG, "[RACE] It is UMA Finals right now so there will be no extra races. Stopping extra race check.")
+            return false
+        } else if (game.imageUtils.findImageWithBitmap("race_select_extra_locked", sourceBitmap, region = game.imageUtils.regionBottomHalf) != null) {
+            MessageLog.i(TAG, "[RACE] Extra Races button is currently locked. Stopping extra race check.")
+            return false
+        } else if (game.imageUtils.findImageWithBitmap("recover_energy_summer", sourceBitmap, region = game.imageUtils.regionBottomHalf) != null) {
+            MessageLog.i(TAG, "[RACE] It is currently Summer right now. Stopping extra race check.")
+            return false
+        }
+
         // For Classic and Senior Year, check if planned races are coming up in the look-ahead window and are eligible for racing.
-        if (game.currentDate.year != 1 && enableRacingPlan) {
+        if (enableFarmingFans && enableRacingPlan && game.currentDate.year != 1) {
             // Handle the user-selected planned races here.
             if (userPlannedRaces.isNotEmpty()) {
                 val currentTurnNumber = game.currentDate.turnNumber
@@ -794,6 +807,7 @@ class Racing (private val game: Game) {
         // Both requirements are independent of racing plan and farming fans settings.
         if (hasFanRequirement) {
             MessageLog.i(TAG, "[RACE] Fan requirement detected. Bypassing smart racing logic to fulfill requirement.")
+            return !raceRepeatWarningCheck
         } else if (hasTrophyRequirement) {
             // Check if G1 races exist at current turn before proceeding.
             // If no G1 races are available, it will still allow regular racing if it's a regular race day or smart racing day.
@@ -810,6 +824,8 @@ class Racing (private val game: Game) {
             } else {
                 MessageLog.i(TAG, "[RACE] Trophy requirement detected. G1 races available at turn ${game.currentDate.turnNumber}. Proceeding to racing screen.")
             }
+
+            return !raceRepeatWarningCheck
         } else if (enableRacingPlan && enableFarmingFans) {
             // Smart racing: Check turn-based eligibility before screen checks.
             // Only run opportunity cost analysis with smartRacingCheckInterval.
@@ -863,34 +879,7 @@ class Racing (private val game: Game) {
             } else {
                 MessageLog.i(TAG, "[RACE] Skipping opportunity cost analysis (turn ${game.currentDate.turnNumber} does not match smartRacingCheckInterval). Using cached optimal race day.")
             }
-        }
 
-        // Check for common restrictions that apply to both smart and standard racing via screen checks.
-        val sourceBitmap = game.imageUtils.getSourceBitmap()
-        val isUmaFinalsLocked = game.imageUtils.findImageWithBitmap("race_select_extra_locked_uma_finals", sourceBitmap, region = game.imageUtils.regionBottomHalf) != null
-        val isLocked = game.imageUtils.findImageWithBitmap("race_select_extra_locked", sourceBitmap, region = game.imageUtils.regionBottomHalf) != null
-        val isSummer = game.imageUtils.findImageWithBitmap("recover_energy_summer", sourceBitmap, region = game.imageUtils.regionBottomHalf) != null
-
-        if (isUmaFinalsLocked) {
-            MessageLog.i(TAG, "[RACE] It is UMA Finals right now so there will be no extra races. Stopping extra race check.")
-            return false
-        } else if (isLocked) {
-            MessageLog.i(TAG, "[RACE] Extra Races button is currently locked. Stopping extra race check.")
-            return false
-        } else if (isSummer) {
-            MessageLog.i(TAG, "[RACE] It is currently Summer right now. Stopping extra race check.")
-            return false
-        }
-
-        // If there are fan/trophy requirements, then proceed to starting the extra racing process.
-        // Otherwise, conditionally start the extra racing process based on the current date.
-        if (hasFanRequirement) {
-            MessageLog.i(TAG, "[RACE] Fan requirement detected. Allowing racing on any eligible day (independent of racing plan/farming fans).")
-            return !raceRepeatWarningCheck
-        } else if (hasTrophyRequirement) {
-            // G1 race availability was already checked above via database query. If no G1 races were found, regular racing eligibility was also checked.
-            return !raceRepeatWarningCheck
-        } else if (enableRacingPlan && enableFarmingFans) {
             // Check if current day matches the optimal race day or falls on the interval.
             val isOptimalDay = nextSmartRaceDay == dayNumber
             val isIntervalDay = dayNumber % daysToRunExtraRaces == 0
