@@ -1,34 +1,19 @@
 <AppUpdater>
   <update>
-    <latestVersion>4.0.1</latestVersion>
+    <latestVersion>4.0.2</latestVersion>
     <url>https://github.com/steve1316/uma-android-automation/releases</url>
     <releaseNotes>
-v4.0.1 - Changelog
-
-New Features
----
-- Add a new option in the Training Event Settings page to search and select specific options for specific character and support training events. This is separate from the existing special event overrides like New Years as those are already shared by all characters.
-- Add new options in the Racing Plan Settings page to customize the Opportunity Cost Analysis parameters.
+v4.0.2 - Changelog
 
 Adjustments
 ---
-- Update game data up to the Hishi Akebono / Balance Update (2025-11-11).
-- Aptitude detection updates will now run when the bot starts instead of later. It will also run again on Inheritances.
-- Added an example to the distance override option in the Training Settings page.
-- Remove the legacy character/support selection options in the Training Settings page to avoid confusion from users as to its purpose and impact on performance. Instead, the raw event data for both character and supports are now saved on app launch to SQLite.
-- Refactored Racing.kt to be more readible.
-- Minor improvements to some of the logging messages to be more clearer.
-- Adjusted conditions so that empty racing plans will still proceed with eligibility checks for extra races instead of prematurely ending.
+- Forgot to add the new character and support event overrides settings to the MessageLog.
 
 Fixed
 ---
-- Fix duplicate selection of races that occur more than once (like Arima Kinen) in the Racing Plan Settings page.
-- Fix extra races being skipped due to the bot thinking that the current day is not a good day to race even though Opportunity Cost Analysis says otherwise.
-- Updated scraper to better handle dynamic CSS classes.
-- Fix bug where user-selected planned races were not being checked for Senior Year.
-- Fix bug where the MessageLog will go blank when clearing the search query.
-- Fix bug where extra race eligibility checks were being performed before they are available in Junior Year July Early Phase.
-- Fix bug involving incorrect equality comparison to check for the OCR string being just the plus sign.
+- Fix bug where frontend will crash due to shallow merge of default settings on a fresh install.
+- Fix crash in the Training Event Settings page due to not destructuring the newly added variables.
+- Fix crash when importing old settings.
 
     </releaseNotes>
   </update>
