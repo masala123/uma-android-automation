@@ -216,7 +216,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		while (true) {
 			// Perform Tesseract OCR detection.
 			if ((255.0 - threshold - increment) > 0.0) {
-				result = imageUtils.findText(increment)
+				result = imageUtils.findEventTitle(increment)
 			} else {
 				break
 			}
