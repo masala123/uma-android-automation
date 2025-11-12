@@ -34,7 +34,7 @@ import androidx.core.net.toUri
  * Loaded into the React PackageList via MainApplication's instantiation of the StartPackage.
  */
 class StartModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaModule(reactContext), ActivityEventListener {
-    private val tag = "[${MainActivity.loggerTag}]StartModule"
+    private val TAG = "[${MainActivity.loggerTag}]StartModule"
     
     companion object {
         private var reactContext: ReactApplicationContext? = null
@@ -47,7 +47,7 @@ class StartModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
     init {
         StartModule.reactContext = reactContext
         StartModule.reactContext?.addActivityEventListener(this)
-        Log.d(tag, "StartModule is now initialized.")
+        Log.d(TAG, "StartModule is now initialized.")
     }
 
     override fun getName(): String {
@@ -65,7 +65,7 @@ class StartModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
                 MediaProjectionService.getStartIntent(reactContext!!, resultCode, data!!)
             )
             sendEvent("MediaProjectionService", "Running")
-            Log.d(tag, "MediaProjectionService is now running.")
+            Log.d(TAG, "MediaProjectionService is now running.")
         }
     }
 
@@ -92,7 +92,7 @@ class StartModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
         // unregister in stopProjection().
         EventBus.getDefault().unregister(this)
         EventBus.getDefault().register(this)
-        Log.d(tag, "Event Bus registered for StartModule")
+        Log.d(TAG, "Event Bus registered for StartModule")
         val mediaProjectionManager = reactContext?.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         reactContext?.startActivityForResult(mediaProjectionManager.createScreenCaptureIntent(), 100, null)
     }
@@ -102,7 +102,7 @@ class StartModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
      */
     private fun stopProjection() {
         EventBus.getDefault().unregister(this)
-        Log.d(tag, "Event Bus unregistered for StartModule")
+        Log.d(TAG, "Event Bus unregistered for StartModule")
         reactContext?.startService(MediaProjectionService.getStopIntent(reactContext!!))
         sendEvent("MediaProjectionService", "Not Running")
     }
@@ -135,7 +135,7 @@ class StartModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
      */
     private fun checkForOverlayPermission(): Boolean {
         if (!Settings.canDrawOverlays(this.reactApplicationContext.currentActivity)) {
-            Log.d(tag, "Application is missing overlay permission.")
+            Log.d(TAG, "Application is missing overlay permission.")
 
             val builder = AlertDialog.Builder(this.reactApplicationContext.currentActivity)
             builder.setTitle(R.string.overlay_disabled)
@@ -154,7 +154,7 @@ class StartModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
             return false
         }
 
-        Log.d(tag, "Application has permission to draw overlay.")
+        Log.d(TAG, "Application has permission to draw overlay.")
         return true
     }
 
@@ -171,7 +171,7 @@ class StartModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
             val enabled = prefString.contains(reactContext?.packageName.toString() + "/" + MyAccessibilityService::class.java.name)
 
             if (enabled) {
-                Log.d(tag, "This application's Accessibility Service is currently turned on.")
+                Log.d(TAG, "This application's Accessibility Service is currently turned on.")
                 return true
             }
         }
@@ -219,48 +219,48 @@ class StartModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
     fun onStartEvent(event: StartEvent) {
         if (event.message == "Entry Point ON") {
             // Initialize SQLite settings with detailed debugging.
-            Log.d(tag, "Starting SQLite settings initialization...")
+            Log.d(TAG, "Starting SQLite settings initialization...")
             
             // Check if the database file exists before attempting to initialize.
             val dbFile = java.io.File(context.filesDir, "SQLite/settings.db")
-            Log.d(tag, "Database file path: ${dbFile.absolutePath}")
-            Log.d(tag, "Database file exists: ${dbFile.exists()}")
-            Log.d(tag, "Database file can read: ${dbFile.canRead()}")
-            Log.d(tag, "Database file size: ${if (dbFile.exists()) dbFile.length() else "N/A"} bytes")
+            Log.d(TAG, "Database file path: ${dbFile.absolutePath}")
+            Log.d(TAG, "Database file exists: ${dbFile.exists()}")
+            Log.d(TAG, "Database file can read: ${dbFile.canRead()}")
+            Log.d(TAG, "Database file size: ${if (dbFile.exists()) dbFile.length() else "N/A"} bytes")
             
             // List the contents of the files directory to see what's actually there.
             val filesDir = context.filesDir
-            Log.d(tag, "Files directory: ${filesDir.absolutePath}")
+            Log.d(TAG, "Files directory: ${filesDir.absolutePath}")
             val files = filesDir.listFiles()
             if (files != null) {
-                Log.d(tag, "Files in files directory:")
+                Log.d(TAG, "Files in files directory:")
                 for (file in files) {
-                    Log.d(tag, "  - ${file.name} (${if (file.isDirectory) "dir" else "file"})")
+                    Log.d(TAG, "  - ${file.name} (${if (file.isDirectory) "dir" else "file"})")
                 }
             }
             
             // Check if SQLite subdirectory exists.
             val sqliteDir = java.io.File(context.filesDir, "SQLite")
-            Log.d(tag, "SQLite directory exists: ${sqliteDir.exists()}")
+            Log.d(TAG, "SQLite directory exists: ${sqliteDir.exists()}")
             if (sqliteDir.exists()) {
                 val sqliteFiles = sqliteDir.listFiles()
                 if (sqliteFiles != null) {
-                    Log.d(tag, "Files in SQLite directory:")
+                    Log.d(TAG, "Files in SQLite directory:")
                     for (file in sqliteFiles) {
-                        Log.d(tag, "  - ${file.name} (${file.length()} bytes)")
+                        Log.d(TAG, "  - ${file.name} (${file.length()} bytes)")
                     }
                 }
             }
             
             // Check if database is available before attempting to initialize.
             val settingsManager = SQLiteSettingsManager(context)
-            Log.d(tag, "Database is available: ${settingsManager.isDatabaseAvailable()}")
+            Log.d(TAG, "Database is available: ${settingsManager.isDatabaseAvailable()}")
             
             SettingsHelper.initialize(context)
             if (SettingsHelper.isAvailable()) {
-                Log.d(tag, "SQLite settings initialized successfully.")
+                Log.d(TAG, "SQLite settings initialized successfully.")
             } else {
-                Log.w(tag, "Failed to initialize SQLite settings, continuing with defaults.")
+                Log.w(TAG, "Failed to initialize SQLite settings, continuing with defaults.")
             }
 
             val entryPoint = Game(context)
@@ -285,7 +285,7 @@ class StartModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
         params.putInt("id", messageId++)
         if (emitter == null) {
             // Register the event emitter to send messages to JS.
-            Log.d(tag, "Event emitter not found to be able to send messages to the frontend. Registering now.")
+            Log.d(TAG, "Event emitter not found to be able to send messages to the frontend. Registering now.")
             emitter = reactContext?.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
         }
 
@@ -309,11 +309,11 @@ class StartModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
      */
     @Subscribe
     fun onSubscriberExceptionEvent(event: SubscriberExceptionEvent) {
-        Log.e(tag, "Received exception event to send: ${event.throwable}")
-        MessageLog.printToLog(event.throwable.toString(), MainActivity.loggerTag, isWarning = false, isError = true, skipPrintTime = false)
+        Log.e(TAG, "Received exception event to send: ${event.throwable}")
+        MessageLog.e(MainActivity.loggerTag, event.throwable.toString())
         for (line in event.throwable.stackTrace) {
-            MessageLog.printToLog("\t${line}", MainActivity.loggerTag, isWarning = false, isError = true, skipPrintTime = true)
+            MessageLog.e(MainActivity.loggerTag, "\t${line}", skipPrintTime = true)
         }
-        MessageLog.printToLog("", MainActivity.loggerTag, isWarning = false, isError = false, skipPrintTime = true)
+        MessageLog.d(MainActivity.loggerTag, "", skipPrintTime = true)
     }
 }

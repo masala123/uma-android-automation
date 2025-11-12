@@ -5,6 +5,7 @@ import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
 import com.steve1316.uma_android_automation.utils.SettingsHelper
 import com.steve1316.uma_android_automation.utils.SQLiteSettingsManager
+import com.steve1316.automation_library.utils.MessageLog
 import net.ricecode.similarity.JaroWinklerStrategy
 import net.ricecode.similarity.StringSimilarityServiceImpl
 import org.json.JSONObject
@@ -14,7 +15,7 @@ import org.json.JSONObject
  * known character and support card event data using string similarity algorithms.
  */
 class TrainingEventRecognizer(private val game: Game, private val imageUtils: CustomImageUtils) {
-	private val tag: String = "[${MainActivity.loggerTag}]TrainingEventRecognizer"
+	private val TAG: String = "[${MainActivity.loggerTag}]TrainingEventRecognizer"
 	
 	private var result = ""
 	private var confidence = 0.0
@@ -48,13 +49,13 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		val characterDataString = settingsManager.loadSetting("trainingEvent", "characterEventData")
 		if (characterDataString != null && characterDataString.isNotEmpty()) {
 			val jsonObject = JSONObject(characterDataString)
-			if (game.debugMode) game.printToLog("[DEBUG] Character event data length: ${jsonObject.length()}.", tag = tag)
+			if (game.debugMode) MessageLog.d(TAG, "Character event data length: ${jsonObject.length()}.")
 			jsonObject
 		} else {
 			null
 		}
 	} catch (e: Exception) {
-		if (game.debugMode) game.printToLog("[DEBUG] Failed to load character event data from SQLite: ${e.message}", tag = tag)
+		if (game.debugMode) MessageLog.d(TAG, "[DEBUG] Failed to load character event data from SQLite: ${e.message}")
 		null
 	}
 	
@@ -67,13 +68,13 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		val supportDataString = settingsManager.loadSetting("trainingEvent", "supportEventData")
 		if (supportDataString != null && supportDataString.isNotEmpty()) {
 			val jsonObject = JSONObject(supportDataString)
-			if (game.debugMode) game.printToLog("[DEBUG] Support event data length: ${jsonObject.length()}.", tag = tag)
+			if (game.debugMode) MessageLog.d(TAG, "Support event data length: ${jsonObject.length()}.")
 			jsonObject
 		} else {
 			null
 		}
 	} catch (e: Exception) {
-		if (game.debugMode) game.printToLog("[DEBUG] Failed to load support event data from SQLite: ${e.message}", tag = tag)
+		if (game.debugMode) MessageLog.d(TAG, "[DEBUG] Failed to load support event data from SQLite: ${e.message}")
 		null
 	}
 	
@@ -99,7 +100,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 	 * Attempt to find the most similar string from data compared to the string returned by OCR.
 	 */
 	private fun findMostSimilarString() {
-		game.printToLog("[TRAINING_EVENT_RECOGNIZER] Now starting process to find most similar string to: $result", tag = tag)
+		MessageLog.i(TAG, "[TRAINING_EVENT_RECOGNIZER] Now starting process to find most similar string to: $result")
 		
 		// Check if this matches any special event patterns first to filter false positives.
 		var matchedSpecialEvent: String? = null
@@ -111,7 +112,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		}
 		val isSpecialEvent = matchedSpecialEvent != null
 		if (isSpecialEvent) {
-			game.printToLog("[TRAINING_EVENT_RECOGNIZER] Detected special event pattern: $matchedSpecialEvent. Will restrict search to this event.", tag = tag)
+			MessageLog.i(TAG, "[TRAINING_EVENT_RECOGNIZER] Detected special event pattern: $matchedSpecialEvent. Will restrict search to this event.")
 			eventTitle = matchedSpecialEvent
 		}
 		
@@ -139,7 +140,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 					
 					val score = service.score(result, eventName)
 					if (!hideComparisonResults) {
-						game.printToLog("[CHARA] $characterKey \"${result}\" vs. \"${eventName}\" confidence: ${game.decimalFormat.format(score)}", tag = tag)
+						MessageLog.i(TAG, "[CHARA] $characterKey \"${result}\" vs. \"${eventName}\" confidence: ${game.decimalFormat.format(score)}")
 					}
 					
 					if (score >= confidence) {
@@ -171,7 +172,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 					
 					val score = service.score(result, eventName)
 					if (!hideComparisonResults) {
-						game.printToLog("[SUPPORT] $supportName \"${result}\" vs. \"${eventName}\" confidence: $score", tag = tag)
+						MessageLog.i(TAG, "[SUPPORT] $supportName \"${result}\" vs. \"${eventName}\" confidence: $score")
 					}
 					
 					if (score >= confidence) {
@@ -185,8 +186,8 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 			}
 		}
 
-		game.printToLog("${if (!hideComparisonResults) "\n" else ""}[TRAINING_EVENT_RECOGNIZER] Finished process to find similar string.", tag = tag)
-		game.printToLog("[TRAINING_EVENT_RECOGNIZER] Event data fetched for \"${eventTitle}\".", tag = tag)
+		MessageLog.i(TAG, "${if (!hideComparisonResults) "\n" else ""}[TRAINING_EVENT_RECOGNIZER] Finished process to find similar string.")
+		MessageLog.i(TAG, "[TRAINING_EVENT_RECOGNIZER] Event data fetched for \"${eventTitle}\".")
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -199,7 +200,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 	 * @return A quadruple containing the event option rewards, confidence score, event title, and character/support name.
 	 */
 	fun start(): Quadruple<ArrayList<String>, Double, String, String> {
-		game.printToLog("\n********************", tag = tag)
+		MessageLog.i(TAG, "\n********************")
 
 		// Reset to default values.
 		result = ""
@@ -226,15 +227,15 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 				
 				when (category) {
 					"character" -> {
-						game.printToLog("\n[RESULT] Character $character Event Name = $eventTitle with confidence = $confidence", tag = tag)
+						MessageLog.i(TAG, "\n[RESULT] Character $character Event Name = $eventTitle with confidence = ${game.decimalFormat.format(confidence)}")
 					}
 					"support" -> {
-						game.printToLog("\n[RESULT] Support $supportCardTitle Event Name = $eventTitle with confidence = $confidence", tag = tag)
+						MessageLog.i(TAG, "\n[RESULT] Support $supportCardTitle Event Name = $eventTitle with confidence = ${game.decimalFormat.format(confidence)}")
 					}
 				}
 				
 				if (enableAutomaticRetry && !hideComparisonResults) {
-					game.printToLog("\n[RESULT] Threshold incremented by $increment", tag = tag)
+					MessageLog.i(TAG, "\n[RESULT] Threshold incremented by $increment")
 				}
 				
 				if (confidence < minimumConfidence && enableAutomaticRetry) {
@@ -248,8 +249,8 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		}
 		
 		val endTime: Long = System.currentTimeMillis()
-		Log.d(tag, "Total Runtime for recognizing training event: ${endTime - startTime}ms")
-		game.printToLog("********************", tag = tag)
+		Log.d(TAG, "Total Runtime for recognizing training event: ${endTime - startTime}ms")
+		MessageLog.i(TAG, "********************")
 		
 		val characterOrSupportName = when (category) {
 			"character" -> character

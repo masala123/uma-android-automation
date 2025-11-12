@@ -18,7 +18,6 @@ import com.steve1316.automation_library.utils.ScreenStateReceiver
 import org.opencv.android.OpenCVLoader
 import java.util.Locale
 
-
 class MainActivity : ReactActivity() {
 	companion object {
 		const val loggerTag: String = "UAA"
