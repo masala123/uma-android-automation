@@ -130,12 +130,12 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	////////////////////////////////////////////////////////////////////
 
 	/**
-	 * Perform OCR text detection using Tesseract along with some image manipulation via thresholding to make the cropped screenshot black and white using OpenCV.
+	 * Perform OCR text detection on the training event title using Tesseract along with some image manipulation via thresholding to make the cropped screenshot black and white using OpenCV.
 	 *
 	 * @param increment Increments the threshold by this value. Defaults to 0.0.
-	 * @return The detected String in the cropped region.
+	 * @return The detected event title in the cropped region.
 	 */
-	fun findText(increment: Double = 0.0): String {
+	fun findEventTitle(increment: Double = 0.0): String {
 		val (sourceBitmap, templateBitmap) = getBitmaps("shift")
 
 		// Acquire the location of the energy text image.
@@ -152,11 +152,11 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		var croppedBitmap: Bitmap? = if (isTablet) {
 			newX = max(0, matchLocation.x.toInt() - relWidth(250))
 			newY = max(0, matchLocation.y.toInt() + relHeight(154))
-			createSafeBitmap(sourceBitmap, newX, newY, relWidth(746), relHeight(85), "findText tablet crop")
+			createSafeBitmap(sourceBitmap, newX, newY, relWidth(746), relHeight(85), "findEventTitle tablet crop")
 		} else {
 			newX = max(0, matchLocation.x.toInt() - relWidth(125))
 			newY = max(0, matchLocation.y.toInt() + relHeight(116))
-			createSafeBitmap(sourceBitmap, newX, newY, relWidth(645), relHeight(65), "findText phone crop")
+			createSafeBitmap(sourceBitmap, newX, newY, relWidth(645), relHeight(65), "findEventTitle phone crop")
 		}
 		if (croppedBitmap == null) {
 			MessageLog.e(TAG, "Failed to create cropped bitmap for text detection")
@@ -171,7 +171,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		val (shiftMatch, _) = match(croppedBitmap, templateBitmap!!, "shift")
 		croppedBitmap = if (shiftMatch) {
 			Log.d(TAG, "Shifting the region over by 70 pixels!")
-			createSafeBitmap(sourceBitmap, relX(newX.toDouble(), 70), newY, 645 - 70, 65, "findText shifted crop") ?: croppedBitmap
+			createSafeBitmap(sourceBitmap, relX(newX.toDouble(), 70), newY, 645 - 70, 65, "findEventTitle shifted crop") ?: croppedBitmap
 		} else {
 			Log.d(TAG, "Do not need to shift.")
 			croppedBitmap
