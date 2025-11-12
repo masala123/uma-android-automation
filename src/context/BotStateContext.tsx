@@ -124,7 +124,7 @@ export const defaultSettings: Settings = {
         enableSkillPointCheck: false,
         skillPointCheck: 750,
         enablePopupCheck: false,
-        enableCraneGameSkip: true,
+        enableCraneGameSkip: false,
     },
     racing: {
         enableFarmingFans: false,
