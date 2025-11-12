@@ -222,6 +222,11 @@ class TrainingEvent(private val game: Game) {
                         val formattedReward: List<String> = reward.split("\n")
 
                         formattedReward.forEach { line ->
+                            // Skip empty strings and divider lines (lines that are all dashes or start with 5 dashes).
+                            if (line.trim().isEmpty() || line.trim().length >= 5 && line.trim().substring(0, 5).all { it == '-' }) {
+                                return@forEach
+                            }
+
                             val formattedLine: String = regex
                                 .replace(line, "")
                                 .replace("(", "")
