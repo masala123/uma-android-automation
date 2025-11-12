@@ -13,6 +13,8 @@ import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.automation_library.utils.MyAccessibilityService
 import com.steve1316.uma_android_automation.utils.SettingsHelper
 import com.steve1316.uma_android_automation.utils.GameDateParser
+import com.steve1316.uma_android_automation.components.ButtonCraneGame
+import com.steve1316.uma_android_automation.components.ButtonCraneGameOk
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.opencv.core.Point
@@ -677,11 +679,22 @@ class Game(val myContext: Context) {
 			wait(2.0)
 			findAndTapImage("next", tries = 1, region = imageUtils.regionBottomHalf)
 			wait(1.0)
-		} else if (imageUtils.findImageWithBitmap("crane_game", sourceBitmap, region = imageUtils.regionBottomHalf) != null) {
-			// Stop when the bot has reached the Crane Game Event.
-			MessageLog.i(TAG, "\n[END] Bot will stop due to the detection of the Crane Game Event. Please complete it and restart the bot.")
-			notificationMessage = "Bot will stop due to the detection of the Crane Game Event. Please complete it and restart the bot."
-			return false
+        } else if (ButtonCraneGame.check(imageUtils=imageUtils)) {
+            if (enableCraneGameSkip) {
+                MessageLog.i(TAG, "[CRANE GAME] Auto-failing crane game...")
+                ButtonCraneGame.click(imageUtils=imageUtils)
+            } else {
+                // Stop when the bot has reached the Crane Game Event.
+                MessageLog.i(TAG, "[END] Bot will stop due to the detection of the Crane Game Event. Please complete it and restart the bot.")
+                notificationMessage = "Bot will stop due to the detection of the Crane Game Event. Please complete it and restart the bot."
+                return false
+            }
+        } else if (
+            ButtonCraneGameOk.check(imageUtils=imageUtils) &&
+            imageUtils.findImageWithBitmap("ordinary_cuties", sourceBitmap) != null
+        ) {
+            MessageLog.i("[CRANE GAME] Crane game completed. Continuing...")
+            ButtonCraneGameOk.click(imageUtils=imageUtils)
 		} else if (findAndTapImage("race_retry", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
 			MessageLog.i(TAG, "[MISC] There is a race retry popup.")
 			wait(5.0)

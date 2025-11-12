@@ -228,6 +228,7 @@ ${longTargetsString}
 ---------- Misc Options ----------
 🔍 Skill Point Check: ${settings.general.enableSkillPointCheck ? `Stop on ${settings.general.skillPointCheck} Skill Points or more` : "❌"}
 🔍 Popup Check: ${settings.general.enablePopupCheck ? "✅" : "❌"}
+🔍 Crane Game Skip (Auto-Fail): ${settings.general.enableCraneGameSkip ? "✅" : "❌"}
 
 ---------- Debug Options ----------
 🐛 Debug Mode: ${settings.debug.enableDebugMode ? "✅" : "❌"}
