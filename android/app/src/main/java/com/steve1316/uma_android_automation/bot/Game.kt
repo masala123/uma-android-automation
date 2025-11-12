@@ -52,6 +52,7 @@ class Game(val myContext: Context) {
 	val enableSkillPointCheck: Boolean = SettingsHelper.getBooleanSetting("general", "enableSkillPointCheck")
 	val skillPointsRequired: Int = SettingsHelper.getIntSetting("general", "skillPointCheck")
 	private val enablePopupCheck: Boolean = SettingsHelper.getBooleanSetting("general", "enablePopupCheck")
+    private val enableCraneGameSkip: Boolean = SettingsHelper.getBooleanSetting("general", "enableCraneGameSkip")
 
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
@@ -693,7 +694,7 @@ class Game(val myContext: Context) {
             ButtonCraneGameOk.check(imageUtils=imageUtils) &&
             imageUtils.findImageWithBitmap("ordinary_cuties", sourceBitmap) != null
         ) {
-            MessageLog.i("[CRANE GAME] Crane game completed. Continuing...")
+            MessageLog.i(TAG, "[CRANE GAME] Crane game completed. Continuing...")
             ButtonCraneGameOk.click(imageUtils=imageUtils)
 		} else if (findAndTapImage("race_retry", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
 			MessageLog.i(TAG, "[MISC] There is a race retry popup.")
