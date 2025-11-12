@@ -1,19 +1,20 @@
 <AppUpdater>
   <update>
-    <latestVersion>4.0.2</latestVersion>
+    <latestVersion>4.1.0</latestVersion>
     <url>https://github.com/steve1316/uma-android-automation/releases</url>
     <releaseNotes>
-v4.0.2 - Changelog
+v4.1.0 - Changelog
 
 Adjustments
 ---
-- Forgot to add the new character and support event overrides settings to the MessageLog.
+- Use the newly updated Automation Library to bundle Google ML Kit into the app. This should solve the issue on some devices where they cannot fetch Google ML Kit by themselves.
+- Refactored OCR functionality to use the Library's findText() function and cleaned up when it should detect characters or digits.
+- Refactored usage of printToLog() calls to use the new log level wrappers instead from the updated Automation Library.
+- Rearranged the eligibility check to start the extra racing process.
 
 Fixed
 ---
-- Fix bug where frontend will crash due to shallow merge of default settings on a fresh install.
-- Fix crash in the Training Event Settings page due to not destructuring the newly added variables.
-- Fix crash when importing old settings.
+- Prevent dividers and empty strings from being processed in handleTrainingEvent().
 
     </releaseNotes>
   </update>
