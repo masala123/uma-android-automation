@@ -5,6 +5,7 @@ import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
 import com.steve1316.uma_android_automation.utils.SettingsHelper
 import com.steve1316.uma_android_automation.utils.SQLiteSettingsManager
+import com.steve1316.automation_library.utils.MessageLog
 import net.ricecode.similarity.JaroWinklerStrategy
 import net.ricecode.similarity.StringSimilarityServiceImpl
 import org.json.JSONObject
@@ -54,7 +55,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 			null
 		}
 	} catch (e: Exception) {
-		if (game.debugMode) game.printToLog("[DEBUG] Failed to load character event data from SQLite: ${e.message}", tag = tag)
+		if (game.debugMode) MessageLog.d(TAG, "[DEBUG] Failed to load character event data from SQLite: ${e.message}")
 		null
 	}
 	
@@ -73,7 +74,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 			null
 		}
 	} catch (e: Exception) {
-		if (game.debugMode) game.printToLog("[DEBUG] Failed to load support event data from SQLite: ${e.message}", tag = tag)
+		if (game.debugMode) MessageLog.d(TAG, "[DEBUG] Failed to load support event data from SQLite: ${e.message}")
 		null
 	}
 	
@@ -139,7 +140,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 					
 					val score = service.score(result, eventName)
 					if (!hideComparisonResults) {
-						game.printToLog("[CHARA] $characterKey \"${result}\" vs. \"${eventName}\" confidence: ${game.decimalFormat.format(score)}", tag = tag)
+						MessageLog.i(TAG, "[CHARA] $characterKey \"${result}\" vs. \"${eventName}\" confidence: ${game.decimalFormat.format(score)}")
 					}
 					
 					if (score >= confidence) {
@@ -171,7 +172,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 					
 					val score = service.score(result, eventName)
 					if (!hideComparisonResults) {
-						game.printToLog("[SUPPORT] $supportName \"${result}\" vs. \"${eventName}\" confidence: $score", tag = tag)
+						MessageLog.i(TAG, "[SUPPORT] $supportName \"${result}\" vs. \"${eventName}\" confidence: $score")
 					}
 					
 					if (score >= confidence) {
@@ -199,7 +200,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 	 * @return A quadruple containing the event option rewards, confidence score, event title, and character/support name.
 	 */
 	fun start(): Quadruple<ArrayList<String>, Double, String, String> {
-		game.printToLog("\n********************", tag = tag)
+		MessageLog.i(TAG, "\n********************")
 
 		// Reset to default values.
 		result = ""

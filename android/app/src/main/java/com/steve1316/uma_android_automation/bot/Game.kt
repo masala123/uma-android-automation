@@ -543,7 +543,7 @@ class Game(val myContext: Context) {
 					75
 				}
 				else -> {
-					MessageLog.w(TAG, "Could not determine Finals date. Defaulting to turn 73.", isError = true)
+					MessageLog.w(TAG, "Could not determine Finals date. Defaulting to turn 73.")
 					73
 				}
 			}
@@ -686,7 +686,7 @@ class Game(val myContext: Context) {
 			MessageLog.i(TAG, "[MISC] There is a race retry popup.")
 			wait(5.0)
 		} else if (findAndTapImage("race_accept_trophy", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
-			printToLog("[MISC] There is a possible popup to accept a trophy.")
+			MessageLog.i(TAG, "[MISC] There is a possible popup to accept a trophy.")
 			racing.finalizeRaceResults(true, isExtra = true)
 		} else if (findAndTapImage("race_end", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
 			MessageLog.i(TAG, "[MISC] Ended a leftover race.")

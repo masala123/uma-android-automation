@@ -75,18 +75,18 @@ open class Campaign(val game: Game) {
 						} else if (game.recoverMood() && !game.checkFinals()) {
 							game.racing.skipRacing = false
 						} else if (game.currentDate.turnNumber >= 16 && !game.racing.checkEligibilityToStartExtraRacingProcess()) {
-							game.printToLog("[INFO] Training due to it not being an extra race day.", tag = tag)
+							MessageLog.i(TAG, "[INFO] Training due to it not being an extra race day.")
 							game.training.handleTraining()
 							game.racing.skipRacing = false
 						} else {
-							game.printToLog("[INFO] Bot has no injuries, mood is sufficient and extra races can be run today. Setting the needToRace flag to true.", tag = tag)
+							MessageLog.i(TAG, "[INFO] Bot has no injuries, mood is sufficient and extra races can be run today. Setting the needToRace flag to true.")
 							needToRace = true
 						}
 					}
 				}
 
                 if (game.racing.encounteredRacingPopup || needToRace) {
-                    game.printToLog("[INFO] All checks are cleared for racing.", tag = tag)
+                    MessageLog.i(TAG, "[INFO] All checks are cleared for racing.")
                     if (!handleRaceEvents()) {
                         if (game.racing.detectedMandatoryRaceCheck) {
                             MessageLog.i(TAG, "\n[END] Stopping bot due to detection of Mandatory Race.")
