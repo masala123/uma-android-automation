@@ -227,10 +227,10 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 				
 				when (category) {
 					"character" -> {
-						MessageLog.i(TAG, "\n[RESULT] Character $character Event Name = $eventTitle with confidence = $confidence")
+						MessageLog.i(TAG, "\n[RESULT] Character $character Event Name = $eventTitle with confidence = ${game.decimalFormat.format(confidence)}")
 					}
 					"support" -> {
-						MessageLog.i(TAG, "\n[RESULT] Support $supportCardTitle Event Name = $eventTitle with confidence = $confidence")
+						MessageLog.i(TAG, "\n[RESULT] Support $supportCardTitle Event Name = $eventTitle with confidence = ${game.decimalFormat.format(confidence)}")
 					}
 				}
 				
