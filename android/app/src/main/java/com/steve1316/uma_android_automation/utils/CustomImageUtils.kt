@@ -30,7 +30,7 @@ import kotlin.text.replace
  * Utility functions for image processing via CV like OpenCV.
  */
 class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(context) {
-	private val TAG: String = "[${MainActivity.loggerTag}]ImageUtils"
+	private val TAG: String = "[${MainActivity.loggerTag}]CustomImageUtils"
 
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
