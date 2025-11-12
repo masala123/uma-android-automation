@@ -248,7 +248,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			height,
 			useThreshold = false,
 			useGrayscale = true,
-			scaleUp = 2,
+			scale = 2.0,
 			ocrEngine = "mlkit",
 			debugName = "TrainingFailureChance"
 		)
@@ -304,7 +304,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 				height,
 				useThreshold = true,
 				useGrayscale = true,
-				scaleUp = 2,
+				scale = 2.0,
 				ocrEngine = "mlkit",
 				debugName = "DayForExtraRace"
 			)
@@ -341,7 +341,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 				height = relHeight(45),
 				useThreshold = true,
 				useGrayscale = true,
-				scaleUp = 2,
+				scale = 2.0,
 				ocrEngine = "mlkit",
 				debugName = "extractRaceName"
 			)
@@ -479,7 +479,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 				height,
 				useThreshold = true,
 				useGrayscale = true,
-				scaleUp = 1,
+				scale = 1.0,
 				ocrEngine = "mlkit",
 				debugName = "SkillPoints"
 			)
@@ -755,7 +755,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 					relHeight(42),
 					useThreshold = false,
 					useGrayscale = true,
-					scaleUp = 1,
+					scale = 1.0,
 					ocrEngine = "tesseract_digits",
 					debugName = "${statName}StatValue"
 				)
@@ -801,7 +801,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 				relHeight(70),
 				useThreshold = true,
 				useGrayscale = true,
-				scaleUp = 1,
+				scale = 1.0,
 				ocrEngine = "mlkit",
 				debugName = "dateString"
 			)
@@ -818,7 +818,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 					relHeight(35),
 					useThreshold = false,
 					useGrayscale = true,
-					scaleUp = 1,
+					scale = 1.0,
 					ocrEngine = "mlkit",
 					debugName = "dateString"
 				)
