@@ -1455,4 +1455,126 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			debugName
 		)
 	}
+
+    /**
+    * Gets the filled percentage of the energy bar.
+    *
+    * @return If energy bar is detected, returns the filled percentage, else returns null.
+    */
+    fun analyzeEnergyBar(): Int? {
+        val (sourceBitmap, templateBitmap) = getBitmaps("energy")
+        if (templateBitmap == null) {
+            game.printToLog("analyzeEnergyBar:: Failed to find template bitmap for \"energy\".", isError = true, tag = tag)
+            return null
+        }
+        val energyTextLocation = findImage("energy", tries = 1, region = regionTopHalf).first
+        if (energyTextLocation == null) {
+            game.printToLog("analyzeEnergyBar:: Failed to find bitmap for \"energy\".", isError = true, tag = tag)
+            return null
+        }
+
+        // Get top right of energyText.
+        var x: Int = (energyTextLocation.x + (templateBitmap.width / 2)).toInt()
+        var y: Int = (energyTextLocation.y - (templateBitmap.height / 2)).toInt()
+        var w: Int = 700
+        var h: Int = 75
+
+        // Crop just the energy bar in the image.
+        // This crop extends to the right beyond the energy bar a bit
+        // since the bar is able to grow.
+        var croppedBitmap = createSafeBitmap(sourceBitmap, x, y, w, h, "analyzeEnergyBar:: Crop energy bar.")
+        if (croppedBitmap == null) {
+            game.printToLog("analyzeEnergyBar:: Failed to crop bitmap.", isError = true, tag = tag)
+            return null
+        }
+
+        // Now find the left and right brackets of the energy bar
+        // to refine our cropped region.
+
+        val energyBarLeftPartTemplateBitmap: Bitmap? = getBitmaps("energy_bar_left_part").second
+        if (energyBarLeftPartTemplateBitmap == null) {
+            game.printToLog("analyzeEnergyBar:: Failed to find left part of energy bar.", isError = true, tag = tag)
+            return null
+        }
+
+        val leftPartLocation: Point? = match(croppedBitmap, energyBarLeftPartTemplateBitmap, "energy_bar_left_part").second
+        if (leftPartLocation == null) {
+            game.printToLog("analyzeEnergyBar:: Failed to find left part of energy bar.", isError = true, tag = tag)
+            return null
+        }
+
+        // The right side of the energy bar looks very different depending on whether
+        // the max energy has been increased. Thus we need to look for one of two bitmaps.
+        var energyBarRightPartTemplateBitmap: Bitmap? = getBitmaps("energy_bar_right_part_0").second
+        var rightPartLocation: Point? = null
+        if (energyBarRightPartTemplateBitmap == null) {
+            energyBarRightPartTemplateBitmap = getBitmaps("energy_bar_right_part_1").second
+            if (energyBarRightPartTemplateBitmap == null) {
+                game.printToLog("analyzeEnergyBar:: Failed to find right part of energy bar.", isError = true, tag = tag)
+                return null
+            }
+            rightPartLocation = match(croppedBitmap, energyBarRightPartTemplateBitmap, "energy_bar_right_part_1").second
+        } else {
+            rightPartLocation = match(croppedBitmap, energyBarRightPartTemplateBitmap, "energy_bar_right_part_0").second
+        }
+
+        if (rightPartLocation == null) {
+            game.printToLog("analyzeEnergyBar:: Failed to find right part of energy bar.", isError = true, tag = tag)
+            return null
+        }
+
+        // Crop the energy bar further to refine the cropped region so that
+        // we can measure the length of the bar.
+        // This crop is just a single pixel high line at the center of the
+        // bounding region.
+        val left: Int = (leftPartLocation.x + (energyBarLeftPartTemplateBitmap.width / 2)).toInt()
+        val right: Int = (rightPartLocation.x - (energyBarRightPartTemplateBitmap.width / 2)).toInt()
+        x = left
+        y = (croppedBitmap.height / 2).toInt()
+        w = (right - left).toInt()
+        h = 1
+
+        croppedBitmap = createSafeBitmap(croppedBitmap, x, y, w, h, "analyzeEnergyBar:: Refine cropped energy bar.")
+        if (croppedBitmap == null) {
+            game.printToLog("analyzeEnergyBar:: Failed to refine cropped bitmap region.", isError = true, tag = tag)
+            return null
+        }
+
+        // HSV color range for gray portion of energy bar.
+        val grayLower = Scalar(0.0, 0.0, 116.0)
+        val grayUpper = Scalar(180.0, 255.0, 118.0)
+        val colorLower = Scalar(5.0, 0.0, 120.0)
+        val colorUpper = Scalar(180.0, 255.0, 255.0)
+
+        // Convert the cropped region to HSV
+        val barMat = Mat()
+        Utils.bitmapToMat(croppedBitmap, barMat)
+        val hsvMat = Mat()
+        Imgproc.cvtColor(barMat, hsvMat, Imgproc.COLOR_BGR2HSV)
+
+        // Create masks for the gray and color portions of the image.
+        val grayMask = Mat()
+        val colorMask = Mat()
+        Core.inRange(hsvMat, grayLower, grayUpper, grayMask)
+        Core.inRange(hsvMat, colorLower, colorUpper, colorMask)
+
+        // Calculate ratio of color and gray pixels.
+        val grayPixels = Core.countNonZero(grayMask)
+        val colorPixels = Core.countNonZero(colorMask)
+        val totalPixels = grayPixels + colorPixels
+
+        var fillPercent: Double = 0.0
+        if (totalPixels > 0) {
+            fillPercent = (colorPixels.toDouble() / totalPixels.toDouble()) * 100.0
+        }
+        val result: Int = fillPercent.toInt().coerceIn(0, 100)
+
+        barMat.release()
+        hsvMat.release()
+        grayMask.release()
+        colorMask.release()
+
+        game.printToLog("analyzeEnergyBar:: Pixel Colors: Gray=$grayPixels, Color=$colorPixels, Energy=$result", tag = tag)
+        return result
+    }
 }
