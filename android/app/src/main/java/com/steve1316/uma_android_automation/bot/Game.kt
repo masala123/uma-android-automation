@@ -680,10 +680,10 @@ class Game(val myContext: Context) {
 			wait(2.0)
 			findAndTapImage("next", tries = 1, region = imageUtils.regionBottomHalf)
 			wait(1.0)
-        } else if (ButtonCraneGame.check(imageUtils=imageUtils)) {
+        } else if (ButtonCraneGame.check(imageUtils = imageUtils)) {
             if (enableCraneGameSkip) {
                 MessageLog.i(TAG, "[CRANE GAME] Auto-failing crane game...")
-                ButtonCraneGame.click(imageUtils=imageUtils)
+                ButtonCraneGame.click(imageUtils = imageUtils)
             } else {
                 // Stop when the bot has reached the Crane Game Event.
                 MessageLog.i(TAG, "[END] Bot will stop due to the detection of the Crane Game Event. Please complete it and restart the bot.")
@@ -691,11 +691,11 @@ class Game(val myContext: Context) {
                 return false
             }
         } else if (
-            ButtonCraneGameOk.check(imageUtils=imageUtils) &&
+            ButtonCraneGameOk.check(imageUtils = imageUtils) &&
             imageUtils.findImageWithBitmap("ordinary_cuties", sourceBitmap) != null
         ) {
             MessageLog.i(TAG, "[CRANE GAME] Crane game completed. Continuing...")
-            ButtonCraneGameOk.click(imageUtils=imageUtils)
+            ButtonCraneGameOk.click(imageUtils = imageUtils)
 		} else if (findAndTapImage("race_retry", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
 			MessageLog.i(TAG, "[MISC] There is a race retry popup.")
 			wait(5.0)
