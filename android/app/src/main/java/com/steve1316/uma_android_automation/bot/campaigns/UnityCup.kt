@@ -34,11 +34,11 @@ class UnityCup(game: Game) : Campaign(game) {
 		if (aoHaruRaceFirstTime && game.imageUtils.findImage("unitycup_set_initial_team_header", tries = 1, region = game.imageUtils.regionMiddle).first != null) {
             MessageLog.i(TAG, "\n[UNITY_CUP] Dismissed the popup to set the initial team.")
 			game.findAndTapImage("race_accept_trophy")
-			handleRaceEventsAoHaru()
+			handleRaceEventsUnityCup()
 			return true
 		} else if (game.imageUtils.findImage("unitycup_race", tries = 1, region = game.imageUtils.regionBottomHalf).first != null) {
             // Otherwise, handle the Unity Cup race.
-			handleRaceEventsAoHaru()
+			handleRaceEventsUnityCup()
 			return true
 		}
 
