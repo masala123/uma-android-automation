@@ -546,6 +546,118 @@ class Training(private val game: Game) {
 		}
 
 		/**
+		 * Scores training options for Unity Cup based on Spirit Explosion Gauge priority system.
+		 *
+		 * Priority order:
+		 * 1. Highest Priority: Trainings with Spirit Explosion Gauges ready to burst.
+		 * 2. Second Priority: Trainings that can fill Spirit Explosion Gauges (not at 100% yet).
+		 * 3. Third Priority: Trainings that fill relationship bars.
+		 * 4. Lowest Priority: Stat prioritization (only if no gauge/relationship opportunities).
+		 *
+		 * Additional considerations:
+		 * - If gauges can be filled for deprioritized stat trainings, ignore stat prioritization (early game).
+		 * - Sometimes worth doing training with no relationship bar gains if building up several bursts.
+		 * - Ideally doing unity training at the same time as triggering regular rainbow trainings.
+		 * - Good facilities to burst: Speed (increased speed stat gains), Wit (energy recovery + speed stat gain).
+		 * - Stamina and Power can be bursted if lacking stats.
+		 * - Guts is not ideal but can be worth it if building up several other bursts.
+		 *
+		 * @param training The training option to evaluate.
+		 *
+		 * @return A score representing Unity Cup training value.
+		 */
+		fun scoreUnityCupTraining(training: TrainingOption): Double {
+			MessageLog.i(TAG, "\n[TRAINING] Starting process to score ${training.name} Training for Unity Cup with Spirit Explosion Gauge priority.")
+
+			// 1. Highest Priority: Trainings with Spirit Explosion Gauges ready to burst.
+            var score = 0.0
+			if (training.numSpiritGaugesReadyToBurst > 0) {
+				// Score increases with number of gauges ready to burst.
+				score += 1000.0 + (training.numSpiritGaugesReadyToBurst * 1000.0)
+				MessageLog.i(TAG, "[TRAINING] ${training.name} Training has ${training.numSpiritGaugesReadyToBurst} Spirit Explosion Gauge(s) ready to burst. Highest priority.")
+				
+				// Facility preference bonuses for bursting.
+				when (training.name) {
+					"Speed" -> score += 500.0 // Best for increased speed stat gains.
+					"Wit" -> score += 500.0 // Best for energy recovery and slightly increased speed stat gain.
+					"Stamina", "Power" -> {
+						// Can be bursted if lacking stats.
+						val statIndex = trainings.indexOf(training.name)
+						val currentStat = currentStatsMap.getOrDefault(training.name, 0)
+						val target = statTargetsByDistance[preferredDistance] ?: intArrayOf(600, 600, 600, 300, 300)
+						val targetStat = target.getOrElse(statIndex) { 600 }
+						if (currentStat < targetStat * 0.8) {
+							score += 300.0
+						}
+					}
+					"Guts" -> {
+						// Guts is not ideal, but can be worth it if building up gauges to max them out for bursting.
+						if (training.numSpiritGaugesCanFill >= 2) {
+							score += 200.0 // Building up multiple gauges to allow for bursting.
+						} else {
+							score -= 100.0 // Not ideal without building up multiple gauges.
+						}
+					}
+				}
+
+				// Bonus for rainbow training while bursting.
+				if (training.isRainbow) {
+					score += 200.0
+					MessageLog.i(TAG, "[TRAINING] Adding some score for ${training.name} Training for being a rainbow training.")
+				}
+			}
+
+			// 2. Second Priority: Trainings that can fill Spirit Explosion Gauges (not at 100% yet).
+			if (training.numSpiritGaugesCanFill > 0) {
+				// Score increases with number of gauges that can be filled.
+				// Each gauge fills by 25% per training execution.
+				score += 1000.0 + (training.numSpiritGaugesCanFill * 200.0)
+				MessageLog.i(TAG, "[TRAINING] ${training.name} Training can fill ${training.numSpiritGaugesCanFill} Spirit Explosion Gauge(s).")
+
+				// Early game: If gauges can be filled for deprioritized stat trainings, ignore stat prioritization.
+				val isEarlyGame = game.currentDate.year < 2
+				if (isEarlyGame) {
+					score += 500.0
+					MessageLog.i(TAG, "[TRAINING] Early game: Prioritizing gauge filling over stat prioritization.")
+				}
+			}
+
+			// 3. Third Priority: Trainings that fill relationship bars.
+			if (training.relationshipBars.isNotEmpty()) {
+				var relationshipScore = 0.0
+				for (bar in training.relationshipBars) {
+					val contribution = when (bar.dominantColor) {
+						"orange" -> 0.0
+						"green" -> 1.0
+						"blue" -> 2.5
+						else -> 0.0
+					}
+					relationshipScore += contribution
+				}
+				score += 100.0 + (relationshipScore * 20.0)
+				MessageLog.i(TAG, "[TRAINING] ${training.name} Training fills relationship bars. Score: ${game.decimalFormat.format(relationshipScore)}.")
+			}
+
+			// 4. Lowest Priority: Stat prioritization.
+			val statIndex = trainings.indexOf(training.name)
+			val statGain = training.statGains.getOrElse(statIndex) { 0 }
+			score += statGain.toDouble() * 0.1
+			MessageLog.i(TAG, "[TRAINING] ${training.name} Training stat gain contribution: ${statGain}.")
+
+			// Sometimes worth doing training with no relationship bar gains if building up several bursts.
+			if (training.relationshipBars.isEmpty() && training.numSpiritGaugesCanFill > 0) {
+				val otherBurstsBuilding = trainingMap.values.sumOf { it.numSpiritGaugesCanFill } - training.numSpiritGaugesCanFill
+				if (otherBurstsBuilding >= 2) {
+					score += 300.0 // Building up several bursts is worth it.
+					Log.d(TAG, "[DEBUG] ${training.name} Training has no relationship bars but is building up ${training.numSpiritGaugesCanFill} gauge(s) along with $otherBurstsBuilding other gauges being built.")
+				}
+			}
+
+			MessageLog.i(TAG, "[TRAINING] ${training.name} Training has a Unity Cup score of ${game.decimalFormat.format(score)}.")
+			return score
+		}
+
+		/**
 		 * Calculates stat efficiency based on ratio completion toward targets.
 		 *
 		 * This function treats stat targets as desired ratios rather than sequential goals.
