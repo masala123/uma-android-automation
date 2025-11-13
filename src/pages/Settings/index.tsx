@@ -98,6 +98,13 @@ const Settings = () => {
                         bsc.setReadyStatus(newScenario !== "")
                     }}
                 />
+                {bsc.settings.general.scenario === "Unity Cup" && (
+                    <View style={styles.errorContainer}>
+                        <Text style={styles.errorText}>
+                            ⚠️ Unity Cup Warning: Running extra races via fan farming being enabled is highly discouraged in order to focus more on unity trainings.
+                        </Text>
+                    </View>
+                )}
                 {!bsc.settings.general.scenario && (
                     <View style={styles.errorContainer}>
                         <Text style={styles.errorText}>⚠️ A scenario must be selected before starting the bot.</Text>
