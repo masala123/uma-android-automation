@@ -238,7 +238,10 @@ class TrainingEvent(private val game: Game) {
                             MessageLog.i(TAG, "[TRAINING_EVENT] Formatted line is \"$formattedLine\".")
 
                             var priorityStatCheck = false
-                            if (line.lowercase().contains("energy")) {
+                            if (line.lowercase().contains("can start dating")) {
+                                MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 1000 to unlock recreation/dating for this support.")
+                                selectionWeight[optionSelected] += 1000
+                            } else if (line.lowercase().contains("energy")) {
                                 val finalEnergyValue = try {
                                     val energyValue = if (formattedLine.contains("/")) {
                                         val splits = formattedLine.split("/")
