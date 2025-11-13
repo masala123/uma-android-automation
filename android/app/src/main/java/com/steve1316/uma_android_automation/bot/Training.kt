@@ -329,14 +329,17 @@ class Training(private val game: Game) {
 					}
 
 					// Update the object in the training map.
-					// Use CountDownLatch to run the 4 operations in parallel to cut down on processing time.
-					val latch = CountDownLatch(4)
+					// Use CountDownLatch to run the operations in parallel to cut down on processing time.
+					// For Unity Cup, add an additional thread for Spirit Explosion Gauge analysis.
+					val latch = CountDownLatch(if (game.campaign == "Unity Cup") 5 else 4)
 
 					// Variables to store results from parallel threads.
 					var statGains: IntArray = intArrayOf()
 					var failureChance: Int = -1
 					var relationshipBars: ArrayList<CustomImageUtils.BarFillResult> = arrayListOf()
 					var isRainbow = false
+					var numSpiritGaugesCanFill: Int = 0
+					var numSpiritGaugesReadyToBurst: Int = 0
 
 					// Get the Points and source Bitmap beforehand before starting the threads to make them safe for parallel processing.
                     val sourceBitmap = game.imageUtils.getSourceBitmap()
@@ -347,13 +350,7 @@ class Training(private val game: Game) {
 					val startTime = System.currentTimeMillis()
 
 					// Check if bot is still running before starting parallel threads.
-					if (!BotService.isRunning) {
-						MessageLog.i(TAG, "Bot stopped before training analysis could complete.")
-						statGains = intArrayOf(0, 0, 0, 0, 0)
-						failureChance = -1
-						relationshipBars = arrayListOf()
-						isRainbow = false
-					} else {
+					if (BotService.isRunning) {
 						// Thread 1: Determine stat gains.
                         Thread {
                             val startTimeStatGains = System.currentTimeMillis()
@@ -409,6 +406,28 @@ class Training(private val game: Game) {
                                 Log.d(TAG, "Total time to detect rainbow for $training: ${System.currentTimeMillis() - startTimeRainbow}ms")
                             }
                         }.start()
+
+                        // Thread 5: Analyze Spirit Explosion Gauges (Unity Cup only).
+                        if (game.campaign == "Unity Cup") {
+                            Thread {
+                                val startTimeSpiritGauge = System.currentTimeMillis()
+                                try {
+                                    val gaugeResult = game.imageUtils.analyzeSpiritExplosionGauges(sourceBitmap)
+                                    if (gaugeResult != null) {
+                                        numSpiritGaugesCanFill = gaugeResult.numGaugesCanFill
+                                        numSpiritGaugesReadyToBurst = gaugeResult.numGaugesReadyToBurst
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e(TAG, "[ERROR] Error in Spirit Explosion Gauge analysis: ${e.stackTraceToString()}")
+                                    numSpiritGaugesCanFill = 0
+                                    numSpiritGaugesReadyToBurst = 0
+                                } finally {
+                                    latch.countDown()
+                                    Log.d(TAG, "Total time to analyze Spirit Explosion Gauge for $training: ${System.currentTimeMillis() - startTimeSpiritGauge}ms")
+                                }
+                            }.start()
+                        }
+
                         try {
                             latch.await(3, TimeUnit.SECONDS)
                         } catch (_: InterruptedException) {
@@ -444,7 +463,9 @@ class Training(private val game: Game) {
 						statGains = statGains,
 						failureChance = failureChance,
 						relationshipBars = relationshipBars,
-                        isRainbow = isRainbow
+                        isRainbow = isRainbow,
+						numSpiritGaugesCanFill = numSpiritGaugesCanFill,
+						numSpiritGaugesReadyToBurst = numSpiritGaugesReadyToBurst
 					)
                     trainingMap[training] = newTraining
                     if (singleTraining) {
