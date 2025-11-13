@@ -281,7 +281,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
 		if (energyTextLocation != null) {
 			// Determine crop region based on campaign and device type.
-			val (offsetX, offsetY, width, height) = if (game.campaign == "Ao Haru") {
+			val (offsetX, offsetY, width, height) = if (game.campaign == "Unity Cup") {
 				if (isTablet) {
 					listOf(-(260 * 1.32).toInt(), -(140 * 1.32).toInt(), relWidth(135), relHeight(100))
 				} else {

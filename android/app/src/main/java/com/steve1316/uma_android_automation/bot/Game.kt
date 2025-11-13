@@ -767,9 +767,9 @@ class Game(val myContext: Context) {
 
 			wait(5.0)
 
-			if (campaign == "Ao Haru") {
-				val aoHaruCampaign = UnityCup(this)
-				aoHaruCampaign.start()
+			if (campaign == "Unity Cup") {
+				val unityCupCampaign = UnityCup(this)
+                unityCupCampaign.start()
 			} else {
 				val uraFinaleCampaign = Campaign(this)
 				uraFinaleCampaign.start()

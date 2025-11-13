@@ -240,7 +240,7 @@ class Training(private val game: Game) {
 		else MessageLog.i(TAG, "\n[TRAINING] Now starting process to analyze all 5 Trainings.")
 
 		// Acquire the position of the speed stat text.
-		val (speedStatTextLocation, _) = if (game.campaign == "Ao Haru") {
+		val (speedStatTextLocation, _) = if (game.campaign == "Unity Cup") {
 			game.imageUtils.findImage("aoharu_stat_speed", tries = 1, region = game.imageUtils.regionBottomHalf)
 		} else {
 			game.imageUtils.findImage("stat_speed", tries = 1, region = game.imageUtils.regionBottomHalf)
