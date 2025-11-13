@@ -121,6 +121,6 @@ class UnityCup(game: Game) : Campaign(game) {
         }
 
         // On the Race Results screen, skip past the final results of all 5 races against this opponent.
-		game.racing.finalizeRaceResults()
+		game.racing.finalizeRaceResults(true)
 	}
 }
