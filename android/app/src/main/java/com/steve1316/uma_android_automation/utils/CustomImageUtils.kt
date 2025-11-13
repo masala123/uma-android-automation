@@ -665,6 +665,100 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	}
 
 	/**
+	 * Analyze the Spirit Explosion Gauges for the currently selected Unity Cup training. Parameter is optional to allow for thread-safe operations.
+	 *
+	 * A training can have multiple gauges with varying fill rates. This function analyzes all gauges and returns:
+	 * - Number of gauges that can be filled (not at 100% yet) by executing this training.
+	 * - Number of gauges that are ready to burst.
+	 *
+	 * @param sourceBitmap Bitmap of the source image separately taken. Defaults to null.
+	 *
+	 * @return A SpiritGaugeResult for the currently selected training, or null if no gauges found.
+	 */
+	fun analyzeSpiritExplosionGauges(sourceBitmap: Bitmap? = null): SpiritGaugeResult? {
+		val customRegion = intArrayOf(displayWidth - (displayWidth / 3), 0, (displayWidth / 3), displayHeight - (displayHeight / 3))
+
+		// Take a single screenshot first to avoid buffer overflow.
+		val sourceBitmap = sourceBitmap ?: getSourceBitmap()
+
+		// Find all Spirit Training icons (there may be multiple for the currently selected training).
+		val spiritTrainingIcons = findAllWithBitmap("unitycup_spirit_training", sourceBitmap, region = customRegion, customConfidence = 0.90)
+		if (spiritTrainingIcons.isEmpty()) {
+			return null
+		}
+
+		// Find all Spirit Explosion icons to determine burst readiness.
+		val spiritExplosionIcons = findAllWithBitmap("unitycup_spirit_explosion", sourceBitmap, region = customRegion, customConfidence = 0.90)
+
+		// Analyze all gauges for all spirit training icons to count how many can be filled.
+		var numGaugesCanFill = 0
+		for (iconLocation in spiritTrainingIcons) {
+			// Gauge is located to the left of the icon. Analyze the gauge region.
+			// The gauge is gray inside (same gray as relationship bars), no dividers.
+			// We need to calculate the percentage fill: gray pixels vs other colors (white, blue, etc.).
+			val gaugeStartX = relX(iconLocation.x, -80) // Gauge is to the left of icon, estimate width.
+			val gaugeStartY = relY(iconLocation.y, -5) // Slight vertical adjustment.
+			val gaugeWidth = relWidth(60)
+			val gaugeHeight = relHeight(15)
+
+			val gaugeBitmap = createSafeBitmap(sourceBitmap, gaugeStartX, gaugeStartY, gaugeWidth, gaugeHeight, "analyzeSpiritExplosionGauges")
+			if (gaugeBitmap == null) {
+				continue
+			}
+
+			val gaugeMat = Mat()
+			Utils.bitmapToMat(gaugeBitmap, gaugeMat)
+
+			// Convert to RGB and then to HSV for better color detection.
+			val rgbMat = Mat()
+			Imgproc.cvtColor(gaugeMat, rgbMat, Imgproc.COLOR_BGR2RGB)
+			val hsvMat = Mat()
+			Imgproc.cvtColor(rgbMat, hsvMat, Imgproc.COLOR_RGB2HSV)
+
+			// Define gray color range (same as relationship bars gray).
+			// Gray typically has low saturation and medium value.
+			val grayLower = Scalar(0.0, 0.0, 50.0)
+			val grayUpper = Scalar(180.0, 50.0, 200.0)
+
+			val grayMask = Mat()
+			Core.inRange(hsvMat, grayLower, grayUpper, grayMask)
+			val grayPixels = Core.countNonZero(grayMask)
+
+			val totalPixels = gaugeMat.rows() * gaugeMat.cols()
+			val fillPercent = if (totalPixels > 0) {
+				(grayPixels.toDouble() / totalPixels.toDouble()) * 100.0
+			} else {
+				0.0
+			}
+
+			// Round to nearest threshold: 0%, 25%, 50%, 75%, 100%.
+			val roundedFillPercent = when {
+				fillPercent < 12.5 -> 0.0
+				fillPercent < 37.5 -> 25.0
+				fillPercent < 62.5 -> 50.0
+				fillPercent < 87.5 -> 75.0
+				else -> 100.0
+			}
+
+			// Count gauges that can be filled.
+			if (roundedFillPercent < 100.0) {
+				numGaugesCanFill++
+			}
+
+			if (debugMode) {
+				Log.d(TAG, "[DEBUG] Spirit Explosion Gauge at (${iconLocation.x}, ${iconLocation.y}): ${decimalFormat.format(roundedFillPercent)}% filled")
+			}
+
+			grayMask.release()
+			hsvMat.release()
+			rgbMat.release()
+			gaugeMat.release()
+		}
+
+		return SpiritGaugeResult(numGaugesCanFill, spiritExplosionIcons.size)
+	}
+
+	/**
 	 * Determines the aptitudes of the current character based on the levels (S, A, B) on the Full Stats popup. The priority order of the aptitude levels is S > A > B.
 	 *
 	 * @return The aptitudes of the current character.
