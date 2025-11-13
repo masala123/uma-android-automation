@@ -218,6 +218,19 @@ const Settings = () => {
                 />
 
                 <CustomCheckbox
+                    checked={bsc.settings.general.enableCraneGameAttempt}
+                    onCheckedChange={(checked) => {
+                        bsc.setSettings({
+                            ...bsc.settings,
+                            general: { ...bsc.settings.general, enableCraneGameAttempt: checked },
+                        })
+                    }}
+                    label="Enable Crane Game Attempt"
+                    description="When enabled, the bot will attempt to complete the crane game. By default, the bot will stop when it is detected."
+                    className="mt-4"
+                />
+
+                <CustomCheckbox
                     checked={bsc.settings.misc.enableSettingsDisplay}
                     onCheckedChange={(checked) => {
                         bsc.setSettings({

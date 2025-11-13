@@ -9,6 +9,7 @@ export interface Settings {
         enableSkillPointCheck: boolean
         skillPointCheck: number
         enablePopupCheck: boolean
+        enableCraneGameAttempt: boolean
     }
 
     // Racing settings
@@ -123,6 +124,7 @@ export const defaultSettings: Settings = {
         enableSkillPointCheck: false,
         skillPointCheck: 750,
         enablePopupCheck: false,
+        enableCraneGameAttempt: false,
     },
     racing: {
         enableFarmingFans: false,
