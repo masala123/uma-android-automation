@@ -218,15 +218,15 @@ const Settings = () => {
                 />
 
                 <CustomCheckbox
-                    checked={bsc.settings.general.enableCraneGameSkip}
+                    checked={bsc.settings.general.enableCraneGameAttempt}
                     onCheckedChange={(checked) => {
                         bsc.setSettings({
                             ...bsc.settings,
-                            general: { ...bsc.settings.general, enableCraneGameSkip: checked },
+                            general: { ...bsc.settings.general, enableCraneGameAttempt: checked },
                         })
                     }}
-                    label="Enable Crane Game Skip (Auto-Fail)"
-                    description="When enabled, crane game events will not stop the bot. Instead, the crane will be clicked automatically, thus failing the crane game but allowing the bot to continue running without user intervention."
+                    label="Enable Crane Game Attempt"
+                    description="When enabled, the bot will attempt to complete the crane game. By default, the bot will stop when it is detected."
                     className="mt-4"
                 />
 
