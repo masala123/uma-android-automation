@@ -7,12 +7,26 @@ import com.steve1316.automation_library.utils.MessageLog
 import org.opencv.core.Point
 
 class UnityCup(game: Game) : Campaign(game) {
-    override val TAG: String = "[${MainActivity.loggerTag}]AoHaru"
-	private var tutorialChances = 3
+    override val TAG: String = "[${MainActivity.loggerTag}]UnityCup"
+	private var tutorialDisabled = false
 	private var aoHaruRaceFirstTime: Boolean = true
 
 	override fun handleTrainingEvent() {
-		handleTrainingEventAoHaru()
+        if (!tutorialDisabled) {
+            tutorialDisabled = if (game.imageUtils.findImage("unitycup_tutorial_header", tries = 1, region = game.imageUtils.regionTopHalf).first != null) {
+                // If the tutorial is detected, select the second option to close it.
+                MessageLog.i(TAG, "\n[UNITY_CUP] Detected tutorial for Unity Cup. Closing it now...")
+                val trainingOptionLocations: ArrayList<Point> = game.imageUtils.findAll("training_event_active")
+                game.gestureUtils.tap(trainingOptionLocations[1].x, trainingOptionLocations[1].y, "training_event_active")
+                true
+            } else {
+                MessageLog.i(TAG, "\n[UNITY_CUP] Tutorial must have already been dismissed.")
+                super.handleTrainingEvent()
+                true
+            }
+        } else {
+            super.handleTrainingEvent()
+        }
 	}
 
 	override fun handleRaceEvents(): Boolean {
@@ -32,27 +46,6 @@ class UnityCup(game: Game) : Campaign(game) {
 
 	override fun checkCampaignSpecificConditions(): Boolean {
 		return false
-	}
-
-	/**
-	 * Checks for Ao Haru's tutorial first before handling a Training Event.
-	 */
-	private fun handleTrainingEventAoHaru() {
-		if (tutorialChances > 0) {
-			if (game.imageUtils.findImage("aoharu_tutorial_header", tries = 2).first != null) {
-				MessageLog.i(TAG, "\n[AOHARU] Detected tutorial for Ao Haru. Closing it now...")
-				
-				// If the tutorial is detected, select the second option to close it.
-				val trainingOptionLocations: ArrayList<Point> = game.imageUtils.findAll("training_event_active")
-				game.gestureUtils.tap(trainingOptionLocations[1].x, trainingOptionLocations[1].y, "training_event_active")
-				tutorialChances = 0
-			} else {
-				tutorialChances -= 1
-				game.trainingEvent.handleTrainingEvent()
-			}
-		} else {
-			game.trainingEvent.handleTrainingEvent()
-		}
 	}
 	
 	/**
