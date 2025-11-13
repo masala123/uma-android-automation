@@ -71,19 +71,20 @@ class UnityCup(game: Game) : Campaign(game) {
             // First get the locations of all 3 opponents.
 			val opponents = game.imageUtils.findAll("unitycup_opponent_option")
             var opponentSelected = false
-            for (val opponent in opponents) {
-                game.gestureUtils.tap(opponents[0].x, opponents[0].y, "unitycup_opponent_option")
+            for (i in opponents.indices) {
+                val opponent = opponents[i]
+                game.gestureUtils.tap(opponent.x, opponent.y, "unitycup_opponent_option")
                 game.findAndTapImage("unitycup_select_opponent")
                 game.wait(1.0)
 
                 val doubleCircles = game.imageUtils.findAll("race_prediction_double_circle", region = game.imageUtils.regionMiddle)
                 if (doubleCircles.size >= 3) {
-                    MessageLog.i(TAG, "[UNITY_CUP] Race #$i has sufficient double circle predictions. Selecting it now...")
+                    MessageLog.i(TAG, "[UNITY_CUP] Race #${i + 1} has sufficient double circle predictions. Selecting it now...")
                     game.findAndTapImage("unitycup_race_begin_showdown")
                     opponentSelected = true
                     break
                 } else {
-                    MessageLog.i(TAG, "[UNITY_CUP] Race #$i only had ${doubleCircles.size} double predictions and falls short. Skipping this opponent.")
+                    MessageLog.i(TAG, "[UNITY_CUP] Race #${i + 1} only had ${doubleCircles.size} double predictions and falls short. Skipping this opponent.")
                     game.findAndTapImage("cancel")
                     game.wait(1.0)
                 }
