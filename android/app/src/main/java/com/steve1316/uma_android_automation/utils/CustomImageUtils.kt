@@ -72,16 +72,17 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	 * @param templateName File name of the template image.
 	 * @param sourceBitmap The source bitmap to search in.
 	 * @param region Specify the region consisting of (x, y, width, height) of the source screenshot to template match. Defaults to (0, 0, 0, 0) which is equivalent to searching the full image.
+	 * @param customConfidence Override the default confidence threshold for template matching. Defaults to 0.0 which uses the default confidence.
 	 * @return An ArrayList of Point objects containing all the occurrences of the specified image or null if not found.
 	 */
-	private fun findAllWithBitmap(templateName: String, sourceBitmap: Bitmap, region: IntArray = intArrayOf(0, 0, 0, 0)): ArrayList<Point> {
+	private fun findAllWithBitmap(templateName: String, sourceBitmap: Bitmap, region: IntArray = intArrayOf(0, 0, 0, 0), customConfidence: Double = 0.0): ArrayList<Point> {
 		var templateBitmap: Bitmap?
 		context.assets?.open("images/$templateName.png").use { inputStream ->
 			templateBitmap = BitmapFactory.decodeStream(inputStream)
 		}
 
 		if (templateBitmap != null) {
-			val matchLocations = matchAll(sourceBitmap, templateBitmap, region = region)
+			val matchLocations = matchAll(sourceBitmap, templateBitmap, region = region, customConfidence = customConfidence)
 			
 			// Sort the match locations by ascending x and y coordinates.
 			matchLocations.sortBy { it.x }
