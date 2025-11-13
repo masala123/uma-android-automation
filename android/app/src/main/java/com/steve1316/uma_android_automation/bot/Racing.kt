@@ -1107,6 +1107,11 @@ class Racing (private val game: Game) {
                     MessageLog.i(TAG, "[RACE] Skipped the lead up to the finish line.")
                 }
                 game.wait(2.0)
+                // Skip crossing the finish line.
+                if (game.findAndTapImage("race_skip_manual", tries = 30, region = game.imageUtils.regionBottomHalf)) {
+                    MessageLog.i(TAG, "[RACE] Skipped crossing the finish line.")
+                }
+                game.wait(2.0)
                 // Skip the result screen.
                 if (game.findAndTapImage("race_skip_manual", tries = 30, region = game.imageUtils.regionBottomHalf)) {
                     MessageLog.i(TAG, "[RACE] Skipped the results screen.")
