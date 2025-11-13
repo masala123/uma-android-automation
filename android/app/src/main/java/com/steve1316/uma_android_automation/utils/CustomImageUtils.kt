@@ -54,6 +54,11 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		val dominantColor: String
 	)
 
+	data class SpiritGaugeResult(
+		val numGaugesCanFill: Int,
+		val numGaugesReadyToBurst: Int
+	)
+
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
 
