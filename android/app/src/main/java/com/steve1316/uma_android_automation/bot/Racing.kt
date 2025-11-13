@@ -1032,7 +1032,7 @@ class Racing (private val game: Game) {
      *
      * @return True if the bot completed the race with retry attempts remaining. Otherwise false.
      */
-    private fun runRaceWithRetries(): Boolean {
+    fun runRaceWithRetries(): Boolean {
         val canSkip = game.imageUtils.findImage("race_skip_locked", tries = 5, region = game.imageUtils.regionBottomHalf).first == null
         
         while (raceRetries >= 0) {
