@@ -1010,50 +1010,140 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 						val statName = statNames[i]
 						val xOffset = i * 180 // All stats are evenly spaced at 180 pixel intervals.
 
-						val croppedBitmap = createSafeBitmap(sourceBitmap!!, relX(skillPointsLocation.x, -934 + xOffset), relY(skillPointsLocation.y, -103), relWidth(150), relHeight(82), "determineStatGainFromTraining $statName")
-						if (croppedBitmap == null) {
-							Log.e(TAG, "[ERROR] Failed to create cropped bitmap for $statName stat gain detection from $trainingName training.")
-							threadSafeResults[i] = 0
-							statLatch.countDown()
-							return@Thread
-						}
-
-						// Check again before expensive operations.
-						if (!BotService.isRunning) {
-							statLatch.countDown()
-							return@Thread
-						}
-
-						// Convert to Mat and then turn it to grayscale.
-						sourceMat = Mat()
-						Utils.bitmapToMat(croppedBitmap, sourceMat)
-						sourceGray = Mat()
-						Imgproc.cvtColor(sourceMat, sourceGray, Imgproc.COLOR_BGR2GRAY)
-
-						workingMat = Mat()
-						sourceGray.copyTo(workingMat)
-
+						// Determine crop regions based on campaign.
+						val isUnityCup = game.campaign == "Unity Cup"
+						val firstRowStartX = relX(skillPointsLocation.x, -934 + xOffset)
+						val firstRowStartY = relY(skillPointsLocation.y, -103)
+						
 						var matchResults = mutableMapOf<String, MutableList<Point>>()
 						templates.forEach { template ->
 							matchResults[template] = mutableListOf()
 						}
 
-						// Check again before starting template processing loop.
-						if (!BotService.isRunning) {
-							threadSafeResults[i] = 0
-							return@Thread
-						}
+						// Declare croppedBitmap variable for debug visualization (used in URA Finale path).
+						var croppedBitmap: Bitmap? = null
 
-						for (templateName in templates) {
-							// Check before each template processing operation.
-							if (!BotService.isRunning) {
-								break
+						if (isUnityCup) {
+							// For Unity Cup, stats are in two rows on top of each other.
+							val firstRowBitmap = createSafeBitmap(sourceBitmap!!, firstRowStartX, firstRowStartY, relWidth(150), relHeight(50), "determineStatGainFromTraining $statName row1")
+							if (firstRowBitmap == null) {
+								Log.e(TAG, "[ERROR] Failed to create first row cropped bitmap for $statName stat gain detection from $trainingName training.")
+								threadSafeResults[i] = 0
+								statLatch.countDown()
+								return@Thread
 							}
-							val templateBitmap = templateBitmaps[templateName]
-							if (templateBitmap != null) {
-								matchResults = processStatGainTemplateWithTransparency(templateName, templateBitmap, workingMat, matchResults)
-							} else {
-								Log.e(TAG, "[ERROR] Could not load template \"$templateName\" to process stat gains for $trainingName training.")
+
+							val secondRowStartX = relX(firstRowStartX.toDouble(), 38)
+							val secondRowStartY = relY(firstRowStartY.toDouble(), -55)
+							val secondRowBitmap = createSafeBitmap(sourceBitmap!!, secondRowStartX, secondRowStartY, relWidth(105), relHeight(45), "determineStatGainFromTraining $statName row2")
+							if (secondRowBitmap == null) {
+								Log.e(TAG, "[ERROR] Failed to create second row cropped bitmap for $statName stat gain detection from $trainingName training.")
+								threadSafeResults[i] = 0
+								statLatch.countDown()
+								return@Thread
+							}
+
+							if (!BotService.isRunning) {
+								statLatch.countDown()
+								return@Thread
+							}
+
+							// Process first row.
+							val firstRowMat = Mat()
+							Utils.bitmapToMat(firstRowBitmap, firstRowMat)
+							val firstRowGray = Mat()
+							Imgproc.cvtColor(firstRowMat, firstRowGray, Imgproc.COLOR_BGR2GRAY)
+							val firstRowWorking = Mat()
+							firstRowGray.copyTo(firstRowWorking)
+
+							// Process second row.
+							val secondRowMat = Mat()
+							Utils.bitmapToMat(secondRowBitmap, secondRowMat)
+							val secondRowGray = Mat()
+							Imgproc.cvtColor(secondRowMat, secondRowGray, Imgproc.COLOR_BGR2GRAY)
+							val secondRowWorking = Mat()
+							secondRowGray.copyTo(secondRowWorking)
+
+							if (!BotService.isRunning) {
+								threadSafeResults[i] = 0
+								firstRowMat.release()
+								firstRowGray.release()
+								firstRowWorking.release()
+								secondRowMat.release()
+								secondRowGray.release()
+								secondRowWorking.release()
+								return@Thread
+							}
+
+							// Process templates for both rows.
+							for (templateName in templates) {
+								if (!BotService.isRunning) {
+									break
+								}
+								val templateBitmap = templateBitmaps[templateName]
+								if (templateBitmap != null) {
+									// Process templates for both rows.
+									matchResults = processStatGainTemplateWithTransparency(templateName, templateBitmap, firstRowWorking, matchResults)
+									val secondRowMatches = processStatGainTemplateWithTransparency(templateName, templateBitmap, secondRowWorking, mutableMapOf<String, MutableList<Point>>().apply {
+										templates.forEach { t -> this[t] = mutableListOf()
+									}})
+									secondRowMatches[templateName]?.forEach { point ->
+										val adjustedPoint = Point(point.x + 38, point.y - 55)
+										matchResults[templateName]?.add(adjustedPoint)
+									}
+								} else {
+									Log.e(TAG, "[ERROR] Could not load template \"$templateName\" to process stat gains for $trainingName training.")
+								}
+							}
+
+							// Clean up Unity Cup resources.
+							firstRowMat.release()
+							firstRowGray.release()
+							firstRowWorking.release()
+							secondRowMat.release()
+							secondRowGray.release()
+							secondRowWorking.release()
+						} else {
+							croppedBitmap = createSafeBitmap(sourceBitmap!!, firstRowStartX, firstRowStartY, relWidth(150), relHeight(82), "determineStatGainFromTraining $statName")
+							if (croppedBitmap == null) {
+								Log.e(TAG, "[ERROR] Failed to create cropped bitmap for $statName stat gain detection from $trainingName training.")
+								threadSafeResults[i] = 0
+								statLatch.countDown()
+								return@Thread
+							}
+
+							// Check again before expensive operations.
+							if (!BotService.isRunning) {
+								statLatch.countDown()
+								return@Thread
+							}
+
+							// Convert to Mat and then turn it to grayscale.
+							sourceMat = Mat()
+							Utils.bitmapToMat(croppedBitmap, sourceMat)
+							sourceGray = Mat()
+							Imgproc.cvtColor(sourceMat, sourceGray, Imgproc.COLOR_BGR2GRAY)
+
+							workingMat = Mat()
+							sourceGray.copyTo(workingMat)
+
+							// Check again before starting template processing loop.
+							if (!BotService.isRunning) {
+								threadSafeResults[i] = 0
+								return@Thread
+							}
+
+							for (templateName in templates) {
+								// Check before each template processing operation.
+								if (!BotService.isRunning) {
+									break
+								}
+								val templateBitmap = templateBitmaps[templateName]
+								if (templateBitmap != null) {
+									matchResults = processStatGainTemplateWithTransparency(templateName, templateBitmap, workingMat, matchResults)
+								} else {
+									Log.e(TAG, "[ERROR] Could not load template \"$templateName\" to process stat gains for $trainingName training.")
+								}
 							}
 						}
 
@@ -1064,31 +1154,44 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
 						// Draw final visualization with all matches for this region.
 						if (debugMode) {
-							val resultMat = Mat()
-							Utils.bitmapToMat(croppedBitmap, resultMat)
-							templates.forEachIndexed { _, templateName ->
-								matchResults[templateName]?.forEach { point ->
-									val templateBitmap = templateBitmaps[templateName]
-									if (templateBitmap != null) {
-										val templateWidth = templateBitmap.width
-										val templateHeight = templateBitmap.height
+							val resultMat = if (isUnityCup) {
+								// For Unity Cup, create a combined visualization using first row bitmap.
+								val combinedBitmap = createSafeBitmap(sourceBitmap!!, firstRowStartX, firstRowStartY, relWidth(150), relHeight(82), "determineStatGainFromTraining $statName combined")
+								if (combinedBitmap != null) {
+									Mat().apply { Utils.bitmapToMat(combinedBitmap, this) }
+								} else {
+									null
+								}
+							} else {
+								Mat().apply { Utils.bitmapToMat(croppedBitmap, this) }
+							}
+							
+							if (resultMat != null) {
+								templates.forEachIndexed { _, templateName ->
+									matchResults[templateName]?.forEach { point ->
+										val templateBitmap = templateBitmaps[templateName]
+										if (templateBitmap != null) {
+											val templateWidth = templateBitmap.width
+											val templateHeight = templateBitmap.height
 
-										// Calculate the bounding box coordinates.
-										val x1 = (point.x - templateWidth/2).toInt()
-										val y1 = (point.y - templateHeight/2).toInt()
-										val x2 = (point.x + templateWidth/2).toInt()
-										val y2 = (point.y + templateHeight/2).toInt()
+											// Calculate the bounding box coordinates.
+											val x1 = (point.x - templateWidth/2).toInt()
+											val y1 = (point.y - templateHeight/2).toInt()
+											val x2 = (point.x + templateWidth/2).toInt()
+											val y2 = (point.y + templateHeight/2).toInt()
 
-										// Draw the bounding box.
-										Imgproc.rectangle(resultMat, Point(x1.toDouble(), y1.toDouble()), Point(x2.toDouble(), y2.toDouble()), Scalar(0.0, 0.0, 0.0), 2)
+											// Draw the bounding box.
+											Imgproc.rectangle(resultMat, Point(x1.toDouble(), y1.toDouble()), Point(x2.toDouble(), y2.toDouble()), Scalar(0.0, 0.0, 0.0), 2)
 
-										// Add text label.
-										Imgproc.putText(resultMat, templateName, Point(point.x, point.y), Imgproc.FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0.0, 0.0, 0.0), 1)
+											// Add text label.
+											Imgproc.putText(resultMat, templateName, Point(point.x, point.y), Imgproc.FONT_HERSHEY_SIMPLEX, 0.5, Scalar(0.0, 0.0, 0.0), 1)
+										}
 									}
 								}
-							}
 
-							Imgcodecs.imwrite("$matchFilePath/debug_${trainingName}TrainingStatGain_${statNames[i]}.png", resultMat)
+								Imgcodecs.imwrite("$matchFilePath/debug_${trainingName}TrainingStatGain_${statNames[i]}.png", resultMat)
+								resultMat.release()
+							}
 						}
 					} catch (e: Exception) {
 						Log.e(TAG, "[ERROR] Error processing stat ${statNames[i]} for $trainingName training: ${e.stackTraceToString()}")
@@ -1606,7 +1709,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         // The right side of the energy bar looks very different depending on whether
         // the max energy has been increased. Thus we need to look for one of two bitmaps.
         var energyBarRightPartTemplateBitmap: Bitmap? = getBitmaps("energy_bar_right_part_0").second
-        var rightPartLocation: Point? = null
+        var rightPartLocation: Point?
         if (energyBarRightPartTemplateBitmap == null) {
             energyBarRightPartTemplateBitmap = getBitmaps("energy_bar_right_part_1").second
             if (energyBarRightPartTemplateBitmap == null) {
@@ -1674,7 +1777,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         grayMask.release()
         colorMask.release()
 
-        MessageLog.i(TAG, "[DEBUG] Results of energy bar analysis: Gray pixels=$grayPixels, Color pixels=$colorPixels, Energy=$result")
+        Log.d(TAG, "[DEBUG] Results of energy bar analysis: Gray pixels=$grayPixels, Color pixels=$colorPixels, Energy=$result")
         return result
     }
 }
