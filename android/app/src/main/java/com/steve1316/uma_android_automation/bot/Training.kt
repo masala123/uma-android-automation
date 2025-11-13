@@ -240,11 +240,7 @@ class Training(private val game: Game) {
 		else MessageLog.i(TAG, "\n[TRAINING] Now starting process to analyze all 5 Trainings.")
 
 		// Acquire the position of the speed stat text.
-		val (speedStatTextLocation, _) = if (game.campaign == "Unity Cup") {
-			game.imageUtils.findImage("aoharu_stat_speed", tries = 1, region = game.imageUtils.regionBottomHalf)
-		} else {
-			game.imageUtils.findImage("stat_speed", tries = 1, region = game.imageUtils.regionBottomHalf)
-		}
+		val (speedStatTextLocation, _) = game.imageUtils.findImage("stat_speed", tries = 1, region = game.imageUtils.regionBottomHalf)
 
 		if (speedStatTextLocation != null) {
 			// Perform a percentage check of Speed training to see if the bot has enough energy to do training. As a result, Speed training will be the one selected for the rest of the algorithm.
