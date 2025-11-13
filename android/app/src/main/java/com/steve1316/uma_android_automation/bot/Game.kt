@@ -52,7 +52,7 @@ class Game(val myContext: Context) {
 	val enableSkillPointCheck: Boolean = SettingsHelper.getBooleanSetting("general", "enableSkillPointCheck")
 	val skillPointsRequired: Int = SettingsHelper.getIntSetting("general", "skillPointCheck")
 	private val enablePopupCheck: Boolean = SettingsHelper.getBooleanSetting("general", "enablePopupCheck")
-    private val enableCraneGameSkip: Boolean = SettingsHelper.getBooleanSetting("general", "enableCraneGameSkip")
+    private val enableCraneGameAttempt: Boolean = SettingsHelper.getBooleanSetting("general", "enableCraneGameAttempt")
 
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
@@ -658,6 +658,75 @@ class Game(val myContext: Context) {
 		}
 	}
 
+	/**
+	 * Handles the Crane Game event by attempting to complete it with three long-press attempts.
+	 *
+	 * @return True if the crane game was successfully completed. False otherwise.
+	 */
+	fun handleCraneGame(): Boolean {
+		MessageLog.i(TAG, "\n[CRANE GAME] Starting crane game attempt...")
+
+		// Find the crane game button location.
+		val buttonLocation = ButtonCraneGame.find(imageUtils = imageUtils)
+		val buttonPoint = buttonLocation.first
+		if (buttonPoint == null) {
+			MessageLog.w(TAG, "\n[CRANE_GAME] Could not find the crane game button. Aborting.")
+			return false
+		}
+
+		val imageName = ButtonCraneGame.templates.first().name
+		val pressDurations = listOf(2.32, 1.134, 0.568)
+
+		// Perform three attempts with different press durations.
+		for (attempt in 1..3) {
+			val pressDuration = pressDurations[attempt - 1]
+			MessageLog.i(TAG, "[CRANE_GAME] Attempt $attempt: Long pressing for ${pressDuration}s...")
+
+			// Perform long press on the button.
+			gestureUtils.tap(buttonPoint.x, buttonPoint.y, imageName, longPress = true, pressDuration = pressDuration)
+
+			if (attempt < 3) {
+				// After attempts 1 and 2, wait for the button to reappear.
+				MessageLog.i(TAG, "[CRANE_GAME] Waiting for the crane game button to reappear after attempt $attempt...")
+				var buttonReappeared = false
+				val maxWaitTime = 10.0
+				val checkInterval = 0.5
+				var elapsedTime = 0.0
+
+				while (elapsedTime < maxWaitTime) {
+					if (ButtonCraneGame.check(imageUtils = imageUtils)) {
+						buttonReappeared = true
+						break
+					}
+					wait(checkInterval, skipWaitingForLoading = true)
+					elapsedTime += checkInterval
+				}
+
+				if (!buttonReappeared) {
+					MessageLog.w(TAG, "[CRANE_GAME] The crane game button did not reappear within ${maxWaitTime} seconds after attempt $attempt.")
+				}
+
+				wait(1.0)
+			} else {
+				// After the third attempt, wait for an extended period and then check for completion.
+				MessageLog.i(TAG, "[CRANE_GAME] Final attempt completed. Waiting for an extended period before checking for completion...")
+				wait(7.0)
+
+				// Check for ordinary_cuties image and ButtonCraneGameOk button.
+				val sourceBitmap = imageUtils.getSourceBitmap()
+				if (imageUtils.findImageWithBitmap("ordinary_cuties", sourceBitmap) != null && ButtonCraneGameOk.check(imageUtils = imageUtils)) {
+					MessageLog.i(TAG, "[CRANE_GAME] Crane game completed successfully.")
+					ButtonCraneGameOk.click(imageUtils = imageUtils)
+					return true
+				} else {
+					MessageLog.w(TAG, "[CRANE_GAME] Could not confirm crane game completion.")
+					return false
+				}
+			}
+		}
+
+		return false
+	}
 
 	/**
 	 * Perform misc checks to potentially fix instances where the bot is stuck.
@@ -681,21 +750,14 @@ class Game(val myContext: Context) {
 			findAndTapImage("next", tries = 1, region = imageUtils.regionBottomHalf)
 			wait(1.0)
         } else if (ButtonCraneGame.check(imageUtils = imageUtils)) {
-            if (enableCraneGameSkip) {
-                MessageLog.i(TAG, "[CRANE GAME] Auto-failing crane game...")
-                ButtonCraneGame.click(imageUtils = imageUtils)
+            if (enableCraneGameAttempt) {
+                handleCraneGame()
             } else {
                 // Stop when the bot has reached the Crane Game Event.
-                MessageLog.i(TAG, "[END] Bot will stop due to the detection of the Crane Game Event. Please complete it and restart the bot.")
-                notificationMessage = "Bot will stop due to the detection of the Crane Game Event. Please complete it and restart the bot."
+                MessageLog.i(TAG, "\n[END] Bot will stop due to the detection of the Crane Game Event.")
+                notificationMessage = "Bot will stop due to the detection of the Crane Game Event."
                 return false
             }
-        } else if (
-            ButtonCraneGameOk.check(imageUtils = imageUtils) &&
-            imageUtils.findImageWithBitmap("ordinary_cuties", sourceBitmap) != null
-        ) {
-            MessageLog.i(TAG, "[CRANE GAME] Crane game completed. Continuing...")
-            ButtonCraneGameOk.click(imageUtils = imageUtils)
 		} else if (findAndTapImage("race_retry", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
 			MessageLog.i(TAG, "[MISC] There is a race retry popup.")
 			wait(5.0)
