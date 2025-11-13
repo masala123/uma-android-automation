@@ -4,7 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
 import com.steve1316.uma_android_automation.MainActivity
-import com.steve1316.uma_android_automation.bot.campaigns.AoHaru
+import com.steve1316.uma_android_automation.bot.campaigns.UnityCup
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
 import com.steve1316.automation_library.utils.ImageUtils.ScaleConfidenceResult
 import com.steve1316.automation_library.utils.BotService
@@ -768,7 +768,7 @@ class Game(val myContext: Context) {
 			wait(5.0)
 
 			if (campaign == "Ao Haru") {
-				val aoHaruCampaign = AoHaru(this)
+				val aoHaruCampaign = UnityCup(this)
 				aoHaruCampaign.start()
 			} else {
 				val uraFinaleCampaign = Campaign(this)
