@@ -19,7 +19,9 @@ class Training(private val game: Game) {
 		val statGains: IntArray,
 		val failureChance: Int,
 		val relationshipBars: ArrayList<CustomImageUtils.BarFillResult>,
-		val isRainbow: Boolean
+		val isRainbow: Boolean,
+		val numSpiritGaugesCanFill: Int = 0,
+		val numSpiritGaugesReadyToBurst: Int = 0
 	) {
 		override fun equals(other: Any?): Boolean {
 			if (this === other) return true
@@ -32,6 +34,8 @@ class Training(private val game: Game) {
 			if (!statGains.contentEquals(other.statGains)) return false
 			if (relationshipBars != other.relationshipBars) return false
 			if (isRainbow != other.isRainbow) return false
+			if (numSpiritGaugesCanFill != other.numSpiritGaugesCanFill) return false
+			if (numSpiritGaugesReadyToBurst != other.numSpiritGaugesReadyToBurst) return false
 
 			return true
 		}
@@ -42,6 +46,8 @@ class Training(private val game: Game) {
 			result = 31 * result + statGains.contentHashCode()
 			result = 31 * result + relationshipBars.hashCode()
 			result = 31 * result + isRainbow.hashCode()
+			result = 31 * result + numSpiritGaugesCanFill
+			result = 31 * result + numSpiritGaugesReadyToBurst
 			return result
 		}
 	}
