@@ -30,12 +30,14 @@ class UnityCup(game: Game) : Campaign(game) {
 	}
 
 	override fun handleRaceEvents(): Boolean {
-		// Check for Ao Haru specific race screens first.
-		if (aoHaruRaceFirstTime && game.imageUtils.findImage("aoharu_set_initial_team_header", tries = 1).first != null) {
+		// Check for the Unity Cup popup to set the initial team.
+		if (aoHaruRaceFirstTime && game.imageUtils.findImage("unitycup_set_initial_team_header", tries = 1, region = game.imageUtils.regionMiddle).first != null) {
+            MessageLog.i(TAG, "\n[UNITY_CUP] Dismissed the popup to set the initial team.")
 			game.findAndTapImage("race_accept_trophy")
 			handleRaceEventsAoHaru()
 			return true
-		} else if (game.imageUtils.findImage("aoharu_race_header", tries = 1).first != null) {
+		} else if (game.imageUtils.findImage("unitycup_race", tries = 1, region = game.imageUtils.regionBottomHalf).first != null) {
+            // Otherwise, handle the Unity Cup race.
 			handleRaceEventsAoHaru()
 			return true
 		}
@@ -49,55 +51,75 @@ class UnityCup(game: Game) : Campaign(game) {
 	}
 	
 	/**
-	 * Handles the Ao Haru's race event.
+	 * Handles the Unity Cup race event.
 	 */
-	private fun handleRaceEventsAoHaru() {
-		MessageLog.i(TAG, "\n[AOHARU] Starting process to handle Ao Haru race...")
+	private fun handleRaceEventsUnityCup() {
+		MessageLog.i(TAG, "\n[UNITY_CUP] Starting process for handling the Unity Cup racing process.")
 		aoHaruRaceFirstTime = false
+        var unityCupFinals = false
 		
-		// Head to the next screen with the 3 racing options.
-		game.findAndTapImage("aoharu_race")
-		game.wait(7.0)
-		
-		if (game.findAndTapImage("aoharu_final_race", tries = 10)) {
-			MessageLog.i(TAG, "\n[AOHARU] Final race detected. Racing it now...")
-			game.findAndTapImage("aoharu_select_race")
-		} else {
-			// Run the first option if it has more than 3 double circles and if not, run the second option.
-			var racingOptions = game.imageUtils.findAll("aoharu_race_option")
-			game.gestureUtils.tap(racingOptions[0].x, racingOptions[0].y, "aoharu_race_option")
-			
-			game.findAndTapImage("aoharu_select_race", tries = 10)
-			game.wait(2.0)
-			
-			val doubleCircles = game.imageUtils.findAll("race_prediction_double_circle")
-			if (doubleCircles.size >= 3) {
-				MessageLog.i(TAG, "[AOHARU] First race has sufficient double circle predictions. Selecting it now...")
-				game.findAndTapImage("aoharu_select_race", tries = 10)
-			} else {
-				MessageLog.i(TAG, "[AOHARU] First race did not have the sufficient double circle predictions. Selecting the 2nd race now...")
-				game.findAndTapImage("cancel", tries = 10)
-				game.wait(1.0)
-				
-				racingOptions = game.imageUtils.findAll("aoharu_race_option")
-				game.gestureUtils.tap(racingOptions[1].x, racingOptions[1].y, "aoharu_race_option")
-				
-				game.findAndTapImage("aoharu_select_race", tries = 30)
-				game.findAndTapImage("aoharu_select_race", tries = 30)
-				game.findAndTapImage("aoharu_select_race", tries = 10)
-			}
-		}
-		
-		game.wait(7.0)
-		
-		// Now run the race and skip to the end.
-		game.findAndTapImage("aoharu_run_race", tries = 30)
-		game.wait(1.0)
-		game.findAndTapImage("race_skip_manual", tries = 30)
+		// Head to the next screen with the 3 opponents.
+		game.findAndTapImage("unitycup_race")
 		game.wait(3.0)
 		
-		game.findAndTapImage("race_end", tries = 30)
-		game.wait(1.0)
-		game.findAndTapImage("race_end", tries = 30)
+		if (game.findAndTapImage("unitycup_final_race")) {
+			MessageLog.i(TAG, "\n[UNITY_CUP] Final race detected with Team Zenith.")
+			game.findAndTapImage("unitycup_race_begin_showdown")
+            unityCupFinals = true
+		} else {
+			// Analyze which opponent has more than 2 double predictions and select the first one it finds going from top to bottom.
+            // First get the locations of all 3 opponents.
+			val opponents = game.imageUtils.findAll("unitycup_opponent_option")
+            var opponentSelected = false
+            for (val opponent in opponents) {
+                game.gestureUtils.tap(opponents[0].x, opponents[0].y, "unitycup_opponent_option")
+                game.findAndTapImage("unitycup_select_opponent")
+                game.wait(1.0)
+
+                val doubleCircles = game.imageUtils.findAll("race_prediction_double_circle", region = game.imageUtils.regionMiddle)
+                if (doubleCircles.size >= 3) {
+                    MessageLog.i(TAG, "[UNITY_CUP] Race #$i has sufficient double circle predictions. Selecting it now...")
+                    game.findAndTapImage("unitycup_race_begin_showdown")
+                    opponentSelected = true
+                    break
+                } else {
+                    MessageLog.i(TAG, "[UNITY_CUP] Race #$i only had ${doubleCircles.size} double predictions and falls short. Skipping this opponent.")
+                    game.findAndTapImage("cancel")
+                    game.wait(1.0)
+                }
+            }
+
+            // If a opponent has not been selected yet, default to the 2nd opponent.
+            if (!opponentSelected) {
+                MessageLog.w(TAG, "[UNITY_CUP] Could not determine any opponent with sufficient double circle predictions. Selecting the 2nd opponent as a fallback.")
+                game.gestureUtils.tap(opponents[1].x, opponents[1].y, "unitycup_opponent_option")
+                game.findAndTapImage("unitycup_select_opponent")
+                game.wait(1.0)
+                game.findAndTapImage("unitycup_race_begin_showdown")
+            }
+		}
+		
+		game.wait(5.0)
+		
+		// Now skip the overall race results or manually run the final race with Team Zenith if the skip is not available.
+        if (unityCupFinals) {
+            if (game.imageUtils.findImage("race_skip_locked", tries = 1, region = game.imageUtils.regionBottomHalf).first != null) {
+                // Manually run the race.
+                game.racing.runRaceWithRetries()
+                // After the race is manually ran, skip past the popup showing the final positions of the racers.
+                game.findAndTapImage("next", region = game.imageUtils.regionBottomHalf)
+            } else {
+                game.findAndTapImage("unitycup_race_skip_results", region = game.imageUtils.regionBottomHalf)
+                game.wait(1.0)
+                game.findAndTapImage("race_skip", region = game.imageUtils.regionBottomHalf)
+            }
+        } else {
+            game.findAndTapImage("unitycup_race_skip_results", region = game.imageUtils.regionBottomHalf)
+            game.wait(1.0)
+            game.findAndTapImage("race_skip", region = game.imageUtils.regionBottomHalf)
+        }
+
+        // On the Race Results screen, skip past the final results of all 5 races against this opponent.
+		game.racing.finalizeRaceResults()
 	}
 }

@@ -1181,8 +1181,10 @@ class Racing (private val game: Game) {
                     game.wait(2.0)
 
                     // Now confirm the completion of a Training Goal popup.
-                    MessageLog.i(TAG, "[RACE] There was a Training Goal popup. Confirming it now.")
-                    game.findAndTapImage("next", tries = 10, region = game.imageUtils.regionBottomHalf)
+                    if (game.campaign != "Unity Cup") {
+                        MessageLog.i(TAG, "[RACE] There was a Training Goal popup. Confirming it now.")
+                        game.findAndTapImage("next", tries = 10, region = game.imageUtils.regionBottomHalf)
+                    }
                 }
             } else if (game.findAndTapImage("next", tries = 10, region = game.imageUtils.regionBottomHalf)) {
                 // Same as above but without the longer delay.
