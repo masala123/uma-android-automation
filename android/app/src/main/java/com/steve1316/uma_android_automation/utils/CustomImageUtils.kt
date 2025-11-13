@@ -1464,12 +1464,12 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
     fun analyzeEnergyBar(): Int? {
         val (sourceBitmap, templateBitmap) = getBitmaps("energy")
         if (templateBitmap == null) {
-            game.printToLog("analyzeEnergyBar:: Failed to find template bitmap for \"energy\".", isError = true, tag = tag)
+            MessageLog.e(TAG, "[ERROR] Failed to find template bitmap for \"energy\".")
             return null
         }
         val energyTextLocation = findImage("energy", tries = 1, region = regionTopHalf).first
         if (energyTextLocation == null) {
-            game.printToLog("analyzeEnergyBar:: Failed to find bitmap for \"energy\".", isError = true, tag = tag)
+            MessageLog.e(TAG, "[ERROR] Failed to find the text location of the energy bar.")
             return null
         }
 
@@ -1484,7 +1484,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         // since the bar is able to grow.
         var croppedBitmap = createSafeBitmap(sourceBitmap, x, y, w, h, "analyzeEnergyBar:: Crop energy bar.")
         if (croppedBitmap == null) {
-            game.printToLog("analyzeEnergyBar:: Failed to crop bitmap.", isError = true, tag = tag)
+            MessageLog.e(TAG, "[ERROR] Failed to crop the bitmap of the energy bar.")
             return null
         }
 
@@ -1493,13 +1493,13 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
         val energyBarLeftPartTemplateBitmap: Bitmap? = getBitmaps("energy_bar_left_part").second
         if (energyBarLeftPartTemplateBitmap == null) {
-            game.printToLog("analyzeEnergyBar:: Failed to find left part of energy bar.", isError = true, tag = tag)
+            MessageLog.e(TAG, "[ERROR] Failed to find the template bitmap for the left part of the energy bar.")
             return null
         }
 
         val leftPartLocation: Point? = match(croppedBitmap, energyBarLeftPartTemplateBitmap, "energy_bar_left_part").second
         if (leftPartLocation == null) {
-            game.printToLog("analyzeEnergyBar:: Failed to find left part of energy bar.", isError = true, tag = tag)
+            MessageLog.e(TAG, "[ERROR] Failed to find the location of the left part of the energy bar.")
             return null
         }
 
@@ -1510,7 +1510,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         if (energyBarRightPartTemplateBitmap == null) {
             energyBarRightPartTemplateBitmap = getBitmaps("energy_bar_right_part_1").second
             if (energyBarRightPartTemplateBitmap == null) {
-                game.printToLog("analyzeEnergyBar:: Failed to find right part of energy bar.", isError = true, tag = tag)
+                MessageLog.e(TAG, "[ERROR] Failed to find the template bitmap for the right part of the energy bar.")
                 return null
             }
             rightPartLocation = match(croppedBitmap, energyBarRightPartTemplateBitmap, "energy_bar_right_part_1").second
@@ -1519,7 +1519,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         }
 
         if (rightPartLocation == null) {
-            game.printToLog("analyzeEnergyBar:: Failed to find right part of energy bar.", isError = true, tag = tag)
+            MessageLog.e(TAG, "[ERROR] Failed to find the location of the right part of the energy bar.")
             return null
         }
 
@@ -1536,7 +1536,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
         croppedBitmap = createSafeBitmap(croppedBitmap, x, y, w, h, "analyzeEnergyBar:: Refine cropped energy bar.")
         if (croppedBitmap == null) {
-            game.printToLog("analyzeEnergyBar:: Failed to refine cropped bitmap region.", isError = true, tag = tag)
+            MessageLog.e(TAG, "[ERROR] Failed to refine the cropped bitmap region of the energy bar.")
             return null
         }
 
@@ -1574,7 +1574,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         grayMask.release()
         colorMask.release()
 
-        game.printToLog("analyzeEnergyBar:: Pixel Colors: Gray=$grayPixels, Color=$colorPixels, Energy=$result", tag = tag)
+        MessageLog.i(TAG, "[DEBUG] Results of energy bar analysis: Gray pixels=$grayPixels, Color pixels=$colorPixels, Energy=$result")
         return result
     }
 }
