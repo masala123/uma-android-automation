@@ -30,7 +30,7 @@ import kotlin.text.replace
  * Utility functions for image processing via CV like OpenCV.
  */
 class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(context) {
-	private val TAG: String = "[${MainActivity.loggerTag}]ImageUtils"
+	private val TAG: String = "[${MainActivity.loggerTag}]CustomImageUtils"
 
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
@@ -130,12 +130,12 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	////////////////////////////////////////////////////////////////////
 
 	/**
-	 * Perform OCR text detection using Tesseract along with some image manipulation via thresholding to make the cropped screenshot black and white using OpenCV.
+	 * Perform OCR text detection on the training event title using Tesseract along with some image manipulation via thresholding to make the cropped screenshot black and white using OpenCV.
 	 *
 	 * @param increment Increments the threshold by this value. Defaults to 0.0.
-	 * @return The detected String in the cropped region.
+	 * @return The detected event title in the cropped region.
 	 */
-	fun findText(increment: Double = 0.0): String {
+	fun findEventTitle(increment: Double = 0.0): String {
 		val (sourceBitmap, templateBitmap) = getBitmaps("shift")
 
 		// Acquire the location of the energy text image.
@@ -152,11 +152,11 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		var croppedBitmap: Bitmap? = if (isTablet) {
 			newX = max(0, matchLocation.x.toInt() - relWidth(250))
 			newY = max(0, matchLocation.y.toInt() + relHeight(154))
-			createSafeBitmap(sourceBitmap, newX, newY, relWidth(746), relHeight(85), "findText tablet crop")
+			createSafeBitmap(sourceBitmap, newX, newY, relWidth(746), relHeight(85), "findEventTitle tablet crop")
 		} else {
 			newX = max(0, matchLocation.x.toInt() - relWidth(125))
 			newY = max(0, matchLocation.y.toInt() + relHeight(116))
-			createSafeBitmap(sourceBitmap, newX, newY, relWidth(645), relHeight(65), "findText phone crop")
+			createSafeBitmap(sourceBitmap, newX, newY, relWidth(645), relHeight(65), "findEventTitle phone crop")
 		}
 		if (croppedBitmap == null) {
 			MessageLog.e(TAG, "Failed to create cropped bitmap for text detection")
@@ -171,7 +171,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		val (shiftMatch, _) = match(croppedBitmap, templateBitmap!!, "shift")
 		croppedBitmap = if (shiftMatch) {
 			Log.d(TAG, "Shifting the region over by 70 pixels!")
-			createSafeBitmap(sourceBitmap, relX(newX.toDouble(), 70), newY, 645 - 70, 65, "findText shifted crop") ?: croppedBitmap
+			createSafeBitmap(sourceBitmap, relX(newX.toDouble(), 70), newY, 645 - 70, 65, "findEventTitle shifted crop") ?: croppedBitmap
 		} else {
 			Log.d(TAG, "Do not need to shift.")
 			croppedBitmap
@@ -248,7 +248,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			height,
 			useThreshold = false,
 			useGrayscale = true,
-			scaleUp = 2,
+			scale = 2.0,
 			ocrEngine = "mlkit",
 			debugName = "TrainingFailureChance"
 		)
@@ -304,7 +304,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 				height,
 				useThreshold = true,
 				useGrayscale = true,
-				scaleUp = 2,
+				scale = 2.0,
 				ocrEngine = "mlkit",
 				debugName = "DayForExtraRace"
 			)
@@ -341,7 +341,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 				height = relHeight(45),
 				useThreshold = true,
 				useGrayscale = true,
-				scaleUp = 2,
+				scale = 2.0,
 				ocrEngine = "mlkit",
 				debugName = "extractRaceName"
 			)
@@ -479,7 +479,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 				height,
 				useThreshold = true,
 				useGrayscale = true,
-				scaleUp = 1,
+				scale = 1.0,
 				ocrEngine = "mlkit",
 				debugName = "SkillPoints"
 			)
@@ -755,7 +755,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 					relHeight(42),
 					useThreshold = false,
 					useGrayscale = true,
-					scaleUp = 1,
+					scale = 1.0,
 					ocrEngine = "tesseract_digits",
 					debugName = "${statName}StatValue"
 				)
@@ -801,7 +801,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 				relHeight(70),
 				useThreshold = true,
 				useGrayscale = true,
-				scaleUp = 1,
+				scale = 1.0,
 				ocrEngine = "mlkit",
 				debugName = "dateString"
 			)
@@ -818,7 +818,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 					relHeight(35),
 					useThreshold = false,
 					useGrayscale = true,
-					scaleUp = 1,
+					scale = 1.0,
 					ocrEngine = "mlkit",
 					debugName = "dateString"
 				)
@@ -1370,88 +1370,6 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	// Helper functions for OCR operations.
 
 	/**
-	 * Performs OCR using Tesseract on the provided bitmap.
-	 *
-	 * @param bitmap The bitmap to perform OCR on.
-	 * @return The detected text string or empty string if OCR fails.
-	 */
-	private fun performTesseractOCR(bitmap: Bitmap): String {
-		tessBaseAPI.setImage(bitmap)
-		return try {
-			val result = tessBaseAPI.utF8Text
-			tessBaseAPI.clear()
-			result
-		} catch (e: Exception) {
-			MessageLog.e(TAG, "Cannot perform OCR with Tesseract: ${e.stackTraceToString()}")
-			tessBaseAPI.clear()
-			""
-		}
-	}
-
-	/**
-	 * Performs OCR using Tesseract with digits-only training data on the provided bitmap.
-	 *
-	 * @param bitmap The bitmap to perform OCR on.
-	 * @return The detected text string or empty string if OCR fails.
-	 */
-	private fun performTesseractDigitsOCR(bitmap: Bitmap): String {
-		tessDigitsBaseAPI.setImage(bitmap)
-		return try {
-			val result = tessDigitsBaseAPI.utF8Text
-			tessDigitsBaseAPI.clear()
-			result
-		} catch (e: Exception) {
-			MessageLog.e(TAG, "Cannot perform OCR with Tesseract Digits: ${e.stackTraceToString()}")
-			tessDigitsBaseAPI.clear()
-			""
-		}
-	}
-
-	/**
-	 * Performs OCR using Google ML Kit on the provided bitmap with fallback to Tesseract.
-	 *
-	 * @param bitmap The bitmap to perform OCR on.
-	 * @param fallbackToTesseract Whether to fallback to Tesseract if ML Kit fails. Defaults to true.
-	 * @return The detected text string or empty string if OCR fails.
-	 */
-	private fun performMLKitOCR(bitmap: Bitmap, fallbackToTesseract: Boolean = true): String {
-		val inputImage: InputImage = InputImage.fromBitmap(bitmap, 0)
-		val latch = CountDownLatch(1)
-		var result = ""
-		var mlkitFailed = false
-
-		googleTextRecognizer.process(inputImage)
-			.addOnSuccessListener { text ->
-				if (text.textBlocks.isNotEmpty()) {
-					for (block in text.textBlocks) {
-						result = block.text
-					}
-				}
-				latch.countDown()
-			}
-			.addOnFailureListener {
-				MessageLog.e(TAG, "Failed to do text detection via Google's ML Kit.")
-				mlkitFailed = true
-				latch.countDown()
-			}
-
-		// Wait for the async operation to complete.
-		try {
-			latch.await(5, TimeUnit.SECONDS)
-		} catch (_: InterruptedException) {
-			MessageLog.e(TAG, "Google ML Kit operation timed out.")
-		}
-
-		// Fallback to Tesseract if ML Kit failed or didn't find result.
-		if (fallbackToTesseract && (mlkitFailed || result.isEmpty())) {
-			MessageLog.i(TAG, "Falling back to Tesseract OCR.")
-			return performTesseractDigitsOCR(bitmap)
-		}
-
-		return result
-	}
-
-	/**
 	 * Performs OCR on a cropped region of a source bitmap with optional preprocessing.
 	 * 
 	 * @param sourceBitmap The source image to crop from.
@@ -1461,7 +1379,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	 * @param height The height of the crop region.
 	 * @param useThreshold Whether to apply binary thresholding. Defaults to true.
 	 * @param useGrayscale Whether to convert to grayscale first. Defaults to true.
-	 * @param scaleUp Factor to scale up the cropped image before OCR. Defaults to 1 (no scaling).
+	 * @param scale Scale factor to apply to the processed image. Values > 1 scale up, values < 1 scale down. Defaults to 1.0 (no scaling).
 	 * @param ocrEngine The OCR engine to use ("tesseract", "mlkit", or "tesseract_digits"). Defaults to "tesseract".
 	 * @param debugName Optional name for debug image saving.
 	 * 
@@ -1475,57 +1393,21 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		height: Int,
 		useThreshold: Boolean = true,
 		useGrayscale: Boolean = true,
-		scaleUp: Int = 1,
+		scale: Double = 1.0,
 		ocrEngine: String = "tesseract",
 		debugName: String = ""
 	): String {
-		val croppedBitmap = createSafeBitmap(sourceBitmap, x, y, width, height, debugName) 
-			?: return ""
-		
-		val cvImage = Mat()
-		Utils.bitmapToMat(croppedBitmap, cvImage)
-		
-		// Apply grayscale if needed.
-		if (useGrayscale) {
-			Imgproc.cvtColor(cvImage, cvImage, Imgproc.COLOR_BGR2GRAY)
-			if (debugMode && debugName.isNotEmpty()) {
-				Imgcodecs.imwrite("$matchFilePath/debug_${debugName}_afterGrayscale.png", cvImage)
-			}
-		}
-		
-		// Apply thresholding if needed.
-		val processedImage = if (useThreshold) {
-			val bwImage = Mat()
-			Imgproc.threshold(cvImage, bwImage, threshold.toDouble(), 255.0, Imgproc.THRESH_BINARY)
-			if (debugMode && debugName.isNotEmpty()) {
-				Imgcodecs.imwrite("$matchFilePath/debug_${debugName}_afterThreshold.png", bwImage)
-			}
-			cvImage.release()
-			bwImage
-		} else {
-			cvImage
-		}
-		
-		// Scale up if needed.
-		val finalBitmap = if (scaleUp > 1) {
-			val resultBitmap = createBitmap(processedImage.cols(), processedImage.rows())
-			Utils.matToBitmap(processedImage, resultBitmap)
-			resultBitmap.scale(resultBitmap.width * scaleUp, resultBitmap.height * scaleUp)
-		} else {
-			val resultBitmap = createBitmap(processedImage.cols(), processedImage.rows())
-			Utils.matToBitmap(processedImage, resultBitmap)
-			resultBitmap
-		}
-		
-		// Perform OCR based on selected engine.
-		val result = when (ocrEngine) {
-			"mlkit" -> performMLKitOCR(finalBitmap)
-			"tesseract_digits" -> performTesseractDigitsOCR(finalBitmap)
-			else -> performTesseractOCR(finalBitmap)
-		}
-		
-		processedImage.release()
-		return result
+		// Perform OCR using findText() from ImageUtils.
+		return findText(
+			cropRegion = intArrayOf(x, y, width, height),
+			grayscale = useGrayscale,
+			thresh = useThreshold,
+			threshold = threshold.toDouble(),
+			thresholdMax = 255.0,
+			scale = scale,
+			sourceBitmap = sourceBitmap,
+			detectDigitsOnly = ocrEngine == "tesseract_digits"
+		)
 	}
 
 	/**
@@ -1538,7 +1420,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	 * @param height Height of the crop region.
 	 * @param useThreshold Whether to apply binary thresholding. Defaults to true.
 	 * @param useGrayscale Whether to convert to grayscale first. Defaults to true.
-	 * @param scaleUp Factor to scale up the cropped image before OCR. Defaults to 1.
+	 * @param scale Scale factor to apply to the processed image. Values > 1 scale up, values < 1 scale down. Defaults to 1.0 (no scaling).
 	 * @param ocrEngine The OCR engine to use. Defaults to "tesseract".
 	 * @param debugName Optional name for debug image saving.
 	 * 
@@ -1552,7 +1434,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		height: Int,
 		useThreshold: Boolean = true,
 		useGrayscale: Boolean = true,
-		scaleUp: Int = 1,
+		scale: Double = 1.0,
 		ocrEngine: String = "tesseract",
 		debugName: String = ""
 	): String {
@@ -1568,9 +1450,131 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			height,
 			useThreshold,
 			useGrayscale,
-			scaleUp,
+			scale,
 			ocrEngine,
 			debugName
 		)
 	}
+
+    /**
+    * Gets the filled percentage of the energy bar.
+    *
+    * @return If energy bar is detected, returns the filled percentage, else returns null.
+    */
+    fun analyzeEnergyBar(): Int? {
+        val (sourceBitmap, templateBitmap) = getBitmaps("energy")
+        if (templateBitmap == null) {
+            game.printToLog("analyzeEnergyBar:: Failed to find template bitmap for \"energy\".", isError = true, tag = tag)
+            return null
+        }
+        val energyTextLocation = findImage("energy", tries = 1, region = regionTopHalf).first
+        if (energyTextLocation == null) {
+            game.printToLog("analyzeEnergyBar:: Failed to find bitmap for \"energy\".", isError = true, tag = tag)
+            return null
+        }
+
+        // Get top right of energyText.
+        var x: Int = (energyTextLocation.x + (templateBitmap.width / 2)).toInt()
+        var y: Int = (energyTextLocation.y - (templateBitmap.height / 2)).toInt()
+        var w: Int = 700
+        var h: Int = 75
+
+        // Crop just the energy bar in the image.
+        // This crop extends to the right beyond the energy bar a bit
+        // since the bar is able to grow.
+        var croppedBitmap = createSafeBitmap(sourceBitmap, x, y, w, h, "analyzeEnergyBar:: Crop energy bar.")
+        if (croppedBitmap == null) {
+            game.printToLog("analyzeEnergyBar:: Failed to crop bitmap.", isError = true, tag = tag)
+            return null
+        }
+
+        // Now find the left and right brackets of the energy bar
+        // to refine our cropped region.
+
+        val energyBarLeftPartTemplateBitmap: Bitmap? = getBitmaps("energy_bar_left_part").second
+        if (energyBarLeftPartTemplateBitmap == null) {
+            game.printToLog("analyzeEnergyBar:: Failed to find left part of energy bar.", isError = true, tag = tag)
+            return null
+        }
+
+        val leftPartLocation: Point? = match(croppedBitmap, energyBarLeftPartTemplateBitmap, "energy_bar_left_part").second
+        if (leftPartLocation == null) {
+            game.printToLog("analyzeEnergyBar:: Failed to find left part of energy bar.", isError = true, tag = tag)
+            return null
+        }
+
+        // The right side of the energy bar looks very different depending on whether
+        // the max energy has been increased. Thus we need to look for one of two bitmaps.
+        var energyBarRightPartTemplateBitmap: Bitmap? = getBitmaps("energy_bar_right_part_0").second
+        var rightPartLocation: Point? = null
+        if (energyBarRightPartTemplateBitmap == null) {
+            energyBarRightPartTemplateBitmap = getBitmaps("energy_bar_right_part_1").second
+            if (energyBarRightPartTemplateBitmap == null) {
+                game.printToLog("analyzeEnergyBar:: Failed to find right part of energy bar.", isError = true, tag = tag)
+                return null
+            }
+            rightPartLocation = match(croppedBitmap, energyBarRightPartTemplateBitmap, "energy_bar_right_part_1").second
+        } else {
+            rightPartLocation = match(croppedBitmap, energyBarRightPartTemplateBitmap, "energy_bar_right_part_0").second
+        }
+
+        if (rightPartLocation == null) {
+            game.printToLog("analyzeEnergyBar:: Failed to find right part of energy bar.", isError = true, tag = tag)
+            return null
+        }
+
+        // Crop the energy bar further to refine the cropped region so that
+        // we can measure the length of the bar.
+        // This crop is just a single pixel high line at the center of the
+        // bounding region.
+        val left: Int = (leftPartLocation.x + (energyBarLeftPartTemplateBitmap.width / 2)).toInt()
+        val right: Int = (rightPartLocation.x - (energyBarRightPartTemplateBitmap.width / 2)).toInt()
+        x = left
+        y = (croppedBitmap.height / 2).toInt()
+        w = (right - left).toInt()
+        h = 1
+
+        croppedBitmap = createSafeBitmap(croppedBitmap, x, y, w, h, "analyzeEnergyBar:: Refine cropped energy bar.")
+        if (croppedBitmap == null) {
+            game.printToLog("analyzeEnergyBar:: Failed to refine cropped bitmap region.", isError = true, tag = tag)
+            return null
+        }
+
+        // HSV color range for gray portion of energy bar.
+        val grayLower = Scalar(0.0, 0.0, 116.0)
+        val grayUpper = Scalar(180.0, 255.0, 118.0)
+        val colorLower = Scalar(5.0, 0.0, 120.0)
+        val colorUpper = Scalar(180.0, 255.0, 255.0)
+
+        // Convert the cropped region to HSV
+        val barMat = Mat()
+        Utils.bitmapToMat(croppedBitmap, barMat)
+        val hsvMat = Mat()
+        Imgproc.cvtColor(barMat, hsvMat, Imgproc.COLOR_BGR2HSV)
+
+        // Create masks for the gray and color portions of the image.
+        val grayMask = Mat()
+        val colorMask = Mat()
+        Core.inRange(hsvMat, grayLower, grayUpper, grayMask)
+        Core.inRange(hsvMat, colorLower, colorUpper, colorMask)
+
+        // Calculate ratio of color and gray pixels.
+        val grayPixels = Core.countNonZero(grayMask)
+        val colorPixels = Core.countNonZero(colorMask)
+        val totalPixels = grayPixels + colorPixels
+
+        var fillPercent: Double = 0.0
+        if (totalPixels > 0) {
+            fillPercent = (colorPixels.toDouble() / totalPixels.toDouble()) * 100.0
+        }
+        val result: Int = fillPercent.toInt().coerceIn(0, 100)
+
+        barMat.release()
+        hsvMat.release()
+        grayMask.release()
+        colorMask.release()
+
+        game.printToLog("analyzeEnergyBar:: Pixel Colors: Gray=$grayPixels, Color=$colorPixels, Energy=$result", tag = tag)
+        return result
+    }
 }

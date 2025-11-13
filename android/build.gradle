@@ -31,6 +31,7 @@ allprojects {
       url(reactNativeAndroidDir)
     }
 
+    // mavenLocal() // Uncomment this for local testing.
     google()
     mavenCentral()
     maven { url 'https://www.jitpack.io' }

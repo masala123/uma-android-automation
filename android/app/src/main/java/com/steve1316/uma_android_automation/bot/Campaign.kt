@@ -12,7 +12,8 @@ import com.steve1316.automation_library.utils.MessageLog
 open class Campaign(val game: Game) {
 	protected open val TAG: String = "[${MainActivity.Companion.loggerTag}]Normal"
 
-	val mustRestBeforeSummer: Boolean = SettingsHelper.getBooleanSetting("training", "mustRestBeforeSummer")
+    private val mustRestBeforeSummer: Boolean = SettingsHelper.getBooleanSetting("training", "mustRestBeforeSummer")
+    private val enableFarmingFans: Boolean = SettingsHelper.getBooleanSetting("racing", "enableFarmingFans")
 
 	/**
 	 * Campaign-specific training event handling.
@@ -74,14 +75,14 @@ open class Campaign(val game: Game) {
 							game.racing.skipRacing = false
 						} else if (game.recoverMood() && !game.checkFinals()) {
 							game.racing.skipRacing = false
-						} else if (game.currentDate.turnNumber >= 16 && !game.racing.checkEligibilityToStartExtraRacingProcess()) {
-							MessageLog.i(TAG, "[INFO] Training due to it not being an extra race day.")
-							game.training.handleTraining()
-							game.racing.skipRacing = false
-						} else {
+						} else if (game.currentDate.turnNumber >= 16 && game.racing.checkEligibilityToStartExtraRacingProcess()) {
 							MessageLog.i(TAG, "[INFO] Bot has no injuries, mood is sufficient and extra races can be run today. Setting the needToRace flag to true.")
 							needToRace = true
-						}
+                        } else {
+                            MessageLog.i(TAG, "[INFO] Training due to it not being an extra race day.")
+                            game.training.handleTraining()
+                            game.racing.skipRacing = false
+                        }
 					}
 				}
 

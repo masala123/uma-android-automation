@@ -119,7 +119,7 @@ object DialogUtils {
             imageUtils.relHeight(templateBitmap.height),
             useThreshold=true,
             useGrayscale=true,
-            scaleUp=1,
+            scale=1.0,
             ocrEngine="mlkit",
             debugName="dialogTitle",
         )
