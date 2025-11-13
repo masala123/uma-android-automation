@@ -912,9 +912,12 @@ class Training(private val game: Game) {
 			return totalScore.coerceAtLeast(0.0)
 		}
 
-		// Decide which scoring function to use based on the current phase or year.
-		// Junior Year will focus on building relationship bars.
-		val best = if (game.currentDate.phase == "Pre-Debut" || game.currentDate.year == 1) {
+		// Decide which scoring function to use based on campaign, phase, or year.
+		val best = if (game.campaign == "Unity Cup" && game.currentDate.year < 3) {
+            // Unity Cup (Year < 3): Use Spirit Explosion Gauge priority system.
+			trainingMap.values.maxByOrNull { scoreUnityCupTraining(it) }
+		} else if (game.currentDate.phase == "Pre-Debut" || game.currentDate.year == 1) {
+            // Junior Year: Focus on building relationship bars.
 			trainingMap.values.maxByOrNull { scoreFriendshipTraining(it) }
 		} else {
 			// For Year 2+, calculate all scores first, then normalize based on actual maximum.
