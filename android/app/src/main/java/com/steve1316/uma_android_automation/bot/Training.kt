@@ -847,10 +847,10 @@ class Training(private val game: Game) {
             }
 			score += 10.0 * skillHintLocations.size
 
-		return score.coerceIn(0.0, 100.0)
-	}
+            return score.coerceIn(0.0, 100.0)
+        }
 
-	/**
+	    /**
 		 * Calculates raw training score without normalization.
 		 *
 		 * This function calculates raw training scores
