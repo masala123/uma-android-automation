@@ -278,11 +278,11 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	}
 
 	/**
-	 * Determines the day number to see if today is eligible for doing an extra race.
+	 * Determines the turn number of the "X turn(s) left" text at the top left corner of the screen.
 	 *
-	 * @return Number of the day.
+	 * @return The remaining turn number.
 	 */
-	fun determineDayForExtraRace(): Int {
+	fun determineTurnsRemainingBeforeNextGoal(): Int {
 		val (energyTextLocation, sourceBitmap) = findImage("energy", tries = 1, region = regionTopHalf)
 
 		if (energyTextLocation != null) {

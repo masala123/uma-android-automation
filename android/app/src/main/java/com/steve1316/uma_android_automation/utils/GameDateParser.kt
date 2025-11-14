@@ -54,7 +54,7 @@ class GameDateParser {
 			return nextDate
 		} else if (dateString.lowercase().contains("debut")) {
 			// Special handling for the Pre-Debut phase.
-			val turnsRemaining = imageUtils.determineDayForExtraRace()
+			val turnsRemaining = imageUtils.determineTurnsRemainingBeforeNextGoal()
 
 			// Pre-Debut ends on Early July (turn 13), so we calculate backwards.
 			// This includes the Race day.
