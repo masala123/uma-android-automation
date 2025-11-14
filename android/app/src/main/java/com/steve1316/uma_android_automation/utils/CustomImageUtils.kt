@@ -1609,7 +1609,8 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			thresholdMax = 255.0,
 			scale = scale,
 			sourceBitmap = sourceBitmap,
-			detectDigitsOnly = ocrEngine == "tesseract_digits"
+			detectDigitsOnly = ocrEngine == "tesseract_digits",
+            debugName = debugName
 		)
 	}
 
