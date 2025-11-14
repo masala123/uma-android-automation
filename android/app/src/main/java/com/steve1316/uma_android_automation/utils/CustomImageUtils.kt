@@ -907,12 +907,18 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			)
 		} else {
 			val (energyLocation, _) = findImage("energy")
+            val offsetX = if (game.campaign == "Unity Cup") {
+                -40
+            } else {
+                -268
+            }
+
 			if (energyLocation != null) {
 				// Perform OCR with no thresholding (date text is on moving background).
 				MessageLog.i(TAG, "Detecting date from the Main screen.")
 				result = performOCROnRegion(
 					sourceBitmap,
-					relX(energyLocation.x, -268),
+					relX(energyLocation.x, offsetX),
 					relY(energyLocation.y, -180),
 					relWidth(308),
 					relHeight(35),
