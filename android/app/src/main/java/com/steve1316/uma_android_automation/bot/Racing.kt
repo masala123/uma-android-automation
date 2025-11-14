@@ -102,8 +102,6 @@ class Racing (private val game: Game) {
         }
 
         return try {
-            if (game.debugMode) MessageLog.d(TAG, "[DEBUG] Raw user-selected racing plan JSON: \"$racingPlanJson\".")
-
             if (racingPlanJson.isEmpty() || racingPlanJson == "[]") {
                 MessageLog.i(TAG, "[RACE] User-selected racing plan is empty, returning empty list.")
                 return emptyList()
@@ -138,8 +136,6 @@ class Racing (private val game: Game) {
     private fun loadRaceData(): Map<String, RaceData> {
         return try {
             val racingPlanDataJson = SettingsHelper.getStringSetting("racing", "racingPlanData")
-            if (game.debugMode) MessageLog.i(TAG, "[RACE] Raw racing plan data JSON length: ${racingPlanDataJson.length}.")
-
             if (racingPlanDataJson.isEmpty()) {
                 MessageLog.i(TAG, "[RACE] Racing plan data is empty, returning empty map.")
                 return emptyMap()
