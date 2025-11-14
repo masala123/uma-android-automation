@@ -4,19 +4,35 @@ import android.util.Log
 import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.utils.SettingsHelper
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
+import com.steve1316.uma_android_automation.utils.types.StatName
+import com.steve1316.uma_android_automation.utils.types.Aptitude
+import com.steve1316.uma_android_automation.utils.types.RunningStyle
+import com.steve1316.uma_android_automation.utils.types.TrackSurface
+import com.steve1316.uma_android_automation.utils.types.TrackDistance
+import com.steve1316.uma_android_automation.utils.types.Mood
 import com.steve1316.automation_library.data.SharedData
 import com.steve1316.automation_library.utils.BotService
 import com.steve1316.automation_library.utils.MessageLog
+import com.steve1316.uma_android_automation.components.ComponentInterface
+import com.steve1316.uma_android_automation.components.ButtonTrainingSpeed
+import com.steve1316.uma_android_automation.components.ButtonTrainingStamina
+import com.steve1316.uma_android_automation.components.ButtonTrainingPower
+import com.steve1316.uma_android_automation.components.ButtonTrainingGuts
+import com.steve1316.uma_android_automation.components.ButtonTrainingWit
+import com.steve1316.uma_android_automation.components.LabelTrainingFailureChance
+import com.steve1316.uma_android_automation.components.LabelStatTableHeaderSkillPoints
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.intArrayOf
+import org.opencv.core.Point
 
 class Training(private val game: Game) {
 	private val TAG: String = "[${MainActivity.loggerTag}]Training"
 
 	data class TrainingOption(
-		val name: String,
-		val statGains: IntArray,
+		val name: StatName,
+		val statGains: Map<StatName, Int>,
 		val failureChance: Int,
 		val relationshipBars: ArrayList<CustomImageUtils.BarFillResult>,
 		val isRainbow: Boolean
@@ -29,7 +45,7 @@ class Training(private val game: Game) {
 
 			if (failureChance != other.failureChance) return false
 			if (name != other.name) return false
-			if (!statGains.contentEquals(other.statGains)) return false
+			if (!statGains.equals(other.statGains)) return false
 			if (relationshipBars != other.relationshipBars) return false
 			if (isRainbow != other.isRainbow) return false
 
@@ -39,134 +55,33 @@ class Training(private val game: Game) {
 		override fun hashCode(): Int {
 			var result = failureChance
 			result = 31 * result + name.hashCode()
-			result = 31 * result + statGains.contentHashCode()
+			result = 31 * result + statGains.entries.hashCode()
 			result = 31 * result + relationshipBars.hashCode()
 			result = 31 * result + isRainbow.hashCode()
 			return result
 		}
 	}
 
-	private val trainings: List<String> = listOf("Speed", "Stamina", "Power", "Guts", "Wit")
-	private val trainingMap: MutableMap<String, TrainingOption> = mutableMapOf()
-	var currentStatsMap: MutableMap<String, Int> = mutableMapOf(
-		"Speed" to 0,
-		"Stamina" to 0,
-		"Power" to 0,
-		"Guts" to 0,
-		"Wit" to 0
-	)
-	private val blacklist: List<String> = SettingsHelper.getStringArraySetting("training", "trainingBlacklist")
-	private val statPrioritizationRaw = SettingsHelper.getStringArraySetting("training", "statPrioritization")
-	val statPrioritization: List<String> = if (!statPrioritizationRaw.isEmpty()) {
+	val trainingMap: MutableMap<StatName, TrainingOption> = mutableMapOf()
+	private val blacklist: List<StatName?> = SettingsHelper.getStringArraySetting("training", "trainingBlacklist").map { StatName.fromName(it) }
+	private val statPrioritizationRaw: List<StatName> = SettingsHelper.getStringArraySetting("training", "statPrioritization").map { StatName.fromName(it)!! }
+	val statPrioritization: List<StatName> = if (!statPrioritizationRaw.isEmpty()) {
 		statPrioritizationRaw
 	} else {
-		listOf("Speed", "Stamina", "Power", "Wit", "Guts")
+		StatName.entries
 	}
 	private val maximumFailureChance: Int = SettingsHelper.getIntSetting("training", "maximumFailureChance")
 	private val disableTrainingOnMaxedStat: Boolean = SettingsHelper.getBooleanSetting("training", "disableTrainingOnMaxedStat")
 	private val focusOnSparkStatTarget: Boolean = SettingsHelper.getBooleanSetting("training", "focusOnSparkStatTarget")
 	private val enableRainbowTrainingBonus: Boolean = SettingsHelper.getBooleanSetting("training", "enableRainbowTrainingBonus")
-	private val preferredDistanceOverride: String = SettingsHelper.getStringSetting("training", "preferredDistanceOverride")
 	private val enableRiskyTraining: Boolean = SettingsHelper.getBooleanSetting("training", "enableRiskyTraining")
 	private val riskyTrainingMinStatGain: Int = SettingsHelper.getIntSetting("training", "riskyTrainingMinStatGain")
 	private val riskyTrainingMaxFailureChance: Int = SettingsHelper.getIntSetting("training", "riskyTrainingMaxFailureChance")
-	private val statTargetsByDistance: MutableMap<String, IntArray> = mutableMapOf(
-		"Sprint" to intArrayOf(0, 0, 0, 0, 0),
-		"Mile" to intArrayOf(0, 0, 0, 0, 0),
-		"Medium" to intArrayOf(0, 0, 0, 0, 0),
-		"Long" to intArrayOf(0, 0, 0, 0, 0)
-	)
-	var preferredDistance: String = ""
 	var firstTrainingCheck = true
 	private val currentStatCap = 1200
 
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
-
-	/**
-	 * Updates the preferred distance based on character aptitudes or manual override setting.
-	 * 
-	 * Priority order for automatic determination:
-	 * 1. Check all distances for S aptitude first (Sprint → Mile → Medium → Long)
-	 * 2. If no S aptitude found, check for A aptitude in same order
-	 * 3. If no S or A aptitude found, default to "Medium"
-	 */
-	fun updatePreferredDistance() {
-		MessageLog.i(TAG, "\n[TRAINING] Updating preferred distance...")
-		
-		// If manual override is set and not "Auto", use the manual value.
-		if (preferredDistanceOverride != "Auto") {
-			preferredDistance = preferredDistanceOverride
-			MessageLog.i(TAG, "[TRAINING] Using manual override: $preferredDistance.")
-			return
-		}
-		
-		// Automatic determination based on aptitudes.
-		val aptitudes = game.aptitudes.distance
-		
-		// First, check all distances for S aptitude.
-		if (aptitudes.sprint == "S") {
-			preferredDistance = "Sprint"
-		} else if (aptitudes.mile == "S") {
-			preferredDistance = "Mile"
-		} else if (aptitudes.medium == "S") {
-			preferredDistance = "Medium"
-		} else if (aptitudes.long == "S") {
-			preferredDistance = "Long"
-		}
-		// Then check for A aptitude if no S found.
-		else if (aptitudes.sprint == "A") {
-			preferredDistance = "Sprint"
-		} else if (aptitudes.mile == "A") {
-			preferredDistance = "Mile"
-		} else if (aptitudes.medium == "A") {
-			preferredDistance = "Medium"
-		} else if (aptitudes.long == "A") {
-			preferredDistance = "Long"
-		}
-		// Default fallback if no S or A aptitude found.
-		else {
-			preferredDistance = "Medium"
-		}
-		
-		MessageLog.i(TAG, "[TRAINING] Determined preferred distance: $preferredDistance (Sprint: ${aptitudes.sprint}, Mile: ${aptitudes.mile}, Medium: ${aptitudes.medium}, Long: ${aptitudes.long})")
-	}
-
-	/**
-	 * Sets up stat targets for different race distances by reading values from SQLite settings. These targets are used to determine training priorities based on the expected race distance.
-	 */
-	fun setStatTargetsByDistances() {
-		val sprintSpeedTarget = SettingsHelper.getIntSetting("trainingStatTarget", "trainingSprintStatTarget_speedStatTarget")
-		val sprintStaminaTarget = SettingsHelper.getIntSetting("trainingStatTarget", "trainingSprintStatTarget_staminaStatTarget")
-		val sprintPowerTarget = SettingsHelper.getIntSetting("trainingStatTarget", "trainingSprintStatTarget_powerStatTarget")
-		val sprintGutsTarget = SettingsHelper.getIntSetting("trainingStatTarget", "trainingSprintStatTarget_gutsStatTarget")
-		val sprintWitTarget = SettingsHelper.getIntSetting("trainingStatTarget", "trainingSprintStatTarget_witStatTarget")
-
-		val mileSpeedTarget = SettingsHelper.getIntSetting("trainingStatTarget", "trainingMileStatTarget_speedStatTarget")
-		val mileStaminaTarget = SettingsHelper.getIntSetting("trainingStatTarget", "trainingMileStatTarget_staminaStatTarget")
-		val milePowerTarget = SettingsHelper.getIntSetting("trainingStatTarget", "trainingMileStatTarget_powerStatTarget")
-		val mileGutsTarget = SettingsHelper.getIntSetting("trainingStatTarget", "trainingMileStatTarget_gutsStatTarget")
-		val mileWitTarget = SettingsHelper.getIntSetting("trainingStatTarget", "trainingMileStatTarget_witStatTarget")
-
-		val mediumSpeedTarget = SettingsHelper.getIntSetting("trainingStatTarget", "trainingMediumStatTarget_speedStatTarget")
-		val mediumStaminaTarget = SettingsHelper.getIntSetting("trainingStatTarget", "trainingMediumStatTarget_staminaStatTarget")
-		val mediumPowerTarget = SettingsHelper.getIntSetting("trainingStatTarget", "trainingMediumStatTarget_powerStatTarget")
-		val mediumGutsTarget = SettingsHelper.getIntSetting("trainingStatTarget", "trainingMediumStatTarget_gutsStatTarget")
-		val mediumWitTarget = SettingsHelper.getIntSetting("trainingStatTarget", "trainingMediumStatTarget_witStatTarget")
-
-		val longSpeedTarget = SettingsHelper.getIntSetting("trainingStatTarget", "trainingLongStatTarget_speedStatTarget")
-		val longStaminaTarget = SettingsHelper.getIntSetting("trainingStatTarget", "trainingLongStatTarget_staminaStatTarget")
-		val longPowerTarget = SettingsHelper.getIntSetting("trainingStatTarget", "trainingLongStatTarget_powerStatTarget")
-		val longGutsTarget = SettingsHelper.getIntSetting("trainingStatTarget", "trainingLongStatTarget_gutsStatTarget")
-		val longWitTarget = SettingsHelper.getIntSetting("trainingStatTarget", "trainingLongStatTarget_witStatTarget")
-
-		// Set the stat targets for each distance type.
-		// Order: Speed, Stamina, Power, Guts, Wit
-		statTargetsByDistance["Sprint"] = intArrayOf(sprintSpeedTarget, sprintStaminaTarget, sprintPowerTarget, sprintGutsTarget, sprintWitTarget)
-		statTargetsByDistance["Mile"] = intArrayOf(mileSpeedTarget, mileStaminaTarget, milePowerTarget, mileGutsTarget, mileWitTarget)
-		statTargetsByDistance["Medium"] = intArrayOf(mediumSpeedTarget, mediumStaminaTarget, mediumPowerTarget, mediumGutsTarget, mediumWitTarget)
-		statTargetsByDistance["Long"] = intArrayOf(longSpeedTarget, longStaminaTarget, longPowerTarget, longGutsTarget, longWitTarget)
-	}
 
 	/**
 	 * Handles the test to perform OCR on the current training on display for stat gains and failure chance.
@@ -235,232 +150,202 @@ class Training(private val game: Game) {
 	 * @param test Flag that forces the failure chance through even if it is not in the acceptable range for testing purposes.
 	 * @param singleTraining Flag that forces only singular training analysis for the current training on the screen.
 	 */
-	private fun analyzeTrainings(test: Boolean = false, singleTraining: Boolean = false) {
-		if (singleTraining) MessageLog.i(TAG, "\n[TRAINING] Now starting process to analyze the training on screen.")
-		else MessageLog.i(TAG, "\n[TRAINING] Now starting process to analyze all 5 Trainings.")
+	fun analyzeTrainings(test: Boolean = false, singleTraining: Boolean = false) {
+		if (singleTraining) {
+            MessageLog.i(TAG, "\n[TRAINING] Now starting process to analyze the training on screen.")
+        } else {
+            MessageLog.i(TAG, "\n[TRAINING] Now starting process to analyze all 5 Trainings.")
+        }
 
-		// Acquire the position of the speed stat text.
-		val (speedStatTextLocation, _) = if (game.campaign == "Ao Haru") {
-			game.imageUtils.findImage("aoharu_stat_speed", tries = 1, region = game.imageUtils.regionBottomHalf)
-		} else {
-			game.imageUtils.findImage("stat_speed", tries = 1, region = game.imageUtils.regionBottomHalf)
-		}
+        // Find the speed training button location so we can swipe across.
+        val point: Point? = ButtonTrainingSpeed.find(imageUtils = game.imageUtils).first
+        if (point == null) {
+            MessageLog.e(TAG, "[TRAINING] Could not find SPEED training button.")
+            return
+        }
 
-		if (speedStatTextLocation != null) {
-			// Perform a percentage check of Speed training to see if the bot has enough energy to do training. As a result, Speed training will be the one selected for the rest of the algorithm.
-			if (!singleTraining && game.imageUtils.findImage("speed_training_header", tries = 1, region = game.imageUtils.regionTopHalf, suppressError = true).first == null) {
-				game.findAndTapImage("training_speed", region = game.imageUtils.regionBottomHalf)
-				game.wait(0.5)
-			}
+        // Swipe across once to make sure that ButtonTrainingSpeed isn't clicked.
+        // If it were clicked, then when we click it later when scanning trainings, it will be trained.
+        // This allows us to ensure that we always start at the speed training button in our loop.
+        if (!singleTraining) {
+            game.gestureUtils.swipe(
+                point.x.toFloat(),
+                point.y.toFloat(),
+                (point.x + 500.0).toFloat(),
+                point.y.toFloat(),
+            )
+        }
 
-			val failureChance: Int = game.imageUtils.findTrainingFailureChance()
-			if (failureChance == -1) {
-				MessageLog.w(TAG, "Skipping training due to not being able to confirm whether or not the bot is at the Training screen.")
-				return
-			}
+        for (statName in StatName.entries) {
+            if (!test && statName in blacklist) {
+                MessageLog.i(TAG, "[TRAINING] Skipping $statName training due to being blacklisted.")
+                continue
+            }
 
-			if (test || failureChance <= maximumFailureChance) {
-				if (!test) MessageLog.i(TAG, "[TRAINING] $failureChance% within acceptable range of ${maximumFailureChance}%. Proceeding to acquire all other percentages and total stat increases...")
+            if (singleTraining) {
+                if (game.imageUtils.findImage("${statName.name.lowercase()}_training_header", tries = 1, region = game.imageUtils.regionTopHalf, suppressError = true).first == null) {
+                    // Keep iterating until the current training is found.
+                    continue
+                }
+                MessageLog.i(TAG, "[TRAINING] The $statName training is currently selected on the screen.")
+            }
 
-				// Iterate through every training that is not blacklisted.
-				for ((index, training) in trainings.withIndex()) {
-					if (!test && blacklist.getOrElse(index) { "" } == training) {
-						MessageLog.i(TAG, "[TRAINING] Skipping $training training due to being blacklisted.")
-						continue
-					}
+            // Get the training button for this stat then click it.
+            val trainingButton = when (statName) {
+                StatName.SPEED -> ButtonTrainingSpeed
+                StatName.STAMINA -> ButtonTrainingStamina
+                StatName.POWER -> ButtonTrainingPower
+                StatName.GUTS -> ButtonTrainingGuts
+                StatName.WIT -> ButtonTrainingWit
+            }
 
-					if (singleTraining) {
-						if (game.imageUtils.findImage("${training.lowercase()}_training_header", tries = 1, region = game.imageUtils.regionTopHalf, suppressError = true).first == null) {
-							// Keep iterating until the current training is found.
-							continue
-						}
-						MessageLog.i(TAG, "[TRAINING] The $training training is currently selected on the screen.")
-					}
+            /*
+            MessageLog.e(TAG, "Clicking $statName button.")
+            if (!trainingButton.click(imageUtils = game.imageUtils)) {
+                MessageLog.e(TAG, "[TRAINING] Failed to click training button for $statName. Aborting training...")
+                return
+            }
+            */
 
-					// Select the Training to make it active except Speed Training since that is already selected at the start.
-					val newX: Double = when (training) {
-						"Stamina" -> {
-							280.0
-						}
-						"Power" -> {
-							402.0
-						}
-						"Guts" -> {
-							591.0
-						}
-						"Wit" -> {
-							779.0
-						}
-						else -> {
-							0.0
-						}
-					}
+            // Slight delay for UI to update after clicking button.
+            game.wait(0.2)
 
-					if (newX != 0.0 && !singleTraining) {
-						if (game.imageUtils.isTablet) {
-							if (training == "Stamina") {
-								game.tap(
-									speedStatTextLocation.x + game.imageUtils.relWidth((newX * 1.05).toInt()),
-									speedStatTextLocation.y + game.imageUtils.relHeight((319 * 1.50).toInt()),
-									"training_option_circular",
-									ignoreWaiting = true
-								)
-							} else {
-								game.tap(
-									speedStatTextLocation.x + game.imageUtils.relWidth((newX * 1.36).toInt()),
-									speedStatTextLocation.y + game.imageUtils.relHeight((319 * 1.50).toInt()),
-									"training_option_circular",
-									ignoreWaiting = true
-								)
-							}
-						} else {
-							game.tap(
-								speedStatTextLocation.x + game.imageUtils.relWidth(newX.toInt()),
-								speedStatTextLocation.y + game.imageUtils.relHeight(319),
-								"training_option_circular",
-								ignoreWaiting = true
-							)
-						}
-						
-						// Wait briefly for UI to update after tapping training button.
-						game.wait(0.2)
-					}
+            val (skillPointsLocation, sourceBitmap) = LabelStatTableHeaderSkillPoints.find(imageUtils = game.imageUtils)
+            if (skillPointsLocation == null) {
+                MessageLog.e(TAG, "[TRAINING] Could not find LabelStatTableHeaderSkillPoints. Aborting training...")
+                return
+            }
 
-					// Update the object in the training map.
-					// Use CountDownLatch to run the 4 operations in parallel to cut down on processing time.
-					val latch = CountDownLatch(4)
+            val (failureChanceLocation, _) = LabelTrainingFailureChance.find(imageUtils = game.imageUtils)
+            if (failureChanceLocation == null) {
+                MessageLog.e(TAG, "[TRAINING] Could not find LabelTrainingFailureChance. Aborting training...")
+                return
+            }
 
-					// Variables to store results from parallel threads.
-					var statGains: IntArray = intArrayOf()
-					var failureChance: Int = -1
-					var relationshipBars: ArrayList<CustomImageUtils.BarFillResult> = arrayListOf()
-					var isRainbow = false
+            val failureChance: Int = game.imageUtils.findTrainingFailureChance(sourceBitmap, failureChanceLocation)
+            if (failureChance == -1) {
+                MessageLog.w(TAG, "[TRAINING] Skipping training due to not being able to confirm whether or not the bot is at the Training screen.")
+                return
+            }
 
-					// Get the Points and source Bitmap beforehand before starting the threads to make them safe for parallel processing.
-                    val sourceBitmap = game.imageUtils.getSourceBitmap()
-                    val skillPointsLocation = game.imageUtils.findImageWithBitmap("skill_points", sourceBitmap, region = game.imageUtils.regionMiddle)
-                    val trainingSelectionLocation = game.imageUtils.findImageWithBitmap("training_failure_chance", sourceBitmap, region = game.imageUtils.regionBottomHalf)
+            if (!test && failureChance > maximumFailureChance) {
+                // Clear the Training map if the bot failed to have enough energy to conduct the training.
+                MessageLog.i(TAG, "[TRAINING] $failureChance% is not within acceptable range of ${maximumFailureChance}%. Proceeding to recover energy.")
+                trainingMap.clear()
+                return
+            }
 
-					// Record start time for elapsed time measurement.
-					val startTime = System.currentTimeMillis()
+            if (!test) {
+                MessageLog.i(TAG, "[TRAINING] $failureChance% within acceptable range of ${maximumFailureChance}%. Proceeding to acquire all other percentages and total stat increases...")
+            }
 
-					// Check if bot is still running before starting parallel threads.
-					if (!BotService.isRunning) {
-						MessageLog.i(TAG, "Bot stopped before training analysis could complete.")
-						statGains = intArrayOf(0, 0, 0, 0, 0)
-						failureChance = -1
-						relationshipBars = arrayListOf()
-						isRainbow = false
-					} else {
-						// Thread 1: Determine stat gains.
-                        Thread {
-                            val startTimeStatGains = System.currentTimeMillis()
-                            try {
-                                statGains = game.imageUtils.determineStatGainFromTraining(training, sourceBitmap, skillPointsLocation!!)
-                            } catch (e: Exception) {
-                                Log.e(TAG, "[ERROR] Error in determineStatGainFromTraining: ${e.stackTraceToString()}")
-                                statGains = intArrayOf(0, 0, 0, 0, 0)
-                            } finally {
-                                latch.countDown()
-                                Log.d(TAG, "Total time to determine stat gains for $training: ${System.currentTimeMillis() - startTimeStatGains}ms")
-                            }
-                        }.start()
+            // Update the object in the training map.
+            // Use CountDownLatch to run the 4 operations in parallel to cut down on processing time.
+            val latch = CountDownLatch(4)
 
-                        // Thread 2: Find failure chance.
-                        Thread {
-                            val startTimeFailureChance = System.currentTimeMillis()
-                            try {
-                                failureChance = game.imageUtils.findTrainingFailureChance(sourceBitmap, trainingSelectionLocation!!)
-                            } catch (e: Exception) {
-                                MessageLog.e(TAG, "Error in findTrainingFailureChance: ${e.stackTraceToString()}")
-                                failureChance = -1
-                            } finally {
-                                latch.countDown()
-                                Log.d(TAG, "Total time to determine failure chance for $training: ${System.currentTimeMillis() - startTimeFailureChance}ms")
-                            }
-                        }.start()
+            // Variables to store results from parallel threads.
+            var statGains = ConcurrentHashMap<StatName, Int>()
+            var relationshipBars: ArrayList<CustomImageUtils.BarFillResult> = arrayListOf()
+            var isRainbow = false
 
-                        // Thread 3: Analyze relationship bars.
-                        Thread {
-                            val startTimeRelationshipBars = System.currentTimeMillis()
-                            try {
-                                relationshipBars = game.imageUtils.analyzeRelationshipBars(sourceBitmap)
-                            } catch (e: Exception) {
-                                Log.e(TAG, "[ERROR] Error in analyzeRelationshipBars: ${e.stackTraceToString()}")
-                                relationshipBars = arrayListOf()
-                            } finally {
-                                latch.countDown()
-                                Log.d(TAG, "Total time to analyze relationship bars for $training: ${System.currentTimeMillis() - startTimeRelationshipBars}ms")
-                            }
-                        }.start()
+            // Record start time for elapsed time measurement.
+            val startTime = System.currentTimeMillis()
 
-                        // Thread 4: Detect rainbow training.
-                        Thread {
-                            val startTimeRainbow = System.currentTimeMillis()
-                            try {
-                                isRainbow = game.imageUtils.findImageWithBitmap("training_rainbow", sourceBitmap, region = game.imageUtils.regionBottomHalf, suppressError = true) != null
-                            } catch (e: Exception) {
-                                Log.e(TAG, "[ERROR] Error in rainbow detection: ${e.stackTraceToString()}")
-                                isRainbow = false
-                            } finally {
-                                latch.countDown()
-                                Log.d(TAG, "Total time to detect rainbow for $training: ${System.currentTimeMillis() - startTimeRainbow}ms")
-                            }
-                        }.start()
-                        try {
-                            latch.await(3, TimeUnit.SECONDS)
-                        } catch (_: InterruptedException) {
-                            Log.e(TAG, "[ERROR] Parallel training analysis timed out")
-                        } finally {
-                            val elapsedTime = System.currentTimeMillis() - startTime
-                            Log.d(TAG, "Total time for $training training analysis: ${elapsedTime}ms")
-                            MessageLog.i(TAG, "All 5 stat regions processed for $training training. Results: ${statGains.toList()}")
-                        }
-					}
+            // Check if bot is still running before starting parallel threads.
+            if (!BotService.isRunning) {
+                MessageLog.i(TAG, "Bot stopped before training analysis could complete.")
+                return
+            }
 
-					// Check if risky training logic should apply based on main stat gain.
-					// The main stat gain for each training type corresponds to its index in the statGains array.
-					val mainStatGain = statGains[index]
-					val effectiveFailureChance = if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
-						riskyTrainingMaxFailureChance
-					} else {
-						maximumFailureChance
-					}
-					
-					// Filter out trainings that exceed the effective failure chance threshold.
-					if (!test && failureChance > effectiveFailureChance) {
-						if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
-							MessageLog.i(TAG, "[TRAINING] Skipping $training training due to failure chance ($failureChance%) exceeding risky threshold (${riskyTrainingMaxFailureChance}%) despite high main stat gain of $mainStatGain.")
-						} else {
-							MessageLog.i(TAG, "[TRAINING] Skipping $training training due to failure chance ($failureChance%) exceeding threshold (${maximumFailureChance}%).")
-						}
-						continue
-					}
+            // Thread 1: Determine stat gains.
+            Thread {
+                val startTimeStatGains = System.currentTimeMillis()
+                try {
+                    statGains = ConcurrentHashMap(game.imageUtils.determineStatGainFromTraining(statName, sourceBitmap, skillPointsLocation))
+                } catch (e: Exception) {
+                    Log.e(TAG, "[ERROR] Error in determineStatGainFromTraining: ${e.stackTraceToString()}")
+                    statGains = ConcurrentHashMap(StatName.values().associateWith { 0 }.toMutableMap())
+                } finally {
+                    latch.countDown()
+                    Log.d(TAG, "Total time to determine stat gains for $statName: ${System.currentTimeMillis() - startTimeStatGains}ms")
+                }
+            }.start()
 
-					val newTraining = TrainingOption(
-						name = training,
-						statGains = statGains,
-						failureChance = failureChance,
-						relationshipBars = relationshipBars,
-                        isRainbow = isRainbow
-					)
-                    trainingMap[training] = newTraining
-                    if (singleTraining) {
-						break
-					}
-				}
+            // Thread 3: Analyze relationship bars.
+            Thread {
+                val startTimeRelationshipBars = System.currentTimeMillis()
+                try {
+                    relationshipBars = game.imageUtils.analyzeRelationshipBars(sourceBitmap, statName)
+                } catch (e: Exception) {
+                    Log.e(TAG, "[ERROR] Error in analyzeRelationshipBars: ${e.stackTraceToString()}")
+                    relationshipBars = arrayListOf()
+                } finally {
+                    latch.countDown()
+                    Log.d(TAG, "Total time to analyze relationship bars for $statName: ${System.currentTimeMillis() - startTimeRelationshipBars}ms")
+                }
+            }.start()
 
-				if (singleTraining) {
-					MessageLog.i(TAG, "[TRAINING] Process to analyze the singular Training complete.")
-				} else {
-					MessageLog.i(TAG, "[TRAINING] Process to analyze all 5 Trainings complete.")
-				}
-			} else {
-				// Clear the Training map if the bot failed to have enough energy to conduct the training.
-				MessageLog.i(TAG, "[TRAINING] $failureChance% is not within acceptable range of ${maximumFailureChance}%. Proceeding to recover energy.")
-				trainingMap.clear()
-			}
-		}
+            // Thread 4: Detect rainbow training.
+            Thread {
+                val startTimeRainbow = System.currentTimeMillis()
+                try {
+                    isRainbow = game.imageUtils.findImageWithBitmap("training_rainbow", sourceBitmap, region = game.imageUtils.regionBottomHalf, suppressError = true) != null
+                } catch (e: Exception) {
+                    Log.e(TAG, "[ERROR] Error in rainbow detection: ${e.stackTraceToString()}")
+                    isRainbow = false
+                } finally {
+                    latch.countDown()
+                    Log.d(TAG, "Total time to detect rainbow for $statName: ${System.currentTimeMillis() - startTimeRainbow}ms")
+                }
+            }.start()
+
+            try {
+                latch.await(3, TimeUnit.SECONDS)
+            } catch (_: InterruptedException) {
+                Log.e(TAG, "[ERROR] Parallel training analysis timed out")
+            } finally {
+                val elapsedTime = System.currentTimeMillis() - startTime
+                Log.d(TAG, "Total time for $statName training analysis: ${elapsedTime}ms")
+                MessageLog.i(TAG, "All 5 stat regions processed for $statName training. Results: ${statGains.toList()}")
+            }
+
+            // Check if risky training logic should apply based on main stat gain.
+            // The main stat gain for each training type corresponds to its index in the statGains array.
+            val mainStatGain = statGains[statName] ?: 0
+            val effectiveFailureChance = if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
+                riskyTrainingMaxFailureChance
+            } else {
+                maximumFailureChance
+            }
+
+            // Filter out trainings that exceed the effective failure chance threshold.
+            if (!test && failureChance > effectiveFailureChance) {
+                if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
+                    MessageLog.i(TAG, "[TRAINING] Skipping $statName training due to failure chance ($failureChance%) exceeding risky threshold (${riskyTrainingMaxFailureChance}%) despite high main stat gain of $mainStatGain.")
+                } else {
+                    MessageLog.i(TAG, "[TRAINING] Skipping $statName training due to failure chance ($failureChance%) exceeding threshold (${maximumFailureChance}%).")
+                }
+                continue
+            }
+
+            val newTraining = TrainingOption(
+                name = statName,
+                statGains = statGains.toMap(),
+                failureChance = failureChance,
+                relationshipBars = relationshipBars,
+                isRainbow = isRainbow
+            )
+            trainingMap[statName] = newTraining
+            if (singleTraining) {
+                break
+            }
+        }
+
+        if (singleTraining) {
+            MessageLog.i(TAG, "[TRAINING] Process to analyze the singular Training complete.")
+        } else {
+            MessageLog.i(TAG, "[TRAINING] Process to analyze all 5 Trainings complete.")
+        }
 	}
 
 	/**
@@ -487,9 +372,9 @@ class Training(private val game: Game) {
 	 * - **Rainbow Detection:** Heavily favored for overall ratio balance
 	 * - **Late Game Stamina:** Ensures 600+ stamina in Year 3
 	 *
-	 * @return The name of the recommended training option, or empty string if no suitable option found.
+	 * @return The name of the recommended training option, or NULL if no suitable option found.
 	 */
-	private fun recommendTraining(): String {
+	private fun recommendTraining(): StatName? {
 		/**
 		 * Scores the currently selected training option during Junior Year based on friendship bar progress.
 		 *
@@ -539,16 +424,16 @@ class Training(private val game: Game) {
 		 *
 		 * @return Raw score representing stat efficiency (will be normalized later).
 		 */
-		fun calculateStatEfficiencyScore(training: TrainingOption, target: IntArray): Double {
+		fun calculateStatEfficiencyScore(training: TrainingOption, target: Map<StatName, Int>): Double {
 			var score = 0.0
 			
-			for ((index, stat) in trainings.withIndex()) {
-				val currentStat = currentStatsMap.getOrDefault(stat, 0)
-				val targetStat = target.getOrElse(index) { 0 }
-				val statGain = training.statGains.getOrElse(index) { 0 }
+			for (statName in StatName.entries) {
+				val currentStat = game.trainee.getStat(statName)
+				val targetStat = target[statName] ?: 0
+				val statGain = training.statGains[statName] ?: 0
 				
 				if (statGain > 0 && targetStat > 0) {
-					val priorityIndex = statPrioritization.indexOf(stat)
+					val priorityIndex = statPrioritization.indexOf(statName)
 					
 					// Calculate completion percentage (how far along this stat is toward its target).
 					val completionPercent = (currentStat.toDouble() / targetStat) * 100.0
@@ -566,11 +451,10 @@ class Training(private val game: Game) {
 					
 					// Priority-based tiebreaker (only applies when completion is similar).
 					// Find the completion percentage of the highest priority stat for comparison.
-					val highestPriorityStat = statPrioritization.firstOrNull() ?: stat
-					val highestPriorityIndex = trainings.indexOf(highestPriorityStat)
-					val highestPriorityCompletion = if (highestPriorityIndex != -1) {
-						val hpCurrent = currentStatsMap.getOrDefault(highestPriorityStat, 0)
-						val hpTarget = target.getOrElse(highestPriorityIndex) { 1 }
+					val highestPriorityStat: StatName? = statPrioritization.firstOrNull()
+					val highestPriorityCompletion = if (highestPriorityStat != null) {
+						val hpCurrent = game.trainee.getStat(highestPriorityStat)
+						val hpTarget = target[highestPriorityStat] ?: 1
 						(hpCurrent.toDouble() / hpTarget) * 100.0
 					} else {
 						completionPercent
@@ -584,7 +468,7 @@ class Training(private val game: Game) {
 					}
 					
 					// Main stat gain bonus: If training improves its MAIN stat by a large amount, it is most likely an undetected rainbow.
-					val isMainStat = training.name == stat
+					val isMainStat = training.name == statName
 					val mainStatBonus = if (isMainStat && statGain >= 30) {
 						2.0
 					} else {
@@ -593,7 +477,7 @@ class Training(private val game: Game) {
 					
 					// Special case: Ensure Stamina is at least 600 in late game.
 					val isLateGame = game.currentDate.year == 3
-					val isStamina = stat == "Stamina"
+					val isStamina = statName == StatName.STAMINA
 					val staminaBelowMinimum = isStamina && currentStat < 600
 					val lateGameStaminaBonus = if (isLateGame && staminaBelowMinimum) {
 						MessageLog.i(TAG, "[TRAINING] Stamina of $currentStat is currently less than 600 so bringing its score higher for Senior Year.")
@@ -601,10 +485,10 @@ class Training(private val game: Game) {
 					} else 1.0
 					
                     // Spark bonus: Prioritize training sessions for 3* sparks for Speed, Stamina, and Power stats below 600 if the setting is enabled.
-                    val isSparkStat = stat in listOf("Speed", "Stamina", "Power")
+                    val isSparkStat = statName in listOf(StatName.SPEED, StatName.STAMINA, StatName.POWER)
                     val canTriggerSpark = currentStat < 600
                     val sparkBonus = if (focusOnSparkStatTarget && isSparkStat && canTriggerSpark) {
-                        MessageLog.i(TAG, "[TRAINING] $stat is at $currentStat (< 600). Prioritizing this training for potential spark event to get above 600.")
+                        MessageLog.i(TAG, "[TRAINING] $statName is at $currentStat (< 600). Prioritizing this training for potential spark event to get above 600.")
                         2.5
                     } else {
                         1.0
@@ -616,11 +500,11 @@ class Training(private val game: Game) {
                         val sparkNote = if (focusOnSparkStatTarget && isSparkStat && canTriggerSpark) " [SPARK PRIORITY]" else ""
 						MessageLog.d(
                             TAG,
-                            "$stat: gain=$statGain, completion=${game.decimalFormat.format(completionPercent)}%, " +
+                            "$statName: gain=$statGain, completion=${game.decimalFormat.format(completionPercent)}%, " +
 							"ratioMult=${game.decimalFormat.format(ratioMultiplier)}, priorityMult=${game.decimalFormat.format(priorityMultiplier)}$bonusNote$staminaNote$sparkNote",
 						)
 					} else {
-						Log.d(TAG, "$stat: gain=$statGain, completion=${game.decimalFormat.format(completionPercent)}%, ratioMult=$ratioMultiplier, priorityMult=$priorityMultiplier")
+						Log.d(TAG, "$statName: gain=$statGain, completion=${game.decimalFormat.format(completionPercent)}%, ratioMult=$ratioMultiplier, priorityMult=$priorityMultiplier")
 					}
 					
 					// Calculate final score for this stat.
@@ -712,10 +596,10 @@ class Training(private val game: Game) {
             }
 			score += 10.0 * skillHintLocations.size
 
-		return score.coerceIn(0.0, 100.0)
-	}
+            return score.coerceIn(0.0, 100.0)
+        }
 
-	/**
+	    /**
 		 * Calculates raw training score without normalization.
 		 *
 		 * This function calculates raw training scores
@@ -728,13 +612,15 @@ class Training(private val game: Game) {
 		fun calculateRawTrainingScore(training: TrainingOption): Double {
 			if (training.name in blacklist) return 0.0
 
+            val currentStat = game.trainee.getStat(training.name)
+
 			// Don't score for stats that are maxed or would be maxed.
-			if ((disableTrainingOnMaxedStat && currentStatsMap[training.name]!! >= currentStatCap) ||
-				(currentStatsMap.getOrDefault(training.name, 0) + training.statGains[trainings.indexOf(training.name)] >= currentStatCap)) {
+			if ((disableTrainingOnMaxedStat && currentStat >= currentStatCap) ||
+				(currentStat + (training.statGains[training.name] ?: 0) >= currentStatCap)) {
 				return 0.0
 			}
 
-			val target = statTargetsByDistance[preferredDistance] ?: intArrayOf(600, 600, 600, 300, 300)
+            val target: Map<StatName, Int> = game.trainee.getStatTargetsByDistance()
 
 			var totalScore = 0.0
 
@@ -800,7 +686,7 @@ class Training(private val game: Game) {
 			trainingScores.keys.maxByOrNull { normalizedScores[it] ?: 0.0 }
 		}
 
-		return best?.name ?: (trainingMap.keys.firstOrNull { it !in blacklist } ?: "")
+		return best?.name ?: (trainingMap.keys.firstOrNull { it !in blacklist } ?: null)
 	}
 
 	/**
@@ -811,10 +697,10 @@ class Training(private val game: Game) {
 		MessageLog.i(TAG, "[TRAINING] Now starting process to execute training...")
 		val trainingSelected = recommendTraining()
 
-		if (trainingSelected != "") {
+		if (trainingSelected != null) {
 			printTrainingMap()
 			MessageLog.i(TAG, "[TRAINING] Executing the $trainingSelected Training.")
-			game.findAndTapImage("training_${trainingSelected.lowercase()}", region = game.imageUtils.regionBottomHalf, taps = 3)
+			game.findAndTapImage("training_${trainingSelected.name.lowercase()}", region = game.imageUtils.regionBottomHalf, taps = 3)
 			MessageLog.i(TAG, "[TRAINING] Process to execute training completed.")
 		} else {
 			MessageLog.i(TAG, "[TRAINING] Conditions have not been met so training will not be done.")
@@ -830,7 +716,7 @@ class Training(private val game: Game) {
 	private fun printTrainingMap() {
 		MessageLog.i(TAG, "\nStat Gains by Training:")
 		trainingMap.forEach { name, training ->
-			MessageLog.i(TAG, "$name Training stat gains: ${training.statGains.contentToString()}, failure chance: ${training.failureChance}%, rainbow: ${training.isRainbow}.")
+			MessageLog.i(TAG, "$name Training stat gains: ${training.statGains}, failure chance: ${training.failureChance}%, rainbow: ${training.isRainbow}.")
 		}
 	}
 }

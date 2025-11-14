@@ -313,7 +313,7 @@ class TrainingEvent(private val game: Game) {
                             } else {
                                 // Apply inflated weights to the prioritized stats based on their order.
                                 game.training.statPrioritization.forEachIndexed { index, stat ->
-                                    if (line.contains(stat)) {
+                                    if (line.lowercase().contains(stat.name.lowercase())) {
                                         // Calculate weight bonus based on position (higher priority = higher bonus).
                                         val priorityBonus = when (index) {
                                             0 -> 50

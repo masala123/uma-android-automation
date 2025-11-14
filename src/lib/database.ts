@@ -20,8 +20,8 @@ export interface DatabaseRace {
     course: string | null
     direction: string
     grade: string
-    terrain: string
-    distanceType: string
+    trackSurface: string
+    trackDistance: string
     distanceMeters: number
     fans: number
     turnNumber: number
@@ -109,8 +109,8 @@ export class DatabaseManager {
                     course TEXT,
                     direction TEXT NOT NULL,
                     grade TEXT NOT NULL,
-                    terrain TEXT NOT NULL,
-                    distanceType TEXT NOT NULL,
+                    trackSurface TEXT NOT NULL,
+                    trackDistance TEXT NOT NULL,
                     distanceMeters INTEGER NOT NULL,
                     fans INTEGER NOT NULL,
                     turnNumber INTEGER NOT NULL,
@@ -383,7 +383,7 @@ export class DatabaseManager {
         try {
             logWithTimestamp(`[DB] Saving race: ${race.name} (${race.turnNumber})`)
             await this.db.runAsync(
-                `INSERT OR REPLACE INTO races (key, name, date, raceTrack, course, direction, grade, terrain, distanceType, distanceMeters, fans, turnNumber, nameFormatted) 
+                `INSERT OR REPLACE INTO races (key, name, date, raceTrack, course, direction, grade, trackSurface, trackDistance, distanceMeters, fans, turnNumber, nameFormatted) 
                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
                 [
                     race.key,
@@ -393,8 +393,8 @@ export class DatabaseManager {
                     race.course,
                     race.direction,
                     race.grade,
-                    race.terrain,
-                    race.distanceType,
+                    race.trackSurface,
+                    race.trackDistance,
                     race.distanceMeters,
                     race.fans,
                     race.turnNumber,
@@ -433,7 +433,7 @@ export class DatabaseManager {
 
                 await this.db!.runAsync("BEGIN TRANSACTION")
                 const stmt = await this.db!.prepareAsync(
-                    `INSERT OR REPLACE INTO races (key, name, date, raceTrack, course, direction, grade, terrain, distanceType, distanceMeters, fans, turnNumber, nameFormatted) 
+                    `INSERT OR REPLACE INTO races (key, name, date, raceTrack, course, direction, grade, trackSurface, trackDistance, distanceMeters, fans, turnNumber, nameFormatted) 
                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
                 )
 
@@ -447,8 +447,8 @@ export class DatabaseManager {
                         race.course,
                         race.direction,
                         race.grade,
-                        race.terrain,
-                        race.distanceType,
+                        race.trackSurface,
+                        race.trackDistance,
                         race.distanceMeters,
                         race.fans,
                         race.turnNumber,

@@ -22,7 +22,7 @@ export interface Settings {
         racingPlan: string
         racingPlanData: string
         minFansThreshold: number
-        preferredTerrain: string
+        preferredTrackSurface: string
         preferredGrades: string[]
         lookAheadDays: number
         smartRacingCheckInterval: number
@@ -140,7 +140,7 @@ export const defaultSettings: Settings = {
         ),
         racingPlanData: JSON.stringify(racesData),
         minFansThreshold: 0,
-        preferredTerrain: "Any",
+        preferredTrackSurface: "Any",
         preferredGrades: ["G1", "G2", "G3"],
         lookAheadDays: 10,
         smartRacingCheckInterval: 2,

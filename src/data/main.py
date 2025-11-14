@@ -516,8 +516,8 @@ class RaceScraper(BaseScraper):
                     "course": info_map.get("Course"),
                     "direction": "Right" if info_map.get("Direction") and info_map.get("Direction") == "Clockwise" else "Left",
                     "grade": info_map.get("Grade"),
-                    "terrain": info_map.get("Terrain"),
-                    "distanceType": info_map.get("Distance (type)"),
+                    "trackSurface": info_map.get("Terrain"),
+                    "trackDistance": info_map.get("Distance (type)"),
                     "distanceMeters": int(info_map.get("Distance (meters)")),
                     "fans": int(
                         dialog_schedule_items[-1].text.replace("Fans gained", "").replace("for 1st place", "").replace("See all", "").strip()
@@ -530,7 +530,7 @@ class RaceScraper(BaseScraper):
                 # Construct the in-game formatted name of the race.
                 distance_type_formatted = "Med" if info_map.get("Distance (type)") == "Medium" else info_map.get("Distance (type)")
                 race_data["nameFormatted"] = (
-                    f"{race_data['raceTrack']} {race_data['terrain']} {race_data['distanceMeters']}m ({distance_type_formatted}) {race_data['direction']}"
+                    f"{race_data['raceTrack']} {race_data['trackSurface']} {race_data['distanceMeters']}m ({distance_type_formatted}) {race_data['direction']}"
                 )
                 if race_data["course"]:
                     race_data["nameFormatted"] += f" / {race_data['course']}"

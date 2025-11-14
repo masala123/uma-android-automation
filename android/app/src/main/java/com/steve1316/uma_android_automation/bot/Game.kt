@@ -13,6 +13,16 @@ import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.automation_library.utils.MyAccessibilityService
 import com.steve1316.uma_android_automation.utils.SettingsHelper
 import com.steve1316.uma_android_automation.utils.GameDateParser
+import com.steve1316.uma_android_automation.bot.Trainee
+import com.steve1316.uma_android_automation.components.DialogUtils
+import com.steve1316.uma_android_automation.components.DialogInterface
+import com.steve1316.uma_android_automation.components.ButtonHomeFullStats
+import com.steve1316.uma_android_automation.utils.types.FanCountClass
+import com.steve1316.uma_android_automation.utils.types.BoundingBox
+import com.steve1316.uma_android_automation.utils.types.Aptitude
+import com.steve1316.uma_android_automation.components.LabelUmamusumeClassFans
+import com.steve1316.uma_android_automation.components.ButtonHomeFansInfo
+
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.opencv.core.Point
@@ -40,6 +50,7 @@ class Game(val myContext: Context) {
 
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
+    val trainee: Trainee = Trainee()
 	val training: Training = Training(this)
 	val racing: Racing = Racing(this)
 	val trainingEvent: TrainingEvent = TrainingEvent(this)
@@ -55,13 +66,11 @@ class Game(val myContext: Context) {
 	////////////////////////////////////////////////////////////////////
 	// Misc
     var currentDate: Date = Date(1, "Early", 1, 1)
-	var aptitudes: Aptitudes = Aptitudes(
-		track = Track("B", "B"),
-		distance = Distance("B", "B", "B", "B"),
-		style = Style("B", "B", "B", "B")
-	)
 	private var inheritancesDone = 0
-    private var needToUpdateAptitudes: Boolean = true
+
+    protected var bTemporaryRunningStyleAptitudesUpdated: Boolean = false
+    // Should always check fan count at bot start unless in pre-debut.
+    var bNeedToCheckFans: Boolean = true
 
 	data class Date(
 		val year: Int,
@@ -70,30 +79,126 @@ class Game(val myContext: Context) {
 		val turnNumber: Int
 	)
 
-	data class Track(
-		val turf: String,
-		val dirt: String
-	)
+    fun checkFans() {
+        MessageLog.d(TAG, "Checking fans...")
+        // Detect the new fan count by clicking the fans info button.
+        // This opens the "Umamusume Class" dialog.
+        // We process this dialog in the dialog handler.
+        ButtonHomeFansInfo.click(imageUtils = imageUtils)
+    }
 
-	data class Distance(
-		val sprint: String,
-		val mile: String,
-		val medium: String,
-		val long: String
-	)
+    fun checkAptitudes() {
+        MessageLog.d(TAG, "Checking aptitudes...")
+        // We update the trainee aptitudes by checking the stats dialog.
+        // So in here we just open the dialog then the dialog handler
+        // will take care of the rest.
+        ButtonHomeFullStats.click(imageUtils = imageUtils)
+    }
 
-	data class Style(
-		val front: String,
-		val pace: String,
-		val late: String,
-		val end: String
-	)
+    fun getFanCountClass(bitmap: Bitmap? = null): FanCountClass? {
+        val (bitmap, templateBitmap) = imageUtils.getBitmaps(ButtonHomeFansInfo.templates[0].name)
+        if (templateBitmap == null) {
+            MessageLog.e(TAG, "getFanCountClass: Could not get template bitmap for ButtonHomeFansInfo: ${ButtonHomeFansInfo.templates[0].name}.")
+            return null
+        }
+        val point: Point? = ButtonHomeFansInfo.find(imageUtils = imageUtils).first
+        if (point == null) {
+            MessageLog.w(TAG, "getFanCountClass: Could not find ButtonHomeFansInfo.")
+            return null
+        }
 
-	data class Aptitudes(
-		val track: Track,
-		val distance: Distance,
-		val style: Style
-	)
+        // Add a small 8px buffer to vertical component.
+        val x = (point.x - (templateBitmap.width / 2)).toInt() - 180
+        val y = (point.y - 15).toInt()
+        val w = 180
+        val h = 30
+
+        val text: String = imageUtils.performOCROnRegion(
+            bitmap,
+            x,
+            y,
+            w,
+            h,
+            useThreshold = false,
+            useGrayscale = true,
+            scaleUp = 1,
+            ocrEngine = "tesseract",
+            debugName = "getFanCountClass",
+        )
+        val fanCountClass: FanCountClass? = FanCountClass.fromName(text.replace(" ", "_"))
+        if (fanCountClass == null) {
+            MessageLog.w(TAG, "getFanCountClass:: Failed to match text to a FanCountClass: $text")
+        }
+        return fanCountClass
+    }
+
+    fun handleDialogs() {
+        val dialog: DialogInterface? = DialogUtils.getDialog(imageUtils = imageUtils)
+        if (dialog == null) {
+            return
+        }
+
+        MessageLog.d(TAG, "[DIALOG] Found Dialog: ${dialog.name}")
+
+        when (dialog.name) {
+            "umamusume_class" -> {
+                MessageLog.d(TAG, "Dialog Event: Campaign: umamusume_class")
+                val (bitmap, templateBitmap) = imageUtils.getBitmaps(LabelUmamusumeClassFans.templates[0].name)
+                if (templateBitmap == null) {
+                    MessageLog.e(TAG, "[DIALOG] umamusume_class: Could not get template bitmap for LabelUmamusumeClassFans: ${LabelUmamusumeClassFans.templates[0].name}.")
+                    return
+                }
+                val point: Point? = LabelUmamusumeClassFans.find(imageUtils = imageUtils).first
+                if (point == null) {
+                    MessageLog.w(TAG, "[DIALOG] umamusume_class: Could not find LabelUmamusumeClassFans.")
+                    return
+                }
+
+                // Add a small 8px buffer to vertical component.
+                val x = (point.x + (templateBitmap.width / 2)).toInt()
+                val y = (point.y - (templateBitmap.height / 2) - 4).toInt()
+                val w = 300
+                val h = templateBitmap.height + 4
+
+                val croppedBitmap = imageUtils.createSafeBitmap(
+                    bitmap,
+                    x,
+                    y,
+                    w,
+                    h,
+                    "dialog::umamusume_class: Cropped bitmap.",
+                )
+                if (croppedBitmap == null) {
+                    MessageLog.e(TAG, "[DIALOG] umamusume_class: Failed to crop bitmap.")
+                    return
+                }
+                val fans = imageUtils.getUmamusumeClassDialogFanCount(croppedBitmap)
+                if (fans != null) {
+                    trainee.fans = fans
+                    bNeedToCheckFans = false
+                    MessageLog.d(TAG, "[DIALOG] umamusume_class: Updated fan count: ${trainee.fans}")
+                } else {
+                    MessageLog.w(TAG, "[DIALOG] umamusume_class: getUmamusumeClassDialogFanCount returned NULL.")
+                }
+                
+                dialog.close(imageUtils = imageUtils)
+            }
+            "umamusume_details" -> {
+                val prevTrackSurface = trainee.trackSurface
+                val prevTrackDistance = trainee.trackDistance
+                val prevRunningStyle = trainee.runningStyle
+                trainee.updateAptitudes(imageUtils = imageUtils)
+                bTemporaryRunningStyleAptitudesUpdated = false
+
+                if (trainee.runningStyle != prevRunningStyle) {
+                    // Reset this flag since our preferred running style has changed.
+                    trainee.bHasSetRunningStyle = false
+                }
+
+                dialog.close(imageUtils = imageUtils)
+            }
+        }
+    }
 
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
@@ -299,7 +404,8 @@ class Game(val myContext: Context) {
 	fun startAptitudesDetectionTest() {
 		MessageLog.i(TAG, "\n[TEST] Now beginning the Aptitudes Detection test on the Main screen.")
 		MessageLog.i(TAG, "[TEST] Note that this test is dependent on having the correct scale.")
-		updateAptitudes()
+        checkAptitudes()
+        handleDialogs()
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -323,7 +429,38 @@ class Game(val myContext: Context) {
 			// Perform updates here if necessary.
             val finalsLocation = imageUtils.findImageWithBitmap("race_select_extra_locked_uma_finals", sourceBitmap, suppressError = true, region = imageUtils.regionBottomHalf)
             updateDate(isFinals = (finalsLocation != null))
-            if (needToUpdateAptitudes) updateAptitudes()
+
+            // Since we're at the main screen, we don't need to worry about this
+            // flag anymore since we will update our aptitudes here if needed.
+            bTemporaryRunningStyleAptitudesUpdated = false
+            // Update the fan count class every time we're at the main screen.
+            val fanCountClass: FanCountClass? = getFanCountClass()
+            if (fanCountClass != null) {
+                trainee.fanCountClass = fanCountClass
+            }
+            // Update trainee information.
+            trainee.updateStats(imageUtils = imageUtils)
+            trainee.updateSkillPoints(imageUtils = imageUtils)
+            trainee.updateMood(imageUtils = imageUtils)
+
+            if (!trainee.bHasUpdatedAptitudes) {
+                checkAptitudes()
+                wait(0.5)
+                // After clicking the FullStats button, need to handle dialogs
+                // since this will open the Umamusume Details dialog.
+                handleDialogs()
+                wait(0.5)
+            }
+
+            if (bNeedToCheckFans) {
+                checkFans()
+                wait(0.5)
+                // After clicking the UmamusumeClass button, need to handle dialogs
+                // since this will open the Umamusume Class dialog.
+                handleDialogs()
+                wait(0.5)
+            }
+
 			true
 		} else if (!enablePopupCheck && imageUtils.findImageWithBitmap("cancel", sourceBitmap, region = imageUtils.regionBottomHalf) != null &&
 			imageUtils.findImageWithBitmap("race_confirm", sourceBitmap, region = imageUtils.regionBottomHalf) != null) {
@@ -482,40 +619,6 @@ class Game(val myContext: Context) {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	// Helper functions to update game states.
-
-	fun updateAptitudes() {
-		MessageLog.i(TAG, "\n[STATS] Updating aptitudes for the current character.")
-		if (findAndTapImage("main_status", tries = 1, region = imageUtils.regionMiddle)) {
-			aptitudes = imageUtils.determineAptitudes(aptitudes)
-			findAndTapImage("race_accept_trophy", tries = 1, region = imageUtils.regionBottomHalf)
-			MessageLog.i(
-                TAG,
-                """
-                [Aptitudes]
-                Track: Turf=${aptitudes.track.turf}, Dirt=${aptitudes.track.dirt}
-                Distance: Sprint=${aptitudes.distance.sprint}, Mile=${aptitudes.distance.mile}, Medium=${aptitudes.distance.medium}, Long=${aptitudes.distance.long}
-                Style: Front=${aptitudes.style.front}, Pace=${aptitudes.style.pace}, Late=${aptitudes.style.late}, End=${aptitudes.style.end}
-                """.trimIndent(),
-			)
-			
-			// Update preferred distance based on new aptitudes.
-			training.updatePreferredDistance()
-            needToUpdateAptitudes = false
-		}
-	}
-
-	/**
-	 * Updates the current stat value mapping by reading the character's current stats from the Main screen.
-	 */
-	fun updateStatValueMapping() {
-		MessageLog.i(TAG, "\n[STATS] Updating stat value mapping.")
-		training.currentStatsMap = imageUtils.determineStatValues(training.currentStatsMap)
-		// Print the updated stat value mapping here.
-		training.currentStatsMap.forEach { it ->
-			MessageLog.i(TAG, "[STATS] ${it.key}: ${it.value}")
-		}
-	}
 
 	/**
 	 * Updates the stored date in memory by keeping track of the current year, phase, month and current turn number.
@@ -566,7 +669,7 @@ class Game(val myContext: Context) {
 			if (findAndTapImage("inheritance", tries = 1, region = imageUtils.regionBottomHalf)) {
 				MessageLog.i(TAG, "\nClaimed an inheritance on ${printFormattedDate()}.")
 				inheritancesDone++
-                needToUpdateAptitudes = true
+                trainee.bHasUpdatedAptitudes = false
 				true
 			} else {
 				false
@@ -717,6 +820,38 @@ class Game(val myContext: Context) {
 	 * @return True if all automation goals have been met. False otherwise.
 	 */
 	fun start(): Boolean {
+        /*
+        val fanCountClass = getFanCountClass()
+        if (fanCountClass != null) {
+            trainee.fanCountClass = fanCountClass
+        } else {
+            MessageLog.e(TAG, "FanCountClass is NULL")
+        }
+
+        checkFans()
+        wait(1.0)
+        handleDialogs()
+        wait(1.0)
+        
+        trainee.updateStats(imageUtils = imageUtils)
+        trainee.updateSkillPoints(imageUtils = imageUtils)
+        trainee.updateMood(imageUtils = imageUtils)
+
+        if (!trainee.bHasUpdatedAptitudes) {
+            MessageLog.e(TAG, "DOING IT")
+            checkAptitudes()
+            wait(1.0)
+            handleDialogs()
+            wait(1.0)
+        }
+        val traineeString = trainee.asString()
+        MessageLog.i(TAG, "TRAINEE DETAILS\n$traineeString")
+
+        */
+        training.analyzeTrainings(test = true, singleTraining = true)
+        MessageLog.e(TAG, "TRAINING MAP: ${training.trainingMap}")
+        return true
+
 		// Print current app settings at the start of the run.
 		try {
 			val formattedSettingsString = SettingsHelper.getStringSetting("misc", "formattedSettingsString")
@@ -761,10 +896,6 @@ class Game(val myContext: Context) {
 		} else if (SettingsHelper.getBooleanSetting("debug", "debugMode_startAptitudesDetectionTest")) {
 			startAptitudesDetectionTest()
 		} else {
-			// Update the stat targets by distances and the preferred distance for training.
-			training.setStatTargetsByDistances()
-			training.updatePreferredDistance()
-
 			wait(5.0)
 
 			if (campaign == "Ao Haru") {

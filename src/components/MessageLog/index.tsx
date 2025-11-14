@@ -219,7 +219,7 @@ ${longTargetsString}
 🏁 Enable Racing Plan: ${settings.racing.enableRacingPlan ? "✅" : "❌"}
 🏁 Racing Plan: ${racingPlanString}
 👥 Minimum Fans Threshold: ${settings.racing.minFansThreshold}
-🏃 Preferred Terrain: ${settings.racing.preferredTerrain}
+🏃 Preferred Track Surface: ${settings.racing.preferredTrackSurface}
 🏆 Preferred Grades: ${settings.racing.preferredGrades.join(", ")}
 📅 Look Ahead Days: ${settings.racing.lookAheadDays} days
 ⏰ Smart Racing Check Interval: ${settings.racing.smartRacingCheckInterval} days

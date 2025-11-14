@@ -12,6 +12,20 @@ import org.json.JSONObject
 import org.opencv.core.Point
 import android.util.Log
 
+import com.steve1316.uma_android_automation.utils.types.Aptitude
+import com.steve1316.uma_android_automation.utils.types.TrackSurface
+import com.steve1316.uma_android_automation.utils.types.TrackDistance
+import com.steve1316.uma_android_automation.utils.types.RunningStyle
+import com.steve1316.uma_android_automation.utils.types.RaceGrade
+
+import com.steve1316.uma_android_automation.components.DialogUtils
+import com.steve1316.uma_android_automation.components.DialogInterface
+import com.steve1316.uma_android_automation.components.ButtonChangeRunningStyle
+import com.steve1316.uma_android_automation.components.ButtonRaceStrategyFront
+import com.steve1316.uma_android_automation.components.ButtonRaceStrategyPace
+import com.steve1316.uma_android_automation.components.ButtonRaceStrategyLate
+import com.steve1316.uma_android_automation.components.ButtonRaceStrategyEnd
+
 class Racing (private val game: Game) {
     private val TAG: String = "[${MainActivity.loggerTag}]Racing"
 
@@ -24,7 +38,7 @@ class Racing (private val game: Game) {
     private val lookAheadDays = SettingsHelper.getIntSetting("racing", "lookAheadDays")
     private val smartRacingCheckInterval = SettingsHelper.getIntSetting("racing", "smartRacingCheckInterval")
     private val minFansThreshold = SettingsHelper.getIntSetting("racing", "minFansThreshold")
-    private val preferredTerrain = SettingsHelper.getStringSetting("racing", "preferredTerrain")
+    private val preferredTrackSurfaceString = SettingsHelper.getStringSetting("racing", "preferredTrackSurface")
     private val preferredGradesString = SettingsHelper.getStringSetting("racing", "preferredGrades")
     private val racingPlanJson = SettingsHelper.getStringSetting("racing", "racingPlan")
     private val minimumQualityThreshold = SettingsHelper.getDoubleSetting("racing", "minimumQualityThreshold")
@@ -61,20 +75,38 @@ class Racing (private val game: Game) {
         private const val RACES_COLUMN_FANS = "fans"
         private const val RACES_COLUMN_TURN_NUMBER = "turnNumber"
         private const val RACES_COLUMN_NAME_FORMATTED = "nameFormatted"
-        private const val RACES_COLUMN_TERRAIN = "terrain"
-        private const val RACES_COLUMN_DISTANCE_TYPE = "distanceType"
+        private const val RACES_COLUMN_TRACK_SURFACE = "trackSurface"
+        private const val RACES_COLUMN_TRACK_DISTANCE = "trackDistance"
         private const val SIMILARITY_THRESHOLD = 0.7
     }
 
     data class RaceData(
         val name: String,
-        val grade: String,
+        val grade: RaceGrade,
         val fans: Int,
         val nameFormatted: String,
-        val terrain: String,
-        val distanceType: String,
+        val trackSurface: TrackSurface,
+        val trackDistance: TrackDistance,
         val turnNumber: Int
-    )
+    ) {
+        constructor(
+            name: String,
+            grade: String,
+            fans: Int,
+            nameFormatted: String,
+            trackSurface: String,
+            trackDistance: String,
+            turnNumber: Int,
+        ) : this(
+            name,
+            RaceGrade.fromName(grade)!!,
+            fans,
+            nameFormatted,
+            TrackSurface.fromName(trackSurface)!!,
+            TrackDistance.fromName(trackDistance)!!,
+            turnNumber,
+        )
+    }
 
     data class ScoredRace(
         val raceData: RaceData,
@@ -89,6 +121,59 @@ class Racing (private val game: Game) {
         val date: String,
         val priority: Int
     )
+
+    fun handleDialogs() {
+        val dialog: DialogInterface? = DialogUtils.getDialog(imageUtils = game.imageUtils)
+        if (dialog == null) {
+            return
+        }
+
+        when (dialog.name) {
+            "strategy" -> {
+                if (!game.trainee.bHasUpdatedAptitudes) {
+                    game.trainee.bTemporaryRunningStyleAptitudesUpdated = updateRaceScreenRunningStyleAptitudes()
+                }
+
+                var runningStyle: RunningStyle? = null
+                val runningStyleString: String = getRunningStyleOption().uppercase()
+                when (runningStyleString) {
+                    // Do not select a strategy. Use what is already selected.
+                    "DEFAULT" -> {
+                        MessageLog.i(TAG, "[DIALOG] strategy:: Using the default running style.")
+                        dialog.ok(imageUtils = game.imageUtils)
+                        game.trainee.bHasSetRunningStyle = true
+                        return
+                    }
+                    // Auto-select the optimal running style based on trainee aptitudes.
+                    "AUTO" -> {
+                        MessageLog.i(TAG, "[DIALOG] strategy:: Auto-selecting the trainee's optimal running style.")
+                        runningStyle = game.trainee.runningStyle
+                    }
+                    else -> {
+                        MessageLog.i(TAG, "[DIALOG] strategy:: Using user-specified running style: $runningStyleString")
+                        runningStyle = RunningStyle.fromShortName(runningStyleString)
+                    }
+                }
+
+                when (runningStyle) {
+                    RunningStyle.FRONT_RUNNER -> ButtonRaceStrategyFront.click(imageUtils = game.imageUtils)
+                    RunningStyle.PACE_CHASER -> ButtonRaceStrategyPace.click(imageUtils = game.imageUtils)
+                    RunningStyle.LATE_SURGER -> ButtonRaceStrategyLate.click(imageUtils = game.imageUtils)
+                    RunningStyle.END_CLOSER -> ButtonRaceStrategyEnd.click(imageUtils = game.imageUtils)
+                    null -> {
+                        // This indicates programmer error.
+                        MessageLog.e(TAG, "[DIALOG] strategy:: Invalid running style: $runningStyle")
+                        dialog.close(imageUtils = game.imageUtils)
+                        game.trainee.bHasSetRunningStyle = false
+                        return
+                    }
+                }
+
+                game.trainee.bHasSetRunningStyle = true
+                dialog.ok(imageUtils = game.imageUtils)
+            }
+        }
+    }
 
     /**
      * Retrieves the user's planned races from saved settings.
@@ -156,8 +241,8 @@ class Racing (private val game: Game) {
                 val raceData = RaceData(
                     name = raceObj.getString("name"),
                     grade = raceObj.getString("grade"),
-                    terrain = raceObj.getString("terrain"),
-                    distanceType = raceObj.getString("distanceType"),
+                    trackSurface = raceObj.getString("trackSurface"),
+                    trackDistance = raceObj.getString("trackDistance"),
                     fans = raceObj.getInt("fans"),
                     turnNumber = raceObj.getInt("turnNumber"),
                     nameFormatted = raceObj.getString("nameFormatted")
@@ -438,7 +523,6 @@ class Racing (private val game: Game) {
 
         // Updates the current date and aptitudes for accurate scoring.
         game.updateDate()
-        game.updateAptitudes()
 
         // Use cached user planned races and race plan data.
         MessageLog.i(TAG, "[RACE] Loaded ${userPlannedRaces.size} user-selected races and ${raceData.size} race entries.")
@@ -457,7 +541,7 @@ class Racing (private val game: Game) {
             val raceName = game.imageUtils.extractRaceName(location)
             val raceData = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
             if (raceData != null) {
-                MessageLog.i(TAG, "[RACE] ✓ Matched in database: ${raceData.name} (Grade: ${raceData.grade}, Fans: ${raceData.fans}, Terrain: ${raceData.terrain}).")
+                MessageLog.i(TAG, "[RACE] ✓ Matched in database: ${raceData.name} (Grade: ${raceData.grade}, Fans: ${raceData.fans}, Track Surface: ${raceData.trackSurface}).")
                 raceData
             } else {
                 MessageLog.i(TAG, "[RACE] ✗ No match found in database for \"$raceName\".")
@@ -474,7 +558,7 @@ class Racing (private val game: Game) {
         // If trophy requirement is active, filter to only G1 races.
         // Trophy requirement is independent of racing plan and farming fans settings.
         val racesForSelection = if (hasTrophyRequirement) {
-            val g1Races = currentRaces.filter { it.grade == "G1" }
+            val g1Races = currentRaces.filter { it.grade == RaceGrade.G1 }
             if (g1Races.isEmpty()) {
                 // No G1 races available. Cancel since trophy requirement specifically needs G1 races.
                 MessageLog.i(TAG, "[RACE] Trophy requirement active but no G1 races available. Canceling racing process (independent of racing plan/farming fans).")
@@ -603,7 +687,7 @@ class Racing (private val game: Game) {
                 game.updateDate()
                 val raceName = game.imageUtils.extractRaceName(doublePredictionLocations[0])
                 val raceData = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
-                if (raceData?.grade == "G1") {
+                if (raceData?.grade == RaceGrade.G1) {
                     MessageLog.i(TAG, "[RACE] Only one race with double predictions and it's G1. Selecting it.")
                     game.tap(doublePredictionLocations[0].x, doublePredictionLocations[0].y, "race_extra_double_prediction", ignoreWaiting = true)
                     return true
@@ -662,7 +746,7 @@ class Racing (private val game: Game) {
             game.updateDate()
             val g1Indices = raceNamesList.mapIndexedNotNull { index, raceName ->
                 val raceData = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
-                if (raceData?.grade == "G1") index else null
+                if (raceData?.grade == RaceGrade.G1) index else null
             }
 
             if (g1Indices.isEmpty()) {
@@ -911,6 +995,53 @@ class Racing (private val game: Game) {
         return enableFarmingFans && (dayNumber % daysToRunExtraRaces == 0) && !raceRepeatWarningCheck
     }
 
+    fun getRunningStyleOption(): String {
+        val currentYear = game.currentDate.year
+        return if (currentYear == 1) juniorYearRaceStrategy else userSelectedOriginalStrategy
+    }
+
+    fun updateRaceScreenRunningStyleAptitudes(): Boolean {
+        val bitmap = game.imageUtils.getSourceBitmap()
+        var text: String = game.imageUtils.performOCROnRegion(
+            bitmap,
+            125,
+            1140,
+            825,
+            45,
+            useThreshold=false,
+            useGrayscale=false,
+            debugName="updateRaceScreenRunningStyleAptitudes",
+        )
+        if (text == "") {
+            MessageLog.w(TAG, "performOCROnRegion did not detect any text.")
+            return false
+        }
+        text = text.replace("[^A-Za-z]".toRegex(), "").lowercase()
+        val substrings = listOf("end", "late", "pace", "front")
+        val parts = text.split(*substrings.toTypedArray()).filter { it.isNotBlank() }
+        if (parts.size != 4) {
+            MessageLog.w(TAG, "performOCROnRegion returned a malformed string: $text")
+            return false
+        }
+        val styleMap: Map<String, String> = substrings.zip(parts).toMap()
+        for ((styleString, aptitudeString) in styleMap) {
+            val style: RunningStyle? = RunningStyle.fromShortName(styleString)
+            if (style == null) {
+                MessageLog.w(TAG, "performOCROnRegion returned invalid running style: $styleString")
+                return false
+            }
+            val aptitude: Aptitude? = Aptitude.fromName(aptitudeString)
+            if (aptitude == null) {
+                MessageLog.w(TAG, "performOCROnRegion returned invalid aptitude for running style: $style -> $aptitudeString")
+                return false
+            }
+            game.trainee.setRunningStyleAptitude(style, aptitude)
+        }
+
+        MessageLog.d(TAG, "Set temporary running style aptitudes: ${game.trainee.runningStyleAptitudes}")
+        return true
+    }
+
     /**
      * Handles race strategy override for Junior Year races.
      *
@@ -918,123 +1049,19 @@ class Racing (private val game: Game) {
      * After Junior Year: Restores the original strategy and disables the feature.
      */
     private fun selectRaceStrategy() {
-        if (!enableRaceStrategyOverride) {
-            return
-        } else if (!firstTimeRacing && !hasAppliedStrategyOverride && game.currentDate.year != 1) {
-            return
-        }
-
-        val currentYear = game.currentDate.year
-        MessageLog.i(TAG, "[RACE] Handling race strategy override for Year $currentYear.")
-
-        // Check if we're on the racing screen by looking for the Change Strategy button.
-        if (!game.findAndTapImage("race_change_strategy", tries = 1, region = game.imageUtils.regionBottomHalf)) {
-            MessageLog.i(TAG, "[RACE] Change Strategy button not found. Skipping strategy override.")
-            return
-        }
-
-        // Wait for the strategy selection popup to appear.
-        game.wait(2.0)
-
-        // Find the confirm button to use as reference point for strategy coordinates.
-        val confirmLocation = game.imageUtils.findImage("confirm", region = game.imageUtils.regionBottomHalf).first
-        if (confirmLocation == null) {
-            MessageLog.e(TAG, "[ERROR] Could not find confirm button for strategy selection. Skipping strategy override.")
-            game.findAndTapImage("cancel", region = game.imageUtils.regionMiddle)
-            return
-        }
-
-        val baseX = confirmLocation.x.toInt()
-        val baseY = confirmLocation.y.toInt()
-
-        if (currentYear == 1) {
-            // Junior Year: Apply user's selected strategy and detect the original.
-            if (!hasAppliedStrategyOverride) {
-                // Detect and store the original strategy.
-                val strategyImages = listOf(
-                    "race_strategy_end" to "End",
-                    "race_strategy_late" to "Late", 
-                    "race_strategy_pace" to "Pace",
-                    "race_strategy_front" to "Front"
-                )
-
-                var originalStrategy: String? = null
-                for ((imageName, strategyName) in strategyImages) {
-                    if (game.imageUtils.findImage(imageName).first != null) {
-                        originalStrategy = strategyName
-                        break
-                    }
-                }
-
-                if (originalStrategy != null) {
-                    detectedOriginalStrategy = originalStrategy
-                    MessageLog.i(TAG, "[RACE] Detected original race strategy: $originalStrategy")
-                }
-
-                // Apply the user's selected strategy.
-                MessageLog.i(TAG, "[RACE] Applying user-selected strategy: $juniorYearRaceStrategy")
-
-                val strategyOffsets = mapOf(
-                    "end" to Pair(-585, -210),
-                    "late" to Pair(-355, -210),
-                    "pace" to Pair(-125, -210),
-                    "front" to Pair(105, -210)
-                )
-
-                val offset = strategyOffsets[juniorYearRaceStrategy.lowercase()]
-                if (offset != null) {
-                    val targetX = (baseX + offset.first).toDouble()
-                    val targetY = (baseY + offset.second).toDouble()
-                    MessageLog.i(TAG, "[RACE] Clicking strategy button at ($targetX, $targetY) for strategy: $juniorYearRaceStrategy")
-                    if (game.gestureUtils.tap(targetX, targetY)) {
-                        hasAppliedStrategyOverride = true
-                        MessageLog.i(TAG, "[RACE] Successfully applied strategy override for Junior Year.")
-                    } else {
-                        MessageLog.e(TAG, "[ERROR] Failed to apply strategy override.")
-                    }
-                } else {
-                    MessageLog.e(TAG, "[ERROR] Unknown strategy: $juniorYearRaceStrategy")
-                }
-            }
-        } else {
-            // Year 2+: Apply the detected original strategy if available, otherwise use user-selected strategy.
-            val strategyToApply = if (detectedOriginalStrategy != null) {
-                detectedOriginalStrategy!!
-            } else {
-                userSelectedOriginalStrategy
-            }
-            
-            MessageLog.i(TAG, "[RACE] Applying original race strategy: $strategyToApply")
-            
-            val strategyOffsets = mapOf(
-                "end" to Pair(-585, -210),
-                "late" to Pair(-355, -210),
-                "pace" to Pair(-125, -210),
-                "front" to Pair(105, -210)
-            )
-
-            val offset = strategyOffsets[strategyToApply.lowercase()]
-            if (offset != null) {
-                val targetX = (baseX + offset.first).toDouble()
-                val targetY = (baseY + offset.second).toDouble()
-                MessageLog.i(TAG, "[RACE] Clicking strategy button at ($targetX, $targetY) for strategy: $strategyToApply")
-                if (game.gestureUtils.tap(targetX, targetY)) {
-                    hasAppliedStrategyOverride = false
-                    MessageLog.i(TAG, "[RACE] Successfully applied original strategy. Strategy override disabled for rest of run.")
-                } else {
-                    MessageLog.e(TAG, "[ERROR] Failed to apply original strategy.")
-                }
-            } else {
-                MessageLog.e(TAG, "[ERROR] Unknown strategy: $strategyToApply")
-            }
-        }
-
-        // Click confirm to apply the strategy change.
-        if (game.findAndTapImage("confirm", tries = 3, region = game.imageUtils.regionBottomHalf)) {
-            game.wait(2.0)
-            MessageLog.i(TAG, "[RACE] Strategy change confirmed.")
-        } else {
-            MessageLog.e(TAG, "[ERROR] Failed to confirm strategy change.")
+        if (
+            !game.trainee.bHasUpdatedAptitudes &&
+            !game.trainee.bTemporaryRunningStyleAptitudesUpdated
+        ) {
+            // If trainee aptitudes are unknown, this means we probably started the bot
+            // at the race screen. We need to open the race strategy dialog and
+            // read the aptitudes in from there.
+            ButtonChangeRunningStyle.click(imageUtils = game.imageUtils)
+            handleDialogs()
+        } else if (!game.trainee.bHasSetRunningStyle) {
+            // If we haven't set the trainee's running style yet, open the dialog.
+            ButtonChangeRunningStyle.click(imageUtils = game.imageUtils)
+            handleDialogs()
         }
     }
 
@@ -1044,6 +1071,7 @@ class Racing (private val game: Game) {
      * @return True if the bot completed the race with retry attempts remaining. Otherwise false.
      */
     private fun runRaceWithRetries(): Boolean {
+        MessageLog.e(TAG, "runRaceWithRetries")
         val canSkip = game.imageUtils.findImage("race_skip_locked", tries = 5, region = game.imageUtils.regionBottomHalf).first == null
         
         while (raceRetries >= 0) {
@@ -1160,6 +1188,7 @@ class Racing (private val game: Game) {
      * @param isExtra Flag to determine the following actions to finish up this mandatory or extra race.
      */
     fun finalizeRaceResults(resultCheck: Boolean, isExtra: Boolean = false) {
+        MessageLog.e(TAG, "finalizeRaceResults")
         MessageLog.i(TAG, "\n[RACE] Now performing cleanup and finishing the race.")
         if (!resultCheck) {
             game.notificationMessage = "Bot has run out of retry attempts for racing. Stopping the bot now..."
@@ -1235,8 +1264,8 @@ class Racing (private val game: Game) {
                     RACES_COLUMN_GRADE,
                     RACES_COLUMN_FANS,
                     RACES_COLUMN_NAME_FORMATTED,
-                    RACES_COLUMN_TERRAIN,
-                    RACES_COLUMN_DISTANCE_TYPE,
+                    RACES_COLUMN_TRACK_SURFACE,
+                    RACES_COLUMN_TRACK_DISTANCE,
                     RACES_COLUMN_TURN_NUMBER
                 ),
                 "$RACES_COLUMN_TURN_NUMBER = ? AND $RACES_COLUMN_NAME_FORMATTED = ?",
@@ -1250,8 +1279,8 @@ class Racing (private val game: Game) {
                     grade = exactCursor.getString(1),
                     fans = exactCursor.getInt(2),
                     nameFormatted = exactCursor.getString(3),
-                    terrain = exactCursor.getString(4),
-                    distanceType = exactCursor.getString(5),
+                    trackSurface = exactCursor.getString(4),
+                    trackDistance = exactCursor.getString(5),
                     turnNumber = exactCursor.getInt(6)
                 )
                 exactCursor.close()
@@ -1269,8 +1298,8 @@ class Racing (private val game: Game) {
                     RACES_COLUMN_GRADE,
                     RACES_COLUMN_FANS,
                     RACES_COLUMN_NAME_FORMATTED,
-                    RACES_COLUMN_TERRAIN,
-                    RACES_COLUMN_DISTANCE_TYPE,
+                    RACES_COLUMN_TRACK_SURFACE,
+                    RACES_COLUMN_TRACK_DISTANCE,
                     RACES_COLUMN_TURN_NUMBER
                 ),
                 "$RACES_COLUMN_TURN_NUMBER = ?",
@@ -1300,8 +1329,8 @@ class Racing (private val game: Game) {
                         grade = fuzzyCursor.getString(1),
                         fans = fuzzyCursor.getInt(2),
                         nameFormatted = nameFormatted,
-                        terrain = fuzzyCursor.getString(4),
-                        distanceType = fuzzyCursor.getString(5),
+                        trackSurface = fuzzyCursor.getString(4),
+                        trackDistance = fuzzyCursor.getString(5),
                         turnNumber = fuzzyCursor.getInt(6)
                     )
                     if (game.debugMode) MessageLog.d(TAG, "[DEBUG] Fuzzy match candidate: \"${bestMatch.name}\" AKA \"$nameFormatted\" with similarity ${game.decimalFormat.format(similarity)}.")
@@ -1332,7 +1361,7 @@ class Racing (private val game: Game) {
      * The score is derived from three weighted factors:
      * - **Fans:** Normalized to a 0–100 scale.
      * - **Grade:** Weighted to a map of values based on grade.
-     * - **Aptitude:** Adds a bonus if both terrain and distance aptitudes are A or S.
+     * - **Aptitude:** Adds a bonus if both track surface and distance aptitudes are A or S.
      *
      * The final score is the average of these three components.
      *
@@ -1345,30 +1374,21 @@ class Racing (private val game: Game) {
         
         // Grade scoring: G1 = 75, G2 = 50, G3 = 25.
         val gradeScore = when (race.grade) {
-            "G1" -> 75.0
-            "G2" -> 50.0
-            "G3" -> 25.0
+            RaceGrade.G1 -> 75.0
+            RaceGrade.G2 -> 50.0
+            RaceGrade.G3 -> 25.0
             else -> 0.0
         }
         
-        // Map distance/terrain types to their current aptitudes.
-        val terrainAptitude = when (race.terrain) {
-            "Turf" -> game.aptitudes.track.turf
-            "Dirt" -> game.aptitudes.track.dirt
-            else -> "X"
-        }
-        val distanceAptitude = when (race.distanceType) {
-            "Sprint" -> game.aptitudes.distance.sprint
-            "Mile" -> game.aptitudes.distance.mile
-            "Medium" -> game.aptitudes.distance.medium
-            "Long" -> game.aptitudes.distance.long
-            else -> "X"
-        }
+        // Get the trainee's aptitude for this race's track surface/distance.
+        val trackSurfaceAptitude: Aptitude = game.trainee.checkTrackSurfaceAptitude(race.trackSurface)
+        val trackDistanceAptitude: Aptitude = game.trainee.checkTrackDistanceAptitude(race.trackDistance)
         
-        // Aptitude bonus: 100 if both terrain and distance match A/S, else 0.
-        val terrainMatch = terrainAptitude == "A" || terrainAptitude == "S"
-        val distanceMatch = distanceAptitude == "A" || distanceAptitude == "S"
-        val aptitudeBonus = if (terrainMatch && distanceMatch) 100.0 else 0.0
+        // Aptitude bonus: 100 if both track surface and distance match A/S, else 0.
+        val trackSurfaceMatch: Boolean = trackSurfaceAptitude >= Aptitude.A
+        val trackDistanceMatch: Boolean = trackDistanceAptitude >= Aptitude.A
+
+        val aptitudeBonus = if (trackSurfaceMatch && trackDistanceMatch) 100.0 else 0.0
         
         // Calculate final score with equal weights.
         val finalScore = (fansScore + gradeScore + aptitudeBonus) / 3.0
@@ -1378,12 +1398,12 @@ class Racing (private val game: Game) {
             TAG,
             """
             [DEBUG] Scoring ${race.name}:
-            Fans        = ${race.fans} (${game.decimalFormat.format(fansScore)})
-            Grade       = ${race.grade} (${game.decimalFormat.format(gradeScore)})
-            Terrain     = ${race.terrain} ($terrainAptitude)
-            Distance    = ${race.distanceType} ($distanceAptitude)
-            Aptitude    = ${game.decimalFormat.format(aptitudeBonus)}
-            Final       = ${game.decimalFormat.format(finalScore)}
+            Fans            = ${race.fans} (${game.decimalFormat.format(fansScore)})
+            Grade           = ${race.grade} (${game.decimalFormat.format(gradeScore)})
+            Track Surface   = ${race.trackSurface} ($trackSurfaceAptitude)
+            Track Distance  = ${race.trackDistance} ($trackDistanceAptitude)
+            Aptitude        = ${game.decimalFormat.format(aptitudeBonus)}
+            Final           = ${game.decimalFormat.format(finalScore)}
             """.trimIndent()
         )
         
@@ -1425,8 +1445,8 @@ class Racing (private val game: Game) {
                     RACES_COLUMN_GRADE,
                     RACES_COLUMN_FANS,
                     RACES_COLUMN_NAME_FORMATTED,
-                    RACES_COLUMN_TERRAIN,
-                    RACES_COLUMN_DISTANCE_TYPE,
+                    RACES_COLUMN_TRACK_SURFACE,
+                    RACES_COLUMN_TRACK_DISTANCE,
                     RACES_COLUMN_TURN_NUMBER
                 ),
                 "$RACES_COLUMN_TURN_NUMBER >= ? AND $RACES_COLUMN_TURN_NUMBER <= ?",
@@ -1442,8 +1462,8 @@ class Racing (private val game: Game) {
                         grade = cursor.getString(1),
                         fans = cursor.getInt(2),
                         nameFormatted = cursor.getString(3),
-                        terrain = cursor.getString(4),
-                        distanceType = cursor.getString(5),
+                        trackSurface = cursor.getString(4),
+                        trackDistance = cursor.getString(5),
                         turnNumber = cursor.getInt(6)
                     )
                     races.add(race)
@@ -1524,27 +1544,27 @@ class Racing (private val game: Game) {
             parsed
         }
 
-        if (game.debugMode) MessageLog.d(TAG, "[DEBUG] Filter criteria: Min fans: $minFansThreshold, terrain: $preferredTerrain, grades: $preferredGrades")
-        else Log.d(TAG, "[DEBUG] Filter criteria: Min fans: $minFansThreshold, terrain: $preferredTerrain, grades: $preferredGrades")
+        if (game.debugMode) MessageLog.d(TAG, "[DEBUG] Filter criteria: Min fans: $minFansThreshold, track surface: $preferredTrackSurfaceString, grades: $preferredGrades")
+        else Log.d(TAG, "[DEBUG] Filter criteria: Min fans: $minFansThreshold, trackSurface: $preferredTrackSurfaceString, grades: $preferredGrades")
         
         val filteredRaces = races.filter { race ->
             val meetsFansThreshold = bypassMinFans || race.fans >= minFansThreshold
-            val meetsTerrainPreference = preferredTerrain == "Any" || race.terrain == preferredTerrain
-            val meetsGradePreference = preferredGrades.isEmpty() || preferredGrades.contains(race.grade)
+            val meetsTrackSurfacePreference = preferredTrackSurfaceString == "Any" || race.trackSurface == TrackSurface.fromName(preferredTrackSurfaceString)
+            val meetsGradePreference = preferredGrades.isEmpty() || preferredGrades.contains(race.grade.name)
             
-            val passes = meetsFansThreshold && meetsTerrainPreference && meetsGradePreference
+            val passes = meetsFansThreshold && meetsTrackSurfacePreference && meetsGradePreference
 
             // If the race did not pass any of the filters, print the reason why.
             if (!passes) {
                 val reasons = mutableListOf<String>()
                 if (!meetsFansThreshold) reasons.add("fans ${race.fans} < $minFansThreshold")
-                if (!meetsTerrainPreference) reasons.add("terrain ${race.terrain} != $preferredTerrain")
+                if (!meetsTrackSurfacePreference) reasons.add("trackSurface ${race.trackSurface} != $preferredTrackSurfaceString")
                 if (!meetsGradePreference) reasons.add("grade ${race.grade} not in $preferredGrades")
                 if (game.debugMode) MessageLog.d(TAG, "[DEBUG] ✗ Filtered out ${race.name}: ${reasons.joinToString(", ")}")
                 else Log.d(TAG, "[DEBUG] ✗ Filtered out ${race.name}: ${reasons.joinToString(", ")}")
             } else {
-                if (game.debugMode) MessageLog.d(TAG, "[DEBUG] ✓ Passed filter: ${race.name} (fans: ${race.fans}, terrain: ${race.terrain}, grade: ${race.grade})")
-                else Log.d(TAG, "[DEBUG] ✓ Passed filter: ${race.name} (fans: ${race.fans}, terrain: ${race.terrain}, grade: ${race.grade})")
+                if (game.debugMode) MessageLog.d(TAG, "[DEBUG] ✓ Passed filter: ${race.name} (fans: ${race.fans}, trackSurface: ${race.trackSurface}, grade: ${race.grade})")
+                else Log.d(TAG, "[DEBUG] ✓ Passed filter: ${race.name} (fans: ${race.fans}, trackSurface: ${race.trackSurface}, grade: ${race.grade})")
             }
             
             passes

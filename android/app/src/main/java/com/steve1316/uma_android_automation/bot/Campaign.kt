@@ -25,6 +25,7 @@ open class Campaign(val game: Game) {
 	 * Campaign-specific race event handling.
 	 */
 	open fun handleRaceEvents(): Boolean {
+        game.bNeedToCheckFans = true
 		return game.racing.handleRaceEvents()
 	}
 
@@ -45,9 +46,6 @@ open class Campaign(val game: Game) {
 			if (game.checkMainScreen()) {
 				var needToRace = false
 				if (!game.racing.encounteredRacingPopup) {
-					// Refresh the stat values in memory.
-					game.updateStatValueMapping()
-
                     // Check if there are fan or trophy requirements that need to be met with racing.
 					game.racing.checkRacingRequirements()
 
