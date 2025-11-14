@@ -291,7 +291,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 				if (isTablet) {
 					listOf(-(260 * 1.32).toInt(), -(140 * 1.32).toInt(), relWidth(135), relHeight(100))
 				} else {
-					listOf(-260, -227, relWidth(100), relHeight(85))
+					listOf(-260, -137, relWidth(100), relHeight(80))
 				}
 			} else {
 				if (isTablet) {
