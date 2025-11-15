@@ -65,6 +65,7 @@ class Game(val myContext: Context) {
 	)
 	private var inheritancesDone = 0
     private var needToUpdateAptitudes: Boolean = true
+    private var recreationDateCompleted: Boolean = false
 
 	data class Date(
 		val year: Int,
@@ -592,6 +593,16 @@ class Game(val myContext: Context) {
     fun recoverEnergy(): Boolean {
 		MessageLog.i(TAG, "\n[ENERGY] Now starting attempt to recover energy on ${printFormattedDate()}.")
         val sourceBitmap = imageUtils.getSourceBitmap()
+		
+		// First, try to handle recreation date which also recovers energy if a date is available.
+		// Skip recreation date if it's already completed (will only be used for mood recovery).
+		if (!recreationDateCompleted && handleRecreationDate(recoverMoodIfCompleted = false)) {
+			MessageLog.i(TAG, "[ENERGY] Successfully recovered energy via recreation date.")
+			racing.raceRepeatWarningCheck = false
+			return true
+		}
+		
+		// Otherwise, fall back to the regular energy recovery logic.
 		return when {
 			findAndTapImage("recover_energy", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf) -> {
 				findAndTapImage("ok")
@@ -645,23 +656,57 @@ class Game(val myContext: Context) {
 			false
 		} else if ((currentMood == "Bad/Awful" || currentMood == "Normal") && imageUtils.findImageWithBitmap("recover_energy_summer", sourceBitmap, region = imageUtils.regionBottomHalf, suppressError = true) == null) {
 			MessageLog.i(TAG, "[MOOD] Current mood is not good. Recovering mood now.")
-			if (!findAndTapImage("recover_mood", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
-				findAndTapImage("recover_energy_summer", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)
-			}
 
 			// Do the date if it is unlocked.
-			if (findAndTapImage("recover_mood_date", tries = 1, region = imageUtils.regionMiddle, suppressError = true)) {
-				wait(1.0)
-			}
+			if (!handleRecreationDate(recoverMoodIfCompleted = true)) {
+                // Otherwise, recover mood as normal.
+                if (!findAndTapImage("recover_mood", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
+                    findAndTapImage("recover_energy_summer", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)
+                }
+                findAndTapImage("ok", region = imageUtils.regionMiddle, suppressError = true)
+            }
 
-			findAndTapImage("ok", region = imageUtils.regionMiddle, suppressError = true)
-			racing.raceRepeatWarningCheck = false
+            racing.raceRepeatWarningCheck = false
 			true
 		} else {
 			MessageLog.i(TAG, "[MOOD] Current mood is good enough or its the Summer event. Moving on...")
 			false
 		}
 	}
+
+    /**
+     * Handles the Recreation date event if detected on the screen.
+     *
+     * @param recoverMoodIfCompleted If true, recover mood if the date was already completed. Otherwise, close the recreation popup.
+     * @return True if the Recreation date event was successfully completed. False otherwise.
+     */
+    fun handleRecreationDate(recoverMoodIfCompleted: Boolean = false): Boolean {
+        return if (imageUtils.findImage("recreation_date", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true).first != null &&
+            findAndTapImage("recover_mood", tries = 1, region = imageUtils.regionBottomHalf)) {
+            MessageLog.i(TAG, "\n[RECREATION_DATE] Recreation has a possible date available.")
+            wait(1.0)
+            // Check if the date is already done.
+            if (imageUtils.findImage("recreation_date_complete", tries = 1, region = imageUtils.regionMiddle).first != null) {
+                MessageLog.i(TAG, "[RECREATION_DATE] Recreation date is already completed.")
+                recreationDateCompleted = true
+                if (recoverMoodIfCompleted) {
+                    MessageLog.i(TAG, "[RECREATION_DATE] Mood requires recovery. Recovering mood with the Umamusume now...")
+                    findAndTapImage("recreation_umamusume", region = imageUtils.regionMiddle)
+                    true
+                } else {
+                    MessageLog.i(TAG, "[RECREATION_DATE] Mood does not require recovery. Moving on...")
+                    findAndTapImage("cancel", region = imageUtils.regionBottomHalf)
+                    true
+                }
+            } else {
+                MessageLog.i(TAG, "[RECREATION_DATE] Recreation date can be done.")
+                findAndTapImage("recreation_dating_progress", region = imageUtils.regionMiddle)
+                true
+            }
+        } else {
+            false
+        }
+    }
 
 	/**
 	 * Handles the Crane Game event by attempting to complete it with three long-press attempts.
@@ -743,8 +788,7 @@ class Game(val myContext: Context) {
 
         val sourceBitmap = imageUtils.getSourceBitmap()
 
-		if (enablePopupCheck && imageUtils.findImageWithBitmap("cancel", sourceBitmap, region = imageUtils.regionBottomHalf) != null &&
-			imageUtils.findImageWithBitmap("recover_mood_date", sourceBitmap, region = imageUtils.regionMiddle) == null) {
+		if (enablePopupCheck && imageUtils.findImageWithBitmap("cancel", sourceBitmap, region = imageUtils.regionBottomHalf) != null) {
 			MessageLog.i(TAG, "\n[END] Bot may have encountered a warning popup. Exiting now...")
 			notificationMessage = "Bot may have encountered a warning popup"
 			return false
