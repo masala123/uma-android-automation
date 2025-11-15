@@ -302,6 +302,7 @@ class Game(val myContext: Context) {
 	fun startAptitudesDetectionTest() {
 		MessageLog.i(TAG, "\n[TEST] Now beginning the Aptitudes Detection test on the Main screen.")
 		MessageLog.i(TAG, "[TEST] Note that this test is dependent on having the correct scale.")
+        wait(3.0)
 		updateAptitudes()
 	}
 
