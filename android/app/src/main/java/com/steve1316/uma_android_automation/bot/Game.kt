@@ -725,7 +725,7 @@ class Game(val myContext: Context) {
 		}
 
 		val imageName = ButtonCraneGame.templates.first().name
-		val pressDurations = listOf(2.32, 1.134, 0.568)
+		val pressDurations = listOf(1.678, 0.838, 0.489)
 
 		// Perform three attempts with different press durations.
 		for (attempt in 1..3) {
@@ -760,11 +760,11 @@ class Game(val myContext: Context) {
 			} else {
 				// After the third attempt, wait for an extended period and then check for completion.
 				MessageLog.i(TAG, "[CRANE_GAME] Final attempt completed. Waiting for an extended period before checking for completion...")
-				wait(7.0)
+				wait(10.0)
 
 				// Check for ordinary_cuties image and ButtonCraneGameOk button.
 				val sourceBitmap = imageUtils.getSourceBitmap()
-				if (imageUtils.findImageWithBitmap("ordinary_cuties", sourceBitmap) != null && ButtonCraneGameOk.check(imageUtils = imageUtils)) {
+				if (imageUtils.findImage("ordinary_cuties", tries = 10, region = imageUtils.regionMiddle).first != null && ButtonCraneGameOk.check(imageUtils = imageUtils)) {
 					MessageLog.i(TAG, "[CRANE_GAME] Crane game completed successfully.")
 					ButtonCraneGameOk.click(imageUtils = imageUtils)
 					return true
