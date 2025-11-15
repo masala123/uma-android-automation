@@ -1177,7 +1177,7 @@ class Racing (private val game: Game) {
                     game.wait(2.0)
 
                     // Now confirm the completion of a Training Goal popup.
-                    if (game.campaign != "Unity Cup") {
+                    if (game.scenario != "Unity Cup") {
                         MessageLog.i(TAG, "[RACE] There was a Training Goal popup. Confirming it now.")
                         game.findAndTapImage("next", tries = 10, region = game.imageUtils.regionBottomHalf)
                     }

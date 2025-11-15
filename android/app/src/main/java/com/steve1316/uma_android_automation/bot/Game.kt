@@ -37,7 +37,7 @@ class Game(val myContext: Context) {
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
 	// SQLite Settings
-	val campaign: String = SettingsHelper.getStringSetting("general", "scenario")
+	val scenario: String = SettingsHelper.getStringSetting("general", "scenario")
 	val debugMode: Boolean = SettingsHelper.getBooleanSetting("debug", "enableDebugMode")
 
 	////////////////////////////////////////////////////////////////////
@@ -808,7 +808,7 @@ class Game(val myContext: Context) {
 			MessageLog.w(TAG, "Failed to load formatted settings from SQLite: ${e.message}")
 			MessageLog.i(TAG, "Using fallback settings display...")
 			// Fallback to basic settings display if formatted string is not available.
-			MessageLog.i(TAG, "Campaign: $campaign")
+			MessageLog.i(TAG, "Scenario: $scenario")
 			MessageLog.i(TAG, "Debug Mode: $debugMode")
 		}
 
@@ -843,7 +843,7 @@ class Game(val myContext: Context) {
 
 			wait(5.0)
 
-			if (campaign == "Unity Cup") {
+			if (scenario == "Unity Cup") {
 				val unityCupCampaign = UnityCup(this)
                 unityCupCampaign.start()
 			} else {

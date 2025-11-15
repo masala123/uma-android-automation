@@ -291,7 +291,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
 		if (energyTextLocation != null) {
 			// Determine crop region based on campaign and device type.
-			val (offsetX, offsetY, width, height) = if (game.campaign == "Unity Cup") {
+			val (offsetX, offsetY, width, height) = if (game.scenario == "Unity Cup") {
 				if (isTablet) {
 					listOf(-(260 * 1.32).toInt(), -(140 * 1.32).toInt(), relWidth(135), relHeight(100))
 				} else {
@@ -930,7 +930,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			)
 		} else {
 			val (energyLocation, _) = findImage("energy")
-            val offsetX = if (game.campaign == "Unity Cup") {
+            val offsetX = if (game.scenario == "Unity Cup") {
                 -40
             } else {
                 -268
@@ -987,7 +987,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	 */
 	fun determineStatGainFromTraining(trainingName: String, sourceBitmap: Bitmap? = null, skillPointsLocation: Point? = null): IntArray {
         // Scenario-specific checks.
-		val isUnityCup = game.campaign == "Unity Cup"
+		val isUnityCup = game.scenario == "Unity Cup"
 
 		val templateSuffix = if (isUnityCup) "_mini" else ""
 		val templates = listOf("+", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9").map { it + templateSuffix }

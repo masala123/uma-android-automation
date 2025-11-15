@@ -331,7 +331,7 @@ class Training(private val game: Game) {
 					// Update the object in the training map.
 					// Use CountDownLatch to run the operations in parallel to cut down on processing time.
 					// For Unity Cup, add an additional thread for Spirit Explosion Gauge analysis.
-					val latch = CountDownLatch(if (game.campaign == "Unity Cup") 5 else 4)
+					val latch = CountDownLatch(if (game.scenario == "Unity Cup") 5 else 4)
 
 					// Variables to store results from parallel threads.
 					var statGains: IntArray = intArrayOf()
@@ -408,7 +408,7 @@ class Training(private val game: Game) {
                         }.start()
 
                         // Thread 5: Analyze Spirit Explosion Gauges (Unity Cup only).
-                        if (game.campaign == "Unity Cup") {
+                        if (game.scenario == "Unity Cup") {
                             Thread {
                                 val startTimeSpiritGauge = System.currentTimeMillis()
                                 try {
@@ -913,7 +913,7 @@ class Training(private val game: Game) {
 		}
 
 		// Decide which scoring function to use based on campaign, phase, or year.
-		val best = if (game.campaign == "Unity Cup" && game.currentDate.year < 3) {
+		val best = if (game.scenario == "Unity Cup" && game.currentDate.year < 3) {
             // Unity Cup (Year < 3): Use Spirit Explosion Gauge priority system.
 			trainingMap.values.maxByOrNull { scoreUnityCupTraining(it) }
 		} else if (game.currentDate.phase == "Pre-Debut" || game.currentDate.year == 1) {
