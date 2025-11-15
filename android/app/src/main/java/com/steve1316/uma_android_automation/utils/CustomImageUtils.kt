@@ -827,9 +827,9 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
 				// Determine level by priority: S > A > B.
 				val level = when {
-					match(croppedBitmap, statAptitudeSTemplate!!, "stat_aptitude_S").first -> "S"
-					match(croppedBitmap, statAptitudeATemplate!!, "stat_aptitude_A").first -> "A"
-					match(croppedBitmap, statAptitudeBTemplate!!, "stat_aptitude_B").first -> "B"
+					match(croppedBitmap, statAptitudeSTemplate!!, "stat_aptitude_S", customConfidence = 0.90).first -> "S"
+					match(croppedBitmap, statAptitudeATemplate!!, "stat_aptitude_A", customConfidence = 0.90).first -> "A"
+					match(croppedBitmap, statAptitudeBTemplate!!, "stat_aptitude_B", customConfidence = 0.90).first -> "B"
 					else -> "X"
 				}
 
