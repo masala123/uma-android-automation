@@ -278,8 +278,8 @@ class TrainingEvent(private val game: Game) {
                                 MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 20 for bond.")
                                 selectionWeight[optionSelected] += 20
                             } else if (line.lowercase().contains("event chain ended")) {
-                                MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of -100 for event chain ending.")
-                                selectionWeight[optionSelected] += -100
+                                MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of -200 for event chain ending.")
+                                selectionWeight[optionSelected] += -200
                             } else if (line.lowercase().contains("(random)")) {
                                 MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of -10 for random reward.")
                                 selectionWeight[optionSelected] += -10
