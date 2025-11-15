@@ -53,7 +53,8 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		val startY: Int,
 		val width: Int,
 		val height: Int,
-		val rowName: String
+		val rowName: String,
+		val templateSuffix: String = ""
 	)
 
 	data class BarFillResult(
@@ -992,8 +993,13 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         // Scenario-specific checks.
 		val isUnityCup = game.scenario == "Unity Cup"
 
-		val templateSuffix = if (isUnityCup) "_mini" else ""
-		val templates = listOf("+", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9").map { it + templateSuffix }
+		// Determine all template suffixes needed for this scenario.
+		val templateSuffixes = if (isUnityCup) {
+			listOf("_mini", "_mini_bold")
+		} else {
+			listOf("")
+		}
+		val baseTemplates = listOf("+", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
 		val statNames = listOf("Speed", "Stamina", "Power", "Guts", "Wit")
 		// Define a mapping of training types to their stat indices
 		val trainingToStatIndices = mapOf(
@@ -1013,11 +1019,14 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		val threadSafeResults = IntArray(5)
 
 		if (skillPointsLocation != null) {
-			// Pre-load all template bitmaps to avoid thread contention
+			// Pre-load all template bitmaps for all suffixes to avoid thread contention.
 			val templateBitmaps = mutableMapOf<String, Bitmap?>()
-			for (templateName in templates) {
-				context.assets?.open("images/$templateName.png").use { inputStream ->
-					templateBitmaps[templateName] = BitmapFactory.decodeStream(inputStream)
+			for (suffix in templateSuffixes) {
+				for (baseTemplate in baseTemplates) {
+					val templateName = baseTemplate + suffix
+					context.assets?.open("images/$templateName.png").use { inputStream ->
+						templateBitmaps[templateName] = BitmapFactory.decodeStream(inputStream)
+					}
 				}
 			}
 
@@ -1053,11 +1062,6 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
                         } else {
                             relY(skillPointsLocation.y, -103)
                         }
-						
-						var matchResults = mutableMapOf<String, MutableList<Point>>()
-						templates.forEach { template ->
-							matchResults[template] = mutableListOf()
-						}
 
 						// Declare croppedBitmap variable for debug visualization (used in URA Finale path).
 						var croppedBitmap: Bitmap? = null
@@ -1065,15 +1069,16 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 						// Build the row configurations based on the current scenario.
 						val rows = if (isUnityCup) {
 							// For Unity Cup, stats are in two rows on top of each other.
+							// First row uses "_mini" suffix, second row uses "_mini_bold" suffix.
 							val secondRowStartY = relY(firstRowStartY.toDouble(), -55)
 							listOf(
-								StatGainRowConfig(firstRowStartX, firstRowStartY, relWidth(150), relHeight(55), "row1"),
-                                StatGainRowConfig(firstRowStartX, secondRowStartY, relWidth(150), relHeight(55), "row2")
+								StatGainRowConfig(firstRowStartX, firstRowStartY, relWidth(150), relHeight(55), "row1", "_mini"),
+                                StatGainRowConfig(firstRowStartX, secondRowStartY, relWidth(150), relHeight(55), "row2", "_mini_bold")
 							)
 						} else {
 							// Default: single row.
 							listOf(
-								StatGainRowConfig(firstRowStartX, firstRowStartY, relWidth(150), relHeight(82), "")
+								StatGainRowConfig(firstRowStartX, firstRowStartY, relWidth(150), relHeight(82), "", "")
 							)
 						}
 
@@ -1108,8 +1113,10 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 								}
 
 								// Initialize row-specific matches for debug visualization.
+								// Use templates with the row's specific suffix.
+								val rowTemplates = baseTemplates.map { it + row.templateSuffix }
 								val rowMatches = mutableMapOf<String, MutableList<Point>>()
-								templates.forEach { template ->
+								rowTemplates.forEach { template ->
 									rowMatches[template] = mutableListOf()
 								}
 
@@ -1140,8 +1147,8 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 									return@Thread
 								}
 
-								// Process templates for this row.
-								for (templateName in templates) {
+								// Process templates for this row using the row's specific suffix.
+								for (templateName in rowTemplates) {
 									// Check before each template processing operation.
 									if (!BotService.isRunning) {
 										processingFailed = true
@@ -1150,16 +1157,11 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 									val templateBitmap = templateBitmaps[templateName]
 									if (templateBitmap != null) {
 										val processedMatches = processStatGainTemplateWithTransparency(templateName, templateBitmap, rowWorking, mutableMapOf<String, MutableList<Point>>().apply {
-											templates.forEach { t -> this[t] = mutableListOf() }
+											rowTemplates.forEach { t -> this[t] = mutableListOf() }
 										})
 										// Store original matches for this row (for debug visualization).
 										processedMatches[templateName]?.forEach { point ->
 											rowMatches[templateName]?.add(point)
-										}
-										// Adjust match points by row offset and add to main results.
-										processedMatches[templateName]?.forEach { point ->
-											val adjustedPoint = Point(point.x, point.y)
-											matchResults[templateName]?.add(adjustedPoint)
 										}
 									} else {
 										Log.e(TAG, "[ERROR] Could not load template \"$templateName\" to process stat gains for $trainingName training.")
@@ -1179,9 +1181,22 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 						}
 
 						// Analyze results and construct the final integer value for this region.
-						val finalValue = constructIntegerFromMatches(matchResults)
+						val finalValue = if (rows.size > 1) {
+							// For Unity Cup with multiple rows, sum the values from each row.
+							val rowValues = rowDebugInfo.mapIndexed { index, rowInfo ->
+								val rowValue = constructIntegerFromMatches(rowInfo.matches)
+								rowValue
+							}
+							val sum = rowValues.sum()
+							MessageLog.d(TAG, "[INFO] $statName final constructed values from $trainingName training: $rowValues, sum: $sum.")
+							sum
+						} else {
+							// For single row scenarios, use the existing behavior.
+							val value = constructIntegerFromMatches(rowDebugInfo[0].matches)
+							MessageLog.d(TAG, "[INFO] $statName final constructed value from $trainingName training: $value.")
+							value
+						}
 						threadSafeResults[i] = finalValue
-						Log.d(TAG, "[INFO] $statName region final constructed value from $trainingName training: $finalValue.")
 
 						// Draw final visualization with all matches for this region.
 						if (debugMode) {
@@ -1191,7 +1206,9 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 								Utils.bitmapToMat(rowInfo.bitmap, resultMat)
 
 								// Draw matches for this row using the stored row-specific matches.
-								templates.forEachIndexed { _, templateName ->
+								// Use the row's template suffix to get the correct templates.
+								val rowTemplates = baseTemplates.map { it + rowInfo.config.templateSuffix }
+								rowTemplates.forEach { templateName ->
 									rowInfo.matches[templateName]?.forEach { point ->
 										val templateBitmap = templateBitmaps[templateName]
 										if (templateBitmap != null) {
