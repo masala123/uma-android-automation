@@ -36,9 +36,11 @@ const TrainingSettings = () => {
     } = trainingSettings
 
     const [statPrioritizationItems, setStatPrioritizationItems] = useState<string[]>(
-        trainingSettings.statPrioritization.length > 0 ? trainingSettings.statPrioritization : defaultSettings.training.statPrioritization
+        settings.training?.statPrioritization !== undefined ? settings.training.statPrioritization : defaultSettings.training.statPrioritization
     )
-    const [blacklistItems, setBlacklistItems] = useState<string[]>(trainingSettings.trainingBlacklist.length > 0 ? trainingSettings.trainingBlacklist : defaultSettings.training.trainingBlacklist)
+    const [blacklistItems, setBlacklistItems] = useState<string[]>(
+        settings.training?.trainingBlacklist !== undefined ? settings.training.trainingBlacklist : defaultSettings.training.trainingBlacklist
+    )
 
     useEffect(() => {
         updateTrainingSetting("statPrioritization", statPrioritizationItems)
