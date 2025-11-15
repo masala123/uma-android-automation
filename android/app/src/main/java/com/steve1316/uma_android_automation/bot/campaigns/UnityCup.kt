@@ -46,7 +46,7 @@ class UnityCup(game: Game) : Campaign(game) {
         // Check for the Unity Cup popup to set the initial team.
         if (aoHaruRaceFirstTime && game.imageUtils.findImage("unitycup_set_initial_team_header", tries = 1).first != null) {
             MessageLog.i(TAG, "\n[UNITY_CUP] Dismissed the popup to set the initial team.")
-			game.findAndTapImage("race_accept_trophy")
+			game.findAndTapImage("close")
 			handleRaceEventsUnityCup()
 			return true
         }
