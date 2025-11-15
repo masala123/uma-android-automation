@@ -12,6 +12,7 @@ class UnityCup(game: Game) : Campaign(game) {
 	private var aoHaruRaceFirstTime: Boolean = true
 
 	override fun handleTrainingEvent() {
+        MessageLog.i(TAG, "\n[UNITY_CUP] Running handleTrainingEvent() for Unity Cup.")
         if (!tutorialDisabled) {
             tutorialDisabled = if (game.imageUtils.findImage("unitycup_tutorial_header", tries = 1, region = game.imageUtils.regionTopHalf).first != null) {
                 // If the tutorial is detected, select the second option to close it.
