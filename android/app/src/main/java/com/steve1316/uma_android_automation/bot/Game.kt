@@ -367,6 +367,7 @@ class Game(val myContext: Context) {
         val sourceBitmap = imageUtils.getSourceBitmap()
 		return if (imageUtils.findImageWithBitmap("race_select_mandatory", sourceBitmap, region = imageUtils.regionBottomHalf) != null) {
 			MessageLog.i(TAG, "Bot is at the preparation screen with a mandatory race ready to be completed.")
+            if (scenario == "Unity Cup") wait(1.0)
 			true
 		} else if (imageUtils.findImageWithBitmap("race_select_mandatory_goal", sourceBitmap, region = imageUtils.regionMiddle) != null) {
 			// Most likely the user started the bot here so a delay will need to be placed to allow the start banner of the Service to disappear.
@@ -376,7 +377,10 @@ class Game(val myContext: Context) {
 			findAndTapImage("back", tries = 1, region = imageUtils.regionBottomHalf)
 			wait(1.0)
 			true
-		} else {
+		} else if (scenario == "Unity Cup" && imageUtils.findImageWithBitmap("unitycup_race", sourceBitmap, region = imageUtils.regionBottomHalf) != null) {
+            MessageLog.i(TAG, "Bot is awaiting opponent selection for a Unity Cup race.")
+            true
+        } else {
 			MessageLog.i(TAG, "Bot is not at the Race Preparation screen for a mandatory race.")
 			false
 		}
