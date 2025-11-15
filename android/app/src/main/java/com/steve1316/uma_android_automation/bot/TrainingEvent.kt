@@ -239,8 +239,8 @@ class TrainingEvent(private val game: Game) {
 
                             var priorityStatCheck = false
                             if (line.lowercase().contains("can start dating")) {
-                                MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 1000 to unlock recreation/dating for this support.")
-                                selectionWeight[optionSelected] += 1000
+                                MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 100 to unlock recreation/dating for this support.")
+                                selectionWeight[optionSelected] += 100
                             } else if (line.lowercase().contains("energy")) {
                                 val finalEnergyValue = try {
                                     val energyValue = if (formattedLine.contains("/")) {
@@ -278,8 +278,8 @@ class TrainingEvent(private val game: Game) {
                                 MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 20 for bond.")
                                 selectionWeight[optionSelected] += 20
                             } else if (line.lowercase().contains("event chain ended")) {
-                                MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of -50 for event chain ending.")
-                                selectionWeight[optionSelected] += -50
+                                MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of -100 for event chain ending.")
+                                selectionWeight[optionSelected] += -100
                             } else if (line.lowercase().contains("(random)")) {
                                 MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of -10 for random reward.")
                                 selectionWeight[optionSelected] += -10
