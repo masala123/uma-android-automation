@@ -765,7 +765,7 @@ class Game(val myContext: Context) {
 		} else if (findAndTapImage("race_retry", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
 			MessageLog.i(TAG, "[MISC] There is a race retry popup.")
 			wait(5.0)
-		} else if (findAndTapImage("race_accept_trophy", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
+		} else if (scenario != "Unity Cup" && findAndTapImage("race_accept_trophy", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
 			MessageLog.i(TAG, "[MISC] There is a possible popup to accept a trophy.")
 			racing.finalizeRaceResults(true, isExtra = true)
 		} else if (findAndTapImage("race_end", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
