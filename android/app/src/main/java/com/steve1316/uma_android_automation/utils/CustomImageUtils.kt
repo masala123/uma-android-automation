@@ -683,35 +683,52 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		val customRegion = intArrayOf(displayWidth - (displayWidth / 3), 0, (displayWidth / 3), displayHeight - (displayHeight / 3))
 
 		// Take a single screenshot first to avoid buffer overflow.
-		val sourceBitmap = sourceBitmap ?: getSourceBitmap()
+		var currentBitmap = sourceBitmap ?: getSourceBitmap()
 
 		// Find all Spirit Training icons (there may be multiple for the currently selected training).
-		val spiritTrainingIcons = findAllWithBitmap("unitycup_spirit_training", sourceBitmap, region = customRegion, customConfidence = 0.90)
+		var spiritTrainingIcons = findAllWithBitmap("unitycup_spirit_training", currentBitmap, region = customRegion, customConfidence = 0.90)
+		
+		// If no gauges detected, try one more time after 0.25s just in case the icon was bouncing.
 		if (spiritTrainingIcons.isEmpty()) {
-			return null
+			try {
+				Thread.sleep(250)
+			} catch (e: InterruptedException) {
+				Thread.currentThread().interrupt()
+				return null
+			}
+			
+			// Take a new screenshot for the retry.
+			currentBitmap = getSourceBitmap()
+			
+			spiritTrainingIcons = findAllWithBitmap("unitycup_spirit_training", currentBitmap, region = customRegion, customConfidence = 0.90)
+			if (spiritTrainingIcons.isEmpty()) {
+				return null
+			}
 		}
 
 		// Find all Spirit Explosion icons to determine burst readiness.
-		val spiritExplosionIcons = findAllWithBitmap("unitycup_spirit_explosion", sourceBitmap, region = customRegion, customConfidence = 0.90)
+		val spiritExplosionIcons = findAllWithBitmap("unitycup_spirit_explosion", currentBitmap, region = customRegion, customConfidence = 0.90)
 
 		// Analyze all gauges for all spirit training icons to count how many can be filled.
 		var numGaugesCanFill = 0
-		for (iconLocation in spiritTrainingIcons) {
+		for ((index, iconLocation) in spiritTrainingIcons.withIndex()) {
 			// Gauge is located to the left of the icon. Analyze the gauge region.
 			// The gauge is gray inside (same gray as relationship bars), no dividers.
 			// We need to calculate the percentage fill: gray pixels vs other colors (white, blue, etc.).
-			val gaugeStartX = relX(iconLocation.x, -80) // Gauge is to the left of icon, estimate width.
-			val gaugeStartY = relY(iconLocation.y, -5) // Slight vertical adjustment.
-			val gaugeWidth = relWidth(60)
-			val gaugeHeight = relHeight(15)
+			val gaugeStartX = relX(iconLocation.x, -175)
+			val gaugeStartY = relY(iconLocation.y, 85)
+			val gaugeWidth = relWidth(30)
+			val gaugeHeight = relHeight(40)
+            Log.d(TAG, "[DEBUG] Spirit Training icon location: (${iconLocation.x}, ${iconLocation.y}), gauge starting at ($gaugeStartX, $gaugeStartY), width: $gaugeWidth, height: $gaugeHeight")
 
-			val gaugeBitmap = createSafeBitmap(sourceBitmap, gaugeStartX, gaugeStartY, gaugeWidth, gaugeHeight, "analyzeSpiritExplosionGauges")
+			val gaugeBitmap = createSafeBitmap(currentBitmap, gaugeStartX, gaugeStartY, gaugeWidth, gaugeHeight, "analyzeSpiritExplosionGauges")
 			if (gaugeBitmap == null) {
 				continue
 			}
 
 			val gaugeMat = Mat()
 			Utils.bitmapToMat(gaugeBitmap, gaugeMat)
+			if (debugMode) Imgcodecs.imwrite("$matchFilePath/debug_spiritExplosionGauge${index + 1}.png", gaugeMat)
 
 			// Convert to RGB and then to HSV for better color detection.
 			val rgbMat = Mat()
