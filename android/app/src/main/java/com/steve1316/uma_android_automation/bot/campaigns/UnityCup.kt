@@ -111,13 +111,13 @@ class UnityCup(game: Game) : Campaign(game) {
                 game.findAndTapImage("next", region = game.imageUtils.regionBottomHalf)
             } else {
                 game.findAndTapImage("unitycup_race_skip_results", region = game.imageUtils.regionBottomHalf)
-                game.wait(1.0)
-                game.findAndTapImage("race_skip", region = game.imageUtils.regionBottomHalf)
+                game.wait(2.0)
+                game.findAndTapImage("race_skip_manual", region = game.imageUtils.regionBottomHalf)
             }
         } else {
             game.findAndTapImage("unitycup_race_skip_results", region = game.imageUtils.regionBottomHalf)
-            game.wait(1.0)
-            game.findAndTapImage("race_skip", region = game.imageUtils.regionBottomHalf)
+            game.wait(2.0)
+            game.findAndTapImage("race_skip_manual", region = game.imageUtils.regionBottomHalf)
         }
 
         // On the Race Results screen, skip past the final results of all 5 races against this opponent.
