@@ -746,8 +746,10 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			val grayPixels = Core.countNonZero(grayMask)
 
 			val totalPixels = gaugeMat.rows() * gaugeMat.cols()
+			// Gray pixels represent the unfilled portion, so filled pixels = total - gray.
+			val filledPixels = totalPixels - grayPixels
 			val fillPercent = if (totalPixels > 0) {
-				(grayPixels.toDouble() / totalPixels.toDouble()) * 100.0
+				(filledPixels.toDouble() / totalPixels.toDouble()) * 100.0
 			} else {
 				0.0
 			}
