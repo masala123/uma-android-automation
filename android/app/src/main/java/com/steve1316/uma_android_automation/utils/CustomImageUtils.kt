@@ -153,7 +153,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		val (_, matchLocation) = match(sourceBitmap, energyTemplateBitmap!!, "energy")
 		if (matchLocation == null) {
 			MessageLog.w(TAG, "Could not proceed with OCR text detection due to not being able to find the energy template on the source image.")
-			return "empty!"
+			return ""
 		}
 
 		// Use the match location acquired from finding the energy text image and acquire the (x, y) coordinates of the event title container right below the location of the energy text image.
@@ -170,7 +170,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		}
 		if (croppedBitmap == null) {
 			MessageLog.e(TAG, "Failed to create cropped bitmap for text detection")
-			return "empty!"
+			return ""
 		}
 
 		val tempImage = Mat()
@@ -205,7 +205,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		Utils.matToBitmap(bwImage, resultBitmap)
 		tessBaseAPI.setImage(resultBitmap)
 
-		var result = "empty!"
+		var result = ""
 		try {
 			// Finally, detect text on the cropped region.
 			result = tessBaseAPI.utF8Text
@@ -425,7 +425,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			Utils.matToBitmap(bwImage, resultBitmap)
 			tessDigitsBaseAPI.setImage(resultBitmap)
 
-			var result = "empty!"
+			var result = ""
 			try {
 				// Finally, detect text on the cropped region.
 				result = tessDigitsBaseAPI.utF8Text
