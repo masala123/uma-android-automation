@@ -102,8 +102,6 @@ class Racing (private val game: Game) {
         }
 
         return try {
-            if (game.debugMode) MessageLog.d(TAG, "[DEBUG] Raw user-selected racing plan JSON: \"$racingPlanJson\".")
-
             if (racingPlanJson.isEmpty() || racingPlanJson == "[]") {
                 MessageLog.i(TAG, "[RACE] User-selected racing plan is empty, returning empty list.")
                 return emptyList()
@@ -138,8 +136,6 @@ class Racing (private val game: Game) {
     private fun loadRaceData(): Map<String, RaceData> {
         return try {
             val racingPlanDataJson = SettingsHelper.getStringSetting("racing", "racingPlanData")
-            if (game.debugMode) MessageLog.i(TAG, "[RACE] Raw racing plan data JSON length: ${racingPlanDataJson.length}.")
-
             if (racingPlanDataJson.isEmpty()) {
                 MessageLog.i(TAG, "[RACE] Racing plan data is empty, returning empty map.")
                 return emptyMap()
@@ -734,8 +730,8 @@ class Racing (private val game: Game) {
      */
     fun checkEligibilityToStartExtraRacingProcess(): Boolean {
         MessageLog.i(TAG, "\n[RACE] Now determining eligibility to start the extra racing process...")
-        val dayNumber = game.imageUtils.determineDayForExtraRace()
-        MessageLog.i(TAG, "[RACE] Current remaining number of days before the next mandatory race: $dayNumber.")
+        val turnsRemaining = game.imageUtils.determineTurnsRemainingBeforeNextGoal()
+        MessageLog.i(TAG, "[RACE] Current remaining number of days before the next mandatory race: $turnsRemaining.")
 
         // If the setting to force racing extra races is enabled, always return true.
         if (enableForceRacing) return true
@@ -781,9 +777,9 @@ class Racing (private val game: Game) {
                         } else {
                             // For Classic Year, check if it's an eligible racing day.
                             if (game.currentDate.year == 2) {
-                                val isEligible = dayNumber % daysToRunExtraRaces == 0
+                                val isEligible = turnsRemaining % daysToRunExtraRaces == 0
                                 if (!isEligible) {
-                                    MessageLog.i(TAG, "[RACE] Planned race \"${plannedRace.raceName}\" is not on an eligible racing day (day $dayNumber, interval $daysToRunExtraRaces).")
+                                    MessageLog.i(TAG, "[RACE] Planned race \"${plannedRace.raceName}\" is not on an eligible racing day (day $turnsRemaining, interval $daysToRunExtraRaces).")
                                 }
                                 isEligible
                             } else {
@@ -812,8 +808,8 @@ class Racing (private val game: Game) {
             // Check if G1 races exist at current turn before proceeding.
             // If no G1 races are available, it will still allow regular racing if it's a regular race day or smart racing day.
             if (!hasG1RacesAtTurn(game.currentDate.turnNumber)) {
-                val isRegularRacingDay = enableFarmingFans && (dayNumber % daysToRunExtraRaces == 0)
-                val isSmartRacingDay = enableRacingPlan && enableFarmingFans && nextSmartRaceDay == dayNumber
+                val isRegularRacingDay = enableFarmingFans && (turnsRemaining % daysToRunExtraRaces == 0)
+                val isSmartRacingDay = enableRacingPlan && enableFarmingFans && nextSmartRaceDay == turnsRemaining
 
                 if (isRegularRacingDay || isSmartRacingDay) {
                     MessageLog.i(TAG, "[RACE] Trophy requirement detected but no G1 races at turn ${game.currentDate.turnNumber}. Allowing regular racing on eligible day.")
@@ -862,7 +858,7 @@ class Racing (private val game: Game) {
                 // If there are no upcoming races to compare against, race now if we have acceptable races.
                 if (filteredUpcomingRaces.isEmpty()) {
                     MessageLog.i(TAG, "[RACE] No upcoming races to compare against. Racing now with available races.")
-                    nextSmartRaceDay = dayNumber
+                    nextSmartRaceDay = turnsRemaining
                 } else {
                     // Use opportunity cost logic to determine if we should race now or wait.
                     val shouldRace = evaluateOpportunityCost(filteredCurrentRaces, lookAheadDays)
@@ -872,7 +868,7 @@ class Racing (private val game: Game) {
                     }
 
                     // Opportunity cost analysis determined we should race now, so set the optimal race day to the current day.
-                    nextSmartRaceDay = dayNumber
+                    nextSmartRaceDay = turnsRemaining
                 }
 
                 MessageLog.i(TAG, "[RACE] Opportunity cost analysis completed, proceeding with screen checks...")
@@ -881,23 +877,23 @@ class Racing (private val game: Game) {
             }
 
             // Check if current day matches the optimal race day or falls on the interval.
-            val isOptimalDay = nextSmartRaceDay == dayNumber
-            val isIntervalDay = dayNumber % daysToRunExtraRaces == 0
+            val isOptimalDay = nextSmartRaceDay == turnsRemaining
+            val isIntervalDay = turnsRemaining % daysToRunExtraRaces == 0
 
             if (isOptimalDay) {
-                MessageLog.i(TAG, "[RACE] Current day ($dayNumber) matches optimal race day.")
+                MessageLog.i(TAG, "[RACE] Current day ($turnsRemaining) matches optimal race day.")
                 return !raceRepeatWarningCheck
             } else if (isIntervalDay) {
-                MessageLog.i(TAG, "[RACE] Current day ($dayNumber) falls on racing interval ($daysToRunExtraRaces).")
+                MessageLog.i(TAG, "[RACE] Current day ($turnsRemaining) falls on racing interval ($daysToRunExtraRaces).")
                 return !raceRepeatWarningCheck
             } else {
-                MessageLog.i(TAG, "[RACE] Current day ($dayNumber) is not optimal (next: $nextSmartRaceDay, interval: $daysToRunExtraRaces).")
+                MessageLog.i(TAG, "[RACE] Current day ($turnsRemaining) is not optimal (next: $nextSmartRaceDay, interval: $daysToRunExtraRaces).")
                 return false
             }
         }
 
         // Conditionally start the standard racing process.
-        return enableFarmingFans && (dayNumber % daysToRunExtraRaces == 0) && !raceRepeatWarningCheck
+        return enableFarmingFans && (turnsRemaining % daysToRunExtraRaces == 0) && !raceRepeatWarningCheck
     }
 
     /**
@@ -1032,7 +1028,7 @@ class Racing (private val game: Game) {
      *
      * @return True if the bot completed the race with retry attempts remaining. Otherwise false.
      */
-    private fun runRaceWithRetries(): Boolean {
+    fun runRaceWithRetries(): Boolean {
         val canSkip = game.imageUtils.findImage("race_skip_locked", tries = 5, region = game.imageUtils.regionBottomHalf).first == null
         
         while (raceRetries >= 0) {
@@ -1107,6 +1103,11 @@ class Racing (private val game: Game) {
                     MessageLog.i(TAG, "[RACE] Skipped the lead up to the finish line.")
                 }
                 game.wait(2.0)
+                // Skip crossing the finish line.
+                if (game.findAndTapImage("race_skip_manual", tries = 30, region = game.imageUtils.regionBottomHalf)) {
+                    MessageLog.i(TAG, "[RACE] Skipped crossing the finish line.")
+                }
+                game.wait(2.0)
                 // Skip the result screen.
                 if (game.findAndTapImage("race_skip_manual", tries = 30, region = game.imageUtils.regionBottomHalf)) {
                     MessageLog.i(TAG, "[RACE] Skipped the results screen.")
@@ -1130,7 +1131,7 @@ class Racing (private val game: Game) {
                     raceRetries--
                 } else {
                     // Check if a Trophy was acquired.
-                    if (game.findAndTapImage("race_accept_trophy", tries = 5, region = game.imageUtils.regionBottomHalf)) {
+                    if (game.findAndTapImage("close", tries = 5, region = game.imageUtils.regionBottomHalf)) {
                         MessageLog.i(TAG, "[RACE] Closing popup to claim trophy...")
                     }
 
@@ -1176,8 +1177,10 @@ class Racing (private val game: Game) {
                     game.wait(2.0)
 
                     // Now confirm the completion of a Training Goal popup.
-                    MessageLog.i(TAG, "[RACE] There was a Training Goal popup. Confirming it now.")
-                    game.findAndTapImage("next", tries = 10, region = game.imageUtils.regionBottomHalf)
+                    if (game.scenario != "Unity Cup") {
+                        MessageLog.i(TAG, "[RACE] There was a Training Goal popup. Confirming it now.")
+                        game.findAndTapImage("next", tries = 10, region = game.imageUtils.regionBottomHalf)
+                    }
                 }
             } else if (game.findAndTapImage("next", tries = 10, region = game.imageUtils.regionBottomHalf)) {
                 // Same as above but without the longer delay.

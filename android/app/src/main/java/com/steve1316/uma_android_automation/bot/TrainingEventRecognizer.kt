@@ -221,7 +221,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 				break
 			}
 			
-			if (result.isNotEmpty() && result != "empty!") {
+			if (result.isNotEmpty() && result != "") {
 				// Now attempt to find the most similar string compared to the one from OCR.
 				findMostSimilarString()
 				
