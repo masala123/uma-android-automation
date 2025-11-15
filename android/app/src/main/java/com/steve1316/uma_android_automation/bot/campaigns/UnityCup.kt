@@ -30,13 +30,8 @@ class UnityCup(game: Game) : Campaign(game) {
 	}
 
 	override fun handleRaceEvents(): Boolean {
-		// Check for the Unity Cup popup to set the initial team.
-		if (aoHaruRaceFirstTime && game.imageUtils.findImage("unitycup_set_initial_team_header", tries = 1, region = game.imageUtils.regionMiddle).first != null) {
-            MessageLog.i(TAG, "\n[UNITY_CUP] Dismissed the popup to set the initial team.")
-			game.findAndTapImage("race_accept_trophy")
-			handleRaceEventsUnityCup()
-			return true
-		} else if (game.imageUtils.findImage("unitycup_race", tries = 1, region = game.imageUtils.regionBottomHalf).first != null) {
+        MessageLog.i(TAG, "\n[UNITY_CUP] Running handleRaceEvents() for Unity Cup.")
+		if (game.imageUtils.findImage("unitycup_race", tries = 1, region = game.imageUtils.regionBottomHalf).first != null) {
             // Otherwise, handle the Unity Cup race.
 			handleRaceEventsUnityCup()
 			return true
@@ -47,6 +42,13 @@ class UnityCup(game: Game) : Campaign(game) {
 	}
 
 	override fun checkCampaignSpecificConditions(): Boolean {
+        // Check for the Unity Cup popup to set the initial team.
+        if (aoHaruRaceFirstTime && game.imageUtils.findImage("unitycup_set_initial_team_header", tries = 1).first != null) {
+            MessageLog.i(TAG, "\n[UNITY_CUP] Dismissed the popup to set the initial team.")
+			game.findAndTapImage("race_accept_trophy")
+			handleRaceEventsUnityCup()
+			return true
+        }
 		return false
 	}
 	
