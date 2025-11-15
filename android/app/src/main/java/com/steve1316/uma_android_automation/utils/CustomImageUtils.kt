@@ -315,7 +315,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 				useThreshold = true,
 				useGrayscale = true,
 				scale = 2.0,
-				ocrEngine = "mlkit",
+				ocrEngine = "tesseract_digits",
 				debugName = "DayForExtraRace"
 			)
 
