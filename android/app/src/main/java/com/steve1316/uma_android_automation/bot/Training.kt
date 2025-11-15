@@ -203,6 +203,7 @@ class Training(private val game: Game) {
 	fun handleTraining() {
 		MessageLog.i(TAG, "\n********************")
 		MessageLog.i(TAG, "[TRAINING] Starting Training process on ${game.printFormattedDate()}.")
+        val startTime = System.currentTimeMillis()
 
 		// Enter the Training screen.
 		if (game.findAndTapImage("training_option", region = game.imageUtils.regionBottomHalf)) {
@@ -228,7 +229,7 @@ class Training(private val game: Game) {
 			}
 
 			game.racing.raceRepeatWarningCheck = false
-			MessageLog.i(TAG, "[TRAINING] Training process completed.")
+			MessageLog.i(TAG, "[TRAINING] Training process completed. Total time: ${System.currentTimeMillis() - startTime}ms")
 		} else {
 			MessageLog.e(TAG, "Cannot start the Training process. Moving on...")
 		}
