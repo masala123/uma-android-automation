@@ -169,7 +169,7 @@ const TrainingSettings = () => {
             borderLeftWidth: 4,
             borderLeftColor: colors.warningBorder,
             padding: 12,
-            marginTop: 12,
+            marginBottom: 12,
             borderRadius: 8,
         },
         errorText: {
