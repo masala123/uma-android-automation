@@ -98,6 +98,13 @@ const Settings = () => {
                         bsc.setReadyStatus(newScenario !== "")
                     }}
                 />
+                {bsc.settings.general.scenario === "Unity Cup" && (
+                    <View style={styles.errorContainer}>
+                        <Text style={styles.errorText}>
+                            ⚠️ Unity Cup Warning: Running extra races via fan farming being enabled is highly discouraged in order to focus more on unity trainings.
+                        </Text>
+                    </View>
+                )}
                 {!bsc.settings.general.scenario && (
                     <View style={styles.errorContainer}>
                         <Text style={styles.errorText}>⚠️ A scenario must be selected before starting the bot.</Text>
@@ -214,6 +221,19 @@ const Settings = () => {
                     }}
                     label="Enable Popup Check"
                     description="Enables check for warning popups like lack of fans or lack of trophies gained. Stops the bot if detected for the user to deal with them manually."
+                    className="mt-4"
+                />
+
+                <CustomCheckbox
+                    checked={bsc.settings.general.enableCraneGameAttempt}
+                    onCheckedChange={(checked) => {
+                        bsc.setSettings({
+                            ...bsc.settings,
+                            general: { ...bsc.settings.general, enableCraneGameAttempt: checked },
+                        })
+                    }}
+                    label="Enable Crane Game Attempt"
+                    description="When enabled, the bot will attempt to complete the crane game. By default, the bot will stop when it is detected."
                     className="mt-4"
                 />
 

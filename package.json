@@ -5,6 +5,7 @@
     "scripts": {
         "start": "expo start",
         "android": "./android/gradlew --stop && expo run:android",
+        "android:bundle": "node android/generate-bundle.js",
         "build": "cd android && ./gradlew --stop && ./gradlew assembleDebug --stacktrace",
         "clean": "cd android && ./gradlew --stop && ./gradlew clean --stacktrace",
         "build:debug": "cd android && ./gradlew --stop && ./gradlew assembleDebug",

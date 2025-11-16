@@ -36,9 +36,11 @@ const TrainingSettings = () => {
     } = trainingSettings
 
     const [statPrioritizationItems, setStatPrioritizationItems] = useState<string[]>(
-        trainingSettings.statPrioritization.length > 0 ? trainingSettings.statPrioritization : defaultSettings.training.statPrioritization
+        settings.training?.statPrioritization !== undefined ? settings.training.statPrioritization : defaultSettings.training.statPrioritization
     )
-    const [blacklistItems, setBlacklistItems] = useState<string[]>(trainingSettings.trainingBlacklist.length > 0 ? trainingSettings.trainingBlacklist : defaultSettings.training.trainingBlacklist)
+    const [blacklistItems, setBlacklistItems] = useState<string[]>(
+        settings.training?.trainingBlacklist !== undefined ? settings.training.trainingBlacklist : defaultSettings.training.trainingBlacklist
+    )
 
     useEffect(() => {
         updateTrainingSetting("statPrioritization", statPrioritizationItems)
@@ -163,6 +165,19 @@ const TrainingSettings = () => {
             flexDirection: "row",
             justifyContent: "space-between",
             marginTop: 20,
+        },
+        errorContainer: {
+            backgroundColor: colors.warningBg,
+            borderLeftWidth: 4,
+            borderLeftColor: colors.warningBorder,
+            padding: 12,
+            marginBottom: 12,
+            borderRadius: 8,
+        },
+        errorText: {
+            fontSize: 14,
+            color: colors.warningText,
+            lineHeight: 20,
         },
     })
 
@@ -292,6 +307,14 @@ const TrainingSettings = () => {
                         setPrioritizationModalVisible,
                         "Select the priority order of the stats. The stats will be trained in the order they are selected. If none are selected, then the default order will be used.",
                         "priority"
+                    )}
+
+                    {bsc.settings.general.scenario === "Unity Cup" && (
+                        <View style={styles.errorContainer}>
+                            <Text style={styles.errorText}>
+                                ⚠️ Unity Cup Note: Unity trainings will take priority over stat prioritization up till Senior Year.
+                            </Text>
+                        </View>
                     )}
 
                     <View style={styles.section}>

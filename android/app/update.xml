@@ -1,19 +1,27 @@
 <AppUpdater>
   <update>
-    <latestVersion>4.0.2</latestVersion>
+    <latestVersion>4.2.0</latestVersion>
     <url>https://github.com/steve1316/uma-android-automation/releases</url>
     <releaseNotes>
-v4.0.2 - Changelog
+v4.2.0 - Changelog
+
+New
+---
+- Support for Unity Cup scenario is now implemented. This includes analysis functionality for Spirit Trainings and the fulfillment of the Explosion Gauges as well as reading stat gains of additional rows other than the first baseline row. Training priority is set to complete Spirit Trainings as fast as possible before Senior Year. Then stat prioritization will take over as normal.
+- Add a new option in the Settings page to enable the ability to at least attempt the Crane Game instead of stopping the bot when it is detected.
 
 Adjustments
 ---
-- Forgot to add the new character and support event overrides settings to the MessageLog.
+- Updated logic to prioritize unlocking recreation/date with supports like Riko.
+- Updated recreation logic to handle recreation/dating if available for energy/mood recovery.
+- Remove Guts from the default blacklist since the Balance update on 2025-11-11 has made it more useful than before.
+- Adjusted the aptitude detection check to use the Close button as the reference point as previously, the overlay button being positioned on the left hand side of the screen could cover the texts previously used as the reference points. In addition, aptitude detection confidence has been forced to be 0.90 to avoid false positives.
 
 Fixed
 ---
-- Fix bug where frontend will crash due to shallow merge of default settings on a fresh install.
-- Fix crash in the Training Event Settings page due to not destructuring the newly added variables.
-- Fix crash when importing old settings.
+- Fix AppUpdater not working and should now be showing you a popup when a new update is available.
+- Fix accuracy issue when reading the number for the turns remaining before the next goal.
+- Fix the blacklist being reset back to the default when clearing it to be empty in the Training Settings page.
 
     </releaseNotes>
   </update>

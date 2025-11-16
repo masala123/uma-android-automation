@@ -216,12 +216,12 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		while (true) {
 			// Perform Tesseract OCR detection.
 			if ((255.0 - threshold - increment) > 0.0) {
-				result = imageUtils.findText(increment)
+				result = imageUtils.findEventTitle(increment)
 			} else {
 				break
 			}
 			
-			if (result.isNotEmpty() && result != "empty!") {
+			if (result.isNotEmpty() && result != "") {
 				// Now attempt to find the most similar string compared to the one from OCR.
 				findMostSimilarString()
 				

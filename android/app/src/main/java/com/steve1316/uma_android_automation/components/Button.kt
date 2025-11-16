@@ -602,7 +602,7 @@ object ButtonCraneGame : ComponentInterface {
 object ButtonCraneGameOk : ComponentInterface {
     override val TAG: String = "ButtonCraneGameOk"
     override val templates: List<Template> = listOf(
-        Template("buttons/crane_game_ok")
+        Template("components/button/crane_game_ok")
     )
 }
 

@@ -17,7 +17,7 @@ import com.steve1316.uma_android_automation.components.DialogInterface
 fun handleDialogs() {
     val dialog: DialogInterface? = DialogUtils.getDialog(imageUtils=game.imageUtils)
     if (dialog == null) {
-        game.printToLog("\n[DIALOG] No dialog found.", tag = tag)
+        MessageLog.i(TAG, "\n[DIALOG] No dialog found.")
         return
     }
 
@@ -25,15 +25,15 @@ fun handleDialogs() {
         "open_soon" -> {
             dialog.close(imageUtils=game.imageUtils)
             game.notificationMessage = "open_soon"
-            game.printToLog("\n[DIALOG] Open Soon!")
+            MessageLog.i(TAG, "\n[DIALOG] Open Soon!")
         }
         "continue_career" -> {
             dialog.close(imageUtils=game.imageUtils)
             //ButtonClose.click(imageUtils=game.imageUtils)
-            game.printToLog("\n[DIALOG] Continue Career")
+            MessageLog.i(TAG, "\n[DIALOG] Continue Career")
         }
         else -> {
-            game.printToLog("\n[DIALOG] ${dialog.name}")
+            MessageLog.i(TAG, "\n[DIALOG] ${dialog.name}")
             game.notificationMessage = "${dialog.name}"
             dialog.close(imageUtils=game.imageUtils)
         }
@@ -119,7 +119,7 @@ object DialogUtils {
             imageUtils.relHeight(templateBitmap.height),
             useThreshold=true,
             useGrayscale=true,
-            scaleUp=1,
+            scale=1.0,
             ocrEngine="mlkit",
             debugName="dialogTitle",
         )
