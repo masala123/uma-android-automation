@@ -24,7 +24,7 @@ def calculate_turn_number(date_string: str) -> int:
     """Calculates the turn number for a race based on its date string.
 
     This function parses race date strings in the format "Senior Class January, Second Half"
-    and converts them to turn numbers using the same logic as the Kotlin GameDateParser.
+    and converts them to turn numbers using the same logic as the Kotlin GameDate.
 
     Args:
         date_string: The date string to parse (e.g., "Senior Class January, Second Half").

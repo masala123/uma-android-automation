@@ -12,7 +12,7 @@ import com.steve1316.automation_library.data.SharedData
 import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.automation_library.utils.MyAccessibilityService
 import com.steve1316.uma_android_automation.utils.SettingsHelper
-import com.steve1316.uma_android_automation.utils.GameDateParser
+import com.steve1316.uma_android_automation.utils.GameDate
 import com.steve1316.uma_android_automation.bot.Trainee
 import com.steve1316.uma_android_automation.components.DialogUtils
 import com.steve1316.uma_android_automation.components.DialogInterface
@@ -40,7 +40,6 @@ class Game(val myContext: Context) {
 
 	val imageUtils: CustomImageUtils = CustomImageUtils(myContext, this)
 	val gestureUtils: MyAccessibilityService = MyAccessibilityService.getInstance()
-	val gameDateParser: GameDateParser = GameDateParser()
 
 	val decimalFormat = DecimalFormat("#.##")
 
@@ -68,20 +67,13 @@ class Game(val myContext: Context) {
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
 	// Misc
-    var currentDate: Date = Date(1, "Early", 1, 1)
+    var currentDate: GameDate = GameDate(day = 1)
 	private var inheritancesDone = 0
 
     protected var bTemporaryRunningStyleAptitudesUpdated: Boolean = false
     // Should always check fan count at bot start unless in pre-debut.
     var bNeedToCheckFans: Boolean = true
     private var recreationDateCompleted: Boolean = false
-
-	data class Date(
-		val year: Int,
-		val phase: String,
-		val month: Int,
-		val turnNumber: Int
-	)
 
     fun checkFans() {
         MessageLog.d(TAG, "Checking fans...")
@@ -300,47 +292,6 @@ class Game(val myContext: Context) {
 		}
 	}
 
-	/**
-	 * Prints the current date as a formatted string.
-	 *
-	 * @return Formatted date string.
-	 */
-	fun printFormattedDate(): String {
-		// Handle Finals dates (turns 73, 74, 75).
-		val finalsLabel = when (currentDate.turnNumber) {
-			73 -> "Finale Qualifier"
-			74 -> "Finale Semifinal"
-			75 -> "Finale Finals"
-			else -> null
-		}
-		if (finalsLabel != null) {
-			return "$finalsLabel / Turn Number ${currentDate.turnNumber}"
-		}
-
-		val formattedYear = when (currentDate.year) {
-			1 -> "Junior Year"
-			2 -> "Classic Year"
-			3 -> "Senior Year"
-            else -> "Null Year"
-		}
-		val formattedMonth = when (currentDate.month) {
-			1 -> "Jan"
-			2 -> "Feb"
-			3 -> "Mar"
-			4 -> "Apr"
-			5 -> "May"
-			6 -> "Jun"
-			7 -> "Jul"
-			8 -> "Aug"
-			9 -> "Sep"
-			10 -> "Oct"
-			11 -> "Nov"
-			12 -> "Dec"
-            else -> "Null Month"
-		}
-		return "$formattedYear ${currentDate.phase} $formattedMonth / Turn Number ${currentDate.turnNumber}"
-	}
-
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////////////
     // Helper functions to test behavior and results of various workflows.
@@ -401,8 +352,7 @@ class Game(val myContext: Context) {
 	fun startDateOCRTest() {
 		MessageLog.i(TAG, "\n[TEST] Now beginning the Date OCR test on the Main screen.")
 		MessageLog.i(TAG, "[TEST] Note that this test is dependent on having the correct scale.")
-        val finalsLocation = imageUtils.findImage("race_select_extra_locked_uma_finals", tries = 1, suppressError = true, region = imageUtils.regionBottomHalf).first
-        updateDate(isFinals = (finalsLocation != null))
+        updateDate()
 	}
 
 	fun startAptitudesDetectionTest() {
@@ -431,8 +381,7 @@ class Game(val myContext: Context) {
 			MessageLog.i(TAG, "Bot is at the Main screen.")
 
 			// Perform updates here if necessary.
-            val finalsLocation = imageUtils.findImageWithBitmap("race_select_extra_locked_uma_finals", sourceBitmap, suppressError = true, region = imageUtils.regionBottomHalf)
-            updateDate(isFinals = (finalsLocation != null))
+            updateDate()
 
             // Since we're at the main screen, we don't need to worry about this
             // flag anymore since we will update our aptitudes here if needed.
@@ -556,30 +505,12 @@ class Game(val myContext: Context) {
 	}
 
 	/**
-	 * Checks if the bot is currently at Finals.
-	 *
-	 * @return True if the bot is at Finals. Otherwise false.
-	 */
-	fun checkFinals(): Boolean {
-		MessageLog.i(TAG, "\nChecking if the bot is at the Finals.")
-		val finalsLocation = imageUtils.findImage("race_select_extra_locked_uma_finals", tries = 1, suppressError = true, region = imageUtils.regionBottomHalf).first
-		return if (finalsLocation != null) {
-			MessageLog.i(TAG, "It is currently the Finals.")
-			updateDate(isFinals = true)
-			true
-		} else {
-			MessageLog.i(TAG, "It is not the Finals yet.")
-			false
-		}
-	}
-
-	/**
 	 * Checks if the bot has a injury.
 	 *
 	 * @return True if the bot has a injury. Otherwise false.
 	 */
 	fun checkInjury(): Boolean {
-		MessageLog.i(TAG, "\n[INJURY] Checking if there is an injury that needs healing on ${printFormattedDate()}.")
+		MessageLog.i(TAG, "\n[INJURY] Checking if there is an injury that needs healing on ${currentDate.toString()}.")
         val sourceBitmap = imageUtils.getSourceBitmap()
 		val recoverInjuryLocation = imageUtils.findImageWithBitmap("recover_injury", sourceBitmap, region = imageUtils.regionBottomHalf)
 		return if (recoverInjuryLocation != null && imageUtils.checkColorAtCoordinates(
@@ -628,43 +559,33 @@ class Game(val myContext: Context) {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	/**
-	 * Updates the stored date in memory by keeping track of the current year, phase, month and current turn number.
-	 *
-	 * @param isFinals If true, checks for Finals date images instead of parsing a date string. Defaults to false.
-	 */
-	fun updateDate(isFinals: Boolean = false) {
+    /** Returns whether we are currently in the finale season. */
+    fun checkFinals(): Boolean {
+        return currentDate?.bIsFinaleSeason ?: false
+    }
+
+    /**
+     * Updates the currentDate GameDate object by detecting the date on screen.
+     *
+     * @return Whether the operation was successful.
+     */
+	fun updateDate(): Boolean {
 		MessageLog.i(TAG, "\n[DATE] Updating the current date.")
-		if (isFinals) {
-			// During Finals, check for Finals-specific date images.
-			// The Finals occur at turns 73, 74, and 75.
-			// Date will be kept at Senior Year Late Dec, only the turn number will be updated.
-            val sourceBitmap = imageUtils.getSourceBitmap()
-			val turnNumber = when {
-				imageUtils.findImageWithBitmap("date_final_qualifier", sourceBitmap, suppressError = true, region = imageUtils.regionTopHalf, customConfidence = 0.9) != null -> {
-					MessageLog.i(TAG, "[DATE] Detected Finals Qualifier (Turn 73).")
-					73
-				}
-				imageUtils.findImageWithBitmap("date_final_semifinal", sourceBitmap, suppressError = true, region = imageUtils.regionTopHalf, customConfidence = 0.9) != null -> {
-					MessageLog.i(TAG, "[DATE] Detected Finals Semifinal (Turn 74).")
-					74
-				}
-				imageUtils.findImageWithBitmap("date_final_finals", sourceBitmap, suppressError = true, region = imageUtils.regionTopHalf, customConfidence = 0.9) != null -> {
-					MessageLog.i(TAG, "[DATE] Detected Finals Finals (Turn 75).")
-					75
-				}
-				else -> {
-					MessageLog.w(TAG, "Could not determine Finals date. Defaulting to turn 73.")
-					73
-				}
-			}
-			// Keep the date at Senior Year Late Dec and only update the turn number.
-			currentDate = Date(3, "Late", 12, turnNumber)
-		} else {
-			val dateString = imageUtils.determineDayString()
-			currentDate = gameDateParser.parseDateString(dateString, imageUtils, this)
-		}
-		MessageLog.i(TAG, "[DATE] It is currently ${printFormattedDate()}.")
+        if (currentDate == null) {
+            currentDate = GameDate.detectDate(imageUtils = imageUtils)
+            if (currentDate == null) {
+                MessageLog.e(TAG, "[DATE] Failed to update date. currentDate is NULL.")
+                return false
+            }
+        } else {
+            if (!currentDate.update(imageUtils = imageUtils)) {
+                MessageLog.e(TAG, "[DATE] currentDate.update() failed to update date.")
+                return false
+            }
+        }
+
+		MessageLog.i(TAG, "[DATE] Updated date ${currentDate.toString()}.")
+        return true
 	}
 
 	/**
@@ -675,7 +596,7 @@ class Game(val myContext: Context) {
 	fun handleInheritanceEvent(): Boolean {
 		return if (inheritancesDone < 2) {
 			if (findAndTapImage("inheritance", tries = 1, region = imageUtils.regionBottomHalf)) {
-				MessageLog.i(TAG, "\nClaimed an inheritance on ${printFormattedDate()}.")
+				MessageLog.i(TAG, "\nClaimed an inheritance on ${currentDate.toString()}.")
 				inheritancesDone++
                 trainee.bHasUpdatedAptitudes = false
 				true
@@ -693,7 +614,7 @@ class Game(val myContext: Context) {
 	 * @return True if the bot successfully recovered energy. Otherwise false.
 	 */
     fun recoverEnergy(): Boolean {
-		MessageLog.i(TAG, "\n[ENERGY] Now starting attempt to recover energy on ${printFormattedDate()}.")
+		MessageLog.i(TAG, "\n[ENERGY] Now starting attempt to recover energy on ${currentDate.toString()}.")
         val sourceBitmap = imageUtils.getSourceBitmap()
 		
 		// First, try to handle recreation date which also recovers energy if a date is available.
@@ -731,7 +652,7 @@ class Game(val myContext: Context) {
 	 * @return True if the bot successfully recovered mood. Otherwise false.
 	 */
 	fun recoverMood(): Boolean {
-		MessageLog.i(TAG, "\n[MOOD] Detecting current mood on ${printFormattedDate()}.")
+		MessageLog.i(TAG, "\n[MOOD] Detecting current mood on ${currentDate.toString()}.")
 
 		// Detect what Mood the bot is at.
         val sourceBitmap = imageUtils.getSourceBitmap()
@@ -968,7 +889,7 @@ class Game(val myContext: Context) {
             handleDialogs()
             wait(1.0)
         }
-        val traineeString = trainee.asString()
+        val traineeString = trainee.toString()
         MessageLog.i(TAG, "TRAINEE DETAILS\n$traineeString")
 
         */

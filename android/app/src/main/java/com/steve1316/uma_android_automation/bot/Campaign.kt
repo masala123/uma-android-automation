@@ -4,6 +4,10 @@ import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.utils.SettingsHelper
 import com.steve1316.automation_library.utils.MessageLog
 
+import com.steve1316.uma_android_automation.utils.types.DateYear
+import com.steve1316.uma_android_automation.utils.types.DateMonth
+import com.steve1316.uma_android_automation.utils.types.DatePhase
+
 /**
  * Base campaign class that contains all shared logic for campaign automation.
  * Campaign-specific logic should be implemented in subclasses by overriding the appropriate methods.
@@ -63,8 +67,14 @@ open class Campaign(val game: Game) {
 						needToRace = true
 					} else {
 						// Check if we need to rest before Summer Training (June Early/Late in Classic/Senior Year).
-						if (mustRestBeforeSummer && (game.currentDate.year == 2 || game.currentDate.year == 3) && game.currentDate.month == 6 && game.currentDate.phase == "Late") {
-							MessageLog.i(TAG, "Forcing rest during June ${game.currentDate.phase} in Year ${game.currentDate.year} in preparation for Summer Training.")
+						if (mustRestBeforeSummer &&
+                            (   game.currentDate.year == DateYear.CLASSIC ||
+                                game.currentDate.year == DateYear.SENIOR
+                            ) &&
+                            game.currentDate.month == DateMonth.JUNE &&
+                            game.currentDate.phase == DatePhase.LATE
+                        ) {
+							MessageLog.i(TAG, "Forcing rest during ${game.currentDate.toString()} in preparation for Summer Training.")
 							game.recoverEnergy()
 							game.racing.skipRacing = false
 						} else if (game.checkInjury() && !game.checkFinals()) {
@@ -73,7 +83,7 @@ open class Campaign(val game: Game) {
 							game.racing.skipRacing = false
 						} else if (game.recoverMood() && !game.checkFinals()) {
 							game.racing.skipRacing = false
-						} else if (game.currentDate.turnNumber >= 16 && game.racing.checkEligibilityToStartExtraRacingProcess()) {
+						} else if (game.currentDate.day >= 16 && game.racing.checkEligibilityToStartExtraRacingProcess()) {
 							MessageLog.i(TAG, "[INFO] Bot has no injuries, mood is sufficient and extra races can be run today. Setting the needToRace flag to true.")
 							needToRace = true
                         } else {

@@ -10,6 +10,7 @@ import com.steve1316.uma_android_automation.utils.types.RunningStyle
 import com.steve1316.uma_android_automation.utils.types.TrackSurface
 import com.steve1316.uma_android_automation.utils.types.TrackDistance
 import com.steve1316.uma_android_automation.utils.types.Mood
+import com.steve1316.uma_android_automation.utils.types.DateYear
 import com.steve1316.automation_library.data.SharedData
 import com.steve1316.automation_library.utils.BotService
 import com.steve1316.automation_library.utils.MessageLog
@@ -662,7 +663,7 @@ class Training(private val game: Game) {
 				MessageLog.i(TAG, "[TRAINING] ${training.name} Training can fill ${training.numSpiritGaugesCanFill} Spirit Explosion Gauge(s).")
 
 				// Early game: If gauges can be filled for deprioritized stat trainings, ignore stat prioritization.
-				val isEarlyGame = game.currentDate.year < 2
+				val isEarlyGame = game.currentDate.year == DateYear.JUNIOR
 				if (isEarlyGame) {
 					score += 500.0
 					MessageLog.i(TAG, "[TRAINING] Early game: Prioritizing gauge filling over stat prioritization.")
@@ -772,7 +773,7 @@ class Training(private val game: Game) {
 					}
 					
 					// Special case: Ensure Stamina is at least 600 in late game.
-					val isLateGame = game.currentDate.year == 3
+					val isLateGame = game.currentDate.year == DateYear.SENIOR
 					val isStamina = statName == StatName.STAMINA
 					val staminaBelowMinimum = isStamina && currentStat < 600
 					val lateGameStaminaBonus = if (isLateGame && staminaBelowMinimum) {
@@ -852,7 +853,7 @@ class Training(private val game: Game) {
 					val diminishingFactor = 1.0 - (fillLevel * 0.5) // Less valuable as bars fill up.
 
 					// Early game bonus for relationship building.
-					val earlyGameBonus = if (game.currentDate.year == 1 || game.currentDate.phase == "Pre-Debut") 1.3 else 1.0
+					val earlyGameBonus = if (game.currentDate.year == DateYear.JUNIOR || game.currentDate.bIsPreDebut) 1.3 else 1.0
 
 					val contribution = baseValue * diminishingFactor * earlyGameBonus
 					score += contribution
@@ -941,7 +942,7 @@ class Training(private val game: Game) {
 
 			// 4. Rainbow training multiplier (Year 2+ only).
 			// Rainbow is heavily favored because it improves overall ratio balance.
-			val rainbowMultiplier = if (training.isRainbow && game.currentDate.year >= 2) {
+			val rainbowMultiplier = if (training.isRainbow && game.currentDate.year > DateYear.JUNIOR) {
 				if (enableRainbowTrainingBonus) {
                     MessageLog.i(TAG, "[TRAINING] ${training.name} Training is detected as a rainbow training. Adding multiplier to score.")
 					2.0
@@ -960,10 +961,10 @@ class Training(private val game: Game) {
 		}
 
 		// Decide which scoring function to use based on campaign, phase, or year.
-		val best = if (game.scenario == "Unity Cup" && game.currentDate.year < 3) {
+		val best = if (game.scenario == "Unity Cup" && game.currentDate.year < DateYear.SENIOR) {
             // Unity Cup (Year < 3): Use Spirit Explosion Gauge priority system.
 			trainingMap.values.maxByOrNull { scoreUnityCupTraining(it) }
-		} else if (game.currentDate.phase == "Pre-Debut" || game.currentDate.year == 1) {
+		} else if (game.currentDate.bIsPreDebut || game.currentDate.year == DateYear.JUNIOR) {
             // Junior Year: Focus on building relationship bars.
 			trainingMap.values.maxByOrNull { scoreFriendshipTraining(it) }
 		} else {

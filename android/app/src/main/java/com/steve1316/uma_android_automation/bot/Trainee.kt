@@ -46,11 +46,11 @@ class Trainee {
                 }
             }
 
-            fun asString(): String {
+            override fun toString(): String {
                 return "Spd=$speed, Sta=$stamina, Pow=$power, Gut=$guts, Wit=$wit"
             }
 
-            fun asIntArray(): IntArray {
+            fun toIntArray(): IntArray {
                 return intArrayOf(speed, stamina, power, guts, wit)
             }
 
@@ -393,10 +393,10 @@ class Trainee {
     }
 
     fun getStatsString(): String {
-        return stats.asString()
+        return stats.toString()
     }
 
-    fun asString(): String {
+    override fun toString(): String {
         val aptitudesString = getAptitudesString()
         val statsString = getStatsString()
         return "Aptitudes: $aptitudesString" +
