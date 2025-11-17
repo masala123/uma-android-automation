@@ -10,6 +10,7 @@ import com.steve1316.automation_library.utils.ImageUtils
 import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.bot.Game
+import com.steve1316.uma_android_automation.bot.MAX_STAT_VALUE
 import com.steve1316.uma_android_automation.utils.types.StatName
 import com.steve1316.uma_android_automation.utils.types.Aptitude
 import com.steve1316.uma_android_automation.utils.types.BoundingBox
@@ -793,17 +794,19 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	 *
 	 * @return The mapping of all 5 stats names to their respective integer values.
 	 */
-	fun determineStatValues(statValueMapping: MutableMap<StatName, Int>): MutableMap<StatName, Int> {
+	fun determineStatValues(): Map<StatName, Int> {
 		val (skillPointsLocation, sourceBitmap) = findImage("skill_points")
+    
+        val result: MutableMap<StatName, Int> = mutableMapOf()
 
 		if (skillPointsLocation != null) {
 			// Process all stats at once using the mapping.
-			statValueMapping.keys.forEachIndexed { index, statName ->
+			StatName.values().forEachIndexed { index, statName ->
 				// Each stat is evenly spaced at 170 pixel intervals starting at offset -862.
 				val offsetX = -862 + (index * 170)
 
 				// Perform OCR with no thresholding (stats are on solid background).
-				val result = performOCROnRegion(
+				val text = performOCROnRegion(
 					sourceBitmap,
 					relX(skillPointsLocation.x, offsetX),
 					relY(skillPointsLocation.y, 25),
@@ -816,18 +819,18 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 					debugName = "${statName}StatValue"
 				)
 
-				// Parse the result.
-				MessageLog.i(TAG, "Detected number of stats for $statName from Tesseract before formatting: $result")
-				if (result.lowercase().contains("max") || result.lowercase().contains("ax")) {
-					MessageLog.i(TAG, "$statName seems to be maxed out. Setting it to 1200.")
-					statValueMapping[statName] = 1200
+				// Parse the text.
+				MessageLog.i(TAG, "Detected number of stats for $statName from Tesseract before formatting: $text")
+				if (text.lowercase().contains("max") || text.lowercase().contains("ax")) {
+					MessageLog.i(TAG, "$statName seems to be maxed out. Setting it to ${MAX_STAT_VALUE}.")
+					result[statName] = MAX_STAT_VALUE
 				} else {
 					try {
-						Log.d(TAG, "Converting $result to integer for $statName stat value")
-						val cleanedResult = result.replace(Regex("[^0-9]"), "")
-						statValueMapping[statName] = cleanedResult.toInt()
+						Log.d(TAG, "Converting $text to integer for $statName stat value")
+						val cleanedText = text.replace(Regex("[^0-9]"), "")
+						result[statName] = cleanedText.toInt().coerceIn(0, MAX_STAT_VALUE)
 					} catch (_: NumberFormatException) {
-						statValueMapping[statName] = -1
+						result[statName] = -1
 					}
 				}
 			}
@@ -835,7 +838,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			MessageLog.e(TAG, "Could not start the process of detecting stat values.")
 		}
 
-		return statValueMapping
+		return result.toMap()
 	}
 
 	/**

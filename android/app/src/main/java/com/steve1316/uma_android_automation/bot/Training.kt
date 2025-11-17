@@ -2,6 +2,7 @@ package com.steve1316.uma_android_automation.bot
 
 import android.util.Log
 import com.steve1316.uma_android_automation.MainActivity
+import com.steve1316.uma_android_automation.bot.MAX_STAT_VALUE
 import com.steve1316.uma_android_automation.utils.SettingsHelper
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
 import com.steve1316.uma_android_automation.utils.types.StatName
@@ -104,7 +105,6 @@ class Training(private val game: Game) {
 	private val riskyTrainingMinStatGain: Int = SettingsHelper.getIntSetting("training", "riskyTrainingMinStatGain")
 	private val riskyTrainingMaxFailureChance: Int = SettingsHelper.getIntSetting("training", "riskyTrainingMaxFailureChance")
 	var firstTrainingCheck = true
-	private val currentStatCap = 1200
 
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
@@ -184,23 +184,27 @@ class Training(private val game: Game) {
             MessageLog.i(TAG, "\n[TRAINING] Now starting process to analyze all 5 Trainings.")
         }
 
-        // Find the speed training button location so we can swipe across.
-        val point: Point? = ButtonTrainingSpeed.find(imageUtils = game.imageUtils).first
-        if (point == null) {
-            MessageLog.e(TAG, "[TRAINING] Could not find SPEED training button.")
-            return
-        }
-
-        // Swipe across once to make sure that ButtonTrainingSpeed isn't clicked.
-        // If it were clicked, then when we click it later when scanning trainings, it will be trained.
-        // This allows us to ensure that we always start at the speed training button in our loop.
+        // Only need to swipe across if not doing single training.
         if (!singleTraining) {
-            game.gestureUtils.swipe(
-                point.x.toFloat(),
-                point.y.toFloat(),
-                (point.x + 500.0).toFloat(),
-                point.y.toFloat(),
-            )
+            // Find the speed training button location so we can swipe across.
+            val point: Point? = ButtonTrainingSpeed.find(imageUtils = game.imageUtils).first
+            if (point == null) {
+                MessageLog.e(TAG, "[TRAINING] Could not find SPEED training button.")
+                return
+            }
+
+            
+            // Swipe across once to make sure that ButtonTrainingSpeed isn't clicked.
+            // If it were clicked, then when we click it later when scanning trainings, it will be trained.
+            // This allows us to ensure that we always start at the speed training button in our loop.
+            if (!singleTraining) {
+                game.gestureUtils.swipe(
+                    point.x.toFloat(),
+                    point.y.toFloat(),
+                    (point.x + 500.0).toFloat(),
+                    point.y.toFloat(),
+                )
+            }
         }
 
         // List to store all training analysis results for parallel processing.
@@ -249,9 +253,12 @@ class Training(private val game: Game) {
                 startTime = startTime,
             )
 
-            if (!trainingButton.click(imageUtils = game.imageUtils)) {
-                MessageLog.e(TAG, "[TRAINING] Failed to click training button for $statName. Aborting training...")
-                return
+            // Only click the button if we arent doing single training.
+            if (!singleTraining) {
+                if (!trainingButton.click(imageUtils = game.imageUtils)) {
+                    MessageLog.e(TAG, "[TRAINING] Failed to click training button for $statName. Aborting training...")
+                    return
+                }
             }
 
             // Slight delay for UI to update after clicking button.
@@ -903,8 +910,8 @@ class Training(private val game: Game) {
             val currentStat = game.trainee.getStat(training.name)
 
 			// Don't score for stats that are maxed or would be maxed.
-			if ((disableTrainingOnMaxedStat && currentStat >= currentStatCap) ||
-				(currentStat + (training.statGains[training.name] ?: 0) >= currentStatCap)) {
+			if ((disableTrainingOnMaxedStat && currentStat >= MAX_STAT_VALUE) ||
+				(currentStat + (training.statGains[training.name] ?: 0) >= MAX_STAT_VALUE)) {
 				return 0.0
 			}
 

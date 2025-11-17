@@ -3,6 +3,7 @@ package com.steve1316.uma_android_automation.bot
 import android.graphics.Bitmap
 import org.opencv.core.Point
 import kotlin.enums.enumEntries
+import kotlin.math.abs
 
 import com.steve1316.automation_library.utils.MessageLog
 
@@ -333,28 +334,21 @@ class Trainee {
     }
 
     fun updateStats(imageUtils: CustomImageUtils) {
-        var statMapping = mutableMapOf<StatName, Int>(
-            StatName.SPEED to 0,
-            StatName.STAMINA to 0,
-            StatName.POWER to 0,
-            StatName.GUTS to 0,
-            StatName.WIT to 0,
-        )
-        statMapping = imageUtils.determineStatValues(statMapping)
+        val statMapping: Map<StatName, Int> = imageUtils.determineStatValues()
 
-        setTraineeStats(
-            speed=statMapping[StatName.SPEED],
-            stamina=statMapping[StatName.STAMINA],
-            power=statMapping[StatName.POWER],
-            guts=statMapping[StatName.GUTS],
-            wit=statMapping[StatName.WIT],
-        )
-
-        bHasUpdatedStats = stats.speed != -1 &&
-            stats.stamina != -1 &&
-            stats.power != -1 &&
-            stats.guts != -1 &&
-            stats.wit != -1
+        // It is possible that we misread a stat value. We want to make sure we
+        // don't update our stats if they change too wildly from the previous values.
+        for ((statName, newValue) in statMapping) {
+            val oldValue = getStat(statName)
+            val diff = abs(newValue - oldValue)
+            // If our previous stat value is <= 0, that means we havent set it yet.
+            if (oldValue <= 0 || diff < 150) {
+                stats.setStat(statName, newValue)
+                bHasUpdatedStats = true
+            } else {
+                MessageLog.w(TAG, "New $statName stat value has changed too much since last update: old=$oldValue, new=$newValue")
+            }
+        }
     }
 
     fun updateMood(imageUtils: CustomImageUtils) {
