@@ -74,7 +74,7 @@ open class Campaign(val game: Game) {
                             game.currentDate.month == DateMonth.JUNE &&
                             game.currentDate.phase == DatePhase.LATE
                         ) {
-							MessageLog.i(TAG, "Forcing rest during ${game.currentDate.toString()} in preparation for Summer Training.")
+							MessageLog.i(TAG, "Forcing rest during ${game.currentDate} in preparation for Summer Training.")
 							game.recoverEnergy()
 							game.racing.skipRacing = false
 						} else if (game.checkInjury() && !game.checkFinals()) {

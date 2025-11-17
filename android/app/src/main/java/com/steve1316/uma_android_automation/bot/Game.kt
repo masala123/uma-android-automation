@@ -510,7 +510,7 @@ class Game(val myContext: Context) {
 	 * @return True if the bot has a injury. Otherwise false.
 	 */
 	fun checkInjury(): Boolean {
-		MessageLog.i(TAG, "\n[INJURY] Checking if there is an injury that needs healing on ${currentDate.toString()}.")
+		MessageLog.i(TAG, "\n[INJURY] Checking if there is an injury that needs healing on ${currentDate}.")
         val sourceBitmap = imageUtils.getSourceBitmap()
 		val recoverInjuryLocation = imageUtils.findImageWithBitmap("recover_injury", sourceBitmap, region = imageUtils.regionBottomHalf)
 		return if (recoverInjuryLocation != null && imageUtils.checkColorAtCoordinates(
@@ -561,7 +561,7 @@ class Game(val myContext: Context) {
 
     /** Returns whether we are currently in the finale season. */
     fun checkFinals(): Boolean {
-        return currentDate?.bIsFinaleSeason ?: false
+        return currentDate.bIsFinaleSeason ?: false
     }
 
     /**
@@ -571,20 +571,12 @@ class Game(val myContext: Context) {
      */
 	fun updateDate(): Boolean {
 		MessageLog.i(TAG, "\n[DATE] Updating the current date.")
-        if (currentDate == null) {
-            currentDate = GameDate.detectDate(imageUtils = imageUtils)
-            if (currentDate == null) {
-                MessageLog.e(TAG, "[DATE] Failed to update date. currentDate is NULL.")
-                return false
-            }
-        } else {
-            if (!currentDate.update(imageUtils = imageUtils)) {
-                MessageLog.e(TAG, "[DATE] currentDate.update() failed to update date.")
-                return false
-            }
+        if (!currentDate.update(imageUtils = imageUtils)) {
+            MessageLog.e(TAG, "[DATE] currentDate.update() failed to update date.")
+            return false
         }
 
-		MessageLog.i(TAG, "[DATE] Updated date ${currentDate.toString()}.")
+		MessageLog.i(TAG, "[DATE] Updated date ${currentDate}.")
         return true
 	}
 
@@ -596,7 +588,7 @@ class Game(val myContext: Context) {
 	fun handleInheritanceEvent(): Boolean {
 		return if (inheritancesDone < 2) {
 			if (findAndTapImage("inheritance", tries = 1, region = imageUtils.regionBottomHalf)) {
-				MessageLog.i(TAG, "\nClaimed an inheritance on ${currentDate.toString()}.")
+				MessageLog.i(TAG, "\nClaimed an inheritance on ${currentDate}.")
 				inheritancesDone++
                 trainee.bHasUpdatedAptitudes = false
 				true
@@ -614,7 +606,7 @@ class Game(val myContext: Context) {
 	 * @return True if the bot successfully recovered energy. Otherwise false.
 	 */
     fun recoverEnergy(): Boolean {
-		MessageLog.i(TAG, "\n[ENERGY] Now starting attempt to recover energy on ${currentDate.toString()}.")
+		MessageLog.i(TAG, "\n[ENERGY] Now starting attempt to recover energy on ${currentDate}.")
         val sourceBitmap = imageUtils.getSourceBitmap()
 		
 		// First, try to handle recreation date which also recovers energy if a date is available.
@@ -652,7 +644,7 @@ class Game(val myContext: Context) {
 	 * @return True if the bot successfully recovered mood. Otherwise false.
 	 */
 	fun recoverMood(): Boolean {
-		MessageLog.i(TAG, "\n[MOOD] Detecting current mood on ${currentDate.toString()}.")
+		MessageLog.i(TAG, "\n[MOOD] Detecting current mood on ${currentDate}.")
 
 		// Detect what Mood the bot is at.
         val sourceBitmap = imageUtils.getSourceBitmap()

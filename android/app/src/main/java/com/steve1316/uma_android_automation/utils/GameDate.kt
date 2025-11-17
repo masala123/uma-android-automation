@@ -1,4 +1,7 @@
-package com.steve1316.uma_android_automation.utils.GameDate
+package com.steve1316.uma_android_automation.utils
+
+import com.steve1316.automation_library.utils.MessageLog
+import com.steve1316.automation_library.utils.TextUtils
 
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
 import com.steve1316.uma_android_automation.utils.types.DateYear
@@ -19,14 +22,14 @@ import com.steve1316.uma_android_automation.utils.types.DatePhase
  * @property bIsFinaleSeason Whether the game is in the finale season.
  */
 class GameDate {
-    private const val TAG: String = "GameDate"
+    private val TAG: String = "GameDate"
 
-    var year: DateYear
-    var month: DateMonth
-    var phase: DatePhase
-    var day: Int
-    var bIsPreDebut: Boolean
-    var bIsFinaleSeason: Boolean
+    var year: DateYear = DateYear.JUNIOR
+    var month: DateMonth = DateMonth.JANUARY
+    var phase: DatePhase = DatePhase.EARLY
+    var day: Int = 1
+    var bIsPreDebut: Boolean = false
+    var bIsFinaleSeason: Boolean = false
 
     /** Constructor that takes year/month/phase arguments to calculate the day. */
     constructor(
@@ -34,7 +37,7 @@ class GameDate {
         month: DateMonth,
         phase: DatePhase,
     ) {
-        val day = GameDate.toDay(year, month, phase)
+        val day = toDay(year, month, phase)
         setDay(day)
     }
 
@@ -84,18 +87,6 @@ class GameDate {
             val year: DateYear = DateYear.fromOrdinal(y)!!
             val month: DateMonth = DateMonth.fromOrdinal(m)!!
             val phase: DatePhase = DatePhase.fromOrdinal(p)!!
-            if (year == null) {
-                MessageLog.w(TAG, "fromDay:: Invalid year: $y")
-                return null
-            }
-            if (month == null) {
-                MessageLog.w(TAG, "fromDay:: Invalid month: $m")
-                return null
-            }
-            if (phase == null) {
-                MessageLog.w(TAG, "fromDay:: Invalid phase: $p")
-                return null
-            }
             return GameDate(
                 year = year,
                 month = month,
@@ -111,7 +102,7 @@ class GameDate {
          * @return The detected GameDate object or NULL if nothing could be detected.
          */
         fun detectDate(imageUtils: CustomImageUtils): GameDate? {
-            return GameDate.fromDateString(imageUtils = imageUtils)
+            return fromDateString(imageUtils = imageUtils)
         }
 
         /**
@@ -127,15 +118,15 @@ class GameDate {
          * @return The GameDate object generated from the date string and turns left,
          * or NULL if conversion failed.
          */
-        fun fromDateString(s: String? = null, turnsLeft: Int? = null, imageUtils: CustomImageUtils? = null): GameDate? {
-            val s: String? = s ?: imageUtils?.determineDayString()
+        fun fromDateString(s: String? = null, turnsLeft: Int? = null, imageUtils: CustomImageUtils): GameDate? {
+            val s: String? = s ?: imageUtils.determineDayString()
             if (s == null || s == "") {
                 MessageLog.d(TAG, "fromDateString:: Passed string is NULL or empty.")
                 return null
             }
 
             if (s.lowercase().contains("debut")) {
-                val turnsLeft: Int? = turnsLeft ?: imageUtils?.determineTurnsRemainingBeforeNextGoal()
+                val turnsLeft: Int? = turnsLeft ?: imageUtils.determineTurnsRemainingBeforeNextGoal()
                 if (turnsLeft == null) {
                     MessageLog.e(TAG, "fromDateString:: In pre-debut but received turnsLeft=NULL. Cannot calculate date without turnsLeft.")
                     return null
@@ -154,7 +145,7 @@ class GameDate {
 
             if (s.lowercase().contains("finale")) {
                 MessageLog.d(TAG, "fromDateString:: Finale season.")
-                val finalsDay: Int? = GameDate.getFinalsDay(imageUtils = imageUtils)
+                val finalsDay: Int? = getFinalsDay(imageUtils = imageUtils)
                 if (finalsDay == null) {
                     MessageLog.w(TAG, "fromDateString:: Could not determine day in finale season. Defaulting to first day of finale.")
                     return GameDate(day = 73)
@@ -179,19 +170,19 @@ class GameDate {
             val monthPart: String = parts.getOrNull(3) ?: DateMonth.JANUARY.shortName
 
             // Find the best match for the strings using Jaro Winkler if not found in mapping.
-            val yearString: String? = TextDetection.matchStringInList(yearPart, years)
+            val yearString: String? = TextUtils.matchStringInList(yearPart, years)
             if (yearString == null) {
                 MessageLog.w(TAG, "fromDateString:: Invalid date format. Could not detect YEAR from $yearPart.")
                 return null
             }
 
-            var monthString: String? = TextDetection.matchStringInList(monthPart, months)
+            val monthString: String? = TextUtils.matchStringInList(monthPart, months)
             if (monthString == null) {
                 MessageLog.w(TAG, "fromDateString:: Invalid date format. Could not detect MONTH from $monthPart.")
                 return null
             }
 
-            val phaseString: String? = TextDetection.matchStringInList(phasePart, phases)
+            val phaseString: String? = TextUtils.matchStringInList(phasePart, phases)
             if (phaseString == null) {
                 MessageLog.w(TAG, "fromDateString:: Invalid date format. Could not detect PHASE from $phasePart.")
                 return null
@@ -215,7 +206,7 @@ class GameDate {
             }
 
             val result = GameDate(year, month, phase)
-            MessageLog.d(TAG, "fromDateString:: Detected ${result.toString()}")
+            MessageLog.d(TAG, "fromDateString:: Detected $result")
             return result
         }
 
@@ -228,10 +219,10 @@ class GameDate {
          */
         fun isSummer(dayToCheck: Int): Boolean {
             // Summer only takes place in classic and senior years.
-            for (year in listOf("classic", "senior")) {
+            for (year in listOf(DateYear.CLASSIC, DateYear.SENIOR)) {
                 if (
-                    dayToCheck >= GameDate(year, "july", "early").day &&
-                    dayToCheck <= GameDate(year, "august", "late").day
+                    dayToCheck >= GameDate(year, DateMonth.JULY, DatePhase.EARLY).day &&
+                    dayToCheck <= GameDate(year, DateMonth.AUGUST, DatePhase.LATE).day
                 ) {
                     return true
                 }
@@ -242,8 +233,7 @@ class GameDate {
 
         fun getFinalsDay(imageUtils: CustomImageUtils): Int? {
             val sourceBitmap = imageUtils.getSourceBitmap()
-
-            val finalsLocation = imageUtils.findImageWithBitmap("race_select_extra_locked_uma_finals", sourceBitmap, suppressError = true, region = imageUtils.regionBottomHalf).first
+            val finalsLocation = imageUtils.findImageWithBitmap("race_select_extra_locked_uma_finals", sourceBitmap, suppressError = true, region = imageUtils.regionBottomHalf)
             val bIsFinals: Boolean = finalsLocation != null
 
             if (!bIsFinals) {
@@ -278,7 +268,7 @@ class GameDate {
      * @return The current day number.
      */
     fun toDay(): Int {
-        return GameDate.toDay(this.year, this.month, this.phase)
+        return toDay(this.year, this.month, this.phase)
     }
 
     /**
@@ -290,17 +280,17 @@ class GameDate {
      * @return Boolean whether the current date is in the summer date range.
      */
     fun isSummer(): Boolean {
-        return GameDate.isSummer(this.day)
+        return isSummer(this.day)
     }
 
     /** Returns a string representation of the current date. */
     override fun toString(): String {
         if (bIsFinaleSeason) {
             return when (this.day) {
-                73 -> "Finale Qualifier (Turn ${this.day})",
-                74 -> "Finale Semi-Final (Turn ${this.day})",
-                75 -> "Finale Finals (Turn ${this.day})",
-                else -> "INVALID DAY (> 75): ${this.day}",
+                73 -> "Finale Qualifier (Turn ${this.day})"
+                74 -> "Finale Semi-Final (Turn ${this.day})"
+                75 -> "Finale Finals (Turn ${this.day})"
+                else -> "INVALID DAY (> 75): ${this.day}"
             }
         }
         return "${this.year.longName} ${this.phase} ${this.month} (Turn ${this.day})"
@@ -308,7 +298,11 @@ class GameDate {
 
     /** Updates class members to reflect the passed day. */
     fun setDay(day: Int) {
-        val tmpDate = GameDate.fromDay(day)
+        val tmpDate: GameDate? = fromDay(day)
+        if (tmpDate == null) {
+            MessageLog.e(TAG, "setDay:: GameDate.fromDay returned NULL for day=$day.")
+            return
+        }
         this.year = tmpDate.year
         this.month = tmpDate.month
         this.phase = tmpDate.phase
@@ -324,7 +318,7 @@ class GameDate {
      * @return The next day's GameDate object, or null
      */
     fun getNextDate(): GameDate? {
-        return GameDate.fromDay(this.day + 1)
+        return fromDay(this.day + 1)
     }
 
     /**
@@ -333,12 +327,12 @@ class GameDate {
      * @return Whether the date was updated successfully.
      */
     fun update(imageUtils: CustomImageUtils): Boolean {
-        val finalsDay: Int? = GameDate.getFinalsDay(imageUtils)
+        val finalsDay: Int? = getFinalsDay(imageUtils)
         if (finalsDay != null) {
             setDay(finalsDay)
         } else {
             // If finalsDay is NULL then we need to detect the date from the screen.
-            val tmpDate: GameDate? = GameDate.fromDateString(imageUtils = imageUtils)
+            val tmpDate: GameDate? = fromDateString(imageUtils = imageUtils)
             if (tmpDate == null) {
                 MessageLog.e(TAG, "GameDate.fromDateString returned NULL.")
                 return false

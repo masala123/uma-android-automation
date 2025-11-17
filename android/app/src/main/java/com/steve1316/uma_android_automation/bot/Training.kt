@@ -137,7 +137,7 @@ class Training(private val game: Game) {
 	 */
 	fun handleTraining() {
 		MessageLog.i(TAG, "\n********************")
-		MessageLog.i(TAG, "[TRAINING] Starting Training process on ${game.printFormattedDate()}.")
+		MessageLog.i(TAG, "[TRAINING] Starting Training process on ${game.currentDate}.")
         val startTime = System.currentTimeMillis()
 
 		// Enter the Training screen.

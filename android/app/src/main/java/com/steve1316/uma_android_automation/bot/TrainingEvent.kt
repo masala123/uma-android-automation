@@ -160,7 +160,7 @@ class TrainingEvent(private val game: Game) {
      */
     fun handleTrainingEvent() {
         MessageLog.i(TAG, "\n********************")
-        MessageLog.i(TAG, "[TRAINING_EVENT] Starting Training Event process on ${game.printFormattedDate()}.")
+        MessageLog.i(TAG, "[TRAINING_EVENT] Starting Training Event process on ${game.currentDate}.")
 
         // Double check if the bot is at the Main screen or not.
         if (game.checkMainScreen()) {

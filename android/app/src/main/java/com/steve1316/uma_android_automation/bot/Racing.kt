@@ -308,7 +308,7 @@ class Racing (private val game: Game) {
      */
     fun handleRaceEvents(): Boolean {
         MessageLog.i(TAG, "\n********************")
-        MessageLog.i(TAG, "[RACE] Starting Racing process on ${game.printFormattedDate()}.")
+        MessageLog.i(TAG, "[RACE] Starting Racing process on ${game.currentDate}.")
         if (encounteredRacingPopup) {
             // Dismiss the insufficient fans popup here and head to the Race Selection screen.
             game.findAndTapImage("race_confirm", tries = 1, region = game.imageUtils.regionBottomHalf)
