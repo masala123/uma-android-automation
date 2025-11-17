@@ -16,8 +16,8 @@ interface Race {
     name: string
     date: string
     grade: string
-    trackSurface: string
-    trackDistance: string
+    terrain: string
+    distanceType: string
     distanceMeters: number
     fans: number
     turnNumber: number
@@ -38,7 +38,7 @@ const RacingPlanSettings = () => {
 
     // Merge current racing settings with defaults to handle missing properties.
     const racingSettings = { ...defaultSettings.racing, ...settings.racing }
-    const { enableRacingPlan, racingPlan, minFansThreshold, preferredTrackSurface, lookAheadDays, smartRacingCheckInterval, minimumQualityThreshold, timeDecayFactor, improvementThreshold, preferredGrades } = racingSettings
+    const { enableRacingPlan, racingPlan, minFansThreshold, perferredTerrain, lookAheadDays, smartRacingCheckInterval, minimumQualityThreshold, timeDecayFactor, improvementThreshold, preferredGrades } = racingSettings
 
     const [searchQuery, setSearchQuery] = useState("")
     // Local state for decimal inputs to preserve intermediate values while typing (e.g., "7.").
@@ -70,10 +70,10 @@ const RacingPlanSettings = () => {
         const matchesSearch = race.name.toLowerCase().includes(searchQuery.toLowerCase()) || race.date.toLowerCase().includes(searchQuery.toLowerCase())
 
         const matchesFans = race.fans >= minFansThreshold
-        const matchesTrackSurface = preferredTrackSurface === "Any" || race.trackSurface === preferredTrackSurface
+        const matchesTerrain = perferredTerrain === "Any" || race.terrain === perferredTerrain
         const matchesGrade = preferredGrades.includes(race.grade) && race.grade !== "OP" && race.grade !== "Pre-OP"
 
-        return matchesSearch && matchesFans && matchesTrackSurface && matchesGrade
+        return matchesSearch && matchesFans && matchesTerrain && matchesGrade
     })
 
     const updateRacingSetting = (key: string, value: any) => {
@@ -212,12 +212,12 @@ const RacingPlanSettings = () => {
             opacity: 0.7,
             marginTop: 4,
         },
-        trackSurfaceButton: {
+        terrainButton: {
             padding: 12,
             borderRadius: 8,
             marginRight: 8,
         },
-        trackSurfaceButtonText: {
+        terrainButtonText: {
             fontSize: 14,
             fontWeight: "600",
         },
@@ -355,26 +355,26 @@ const RacingPlanSettings = () => {
                 <View style={styles.section}>
                     <Text style={styles.sectionTitle}>Preferred Track Surface</Text>
                     <View style={{ flexDirection: "row" }}>
-                        {["Any", "Turf", "Dirt"].map((trackSurface) => (
+                        {["Any", "Turf", "Dirt"].map((terrain) => (
                             <TouchableOpacity
-                                key={trackSurface}
-                                onPress={() => updateRacingSetting("preferredTrackSurface", trackSurface)}
+                                key={terrain}
+                                onPress={() => updateRacingSetting("perferredTerrain", terrain)}
                                 style={[
-                                    styles.trackSurfaceButton,
+                                    styles.terrainButton,
                                     {
-                                        backgroundColor: preferredTrackSurface === trackSurface ? colors.primary : colors.card,
+                                        backgroundColor: perferredTerrain === terrain ? colors.primary : colors.card,
                                     },
                                 ]}
                             >
                                 <Text
                                     style={[
-                                        styles.trackSurfaceButtonText,
+                                        styles.terrainButtonText,
                                         {
-                                            color: preferredTrackSurface === trackSurface ? colors.background : colors.foreground,
+                                            color: perferredTerrain === terrain ? colors.background : colors.foreground,
                                         },
                                     ]}
                                 >
-                                    {trackSurface}
+                                    {terrain}
                                 </Text>
                             </TouchableOpacity>
                         ))}
@@ -390,7 +390,7 @@ const RacingPlanSettings = () => {
                                 key={grade}
                                 onPress={() => toggleGrade(grade)}
                                 style={[
-                                    styles.trackSurfaceButton,
+                                    styles.terrainButton,
                                     {
                                         backgroundColor: preferredGrades.includes(grade) ? colors.primary : colors.card,
                                     },
@@ -398,7 +398,7 @@ const RacingPlanSettings = () => {
                             >
                                 <Text
                                     style={[
-                                        styles.trackSurfaceButtonText,
+                                        styles.terrainButtonText,
                                         {
                                             color: preferredGrades.includes(grade) ? colors.background : colors.foreground,
                                         },
@@ -447,7 +447,7 @@ const RacingPlanSettings = () => {
                                                 <Text style={styles.raceName}>{race.name}</Text>
                                                 <Text style={styles.raceDate}>{race.date}</Text>
                                                 <Text style={styles.raceFans}>
-                                                    {race.fans} fans • {race.grade} • {race.trackSurface} • {race.trackDistance}
+                                                    {race.fans} fans • {race.grade} • {race.terrain} • {race.distanceType}
                                                 </Text>
                                             </View>
                                             {parsedRacingPlan.some((planned) => planned.raceName === race.name && planned.date === race.date && planned.turnNumber === race.turnNumber) && (
@@ -490,7 +490,7 @@ const RacingPlanSettings = () => {
                         <CustomTitle
                             title="Racing Plan"
                             description={
-                                "Uses opportunity cost analysis to optimize race selection by looking ahead N days for races matching your character's aptitudes (A/S track surface/distance). Scores races by fans, grade, and aptitude matches.\n\nUses standard settings until Classic Year, then combines both this and standard racing settings during Classic Year. Only fully activates in Senior Year. Races when current opportunities are good enough and waiting doesn't offer significantly better value, ensuring steady fan accumulation without endless waiting."
+                                "Uses opportunity cost analysis to optimize race selection by looking ahead N days for races matching your character's aptitudes (A/S terrain/distance). Scores races by fans, grade, and aptitude matches.\n\nUses standard settings until Classic Year, then combines both this and standard racing settings during Classic Year. Only fully activates in Senior Year. Races when current opportunities are good enough and waiting doesn't offer significantly better value, ensuring steady fan accumulation without endless waiting."
                             }
                         />
 

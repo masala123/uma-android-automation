@@ -39,7 +39,7 @@ class Racing (private val game: Game) {
     private val lookAheadDays = SettingsHelper.getIntSetting("racing", "lookAheadDays")
     private val smartRacingCheckInterval = SettingsHelper.getIntSetting("racing", "smartRacingCheckInterval")
     private val minFansThreshold = SettingsHelper.getIntSetting("racing", "minFansThreshold")
-    private val preferredTrackSurfaceString = SettingsHelper.getStringSetting("racing", "preferredTrackSurface")
+    private val preferredTrackSurfaceString = SettingsHelper.getStringSetting("racing", "preferredTerrain")
     private val preferredGradesString = SettingsHelper.getStringSetting("racing", "preferredGrades")
     private val racingPlanJson = SettingsHelper.getStringSetting("racing", "racingPlan")
     private val minimumQualityThreshold = SettingsHelper.getDoubleSetting("racing", "minimumQualityThreshold")
@@ -76,8 +76,8 @@ class Racing (private val game: Game) {
         private const val RACES_COLUMN_FANS = "fans"
         private const val RACES_COLUMN_TURN_NUMBER = "turnNumber"
         private const val RACES_COLUMN_NAME_FORMATTED = "nameFormatted"
-        private const val RACES_COLUMN_TRACK_SURFACE = "trackSurface"
-        private const val RACES_COLUMN_TRACK_DISTANCE = "trackDistance"
+        private const val RACES_COLUMN_TRACK_SURFACE = "terrain"
+        private const val RACES_COLUMN_TRACK_DISTANCE = "distanceType"
         private const val SIMILARITY_THRESHOLD = 0.7
     }
 
@@ -236,13 +236,13 @@ class Racing (private val game: Game) {
                 val raceObj = jsonObject.getJSONObject(key)
 
                 val raceData = RaceData(
-                    name = raceObj.getString("name"),
-                    grade = raceObj.getString("grade"),
-                    trackSurface = raceObj.getString("trackSurface"),
-                    trackDistance = raceObj.getString("trackDistance"),
-                    fans = raceObj.getInt("fans"),
-                    turnNumber = raceObj.getInt("turnNumber"),
-                    nameFormatted = raceObj.getString("nameFormatted")
+                    name = raceObj.getString(RACES_COLUMN_NAME),
+                    grade = raceObj.getString(RACES_COLUMN_GRADE),
+                    trackSurface = raceObj.getString(RACES_COLUMN_TRACK_SURFACE),
+                    trackDistance = raceObj.getString(RACES_COLUMN_TRACK_DISTANCE),
+                    fans = raceObj.getInt(RACES_COLUMN_FANS),
+                    turnNumber = raceObj.getInt(RACES_COLUMN_TURN_NUMBER),
+                    nameFormatted = raceObj.getString(RACES_COLUMN_NAME_FORMATTED)
                 )
 
                 raceDataMap[raceData.name] = raceData
