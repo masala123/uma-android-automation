@@ -788,83 +788,6 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	}
 
 	/**
-	 * Determines the aptitudes of the current character based on the levels (S, A, B) on the Full Stats popup. The priority order of the aptitude levels is S > A > B.
-	 *
-	 * @return The aptitudes of the current character.
-	 */
-	fun determineAptitudes(currentAptitudes: Game.Aptitudes): Game.Aptitudes {
-		val (_, statAptitudeSTemplate) = getBitmaps("stat_aptitude_S")
-		val (_, statAptitudeATemplate) = getBitmaps("stat_aptitude_A")
-		val (_, statAptitudeBTemplate) = getBitmaps("stat_aptitude_B")
-
-        // Use the Close button as the reference point for the aptitude locations.
-		val (closeButtonLocation, sourceBitmap) = findImage("close", region = regionBottomHalf)
-		if (closeButtonLocation == null) {
-			MessageLog.e(TAG, "Could not find close button. Keeping previous aptitude values.")
-			return currentAptitudes
-		}
-
-		val aptitudes = mutableMapOf(
-			"track" to mutableMapOf("turf" to "", "dirt" to ""),
-			"distance" to mutableMapOf("sprint" to "", "mile" to "", "medium" to "", "long" to ""),
-			"style" to mutableMapOf("front" to "", "pace" to "", "late" to "", "end" to "")
-		)
-
-		aptitudes.entries.toList().forEachIndexed { rowIndex, (aptitudeName, keys) ->
-            // Calculate Y offset for each row.
-			val yOffset = -1165 + (rowIndex * 60)
-			keys.keys.forEachIndexed { i, key ->
-				// Only two aptitudes for Track: Turf and Dirt.
-				if (aptitudeName == "track" && i > 1) return@forEachIndexed
-
-				val croppedBitmap = createSafeBitmap(
-					sourceBitmap,
-					relX(closeButtonLocation.x, -280 + (i * 190)),
-					relY(closeButtonLocation.y, yOffset),
-					176,
-					52,
-					"determineAptitudes $aptitudeName $key"
-				)
-
-				if (croppedBitmap == null) {
-					MessageLog.e(TAG, "Failed to crop bitmap for $aptitudeName $key.")
-					return@forEachIndexed
-				}
-
-				// Determine level by priority: S > A > B.
-				val level = when {
-					match(croppedBitmap, statAptitudeSTemplate!!, "stat_aptitude_S", customConfidence = 0.90).first -> "S"
-					match(croppedBitmap, statAptitudeATemplate!!, "stat_aptitude_A", customConfidence = 0.90).first -> "A"
-					match(croppedBitmap, statAptitudeBTemplate!!, "stat_aptitude_B", customConfidence = 0.90).first -> "B"
-					else -> "X"
-				}
-
-				aptitudes[aptitudeName]?.set(key, level)
-			}
-		}
-
-		// Build updated Aptitudes object
-		return Game.Aptitudes(
-			track = Game.Track(
-				turf = aptitudes["track"]?.get("turf") ?: currentAptitudes.track.turf,
-				dirt = aptitudes["track"]?.get("dirt") ?: currentAptitudes.track.dirt
-			),
-			distance = Game.Distance(
-				sprint = aptitudes["distance"]?.get("sprint") ?: currentAptitudes.distance.sprint,
-				mile = aptitudes["distance"]?.get("mile") ?: currentAptitudes.distance.mile,
-				medium = aptitudes["distance"]?.get("medium") ?: currentAptitudes.distance.medium,
-				long = aptitudes["distance"]?.get("long") ?: currentAptitudes.distance.long
-			),
-			style = Game.Style(
-				front = aptitudes["style"]?.get("front") ?: currentAptitudes.style.front,
-				pace = aptitudes["style"]?.get("pace") ?: currentAptitudes.style.pace,
-				late = aptitudes["style"]?.get("late") ?: currentAptitudes.style.late,
-				end = aptitudes["style"]?.get("end") ?: currentAptitudes.style.end
-			)
-		)
-	}
-
-	/**
 	 * Reads the 5 stat values on the Main screen.
 	 *
 	 * @return The mapping of all 5 stats names to their respective integer values.
@@ -1762,7 +1685,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
             return null
         }
     }
-}
+
     /**
     * Gets the filled percentage of the energy bar.
     *

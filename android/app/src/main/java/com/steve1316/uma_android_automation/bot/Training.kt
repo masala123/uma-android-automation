@@ -35,13 +35,13 @@ class Training(private val game: Game) {
 	 * Class to store analysis results for a training during parallel processing.
 	 * Uses mutable properties so threads can update them.
 	 */
-	private class TrainingAnalysisResult(
-		val statName: StatName,
+	data class TrainingAnalysisResult(
+		val name: StatName,
 		val logMessages: ConcurrentLinkedQueue<String>,
 		val latch: CountDownLatch,
 		val startTime: Long
 	) {
-		var statGains: MutableMap<StatName, Int> = mutableMapOf()
+		var statGains: Map<StatName, Int> = mapOf()
 		var failureChance: Int = -1
 		var relationshipBars: ArrayList<CustomImageUtils.BarFillResult> = arrayListOf()
 		var isRainbow: Boolean = false
@@ -202,6 +202,9 @@ class Training(private val game: Game) {
             )
         }
 
+        // List to store all training analysis results for parallel processing.
+        val analysisResults = mutableListOf<TrainingAnalysisResult>()
+
         for (statName in StatName.entries) {
             if (!test && statName in blacklist) {
                 MessageLog.i(TAG, "[TRAINING] Skipping $statName training due to being blacklisted.")
@@ -224,8 +227,14 @@ class Training(private val game: Game) {
                 StatName.GUTS -> ButtonTrainingGuts
                 StatName.WIT -> ButtonTrainingWit
             }
-            // List to store all training analysis results for parallel processing.
-            val analysisResults = mutableListOf<TrainingAnalysisResult>()
+
+            val newX = when (statName) {
+                StatName.SPEED -> 0.0
+                StatName.STAMINA -> 280.0
+                StatName.POWER -> 402.0
+                StatName.GUTS -> 591.0
+                StatName.WIT -> 779.0
+            }
 
             // Unified approach: always use result object and start threads the same way.
             // Use CountDownLatch to run the operations in parallel to cut down on processing time.
@@ -236,29 +245,22 @@ class Training(private val game: Game) {
             // Create log message buffer for this training.
             val logMessages = ConcurrentLinkedQueue<String>()
 
-            // Variables to store results from parallel threads.
-            var statGains = ConcurrentHashMap<StatName, Int>()
-            var relationshipBars: ArrayList<CustomImageUtils.BarFillResult> = arrayListOf()
-            var isRainbow = false
-
             // Record start time for elapsed time measurement.
             val startTime = System.currentTimeMillis()
 
             // Create result object to store analysis state.
             val result = TrainingAnalysisResult(
-                statName = statName,
+                name = statName,
                 logMessages = logMessages,
                 latch = latch,
                 startTime = startTime,
             )
 
-            /*
-            MessageLog.e(TAG, "Clicking $statName button.")
+            MessageLog.e(TAG, "Clicking $statName button. ($newX)")
             if (!trainingButton.click(imageUtils = game.imageUtils)) {
                 MessageLog.e(TAG, "[TRAINING] Failed to click training button for $statName. Aborting training...")
                 return
             }
-            */
 
             // Slight delay for UI to update after clicking button.
             game.wait(0.2)
@@ -311,7 +313,7 @@ class Training(private val game: Game) {
                         result.numSpiritGaugesReadyToBurst = 0
                     } finally {
                         val elapsedTime = System.currentTimeMillis() - startTimeSpiritGauge
-                        Log.d(TAG, "Total time to analyze Spirit Explosion Gauge for $training: ${elapsedTime}ms")
+                        Log.d(TAG, "Total time to analyze Spirit Explosion Gauge for $statName: ${elapsedTime}ms")
                         spiritGaugeLatch.countDown()
                     }
                 }.start()
@@ -320,7 +322,7 @@ class Training(private val game: Game) {
                 try {
                     spiritGaugeLatch.await(3, TimeUnit.SECONDS)
                 } catch (_: InterruptedException) {
-                    Log.e(TAG, "[ERROR] Spirit Explosion Gauge analysis timed out for $training")
+                    Log.e(TAG, "[ERROR] Spirit Explosion Gauge analysis timed out for $statName")
                 }
             }
 
@@ -352,7 +354,7 @@ class Training(private val game: Game) {
             Thread {
                 val startTimeFailureChance = System.currentTimeMillis()
                 try {
-                    result.failureChance = game.imageUtils.findTrainingFailureChance(sourceBitmap, trainingSelectionLocation!!)
+                    result.failureChance = game.imageUtils.findTrainingFailureChance(sourceBitmap, failureChanceLocation)
                 } catch (e: Exception) {
                     MessageLog.e(TAG, "Error in findTrainingFailureChance: ${e.stackTraceToString()}")
                     result.failureChance = -1
@@ -370,7 +372,7 @@ class Training(private val game: Game) {
             Thread {
                 val startTimeRelationshipBars = System.currentTimeMillis()
                 try {
-                    result.relationshipBars = game.imageUtils.analyzeRelationshipBars(sourceBitmap)
+                    result.relationshipBars = game.imageUtils.analyzeRelationshipBars(sourceBitmap, statName)
                 } catch (e: Exception) {
                     Log.e(TAG, "[ERROR] Error in analyzeRelationshipBars: ${e.stackTraceToString()}")
                     result.relationshipBars = arrayListOf()
@@ -436,13 +438,13 @@ class Training(private val game: Game) {
                 }
 
                 // Check if risky training logic should apply based on main stat gain.
-                val mainStatGain = result.statGains[result.statName]
+                val mainStatGain = result.statGains[result.name] ?: 0
                 val effectiveFailureChance = if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
                     riskyTrainingMaxFailureChance
                 } else {
                     maximumFailureChance
                 }
-                
+
                 // Filter out trainings that exceed the effective failure chance threshold.
                 if (!test && result.failureChance > effectiveFailureChance) {
                     if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
@@ -454,7 +456,7 @@ class Training(private val game: Game) {
                 }
 
                 val newTraining = TrainingOption(
-                    name = result.statName,
+                    name = result.name,
                     statGains = result.statGains,
                     failureChance = result.failureChance,
                     relationshipBars = result.relationshipBars,
@@ -462,7 +464,7 @@ class Training(private val game: Game) {
                     numSpiritGaugesCanFill = result.numSpiritGaugesCanFill,
                     numSpiritGaugesReadyToBurst = result.numSpiritGaugesReadyToBurst
                 )
-                trainingMap[result.statName] = newTraining
+                trainingMap[result.name] = newTraining
                 break
             } else {
                 // For parallel processing, store result for later processing.
@@ -477,12 +479,12 @@ class Training(private val game: Game) {
                 try {
                     result.latch.await(10, TimeUnit.SECONDS)
                 } catch (_: InterruptedException) {
-                    Log.e(TAG, "[ERROR] Parallel training analysis timed out for ${result.statName}")
+                    Log.e(TAG, "[ERROR] Parallel training analysis timed out for ${result.name}")
                 } finally {
                     val elapsedTime = System.currentTimeMillis() - result.startTime
-                    Log.d(TAG, "Total time for ${result.statName} training analysis: ${elapsedTime}ms")
-                    result.logMessages.offer("[TRAINING] [${result.statName}] All analysis threads completed. Total time: ${elapsedTime}ms")
-                    result.logMessages.offer("[TRAINING] [${result.statName}] All 5 stat regions processed. Results: ${result.statGains.toString()}")
+                    Log.d(TAG, "Total time for ${result.name} training analysis: ${elapsedTime}ms")
+                    result.logMessages.offer("[TRAINING] [${result.name}] All analysis threads completed. Total time: ${elapsedTime}ms")
+                    result.logMessages.offer("[TRAINING] [${result.name}] All 5 stat regions processed. Results: ${result.statGains.toString()}")
                 }
             }
 
@@ -494,7 +496,7 @@ class Training(private val game: Game) {
                 }
 
                 // Check if risky training logic should apply based on main stat gain.
-                val mainStatGain = result.statGains[result.statName]
+                val mainStatGain: Int = result.statGains[result.name] ?: 0
                 val effectiveFailureChance = if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
                     riskyTrainingMaxFailureChance
                 } else {
@@ -504,15 +506,15 @@ class Training(private val game: Game) {
                 // Filter out trainings that exceed the effective failure chance threshold.
                 if (!test && result.failureChance > effectiveFailureChance) {
                     if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
-                        MessageLog.i(TAG, "[TRAINING] Skipping ${result.statName} training due to failure chance (${result.failureChance}%) exceeding risky threshold (${riskyTrainingMaxFailureChance}%) despite high main stat gain of $mainStatGain.")
+                        MessageLog.i(TAG, "[TRAINING] Skipping ${result.name} training due to failure chance (${result.failureChance}%) exceeding risky threshold (${riskyTrainingMaxFailureChance}%) despite high main stat gain of $mainStatGain.")
                     } else {
-                        MessageLog.i(TAG, "[TRAINING] Skipping ${result.statName} training due to failure chance (${result.failureChance}%) exceeding threshold (${maximumFailureChance}%).")
+                        MessageLog.i(TAG, "[TRAINING] Skipping ${result.name} training due to failure chance (${result.failureChance}%) exceeding threshold (${maximumFailureChance}%).")
                     }
                     continue
                 }
 
                 val newTraining = TrainingOption(
-                    name = result.statName,
+                    name = result.name,
                     statGains = result.statGains,
                     failureChance = result.failureChance,
                     relationshipBars = result.relationshipBars,
@@ -520,39 +522,7 @@ class Training(private val game: Game) {
                     numSpiritGaugesCanFill = result.numSpiritGaugesCanFill,
                     numSpiritGaugesReadyToBurst = result.numSpiritGaugesReadyToBurst
                 )
-                trainingMap[result.statName] = newTraining
-            }
-        }
-
-            // Check if risky training logic should apply based on main stat gain.
-            // The main stat gain for each training type corresponds to its index in the statGains array.
-            val mainStatGain = statGains[statName] ?: 0
-            val effectiveFailureChance = if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
-                riskyTrainingMaxFailureChance
-            } else {
-                maximumFailureChance
-            }
-
-            // Filter out trainings that exceed the effective failure chance threshold.
-            if (!test && failureChance > effectiveFailureChance) {
-                if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
-                    MessageLog.i(TAG, "[TRAINING] Skipping $statName training due to failure chance ($failureChance%) exceeding risky threshold (${riskyTrainingMaxFailureChance}%) despite high main stat gain of $mainStatGain.")
-                } else {
-                    MessageLog.i(TAG, "[TRAINING] Skipping $statName training due to failure chance ($failureChance%) exceeding threshold (${maximumFailureChance}%).")
-                }
-                continue
-            }
-
-            val newTraining = TrainingOption(
-                name = statName,
-                statGains = statGains.toMap(),
-                failureChance = failureChance,
-                relationshipBars = relationshipBars,
-                isRainbow = isRainbow
-            )
-            trainingMap[statName] = newTraining
-            if (singleTraining) {
-                break
+                trainingMap[result.name] = newTraining
             }
         }
 
@@ -646,28 +616,28 @@ class Training(private val game: Game) {
 		fun scoreUnityCupTraining(training: TrainingOption): Double {
 			MessageLog.i(TAG, "\n[TRAINING] Starting process to score ${training.name} Training for Unity Cup with Spirit Explosion Gauge priority.")
 
+            val target: Map<StatName, Int> = game.trainee.getStatTargetsByDistance()
+            val currentStat = game.trainee.getStat(training.name)
+            val targetStat = target[training.name] ?: 600
+
 			// 1. Highest Priority: Trainings with Spirit Explosion Gauges ready to burst.
             var score = 0.0
 			if (training.numSpiritGaugesReadyToBurst > 0) {
 				// Score increases with number of gauges ready to burst.
 				score += 1000.0 + (training.numSpiritGaugesReadyToBurst * 1000.0)
 				MessageLog.i(TAG, "[TRAINING] ${training.name} Training has ${training.numSpiritGaugesReadyToBurst} Spirit Explosion Gauge(s) ready to burst. Highest priority.")
-				
+
 				// Facility preference bonuses for bursting.
 				when (training.name) {
-					"Speed" -> score += 500.0 // Best for increased speed stat gains.
-					"Wit" -> score += 500.0 // Best for energy recovery and slightly increased speed stat gain.
-					"Stamina", "Power" -> {
+					StatName.SPEED -> score += 500.0 // Best for increased speed stat gains.
+					StatName.WIT -> score += 500.0 // Best for energy recovery and slightly increased speed stat gain.
+					StatName.STAMINA, StatName.POWER -> {
 						// Can be bursted if lacking stats.
-						val statIndex = trainings.indexOf(training.name)
-						val currentStat = currentStatsMap.getOrDefault(training.name, 0)
-						val target = statTargetsByDistance[preferredDistance] ?: intArrayOf(600, 600, 600, 300, 300)
-						val targetStat = target.getOrElse(statIndex) { 600 }
 						if (currentStat < targetStat * 0.8) {
 							score += 300.0
 						}
 					}
-					"Guts" -> {
+					StatName.GUTS -> {
 						// Guts is not ideal, but can be worth it if building up gauges to max them out for bursting.
 						if (training.numSpiritGaugesCanFill >= 2) {
 							score += 200.0 // Building up multiple gauges to allow for bursting.
@@ -716,10 +686,9 @@ class Training(private val game: Game) {
 			}
 
 			// 4. Lowest Priority: Stat prioritization.
-			val statIndex = trainings.indexOf(training.name)
-			val statGain = training.statGains.getOrElse(statIndex) { 0 }
+			val statGain = training.statGains[training.name] ?: 0
 			score += statGain.toDouble() * 0.1
-			MessageLog.i(TAG, "[TRAINING] ${training.name} Training stat gain contribution: ${statGain}.")
+			MessageLog.i(TAG, "[TRAINING] ${training.name} Training stat gain contribution: $statGain.")
 
 			// Sometimes worth doing training with no relationship bar gains if building up several bursts.
 			if (training.relationshipBars.isEmpty() && training.numSpiritGaugesCanFill > 0) {
@@ -1023,7 +992,6 @@ class Training(private val game: Game) {
 	 * Execute the training with the highest stat weight.
 	 */
 	private fun executeTraining() {
-
 		MessageLog.i(TAG, "[TRAINING] Now starting process to execute training...")
 		val trainingSelected = recommendTraining()
 

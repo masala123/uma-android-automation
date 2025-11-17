@@ -123,9 +123,9 @@ class Game(val myContext: Context) {
             y,
             w,
             h,
-            useThreshold = false,
+			useThreshold = false,
             useGrayscale = true,
-            scaleUp = 1,
+            scale = 1.0,
             ocrEngine = "tesseract",
             debugName = "getFanCountClass",
         )
@@ -972,9 +972,13 @@ class Game(val myContext: Context) {
         MessageLog.i(TAG, "TRAINEE DETAILS\n$traineeString")
 
         */
+        /*
         training.analyzeTrainings(test = true, singleTraining = true)
-        MessageLog.e(TAG, "TRAINING MAP: ${training.trainingMap}")
+        for ((k, v) in training.trainingMap) {
+            MessageLog.e(TAG, "[${v.name}] ${v.statGains.entries}")
+        }
         return true
+        */
 
 		// Print current app settings at the start of the run.
 		try {
