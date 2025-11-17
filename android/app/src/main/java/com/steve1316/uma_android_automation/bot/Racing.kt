@@ -1178,7 +1178,6 @@ class Racing (private val game: Game) {
      * @param isExtra Flag to determine the following actions to finish up this mandatory or extra race.
      */
     fun finalizeRaceResults(resultCheck: Boolean, isExtra: Boolean = false) {
-        MessageLog.e(TAG, "finalizeRaceResults")
         MessageLog.i(TAG, "\n[RACE] Now performing cleanup and finishing the race.")
         if (!resultCheck) {
             game.notificationMessage = "Bot has run out of retry attempts for racing. Stopping the bot now..."

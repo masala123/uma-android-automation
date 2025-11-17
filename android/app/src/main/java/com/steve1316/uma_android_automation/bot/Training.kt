@@ -229,14 +229,6 @@ class Training(private val game: Game) {
                 StatName.WIT -> ButtonTrainingWit
             }
 
-            val newX = when (statName) {
-                StatName.SPEED -> 0.0
-                StatName.STAMINA -> 280.0
-                StatName.POWER -> 402.0
-                StatName.GUTS -> 591.0
-                StatName.WIT -> 779.0
-            }
-
             // Unified approach: always use result object and start threads the same way.
             // Use CountDownLatch to run the operations in parallel to cut down on processing time.
             // Note: For parallel processing, Spirit Explosion Gauge is handled synchronously for Unity Cup, so latch count is 4.
@@ -257,7 +249,6 @@ class Training(private val game: Game) {
                 startTime = startTime,
             )
 
-            MessageLog.e(TAG, "Clicking $statName button. ($newX)")
             if (!trainingButton.click(imageUtils = game.imageUtils)) {
                 MessageLog.e(TAG, "[TRAINING] Failed to click training button for $statName. Aborting training...")
                 return

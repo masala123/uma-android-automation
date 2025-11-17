@@ -26,9 +26,9 @@ import com.steve1316.uma_android_automation.components.LabelStatTrackSurface
 import com.steve1316.uma_android_automation.components.LabelStatStyle
 
 class Trainee {
-    private val TAG: String = "Trainee"
-
     companion object {
+        const val TAG: String = "Trainee"
+
         data class Stats(
             var speed: Int = -1,
             var stamina: Int = -1,
@@ -238,7 +238,7 @@ class Trainee {
 
         val (point, bitmap) = label.find(imageUtils = imageUtils)
         if (point == null) {
-            MessageLog.e("Trainee", "findAptitudesInBitmap<${T::class.simpleName}>:: point is NULL.")
+            MessageLog.e(TAG, "findAptitudesInBitmap<${T::class.simpleName}>:: point is NULL.")
             return null
         }
 
@@ -252,7 +252,7 @@ class Trainee {
                 "Trainee::findAptitudesInBitmap<${T::class.simpleName}>:: crop bitmap.",
             )
             if (croppedBitmap == null) {
-                MessageLog.e("Trainee", "findAptitudesInBitmap<${T::class.simpleName}>:: Failed to create cropped bitmap: ${option}.")
+                MessageLog.e(TAG, "findAptitudesInBitmap<${T::class.simpleName}>:: Failed to create cropped bitmap: ${option}.")
                 return@forEachIndexed
             }
             for (aptitude in Aptitude.entries) {

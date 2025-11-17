@@ -22,8 +22,6 @@ import com.steve1316.uma_android_automation.utils.types.DatePhase
  * @property bIsFinaleSeason Whether the game is in the finale season.
  */
 class GameDate {
-    private val TAG: String = "GameDate"
-
     var year: DateYear = DateYear.JUNIOR
     var month: DateMonth = DateMonth.JANUARY
     var phase: DatePhase = DatePhase.EARLY
@@ -38,12 +36,26 @@ class GameDate {
         phase: DatePhase,
     ) {
         val day = toDay(year, month, phase)
-        setDay(day)
+        
+        this.year = year
+        this.month = month
+        this.phase = phase
+        this.day = day
+
+        bIsPreDebut = this.day < 12
+        bIsFinaleSeason = this.day > 72
     }
 
     /** Constructor that takes a day argument to calculate the year/month/phase. */
     constructor(day: Int) {
-        setDay(day)
+        val tmpDate = fromDay(day)
+        this.year = tmpDate.year
+        this.month = tmpDate.month
+        this.phase = tmpDate.phase
+        this.day = day
+
+        bIsPreDebut = this.day < 12
+        bIsFinaleSeason = this.day > 72
     }
 
     companion object {
@@ -61,7 +73,7 @@ class GameDate {
          *
          * @return The GameDate object generated from the day number or NULL if conversion failed.
          */
-        fun fromDay(day: Int): GameDate? {
+        fun fromDay(day: Int): GameDate {
             // Clamp minimum day to 1.
             if (day < 1) {
                 return GameDate(
@@ -75,7 +87,13 @@ class GameDate {
             // formulae below, so we just use the alternative secondary
             // constructor and return that object.
             if (day > 72) {
-                return GameDate(day = day)
+                val tmpDate = GameDate(
+                    year = DateYear.SENIOR,
+                    month = DateMonth.DECEMBER,
+                    phase = DatePhase.LATE,
+                )
+                tmpDate.day = day
+                return tmpDate
             }
 
             // Day starts at 1, not 0, so we need to decrement for the following
@@ -232,24 +250,33 @@ class GameDate {
         }
 
         fun getFinalsDay(imageUtils: CustomImageUtils): Int? {
-            val sourceBitmap = imageUtils.getSourceBitmap()
-            val finalsLocation = imageUtils.findImageWithBitmap("race_select_extra_locked_uma_finals", sourceBitmap, suppressError = true, region = imageUtils.regionBottomHalf)
-            val bIsFinals: Boolean = finalsLocation != null
+            val goalText = imageUtils.getGoalText().lowercase()
 
-            if (!bIsFinals) {
+            val dayString: String? = imageUtils.determineDayString()
+            if (dayString == null) {
+                MessageLog.w(TAG, "[DATE] Could not detect day string.")
                 return null
             }
 
+            if (!dayString.lowercase().contains("finale")) {
+                MessageLog.w(TAG, "[DATE] getFinalsDay:: Not in finale season. Day string: $dayString")
+                return null
+            }
+
+            fun goalTextMatch(target: String, query: String, threshold: Double = 0.9): Boolean {
+                return TextUtils.findMostSimilarSubstring(target, query, threshold) != null
+            }
+
             return when {
-                imageUtils.findImageWithBitmap("date_final_qualifier", sourceBitmap, suppressError = true, region = imageUtils.regionTopHalf, customConfidence = 0.9) != null -> {
+                goalTextMatch(goalText, "qualifier") -> {
                     MessageLog.d(TAG, "[DATE] Detected Finals Qualifier (Turn 73).")
                     73
                 }
-                imageUtils.findImageWithBitmap("date_final_semifinal", sourceBitmap, suppressError = true, region = imageUtils.regionTopHalf, customConfidence = 0.9) != null -> {
+                goalTextMatch(goalText, "semifinal") -> {
                     MessageLog.d(TAG, "[DATE] Detected Finals Semifinal (Turn 74).")
                     74
                 }
-                imageUtils.findImageWithBitmap("date_final_finals", sourceBitmap, suppressError = true, region = imageUtils.regionTopHalf, customConfidence = 0.9) != null -> {
+                goalTextMatch(goalText, "finals") -> {
                     MessageLog.d(TAG, "[DATE] Detected Finals Finals (Turn 75).")
                     75
                 }
@@ -297,12 +324,8 @@ class GameDate {
     }
 
     /** Updates class members to reflect the passed day. */
-    fun setDay(day: Int) {
-        val tmpDate: GameDate? = fromDay(day)
-        if (tmpDate == null) {
-            MessageLog.e(TAG, "setDay:: GameDate.fromDay returned NULL for day=$day.")
-            return
-        }
+    fun updateDay(day: Int) {
+        val tmpDate: GameDate = fromDay(day)
         this.year = tmpDate.year
         this.month = tmpDate.month
         this.phase = tmpDate.phase
@@ -329,7 +352,7 @@ class GameDate {
     fun update(imageUtils: CustomImageUtils): Boolean {
         val finalsDay: Int? = getFinalsDay(imageUtils)
         if (finalsDay != null) {
-            setDay(finalsDay)
+            updateDay(finalsDay)
         } else {
             // If finalsDay is NULL then we need to detect the date from the screen.
             val tmpDate: GameDate? = fromDateString(imageUtils = imageUtils)
@@ -337,7 +360,7 @@ class GameDate {
                 MessageLog.e(TAG, "GameDate.fromDateString returned NULL.")
                 return false
             }
-            setDay(tmpDate.day)
+            updateDay(tmpDate.day)
         }
         return true
     }

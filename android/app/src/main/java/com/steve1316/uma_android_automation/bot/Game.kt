@@ -857,42 +857,6 @@ class Game(val myContext: Context) {
 	 * @return True if all automation goals have been met. False otherwise.
 	 */
 	fun start(): Boolean {
-        /*
-        val fanCountClass = getFanCountClass()
-        if (fanCountClass != null) {
-            trainee.fanCountClass = fanCountClass
-        } else {
-            MessageLog.e(TAG, "FanCountClass is NULL")
-        }
-
-        checkFans()
-        wait(1.0)
-        handleDialogs()
-        wait(1.0)
-        
-        trainee.updateStats(imageUtils = imageUtils)
-        trainee.updateSkillPoints(imageUtils = imageUtils)
-        trainee.updateMood(imageUtils = imageUtils)
-
-        if (!trainee.bHasUpdatedAptitudes) {
-            MessageLog.e(TAG, "DOING IT")
-            checkAptitudes()
-            wait(1.0)
-            handleDialogs()
-            wait(1.0)
-        }
-        val traineeString = trainee.toString()
-        MessageLog.i(TAG, "TRAINEE DETAILS\n$traineeString")
-
-        */
-        /*
-        training.analyzeTrainings(test = true, singleTraining = true)
-        for ((k, v) in training.trainingMap) {
-            MessageLog.e(TAG, "[${v.name}] ${v.statGains.entries}")
-        }
-        return true
-        */
-
 		// Print current app settings at the start of the run.
 		try {
 			val formattedSettingsString = SettingsHelper.getStringSetting("misc", "formattedSettingsString")

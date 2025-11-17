@@ -12,6 +12,7 @@ import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.bot.Game
 import com.steve1316.uma_android_automation.utils.types.StatName
 import com.steve1316.uma_android_automation.utils.types.Aptitude
+import com.steve1316.uma_android_automation.utils.types.BoundingBox
 import org.opencv.android.Utils
 import org.opencv.core.*
 import org.opencv.imgcodecs.Imgcodecs
@@ -1806,5 +1807,37 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
         Log.d(TAG, "[DEBUG] Results of energy bar analysis: Gray pixels=$grayPixels, Color pixels=$colorPixels, Energy=$result")
         return result
+    }
+
+    fun getGoalText(): String {
+        val bbox = BoundingBox(
+            x = 365,
+            y = 110,
+            w = relWidth(550),
+            h = relHeight(40), //relHeight(90),
+        )
+        val sourceBitmap = getSourceBitmap()
+
+		// Perform OCR with 2x scaling and no thresholding.
+		val result = performOCROnRegion(
+			sourceBitmap!!,
+			bbox.x,
+            bbox.y,
+            bbox.w,
+            bbox.h,
+			useThreshold = false,
+			useGrayscale = true,
+			scale = 1.0,
+			ocrEngine = "mlkit",
+			debugName = "GoalText",
+		)
+
+		if (debugMode) {
+			MessageLog.d(TAG, "getGoalText:: Detected text: $result")
+		} else {
+			Log.d(TAG, "getGoalText:: Detected text: $result")
+		}
+
+		return result
     }
 }
