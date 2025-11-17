@@ -38,7 +38,7 @@ const RacingPlanSettings = () => {
 
     // Merge current racing settings with defaults to handle missing properties.
     const racingSettings = { ...defaultSettings.racing, ...settings.racing }
-    const { enableRacingPlan, racingPlan, minFansThreshold, perferredTerrain, lookAheadDays, smartRacingCheckInterval, minimumQualityThreshold, timeDecayFactor, improvementThreshold, preferredGrades } = racingSettings
+    const { enableRacingPlan, racingPlan, minFansThreshold, preferredTerrain, lookAheadDays, smartRacingCheckInterval, minimumQualityThreshold, timeDecayFactor, improvementThreshold, preferredGrades } = racingSettings
 
     const [searchQuery, setSearchQuery] = useState("")
     // Local state for decimal inputs to preserve intermediate values while typing (e.g., "7.").
@@ -70,7 +70,7 @@ const RacingPlanSettings = () => {
         const matchesSearch = race.name.toLowerCase().includes(searchQuery.toLowerCase()) || race.date.toLowerCase().includes(searchQuery.toLowerCase())
 
         const matchesFans = race.fans >= minFansThreshold
-        const matchesTerrain = perferredTerrain === "Any" || race.terrain === perferredTerrain
+        const matchesTerrain = preferredTerrain === "Any" || race.terrain === preferredTerrain
         const matchesGrade = preferredGrades.includes(race.grade) && race.grade !== "OP" && race.grade !== "Pre-OP"
 
         return matchesSearch && matchesFans && matchesTerrain && matchesGrade
@@ -353,16 +353,16 @@ const RacingPlanSettings = () => {
                 </View>
 
                 <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Preferred Track Surface</Text>
+                    <Text style={styles.sectionTitle}>Preferred Terrain</Text>
                     <View style={{ flexDirection: "row" }}>
                         {["Any", "Turf", "Dirt"].map((terrain) => (
                             <TouchableOpacity
                                 key={terrain}
-                                onPress={() => updateRacingSetting("perferredTerrain", terrain)}
+                                onPress={() => updateRacingSetting("preferredTerrain", terrain)}
                                 style={[
                                     styles.terrainButton,
                                     {
-                                        backgroundColor: perferredTerrain === terrain ? colors.primary : colors.card,
+                                        backgroundColor: preferredTerrain === terrain ? colors.primary : colors.card,
                                     },
                                 ]}
                             >
@@ -370,7 +370,7 @@ const RacingPlanSettings = () => {
                                     style={[
                                         styles.terrainButtonText,
                                         {
-                                            color: perferredTerrain === terrain ? colors.background : colors.foreground,
+                                            color: preferredTerrain === terrain ? colors.background : colors.foreground,
                                         },
                                     ]}
                                 >
