@@ -82,7 +82,15 @@ class Game(val myContext: Context) {
         // Detect the new fan count by clicking the fans info button.
         // This opens the "Umamusume Class" dialog.
         // We process this dialog in the dialog handler.
-        ButtonHomeFansInfo.click(imageUtils = imageUtils)
+        // This button is in a different position for Unity/URA scenarios.
+        // The Unity scenario has an info button just like the ButtonHomeFansInfo
+        // button so they are easily mistaken by OCR.
+        // Thus we just tap their location manually.
+        if (scenario == "Unity Cup") {
+            tap(264.0, 1184.0, ButtonHomeFansInfo.templates[0].name, ignoreWaiting = true)
+        } else {
+            tap(240.0, 330.0, ButtonHomeFansInfo.templates[0].name, ignoreWaiting = true)
+        }
     }
 
     fun checkAptitudes() {
