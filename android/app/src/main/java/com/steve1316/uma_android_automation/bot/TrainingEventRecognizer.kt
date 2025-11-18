@@ -17,15 +17,6 @@ import org.json.JSONObject
 class TrainingEventRecognizer(private val game: Game, private val imageUtils: CustomImageUtils) {
 	private val TAG: String = "[${MainActivity.loggerTag}]TrainingEventRecognizer"
 	
-	private var result = ""
-	private var confidence = 0.0
-	private var category = ""
-	private var eventTitle = ""
-	private var supportCardTitle = ""
-	private var eventOptionRewards: ArrayList<String> = arrayListOf()
-	
-	private var character = ""
-	
 	// Define event matching patterns to filter false positives during detection.
 	val eventPatterns = mapOf(
 		"New Year's Resolutions" to listOf("New Year's Resolutions", "Resolutions"),
@@ -37,7 +28,8 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		"Don't Overdo It!" to listOf("Don't Overdo It"),
 		"Extra Training" to listOf("Extra Training"),
 		"Acupuncture (Just an Acupuncturist, No Worries! ☆)" to listOf("Acupuncture", "Just an Acupuncturist"),
-		"Etsuko's Exhaustive Coverage" to listOf("Etsuko", "Exhaustive Coverage")
+		"Etsuko's Exhaustive Coverage" to listOf("Etsuko", "Exhaustive Coverage"),
+        "Tutorial" to listOf("Tutorial")
 	)
 	
 	// The full character event data should be stored in SQLite and will be loaded here.
@@ -93,19 +85,42 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
         val fourth: D
     )
 
+    /**
+     * Data class to hold the result of finding the most similar string.
+     */
+    private data class MatchingResult(
+        val confidence: Double,
+        val category: String,
+        val eventTitle: String,
+        val supportCardTitle: String,
+        val eventOptionRewards: ArrayList<String>,
+        val character: String
+    )
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 
 	/**
 	 * Attempt to find the most similar string from data compared to the string returned by OCR.
+	 *
+	 * @param ocrResult The string result from OCR detection.
+	 * @return A MatchingResult containing the best match found, or default values if no match is found.
 	 */
-	private fun findMostSimilarString() {
-		MessageLog.i(TAG, "[TRAINING_EVENT_RECOGNIZER] Now starting process to find most similar string to: $result")
+	private fun findMostSimilarString(ocrResult: String): MatchingResult {
+		MessageLog.i(TAG, "[TRAINING_EVENT_RECOGNIZER] Now starting process to find most similar string to: $ocrResult")
+		
+		// Initialize result with default values.
+		var confidence = 0.0
+		var category = ""
+		var eventTitle = ""
+		var supportCardTitle = ""
+		var eventOptionRewards: ArrayList<String> = arrayListOf()
+		var character = ""
 		
 		// Check if this matches any special event patterns first to filter false positives.
 		var matchedSpecialEvent: String? = null
 		for ((eventName, patterns) in eventPatterns) {
-			if (patterns.any { pattern -> result.contains(pattern) }) {
+			if (patterns.any { pattern -> ocrResult.contains(pattern) }) {
 				matchedSpecialEvent = eventName
 				break
 			}
@@ -117,7 +132,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		}
 		
 		// Remove any detected whitespaces.
-		result = result.replace(" ", "")
+		val processedResult = ocrResult.replace(" ", "")
 		
 		// Use the Jaro Winkler algorithm to compare similarities the OCR detected string and the rest of the strings inside the data classes.
 		val service = StringSimilarityServiceImpl(JaroWinklerStrategy())
@@ -138,9 +153,9 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 						eventOptions.add(eventOptionsArray.getString(i))
 					}
 					
-					val score = service.score(result, eventName)
+					val score = service.score(processedResult, eventName)
 					if (!hideComparisonResults) {
-						MessageLog.i(TAG, "[CHARA] $characterKey \"${result}\" vs. \"${eventName}\" confidence: ${game.decimalFormat.format(score)}")
+						MessageLog.i(TAG, "[CHARA] $characterKey \"${processedResult}\" vs. \"${eventName}\" confidence: ${game.decimalFormat.format(score)}")
 					}
 					
 					if (score >= confidence) {
@@ -170,9 +185,9 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 						eventOptions.add(eventOptionsArray.getString(i))
 					}
 					
-					val score = service.score(result, eventName)
+					val score = service.score(processedResult, eventName)
 					if (!hideComparisonResults) {
-						MessageLog.i(TAG, "[SUPPORT] $supportName \"${result}\" vs. \"${eventName}\" confidence: $score")
+						MessageLog.i(TAG, "[SUPPORT] $supportName \"${processedResult}\" vs. \"${eventName}\" confidence: $score")
 					}
 					
 					if (score >= confidence) {
@@ -188,6 +203,8 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 
 		MessageLog.i(TAG, "${if (!hideComparisonResults) "\n" else ""}[TRAINING_EVENT_RECOGNIZER] Finished process to find similar string.")
 		MessageLog.i(TAG, "[TRAINING_EVENT_RECOGNIZER] Event data fetched for \"${eventTitle}\".")
+		
+		return MatchingResult(confidence, category, eventTitle, supportCardTitle, eventOptionRewards, character)
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -202,35 +219,35 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 	fun start(): Quadruple<ArrayList<String>, Double, String, String> {
 		MessageLog.i(TAG, "\n********************")
 
-		// Reset to default values.
-		result = ""
-		confidence = 0.0
-		category = ""
-		eventTitle = ""
-		supportCardTitle = ""
-		eventOptionRewards.clear()
+		// Initialize best result with default values.
+		var bestResult = MatchingResult(0.0, "", "", "", arrayListOf(), "")
 		
 		var increment = 0.0
 		
 		val startTime: Long = System.currentTimeMillis()
 		while (true) {
 			// Perform Tesseract OCR detection.
-			if ((255.0 - threshold - increment) > 0.0) {
-				result = imageUtils.findEventTitle(increment)
+			val ocrResult: String = if ((255.0 - threshold - increment) > 0.0) {
+				imageUtils.findEventTitle(increment)
 			} else {
 				break
 			}
 			
-			if (result.isNotEmpty() && result != "") {
+			if (ocrResult.isNotEmpty() && ocrResult != "") {
 				// Now attempt to find the most similar string compared to the one from OCR.
-				findMostSimilarString()
+				val matchingResult = findMostSimilarString(ocrResult)
 				
-				when (category) {
+				// Update best result if this one is better.
+				if (matchingResult.confidence >= bestResult.confidence) {
+					bestResult = matchingResult
+				}
+				
+				when (matchingResult.category) {
 					"character" -> {
-						MessageLog.i(TAG, "\n[RESULT] Character $character Event Name = $eventTitle with confidence = ${game.decimalFormat.format(confidence)}")
+						MessageLog.i(TAG, "\n[RESULT] Character ${matchingResult.character} Event Name = ${matchingResult.eventTitle} with confidence = ${game.decimalFormat.format(matchingResult.confidence)}")
 					}
 					"support" -> {
-						MessageLog.i(TAG, "\n[RESULT] Support $supportCardTitle Event Name = $eventTitle with confidence = ${game.decimalFormat.format(confidence)}")
+						MessageLog.i(TAG, "\n[RESULT] Support ${matchingResult.supportCardTitle} Event Name = ${matchingResult.eventTitle} with confidence = ${game.decimalFormat.format(matchingResult.confidence)}")
 					}
 				}
 				
@@ -238,7 +255,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 					MessageLog.i(TAG, "\n[RESULT] Threshold incremented by $increment")
 				}
 				
-				if (confidence < minimumConfidence && enableAutomaticRetry) {
+				if (matchingResult.confidence < minimumConfidence && enableAutomaticRetry) {
 					increment += 5.0
 				} else {
 					break
@@ -252,12 +269,12 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		Log.d(TAG, "Total Runtime for recognizing training event: ${endTime - startTime}ms")
 		MessageLog.i(TAG, "********************")
 		
-		val characterOrSupportName = when (category) {
-			"character" -> character
-			"support" -> supportCardTitle
+		val characterOrSupportName = when (bestResult.category) {
+			"character" -> bestResult.character
+			"support" -> bestResult.supportCardTitle
 			else -> ""
 		}
 		
-		return Quadruple(eventOptionRewards, confidence, eventTitle, characterOrSupportName)
+		return Quadruple(bestResult.eventOptionRewards, bestResult.confidence, bestResult.eventTitle, characterOrSupportName)
 	}
 }
