@@ -253,9 +253,21 @@ ${longTargetsString}
         })
     }, [formattedSettingsString])
 
-    const introMessage = bsc.settings.misc.enableSettingsDisplay
-        ? `****************************************\nWelcome to ${bsc.appName} v${bsc.appVersion}\n****************************************\n\n${formattedSettingsString}`
-        : `****************************************\nWelcome to ${bsc.appName} v${bsc.appVersion}\n****************************************`
+    // Don't add formattedSettingsString if logs are already present (Android already copied it).
+    const introMessage = useMemo(() => {
+        const hasLogs = mlc.messageLog.length > 0
+        const baseMessage = `****************************************\nWelcome to ${bsc.appName} v${bsc.appVersion}\n****************************************`
+        
+        if (hasLogs) {
+            // If logs exist, Android already copied the settings string, so don't include it.
+            return baseMessage
+        }
+        
+        // Only include settings string if enabled and no logs exist yet.
+        return bsc.settings.misc.enableSettingsDisplay
+            ? `${baseMessage}\n\n${formattedSettingsString}`
+            : baseMessage
+    }, [bsc.settings.misc.enableSettingsDisplay, formattedSettingsString, mlc.messageLog.length])
 
     // Process log messages with color coding and virtualization.
     const processedMessages = useMemo((): LogMessage[] => {
