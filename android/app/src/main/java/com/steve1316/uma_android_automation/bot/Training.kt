@@ -382,32 +382,16 @@ class Training(private val game: Game) {
 					// This ensures if retry is needed, it can take a new screenshot while still on the correct training.
 					// For singleTraining mode, handle it in a thread like the other analyses.
 					if (game.scenario == "Unity Cup" && BotService.isRunning && !singleTraining) {
-						val spiritGaugeLatch = CountDownLatch(1)
-						Thread {
-							val startTimeSpiritGauge = System.currentTimeMillis()
-							try {
-							val gaugeResult = game.imageUtils.analyzeSpiritExplosionGauges(sourceBitmap)
-							if (gaugeResult != null) {
-								result.numSpiritGaugesCanFill = gaugeResult.numGaugesCanFill
-								result.numSpiritGaugesReadyToBurst = gaugeResult.numGaugesReadyToBurst
-							}
-							} catch (e: Exception) {
-								Log.e(TAG, "[ERROR] Error in Spirit Explosion Gauge analysis: ${e.stackTraceToString()}")
-								result.numSpiritGaugesCanFill = 0
-								result.numSpiritGaugesReadyToBurst = 0
-							} finally {
-								val elapsedTime = System.currentTimeMillis() - startTimeSpiritGauge
-								Log.d(TAG, "Total time to analyze Spirit Explosion Gauge for $training: ${elapsedTime}ms")
-								spiritGaugeLatch.countDown()
-							}
-						}.start()
-						
-						// Wait for spirit gauge analysis to complete before moving to next training.
-						try {
-							spiritGaugeLatch.await(3, TimeUnit.SECONDS)
-						} catch (_: InterruptedException) {
-							Log.e(TAG, "[ERROR] Spirit Explosion Gauge analysis timed out for $training")
-						}
+                        val startTimeSpiritGauge = System.currentTimeMillis()
+                        val gaugeResult = game.imageUtils.analyzeSpiritExplosionGauges(sourceBitmap)
+                        if (gaugeResult != null) {
+                            result.numSpiritGaugesCanFill = gaugeResult.numGaugesCanFill
+                            result.numSpiritGaugesReadyToBurst = gaugeResult.numGaugesReadyToBurst
+                        } else {
+                            result.numSpiritGaugesCanFill = 0
+                            result.numSpiritGaugesReadyToBurst = 0
+                        }
+                        Log.d(TAG, "Total time to analyze Spirit Explosion Gauge for $training: ${System.currentTimeMillis() - startTimeSpiritGauge}ms")
 					}
 
 					// Check if bot is still running before starting parallel threads.
@@ -511,8 +495,9 @@ class Training(private val game: Game) {
 						// For singleTraining, wait here and process immediately.
 						try {
 							latch.await(3, TimeUnit.SECONDS)
-						} catch (_: InterruptedException) {
+						} catch (e: InterruptedException) {
 							Log.e(TAG, "[ERROR] Parallel training analysis timed out")
+							Thread.currentThread().interrupt()
 						} finally {
 							val elapsedTime = System.currentTimeMillis() - startTime
 							Log.d(TAG, "Total time for $training training analysis: ${elapsedTime}ms")
@@ -556,21 +541,39 @@ class Training(private val game: Game) {
 
 				// For parallel processing, wait for all analyses and process results.
 				if (!singleTraining && analysisResults.isNotEmpty()) {
-					// Wait for all analysis threads to complete with 10s timeout.
-					for (result in analysisResults) {
-						try {
-							result.latch.await(10, TimeUnit.SECONDS)
-						} catch (_: InterruptedException) {
-							Log.e(TAG, "[ERROR] Parallel training analysis timed out for ${result.training}")
-						} finally {
-							val elapsedTime = System.currentTimeMillis() - result.startTime
-							Log.d(TAG, "Total time for ${result.training} training analysis: ${elapsedTime}ms")
-							result.logMessages.offer("[TRAINING] [${result.training}] All analysis threads completed. Total time: ${elapsedTime}ms")
-							result.logMessages.offer("[TRAINING] [${result.training}] All 5 stat regions processed. Results: ${result.statGains.toList()}")
+					// Wait for all analysis threads to complete in parallel with 10s timeout.
+					val waitThreads = analysisResults.map { result ->
+						Thread {
+							try {
+								// Check if bot is still running before waiting.
+								if (!BotService.isRunning) {
+									return@Thread
+								}
+								result.latch.await(10, TimeUnit.SECONDS)
+							} catch (e: InterruptedException) {
+								Log.e(TAG, "[ERROR] Parallel training analysis timed out for ${result.training}")
+								Thread.currentThread().interrupt()
+							} finally {
+								// Only log and process if bot is still running.
+								if (BotService.isRunning) {
+									val elapsedTime = System.currentTimeMillis() - result.startTime
+									Log.d(TAG, "Total time for ${result.training} training analysis: ${elapsedTime}ms")
+									result.logMessages.offer("[TRAINING] [${result.training}] All analysis threads completed. Total time: ${elapsedTime}ms")
+									result.logMessages.offer("[TRAINING] [${result.training}] All 5 stat regions processed. Results: ${result.statGains.toList()}")
+								}
+							}
 						}
 					}
-
-					// Process results and output logs in training order.
+					
+					// Start all wait threads concurrently.
+					waitThreads.forEach { it.start() }
+					// Join all wait threads to ensure completion.
+					if (BotService.isRunning) {
+						waitThreads.forEach { it.join() }
+					} else {
+						return
+					}
+					
 					for (result in analysisResults) {
 						// Output buffered log messages for this training.
 						while (result.logMessages.isNotEmpty()) {
@@ -1080,7 +1083,6 @@ class Training(private val game: Game) {
 	 * Execute the training with the highest stat weight.
 	 */
 	private fun executeTraining() {
-
 		MessageLog.i(TAG, "[TRAINING] Now starting process to execute training...")
 		val trainingSelected = recommendTraining()
 
