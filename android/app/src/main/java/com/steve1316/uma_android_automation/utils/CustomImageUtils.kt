@@ -793,9 +793,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 				numGaugesCanFill++
 			}
 
-			if (debugMode) {
-				Log.d(TAG, "[DEBUG] Spirit Explosion Gauge at (${iconLocation.x}, ${iconLocation.y}): ${decimalFormat.format(roundedFillPercent)}% filled")
-			}
+            Log.d(TAG, "[DEBUG] Spirit Explosion Gauge at (${iconLocation.x}, ${iconLocation.y}): ${decimalFormat.format(roundedFillPercent)}% filled")
 
 			grayMask.release()
 			hsvMat.release()
