@@ -73,7 +73,10 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		val filledSegments: Int,
 		val dominantColor: String,
         val statBlock: StatBlock,
-	)
+	) {
+        val isRainbow: Boolean
+            get() = statBlock.name == statName.name && dominantColor == "orange"
+    }
 
 	data class SpiritGaugeResult(
 		val numGaugesCanFill: Int,

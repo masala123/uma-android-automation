@@ -46,7 +46,7 @@ class Training(private val game: Game) {
 		var statGains: Map<StatName, Int> = mapOf()
 		var failureChance: Int = -1
 		var relationshipBars: ArrayList<CustomImageUtils.BarFillResult> = arrayListOf()
-		var isRainbow: Boolean = false
+		var numRainbow: Int = 0
 		var numSpiritGaugesCanFill: Int = 0
 		var numSpiritGaugesReadyToBurst: Int = 0
 	}
@@ -56,7 +56,7 @@ class Training(private val game: Game) {
 		val statGains: Map<StatName, Int>,
 		val failureChance: Int,
 		val relationshipBars: ArrayList<CustomImageUtils.BarFillResult>,
-		val isRainbow: Boolean,
+		val numRainbow: Int,
 		val numSpiritGaugesCanFill: Int = 0,
 		val numSpiritGaugesReadyToBurst: Int = 0
 	) {
@@ -70,7 +70,7 @@ class Training(private val game: Game) {
 			if (name != other.name) return false
 			if (!statGains.equals(other.statGains)) return false
 			if (relationshipBars != other.relationshipBars) return false
-			if (isRainbow != other.isRainbow) return false
+			if (numRainbow != other.numRainbow) return false
 			if (numSpiritGaugesCanFill != other.numSpiritGaugesCanFill) return false
 			if (numSpiritGaugesReadyToBurst != other.numSpiritGaugesReadyToBurst) return false
 
@@ -82,7 +82,7 @@ class Training(private val game: Game) {
 			result = 31 * result + name.hashCode()
 			result = 31 * result + statGains.entries.hashCode()
 			result = 31 * result + relationshipBars.hashCode()
-			result = 31 * result + isRainbow.hashCode()
+			result = 31 * result + numRainbow
 			result = 31 * result + numSpiritGaugesCanFill
 			result = 31 * result + numSpiritGaugesReadyToBurst
 			return result
@@ -237,7 +237,7 @@ class Training(private val game: Game) {
             // Use CountDownLatch to run the operations in parallel to cut down on processing time.
             // Note: For parallel processing, Spirit Explosion Gauge is handled synchronously for Unity Cup, so latch count is 4.
             // For singleTraining, Spirit Explosion Gauge runs in a thread for Unity Cup, so latch count is 5.
-            val latch = CountDownLatch(if (singleTraining && game.scenario == "Unity Cup") 5 else 4)
+            val latch = CountDownLatch(if (singleTraining && game.scenario == "Unity Cup") 4 else 3)
 
             // Create log message buffer for this training.
             val logMessages = ConcurrentLinkedQueue<String>()
@@ -372,6 +372,9 @@ class Training(private val game: Game) {
                 val startTimeRelationshipBars = System.currentTimeMillis()
                 try {
                     result.relationshipBars = game.imageUtils.analyzeRelationshipBars(sourceBitmap, statName)
+                    result.numRainbow = result.relationshipBars.count { barFillResult ->
+                        barFillResult.isRainbow
+                    }
                 } catch (e: Exception) {
                     Log.e(TAG, "[ERROR] Error in analyzeRelationshipBars: ${e.stackTraceToString()}")
                     result.relationshipBars = arrayListOf()
@@ -385,25 +388,7 @@ class Training(private val game: Game) {
                 }
             }.start()
 
-            // Thread 4: Detect rainbow training.
-            Thread {
-                val startTimeRainbow = System.currentTimeMillis()
-                try {
-                    result.isRainbow = game.imageUtils.findImageWithBitmap("training_rainbow", sourceBitmap, region = game.imageUtils.regionBottomHalf, suppressError = true) != null
-                } catch (e: Exception) {
-                    Log.e(TAG, "[ERROR] Error in rainbow detection: ${e.stackTraceToString()}")
-                    result.isRainbow = false
-                } finally {
-                    latch.countDown()
-                    val elapsedTime = System.currentTimeMillis() - startTimeRainbow
-                    Log.d(TAG, "Total time to detect rainbow for $statName: ${elapsedTime}ms")
-                    if (!singleTraining) {
-                        logMessages.offer("[TRAINING] [$statName] Rainbow detection completed in ${elapsedTime}ms")
-                    }
-                }
-            }.start()
-
-            // Thread 5: Analyze Spirit Explosion Gauges (Unity Cup only, singleTraining mode only).
+            // Thread 4: Analyze Spirit Explosion Gauges (Unity Cup only, singleTraining mode only).
             if (game.scenario == "Unity Cup" && singleTraining) {
                 Thread {
                     val startTimeSpiritGauge = System.currentTimeMillis()
@@ -459,7 +444,7 @@ class Training(private val game: Game) {
                     statGains = result.statGains,
                     failureChance = result.failureChance,
                     relationshipBars = result.relationshipBars,
-                    isRainbow = result.isRainbow,
+                    numRainbow = result.numRainbow,
                     numSpiritGaugesCanFill = result.numSpiritGaugesCanFill,
                     numSpiritGaugesReadyToBurst = result.numSpiritGaugesReadyToBurst
                 )
@@ -517,7 +502,7 @@ class Training(private val game: Game) {
                     statGains = result.statGains,
                     failureChance = result.failureChance,
                     relationshipBars = result.relationshipBars,
-                    isRainbow = result.isRainbow,
+                    numRainbow = result.numRainbow,
                     numSpiritGaugesCanFill = result.numSpiritGaugesCanFill,
                     numSpiritGaugesReadyToBurst = result.numSpiritGaugesReadyToBurst
                 )
@@ -647,7 +632,7 @@ class Training(private val game: Game) {
 				}
 
 				// Bonus for rainbow training while bursting.
-				if (training.isRainbow) {
+				if (training.numRainbow > 0) {
 					score += 200.0
 					MessageLog.i(TAG, "[TRAINING] Adding some score for ${training.name} Training for being a rainbow training.")
 				}
@@ -940,7 +925,7 @@ class Training(private val game: Game) {
 
 			// 4. Rainbow training multiplier (Year 2+ only).
 			// Rainbow is heavily favored because it improves overall ratio balance.
-			val rainbowMultiplier = if (training.isRainbow && game.currentDate.year > DateYear.JUNIOR) {
+			val rainbowMultiplier = if (training.numRainbow > 0 && game.currentDate.year > DateYear.JUNIOR) {
 				if (enableRainbowTrainingBonus) {
                     MessageLog.i(TAG, "[TRAINING] ${training.name} Training is detected as a rainbow training. Adding multiplier to score.")
 					2.0
@@ -1013,7 +998,7 @@ class Training(private val game: Game) {
 	private fun printTrainingMap() {
 		MessageLog.i(TAG, "\nStat Gains by Training:")
 		trainingMap.forEach { name, training ->
-			MessageLog.i(TAG, "$name Training stat gains: ${training.statGains}, failure chance: ${training.failureChance}%, rainbow: ${training.isRainbow}.")
+			MessageLog.i(TAG, "$name Training stat gains: ${training.statGains}, failure chance: ${training.failureChance}%, rainbow: ${training.numRainbow}.")
 		}
 	}
 }
