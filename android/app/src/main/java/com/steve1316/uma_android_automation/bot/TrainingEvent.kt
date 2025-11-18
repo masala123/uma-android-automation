@@ -177,7 +177,16 @@ class TrainingEvent(private val game: Game) {
         if (eventRewards.isNotEmpty() && eventRewards[0] != "") {
             // Check for special event overrides first.
             val specialEventResult = checkSpecialEventOverride(eventTitle)
-            if (specialEventResult != null) {
+
+            // Ensure Tutorial events always select the 2nd option to dismiss.
+            if (eventTitle == "Tutorial") {
+                optionSelected = 1
+                if (optionSelected >= eventRewards.size) {
+                    MessageLog.w(TAG, "Tutorial option 2 is out of bounds. Using last option.")
+                    optionSelected = eventRewards.size - 1
+                }
+                MessageLog.i(TAG, "[TRAINING_EVENT] Tutorial event detected for Unity Cup. Dismissing it now...")
+            } else if (specialEventResult != null) {
                 val (selectedOptionIndex, requiresConfirmation) = specialEventResult
                 optionSelected = selectedOptionIndex
                 
