@@ -758,20 +758,8 @@ class Game(val myContext: Context) {
 
 				wait(1.0)
 			} else {
-				// After the third attempt, wait for an extended period and then check for completion.
-				MessageLog.i(TAG, "[CRANE_GAME] Final attempt completed. Waiting for an extended period before checking for completion...")
-				wait(10.0)
-
-				// Check for ordinary_cuties image and ButtonCraneGameOk button.
-				val sourceBitmap = imageUtils.getSourceBitmap()
-				if (imageUtils.findImage("ordinary_cuties", tries = 10, region = imageUtils.regionMiddle).first != null && ButtonCraneGameOk.check(imageUtils = imageUtils)) {
-					MessageLog.i(TAG, "[CRANE_GAME] Crane game completed successfully.")
-					ButtonCraneGameOk.click(imageUtils = imageUtils)
-					return true
-				} else {
-					MessageLog.w(TAG, "[CRANE_GAME] Could not confirm crane game completion.")
-					return false
-				}
+				MessageLog.i(TAG, "[CRANE_GAME] Final attempt completed.")
+                return true
 			}
 		}
 
@@ -807,6 +795,12 @@ class Game(val myContext: Context) {
                 notificationMessage = "Bot will stop due to the detection of the Crane Game Event."
                 return false
             }
+        } else if (
+            imageUtils.findImage("ordinary_cuties", region = imageUtils.regionMiddle).first != null &&
+            ButtonCraneGameOk.check(imageUtils = imageUtils)
+        ) {
+            ButtonCraneGameOk.click(imageUtils = imageUtils)
+            MessageLog.i(TAG, "[CRANE GAME] Event exited.")
 		} else if (findAndTapImage("race_retry", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
 			MessageLog.i(TAG, "[MISC] There is a race retry popup.")
 			wait(5.0)
