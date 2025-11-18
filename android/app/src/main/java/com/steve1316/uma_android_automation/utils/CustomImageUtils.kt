@@ -537,34 +537,58 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
 		// Start parallel threads for each findAll call, passing the same source bitmap.
 		Thread {
-			speedBlocks.addAll(findAllWithBitmap("stat_speed_block", sourceBitmap, region = customRegion))
-			latch.countDown()
-		}.start()
+			try {
+				speedBlocks.addAll(findAllWithBitmap("stat_speed_block", sourceBitmap, region = customRegion))
+			} catch (_: InterruptedException) {
+			} finally {
+				latch.countDown()
+			}
+		}.apply { isDaemon = true }.start()
 
 		Thread {
-			staminaBlocks.addAll(findAllWithBitmap("stat_stamina_block", sourceBitmap, region = customRegion))
-			latch.countDown()
-		}.start()
+			try {
+				staminaBlocks.addAll(findAllWithBitmap("stat_stamina_block", sourceBitmap, region = customRegion))
+			} catch (_: InterruptedException) {
+			} finally {
+				latch.countDown()
+			}
+		}.apply { isDaemon = true }.start()
 
 		Thread {
-			powerBlocks.addAll(findAllWithBitmap("stat_power_block", sourceBitmap, region = customRegion))
-			latch.countDown()
-		}.start()
+			try {
+				powerBlocks.addAll(findAllWithBitmap("stat_power_block", sourceBitmap, region = customRegion))
+			} catch (_: InterruptedException) {
+			} finally {
+				latch.countDown()
+			}
+		}.apply { isDaemon = true }.start()
 
 		Thread {
-			gutsBlocks.addAll(findAllWithBitmap("stat_guts_block", sourceBitmap, region = customRegion))
-			latch.countDown()
-		}.start()
+			try {
+				gutsBlocks.addAll(findAllWithBitmap("stat_guts_block", sourceBitmap, region = customRegion))
+			} catch (_: InterruptedException) {
+			} finally {
+				latch.countDown()
+			}
+		}.apply { isDaemon = true }.start()
 
 		Thread {
-			witBlocks.addAll(findAllWithBitmap("stat_wit_block", sourceBitmap, region = customRegion))
-			latch.countDown()
-		}.start()
+			try {
+				witBlocks.addAll(findAllWithBitmap("stat_wit_block", sourceBitmap, region = customRegion))
+			} catch (_: InterruptedException) {
+			} finally {
+				latch.countDown()
+			}
+		}.apply { isDaemon = true }.start()
 
 		Thread {
-			friendshipBlocks.addAll(findAllWithBitmap("stat_friendship_block", sourceBitmap, region = customRegion))
-			latch.countDown()
-		}.start()
+			try {
+				friendshipBlocks.addAll(findAllWithBitmap("stat_friendship_block", sourceBitmap, region = customRegion))
+			} catch (_: InterruptedException) {
+			} finally {
+				latch.countDown()
+			}
+		}.apply { isDaemon = true }.start()
 
 		// Wait for all threads to complete.
 		try {
@@ -1102,7 +1126,6 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 								if (rowBitmap == null) {
 									Log.e(TAG, "[ERROR] Failed to create cropped bitmap for $statName stat gain detection from $trainingName training ${row.rowName}.")
 									threadSafeResults[i] = 0
-									statLatch.countDown()
 									processingFailed = true
 									return@Thread
 								}
@@ -1122,7 +1145,6 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
 								// Check again before expensive operations.
 								if (!BotService.isRunning) {
-									statLatch.countDown()
 									processingFailed = true
 									return@Thread
 								}
@@ -1244,6 +1266,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 								resultMat.release()
 							}
 						}
+					} catch (_: InterruptedException) {
 					} catch (e: Exception) {
 						Log.e(TAG, "[ERROR] Error processing stat ${statNames[i]} for $trainingName training: ${e.stackTraceToString()}")
 						threadSafeResults[i] = 0
@@ -1254,7 +1277,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 						workingMat?.release()
 						statLatch.countDown()
 					}
-				}.start()
+				}.apply { isDaemon = true }.start()
 			}
 
 			// Wait for all threads to complete.
