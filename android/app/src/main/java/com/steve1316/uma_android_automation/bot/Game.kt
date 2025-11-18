@@ -660,6 +660,8 @@ class Game(val myContext: Context) {
 			// Do the date if it is unlocked.
 			if (!handleRecreationDate(recoverMoodIfCompleted = true)) {
                 // Otherwise, recover mood as normal.
+                findAndTapImage("cancel", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)
+                wait(1.0)
                 if (!findAndTapImage("recover_mood", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
                     findAndTapImage("recover_energy_summer", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)
                 }
@@ -681,7 +683,7 @@ class Game(val myContext: Context) {
      * @return True if the Recreation date event was successfully completed. False otherwise.
      */
     fun handleRecreationDate(recoverMoodIfCompleted: Boolean = false): Boolean {
-        return if (imageUtils.findImage("recreation_date", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true).first != null &&
+        return if (imageUtils.findImage("recreation_date", tries = 1, region = imageUtils.regionBottomHalf).first != null &&
             findAndTapImage("recover_mood", tries = 1, region = imageUtils.regionBottomHalf)) {
             MessageLog.i(TAG, "\n[RECREATION_DATE] Recreation has a possible date available.")
             wait(1.0)
