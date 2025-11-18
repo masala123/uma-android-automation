@@ -546,13 +546,17 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
         for (name in StatName.entries) {
             val thread = Thread {
-                blockMap[name.name] = findAllWithBitmap(
-                    "stat_${name.name.lowercase()}_block",
-                    sourceBitmap,
-                    region=customRegion,
-                )
-                latch.countDown()
-            }
+                try {
+                    blockMap[name.name] = findAllWithBitmap(
+                        "stat_${name.name.lowercase()}_block",
+                        sourceBitmap,
+                        region=customRegion,
+                    )
+                } catch (_: InterruptedException) {
+                } finally {
+                    latch.countDown()
+                }
+            }.apply { isDaemon = true }
             threads.add(thread)
             thread.start()
         }
@@ -569,7 +573,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         threads.add(thread)
         thread.start()
 
-        // Wait for all threads to complete.
+		// Wait for all threads to complete.
 		try {
 			latch.await(10, TimeUnit.SECONDS)
 		} catch (_: InterruptedException) {
@@ -1038,7 +1042,6 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 								if (rowBitmap == null) {
 									Log.e(TAG, "[ERROR] Failed to create cropped bitmap for $statName stat gain detection from $trainingName training ${row.rowName}.")
 									threadSafeResults[statName] = 0
-									statLatch.countDown()
 									processingFailed = true
 									return@Thread
 								}
@@ -1058,7 +1061,6 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
 								// Check again before expensive operations.
 								if (!BotService.isRunning) {
-									statLatch.countDown()
 									processingFailed = true
 									return@Thread
 								}
@@ -1180,6 +1182,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 								resultMat.release()
 							}
 						}
+					} catch (_: InterruptedException) {
 					} catch (e: Exception) {
 						Log.e(TAG, "[ERROR] Error processing stat $statName for $trainingName training: ${e.stackTraceToString()}")
 						threadSafeResults[statName] = 0
@@ -1190,7 +1193,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 						workingMat?.release()
 						statLatch.countDown()
 					}
-				}.start()
+				}.apply { isDaemon = true }.start()
 			}
 
 			// Wait for all threads to complete.
