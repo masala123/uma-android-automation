@@ -660,6 +660,8 @@ class Game(val myContext: Context) {
 			// Do the date if it is unlocked.
 			if (!handleRecreationDate(recoverMoodIfCompleted = true)) {
                 // Otherwise, recover mood as normal.
+                findAndTapImage("cancel", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)
+                wait(1.0)
                 if (!findAndTapImage("recover_mood", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
                     findAndTapImage("recover_energy_summer", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)
                 }
