@@ -113,11 +113,12 @@ class Game(val myContext: Context) {
             return null
         }
 
-        // Add a small 8px buffer to vertical component.
         val x = (point.x - (templateBitmap.width / 2)).toInt() - 180
-        val y = (point.y - 15).toInt()
+        // Add a small buffer to vertical component.
+        val y = (point.y - 16).toInt()
         val w = 180
-        val h = 30
+        // 32px minimum for google ML kit.
+        val h = 32
 
         val text: String = imageUtils.performOCROnRegion(
             bitmap,
