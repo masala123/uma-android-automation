@@ -100,11 +100,13 @@ class Racing (private val game: Game) {
             turnNumber: Int,
         ) : this(
             name,
-            RaceGrade.fromName(grade)!!,
+            // Scraper source uses "Pre-Op" but we need "PRE_OP" for our enum.
+            RaceGrade.fromName(grade.lowercase().replace("pre-op", "pre_op"))!!,
             fans,
             nameFormatted,
             TrackSurface.fromName(trackSurface)!!,
-            TrackDistance.fromName(trackDistance)!!,
+            // Scraper source uses "Short" instead of "Sprint" which is expected by our enum.
+            TrackDistance.fromName(trackDistance.lowercase().replace("short", "sprint"))!!,
             turnNumber,
         )
     }
