@@ -681,7 +681,7 @@ class Game(val myContext: Context) {
      * @return True if the Recreation date event was successfully completed. False otherwise.
      */
     fun handleRecreationDate(recoverMoodIfCompleted: Boolean = false): Boolean {
-        return if (imageUtils.findImage("recreation_date", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true).first != null &&
+        return if (imageUtils.findImage("recreation_date", tries = 1, region = imageUtils.regionBottomHalf).first != null &&
             findAndTapImage("recover_mood", tries = 1, region = imageUtils.regionBottomHalf)) {
             MessageLog.i(TAG, "\n[RECREATION_DATE] Recreation has a possible date available.")
             wait(1.0)
