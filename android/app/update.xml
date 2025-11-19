@@ -1,24 +1,13 @@
 <AppUpdater>
   <update>
-    <latestVersion>4.2.1</latestVersion>
+    <latestVersion>4.2.2</latestVersion>
     <url>https://github.com/steve1316/uma-android-automation/releases</url>
     <releaseNotes>
-v4.2.1 - Changelog
-
-Adjustments
----
-- Updated Automation Library to 2.2.0. This comes with most of the delays from the library being removed which makes the app run faster, specifically for the image and accessibility service functions.
-- Close the recreation/dating popup if mood recovery is not needed.
-- Minor increase of a few milliseconds to the Crane Game timings.
-- Set the custom confidence of the racing requirement checks to 0.90 to possibly fix false positives.
-- Increase delay and retries when skipping the Unity Cup race results.
+v4.2.2 - Changelog
 
 Fixed
 ---
-- Fix crash when stopping the bot in the middle of analyzing trainings.
-- Fix the Tutorial event for Unity Cup sometimes not being dismissed properly.
-- Fix bug where the settings string is appended twice to the MessageLog log viewer.
-- Fix bug where the TrainingEventRecognizer did not return early when a special event was detected.
+- Fix the app getting stuck trying to skip the race results of the Unity Cup.
 
     </releaseNotes>
   </update>
