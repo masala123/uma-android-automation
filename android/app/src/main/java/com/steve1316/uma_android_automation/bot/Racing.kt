@@ -796,13 +796,13 @@ class Racing (private val game: Game) {
     fun checkRacingRequirements() {
         // Check for fan requirement on the main screen.
         val sourceBitmap = game.imageUtils.getSourceBitmap()
-        val needsFanRequirement = game.imageUtils.findImageWithBitmap("race_fans_criteria", sourceBitmap, region = game.imageUtils.regionTopHalf) != null
+        val needsFanRequirement = game.imageUtils.findImageWithBitmap("race_fans_criteria", sourceBitmap, region = game.imageUtils.regionTopHalf, customConfidence = 0.90) != null
         if (needsFanRequirement) {
             hasFanRequirement = true
             MessageLog.i(TAG, "[RACE] Fan requirement criteria detected on main screen. Forcing racing to fulfill requirement.")
         } else {
             // Check for trophy requirement on the main screen.
-            val needsTrophyRequirement = game.imageUtils.findImageWithBitmap("race_trophies_criteria", sourceBitmap, region = game.imageUtils.regionTopHalf) != null
+            val needsTrophyRequirement = game.imageUtils.findImageWithBitmap("race_trophies_criteria", sourceBitmap, region = game.imageUtils.regionTopHalf, customConfidence = 0.90) != null
             if (needsTrophyRequirement) {
                 hasTrophyRequirement = true
                 MessageLog.i(TAG, "[RACE] Trophy requirement criteria detected on main screen. Forcing racing to fulfill requirement.")

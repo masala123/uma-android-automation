@@ -173,31 +173,56 @@ class TrainingEvent(private val game: Game) {
 
         val regex = Regex("[a-zA-Z]+")
         var optionSelected = 0
+        var specialEventHandled = false
+        var isTutorialEvent = false
+        var tutorialOptionCount = 0
 
-        if (eventRewards.isNotEmpty() && eventRewards[0] != "") {
-            // Check for special event overrides first.
-            val specialEventResult = checkSpecialEventOverride(eventTitle)
+        // Check for special event overrides first.
+        val specialEventResult = checkSpecialEventOverride(eventTitle)
 
-            // Ensure Tutorial events always select the 2nd option to dismiss.
-            if (eventTitle == "Tutorial") {
+        // Handle Tutorial events by detecting the number of options on screen.
+        if (eventTitle == "Tutorial") {
+            isTutorialEvent = true
+            // Detect the number of event options on the screen.
+            val trainingOptionLocations: ArrayList<Point> = game.imageUtils.findAll("training_event_active")
+            tutorialOptionCount = trainingOptionLocations.size
+            
+            MessageLog.i(TAG, "[TRAINING_EVENT] Tutorial event detected for Unity Cup. Found $tutorialOptionCount option(s) on screen.")
+            
+            if (tutorialOptionCount == 2) {
+                // If 2 options detected, select the last one (index 1).
                 optionSelected = 1
-                if (optionSelected >= eventRewards.size) {
-                    MessageLog.w(TAG, "Tutorial option 2 is out of bounds. Using last option.")
-                    optionSelected = eventRewards.size - 1
-                }
-                MessageLog.i(TAG, "[TRAINING_EVENT] Tutorial event detected for Unity Cup. Dismissing it now...")
-            } else if (specialEventResult != null) {
-                val (selectedOptionIndex, requiresConfirmation) = specialEventResult
-                optionSelected = selectedOptionIndex
-                
-                // Ensure the selected option is within bounds.
-                if (optionSelected >= eventRewards.size) {
-                    MessageLog.w(TAG, "Selected special event option $optionSelected is out of bounds. Using last option.")
-                    optionSelected = eventRewards.size - 1
-                }
-                
+                MessageLog.i(TAG, "[TRAINING_EVENT] Selecting last option (option 2) to dismiss Tutorial.")
+            } else if (tutorialOptionCount == 5) {
+                optionSelected = 4
+                MessageLog.i(TAG, "[TRAINING_EVENT] Selecting last option (option 5) first, then will select first option to close.")
+            } else {
+                // Default to last option if count doesn't match expected values.
+                optionSelected = if (tutorialOptionCount > 0) tutorialOptionCount - 1 else 0
+                MessageLog.w(TAG, "[TRAINING_EVENT] Unexpected option count ($tutorialOptionCount). Selecting last option.")
+            }
+            
+            specialEventHandled = true
+        } else if (specialEventResult != null) {
+            val (selectedOptionIndex, _) = specialEventResult
+            optionSelected = selectedOptionIndex
+            
+            // Ensure the selected option is within bounds.
+            if (eventRewards.isNotEmpty() && optionSelected >= eventRewards.size) {
+                MessageLog.w(TAG, "Selected special event option $optionSelected is out of bounds. Using last option.")
+                optionSelected = eventRewards.size - 1
+            }
+            
+            if (eventRewards.isNotEmpty() && optionSelected < eventRewards.size) {
                 MessageLog.i(TAG, "[TRAINING_EVENT] Special event override applied: option ${optionSelected + 1}: \"${eventRewards[optionSelected]}\"")
             } else {
+                MessageLog.i(TAG, "[TRAINING_EVENT] Special event override applied: option ${optionSelected + 1}")
+            }
+            specialEventHandled = true
+        }
+
+        if (eventRewards.isNotEmpty() && eventRewards[0] != "") {
+            if (!specialEventHandled) {
                 // Check for character or support event overrides.
                 val characterOverride = checkCharacterEventOverride(characterOrSupportName, eventTitle)
                 val supportOverride = checkSupportEventOverride(characterOrSupportName, eventTitle)
@@ -428,44 +453,121 @@ class TrainingEvent(private val game: Game) {
 
             MessageLog.i(TAG, resultString)
         } else {
-            MessageLog.w(TAG, "First option will be selected since OCR failed to match the event title.")
-            optionSelected = 0
+            if (!specialEventHandled) {
+                MessageLog.w(TAG, "First option will be selected since OCR failed to match the event title and no event rewards were found.")
+                optionSelected = 0
+            } else {
+                MessageLog.w(TAG, "No event rewards were found, but special event override was applied.")
+            }
         }
 
         val trainingOptionLocations: ArrayList<Point> = game.imageUtils.findAll("training_event_active")
-        val selectedLocation: Point? = if (trainingOptionLocations.isNotEmpty()) {
-            // Account for the situation where it could go out of bounds if the detected event options is incorrect and gives too many results.
-            try {
-                trainingOptionLocations[optionSelected]
-            } catch (_: IndexOutOfBoundsException) {
-                // Default to the first option.
-                trainingOptionLocations[0]
+        
+        // Handle Tutorial events specially.
+        if (isTutorialEvent && trainingOptionLocations.isNotEmpty()) {
+            if (tutorialOptionCount == 5) {
+                // For 5-option Tutorial: select last option, wait, then select first option.
+                val lastOptionLocation = try {
+                    trainingOptionLocations[4]
+                } catch (_: IndexOutOfBoundsException) {
+                    trainingOptionLocations[trainingOptionLocations.size - 1]
+                }
+                
+                game.tap(lastOptionLocation.x + game.imageUtils.relWidth(100), lastOptionLocation.y, "training_event_active")
+                MessageLog.i(TAG, "[TRAINING_EVENT] Selected last option (option 5) for Tutorial to back out.")
+                
+                game.wait(1.0)
+                
+                // Find the training option locations again.
+                val updatedTrainingOptionLocations: ArrayList<Point> = game.imageUtils.findAll("training_event_active")
+                if (updatedTrainingOptionLocations.isNotEmpty()) {
+                    // Now select the first option to close.
+                    val firstOptionLocation = updatedTrainingOptionLocations[0]
+                    game.tap(firstOptionLocation.x + game.imageUtils.relWidth(100), firstOptionLocation.y, "training_event_active")
+                    MessageLog.i(TAG, "[TRAINING_EVENT] Selected first option (option 1) to close Tutorial.")
+                } else {
+                    MessageLog.w(TAG, "[TRAINING_EVENT] Could not find training event options after waiting. Tutorial may have already closed.")
+                }
+            } else {
+                // For 2-option Tutorial or other cases: select the determined option.
+                val selectedLocation = try {
+                    trainingOptionLocations[optionSelected]
+                } catch (_: IndexOutOfBoundsException) {
+                    trainingOptionLocations[trainingOptionLocations.size - 1]
+                }
+                
+                game.tap(selectedLocation.x + game.imageUtils.relWidth(100), selectedLocation.y, "training_event_active")
+                MessageLog.i(TAG, "[TRAINING_EVENT] Selected option ${optionSelected + 1} for Tutorial.")
+            }
+            
+            // Wait 3 seconds after selecting Tutorial event options.
+            MessageLog.i(TAG, "[TRAINING_EVENT] Waiting 3 seconds before handling Next/Close buttons for Tutorial.")
+            game.wait(3.0)
+            
+            // Start searching for Next buttons and clicking them until Close button is found.
+            var closeButtonFound = false
+            var maxIterations = 20 // Prevent infinite loops.
+            var iterationCount = 0
+            
+            while (!closeButtonFound && iterationCount < maxIterations) {
+                iterationCount++
+                
+                // First check for Close button.
+                if (game.findAndTapImage("close", tries = 1, region = game.imageUtils.regionBottomHalf, suppressError = true)) {
+                    MessageLog.i(TAG, "[TRAINING_EVENT] Close button found and clicked. Tutorial event handling complete.")
+                    closeButtonFound = true
+                    break
+                }
+                
+                // If Close button not found, look for Next button.
+                if (game.findAndTapImage("next", tries = 1, region = game.imageUtils.regionBottomHalf, suppressError = true)) {
+                    MessageLog.i(TAG, "[TRAINING_EVENT] Next button found and clicked. Waiting for next screen...")
+                    game.wait(1.0)
+                } else {
+                    // Neither button found, wait a bit and try again.
+                    MessageLog.d(TAG, "[TRAINING_EVENT] Neither Next nor Close button found. Waiting...")
+                    game.wait(0.5)
+                }
+            }
+            
+            if (!closeButtonFound && iterationCount >= maxIterations) {
+                MessageLog.w(TAG, "[TRAINING_EVENT] Reached maximum iterations while searching for Close button. Tutorial handling may be incomplete.")
             }
         } else {
-            game.imageUtils.findImage("training_event_active", tries = 5, region = game.imageUtils.regionMiddle).first
-        }
+            // Normal event handling.
+            val selectedLocation: Point? = if (trainingOptionLocations.isNotEmpty()) {
+                // Account for the situation where it could go out of bounds if the detected event options is incorrect and gives too many results.
+                try {
+                    trainingOptionLocations[optionSelected]
+                } catch (_: IndexOutOfBoundsException) {
+                    // Default to the first option.
+                    trainingOptionLocations[0]
+                }
+            } else {
+                game.imageUtils.findImage("training_event_active", tries = 5, region = game.imageUtils.regionMiddle).first
+            }
 
-        if (selectedLocation != null) {
-            game.tap(selectedLocation.x + game.imageUtils.relWidth(100), selectedLocation.y, "training_event_active")
-            
-            // Check if this special event requires confirmation.
-            val specialEventResult = checkSpecialEventOverride(eventTitle)
-            if (specialEventResult != null) {
-                val (_, requiresConfirmation) = specialEventResult
-                if (requiresConfirmation) {
-                    MessageLog.i(TAG, "[TRAINING_EVENT] Special event requires confirmation, waiting for dialog...")
-                    
-                    // Wait a moment for the confirmation dialog to appear.
-                    game.wait(1.0)
-                    
-                    // Look for confirmation options and select the first one (Yes).
-                    val confirmationLocations: ArrayList<Point> = game.imageUtils.findAll("training_event_active")
-                    if (confirmationLocations.isNotEmpty()) {
-                        val confirmLocation = confirmationLocations[0]
-                        game.tap(confirmLocation.x + game.imageUtils.relWidth(100), confirmLocation.y, "training_event_active")
-                        MessageLog.i(TAG, "[TRAINING_EVENT] Special event confirmed.")
-                    } else {
-                        MessageLog.w(TAG, "Could not find confirmation options for special event.")
+            if (selectedLocation != null) {
+                game.tap(selectedLocation.x + game.imageUtils.relWidth(100), selectedLocation.y, "training_event_active")
+                
+                // Check if this special event requires confirmation.
+                if (specialEventResult != null) {
+                    val (_, requiresConfirmation) = specialEventResult
+                    if (requiresConfirmation) {
+                        MessageLog.i(TAG, "[TRAINING_EVENT] Special event requires confirmation, waiting for dialog...")
+                        
+                        // Wait a moment for the confirmation dialog to appear.
+                        game.wait(1.0)
+                        
+                        // Look for confirmation options and select the first one (Yes).
+                        val confirmationLocations: ArrayList<Point> = game.imageUtils.findAll("training_event_active")
+                        if (confirmationLocations.isNotEmpty()) {
+                            val confirmLocation = confirmationLocations[0]
+                            game.tap(confirmLocation.x + game.imageUtils.relWidth(100), confirmLocation.y, "training_event_active")
+                            MessageLog.i(TAG, "[TRAINING_EVENT] Special event confirmed.")
+                        } else {
+                            MessageLog.w(TAG, "Could not find confirmation options for special event.")
+                        }
                     }
                 }
             }
