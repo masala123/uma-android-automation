@@ -727,7 +727,7 @@ class Game(val myContext: Context) {
 		}
 
 		val imageName = ButtonCraneGame.templates.first().name
-		val pressDurations = listOf(1.678, 0.838, 0.489)
+		val pressDurations = listOf(1.95, 1.00, 0.60)
 
 		// Perform three attempts with different press durations.
 		for (attempt in 1..3) {
