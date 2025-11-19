@@ -103,7 +103,7 @@ class UnityCup(game: Game) : Campaign(game) {
             }
 		}
 		
-		game.wait(5.0)
+		game.wait(6.0)
 		
 		// Now skip the overall race results or manually run the final race with Team Zenith if the skip is not available.
         if (unityCupFinals) {
@@ -111,16 +111,16 @@ class UnityCup(game: Game) : Campaign(game) {
                 // Manually run the race.
                 game.racing.runRaceWithRetries()
                 // After the race is manually ran, skip past the popup showing the final positions of the racers.
-                game.findAndTapImage("next", region = game.imageUtils.regionBottomHalf)
+                game.findAndTapImage("next", tries = 20, region = game.imageUtils.regionBottomHalf)
             } else {
-                game.findAndTapImage("unitycup_race_skip_results", region = game.imageUtils.regionBottomHalf)
+                game.findAndTapImage("unitycup_race_skip_results", tries = 20, region = game.imageUtils.regionBottomHalf)
                 game.wait(2.0)
-                game.findAndTapImage("race_skip_manual", region = game.imageUtils.regionBottomHalf)
+                game.findAndTapImage("race_skip_manual", tries = 20, region = game.imageUtils.regionBottomHalf)
             }
         } else {
-            game.findAndTapImage("unitycup_race_skip_results", region = game.imageUtils.regionBottomHalf)
+            game.findAndTapImage("unitycup_race_skip_results", tries = 20, region = game.imageUtils.regionBottomHalf)
             game.wait(2.0)
-            game.findAndTapImage("race_skip_manual", region = game.imageUtils.regionBottomHalf)
+            game.findAndTapImage("race_skip_manual", tries = 20, region = game.imageUtils.regionBottomHalf)
         }
 
         // On the Race Results screen, skip past the final results of all 5 races against this opponent.
