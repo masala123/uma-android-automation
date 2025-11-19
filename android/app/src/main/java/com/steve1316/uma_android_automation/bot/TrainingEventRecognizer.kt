@@ -236,6 +236,11 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 			if (ocrResult.isNotEmpty() && ocrResult != "") {
 				// Now attempt to find the most similar string compared to the one from OCR.
 				val matchingResult = findMostSimilarString(ocrResult)
+				if (matchingResult.eventTitle.isNotEmpty() && eventPatterns.containsKey(matchingResult.eventTitle)) {
+					MessageLog.i(TAG, "[TRAINING_EVENT_RECOGNIZER] Special event \"${matchingResult.eventTitle}\" detected.")
+					bestResult = matchingResult
+					break
+				}
 				
 				// Update best result if this one is better.
 				if (matchingResult.confidence >= bestResult.confidence) {
