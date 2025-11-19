@@ -4,6 +4,7 @@ import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.bot.Campaign
 import com.steve1316.uma_android_automation.bot.Game
 import com.steve1316.automation_library.utils.MessageLog
+import com.steve1316.uma_android_automation.components.ButtonRace
 import org.opencv.core.Point
 
 class UnityCup(game: Game) : Campaign(game) {
@@ -36,7 +37,21 @@ class UnityCup(game: Game) : Campaign(game) {
             // Otherwise, handle the Unity Cup race.
 			handleRaceEventsUnityCup()
 			return true
-		}
+		} else if (
+            game.imageUtils.findImage("unitycup_race_skip_results", tries = 1, region = game.imageUtils.regionBottomHalf).first != null &&
+            game.imageUtils.findImage("race_skip_locked", tries = 1, region = game.imageUtils.regionBottomHalf).first == null
+        ) {
+            game.findAndTapImage("unitycup_race_skip_results", region = game.imageUtils.regionBottomHalf)
+            return true
+        } else if (
+            game.imageUtils.findImage("unitycup_race_manual", tries = 1, region = game.imageUtils.regionBottomHalf).first != null &&
+            game.imageUtils.findImage("race_skip_locked", tries = 1, region = game.imageUtils.regionBottomHalf).first != null
+        ) {
+            game.findAndTapImage("unitycup_race_manual", region = game.imageUtils.regionBottomHalf)
+            return true
+        } else if (ButtonRace.click(imageUtils = game.imageUtils)) {
+            return true
+        }
 
 		// Fall back to the regular race handling logic.
 		return super.handleRaceEvents()
@@ -49,6 +64,20 @@ class UnityCup(game: Game) : Campaign(game) {
 			game.findAndTapImage("close")
 			handleRaceEventsUnityCup()
 			return true
+        } else if (
+            game.imageUtils.findImage("unitycup_race_skip_results", tries = 1, region = game.imageUtils.regionBottomHalf).first != null &&
+            game.imageUtils.findImage("race_skip_locked", tries = 1, region = game.imageUtils.regionBottomHalf).first == null
+        ) {
+            game.findAndTapImage("unitycup_race_skip_results", region = game.imageUtils.regionBottomHalf)
+            return true
+        } else if (
+            game.imageUtils.findImage("unitycup_race_manual", tries = 1, region = game.imageUtils.regionBottomHalf).first != null &&
+            game.imageUtils.findImage("race_skip_locked", tries = 1, region = game.imageUtils.regionBottomHalf).first != null
+        ) {
+            game.findAndTapImage("unitycup_race_manual", region = game.imageUtils.regionBottomHalf)
+            return true
+        } else if (ButtonRace.click(imageUtils = game.imageUtils)) {
+            return true
         }
 		return false
 	}
