@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.intArrayOf
+import kotlin.math.pow
 import org.opencv.core.Point
 
 class Training(private val game: Game) {
@@ -636,9 +637,13 @@ class Training(private val game: Game) {
 				}
 
 				// Bonus for rainbow training while bursting.
-				if (training.numRainbow > 0) {
-					score += 200.0
-					MessageLog.i(TAG, "[TRAINING] Adding some score for ${training.name} Training for being a rainbow training.")
+                var rainbowBonusScore = 0.0
+                for (i in 1 until training.numRainbow + 1) {
+                    rainbowBonusScore += 400 * (0.5).pow(i)
+                }
+				if (rainbowBonusScore > 0) {
+					MessageLog.i(TAG, "[TRAINING] Adding bonus score for ${training.numRainbow} rainbow trainings: $rainbowBonusScore")
+                    score += rainbowBonusScore
 				}
 			}
 
