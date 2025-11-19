@@ -25,6 +25,7 @@ import com.steve1316.uma_android_automation.components.ButtonHomeFansInfo
 
 import com.steve1316.uma_android_automation.components.ButtonCraneGame
 import com.steve1316.uma_android_automation.components.ButtonCraneGameOk
+import com.steve1316.uma_android_automation.components.ButtonSkip
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.opencv.core.Point
@@ -848,7 +849,9 @@ class Game(val myContext: Context) {
 		} else if (findAndTapImage("back", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
 			MessageLog.i(TAG, "[MISC] Navigating back a screen since all the other misc checks have been completed.")
 			wait(1.0)
-		} else if (!BotService.isRunning) {
+		} else if (ButtonSkip.click(imageUtils = imageUtils)) {
+            MessageLog.d(TAG, "[MISC] Clicked skip button.")
+        } else if (!BotService.isRunning) {
 			MessageLog.i(TAG, "\n[END] BotService is not running. Exiting now...")
 			throw InterruptedException()
 		} else {
