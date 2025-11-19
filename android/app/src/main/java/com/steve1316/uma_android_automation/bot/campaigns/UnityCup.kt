@@ -36,7 +36,9 @@ class UnityCup(game: Game) : Campaign(game) {
             // Otherwise, handle the Unity Cup race.
 			handleRaceEventsUnityCup()
 			return true
-		}
+		} else if (game.findAndTapImage("unitycup_race_skip_results", region = game.imageUtils.regionBottomHalf)) {
+            return true
+        }
 
 		// Fall back to the regular race handling logic.
 		return super.handleRaceEvents()
@@ -49,6 +51,8 @@ class UnityCup(game: Game) : Campaign(game) {
 			game.findAndTapImage("close")
 			handleRaceEventsUnityCup()
 			return true
+        } else if (game.findAndTapImage("unitycup_race_skip_results", region = game.imageUtils.regionBottomHalf)) {
+            return true
         }
 		return false
 	}
