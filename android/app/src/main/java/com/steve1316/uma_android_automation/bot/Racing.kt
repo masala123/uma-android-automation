@@ -236,6 +236,9 @@ class Racing (private val game: Game) {
         // If there are no races available, cancel the racing process.
         if (game.imageUtils.findImage("race_none_available", tries = 1, region = game.imageUtils.regionMiddle, suppressError = true).first != null) {
             MessageLog.i(TAG, "[RACE] There are no races to compete in. Canceling the racing process and doing something else.")
+            // Clear requirement flags since we cannot proceed with racing.
+            hasFanRequirement = false
+            hasTrophyRequirement = false
             MessageLog.i(TAG, "********************")
             return false
         }
@@ -251,6 +254,9 @@ class Racing (private val game: Game) {
             return handleExtraRace()
         }
 
+        // Clear requirement flags if no race selection buttons were found.
+        hasFanRequirement = false
+        hasTrophyRequirement = false
         MessageLog.i(TAG, "********************")
         return false
     }
@@ -331,6 +337,9 @@ class Racing (private val game: Game) {
                 raceRepeatWarningCheck = true
                 MessageLog.i(TAG, "[RACE] Closing popup warning of doing more than 3+ races and setting flag to prevent racing for now. Canceling the racing process and doing something else.")
                 game.findAndTapImage("cancel", region = game.imageUtils.regionBottomHalf)
+                // Clear requirement flags since we cannot proceed with racing.
+                hasFanRequirement = false
+                hasTrophyRequirement = false
                 MessageLog.i(TAG, "********************")
                 return false
             } else {
@@ -343,6 +352,9 @@ class Racing (private val game: Game) {
         val statusLocation = game.imageUtils.findImage("race_status").first
         if (statusLocation == null) {
             MessageLog.e(TAG, "[ERROR] Unable to determine existence of list of extra races. Canceling the racing process and doing something else.")
+            // Clear requirement flags since we cannot proceed with racing.
+            hasFanRequirement = false
+            hasTrophyRequirement = false
             MessageLog.i(TAG, "********************")
             return false
         }
@@ -352,11 +364,12 @@ class Racing (private val game: Game) {
             // If there is a fan/trophy requirement but no races available, reset the flags and proceed with training to advance the day.
             if (hasFanRequirement || hasTrophyRequirement) {
                 MessageLog.i(TAG, "[RACE] Fan/trophy requirement detected but no extra races available. Clearing requirement flags and proceeding with training to advance the day.")
-                hasFanRequirement = false
-                hasTrophyRequirement = false
             } else {
                 MessageLog.e(TAG, "[ERROR] Was unable to find any extra races to select. Canceling the racing process and doing something else.")
             }
+            // Always clear requirement flags when no races are available.
+            hasFanRequirement = false
+            hasTrophyRequirement = false
             MessageLog.i(TAG, "********************")
             return false
         } else {
@@ -402,7 +415,12 @@ class Racing (private val game: Game) {
             processStandardRacing()
         }
 
-        if (!success) return false
+        if (!success) {
+            // Clear requirement flags if race selection failed.
+            hasFanRequirement = false
+            hasTrophyRequirement = false
+            return false
+        }
 
         // Confirm the selection and the resultant popup and then wait for the game to load.
         game.findAndTapImage("race_confirm", tries = 30, region = game.imageUtils.regionBottomHalf)
@@ -714,11 +732,23 @@ class Racing (private val game: Game) {
             hasFanRequirement = true
             MessageLog.i(TAG, "[RACE] Fan requirement criteria detected on main screen. Forcing racing to fulfill requirement.")
         } else {
+            // Clear the flag if requirement is no longer present.
+            if (hasFanRequirement) {
+                MessageLog.i(TAG, "[RACE] Fan requirement no longer detected on main screen. Clearing flag.")
+                hasFanRequirement = false
+            }
+            
             // Check for trophy requirement on the main screen.
             val needsTrophyRequirement = game.imageUtils.findImageWithBitmap("race_trophies_criteria", sourceBitmap, region = game.imageUtils.regionTopHalf, customConfidence = 0.90) != null
             if (needsTrophyRequirement) {
                 hasTrophyRequirement = true
                 MessageLog.i(TAG, "[RACE] Trophy requirement criteria detected on main screen. Forcing racing to fulfill requirement.")
+            } else {
+                // Clear the flag if requirement is no longer present.
+                if (hasTrophyRequirement) {
+                    MessageLog.i(TAG, "[RACE] Trophy requirement no longer detected on main screen. Clearing flag.")
+                    hasTrophyRequirement = false
+                }
             }
         }
     }
@@ -1156,6 +1186,11 @@ class Racing (private val game: Game) {
             throw IllegalStateException()
         }
 
+        // Always reset flags after successful race completion, regardless of UI flow.
+        firstTimeRacing = false
+        hasFanRequirement = false
+        hasTrophyRequirement = false
+
         // Bot will be at the screen where it shows the final positions of all participants.
         // Press the confirm button and wait to see the triangle of fans.
         MessageLog.i(TAG, "[RACE] Now attempting to confirm the final positions of all participants and number of gained fans")
@@ -1187,10 +1222,6 @@ class Racing (private val game: Game) {
                 game.wait(2.0)
                 game.findAndTapImage("race_end", tries = 10, region = game.imageUtils.regionBottomHalf)
             }
-
-            firstTimeRacing = false
-            hasFanRequirement = false
-            hasTrophyRequirement = false
         } else {
             MessageLog.e(TAG, "Cannot start the cleanup process for finishing the race. Moving on...")
         }
