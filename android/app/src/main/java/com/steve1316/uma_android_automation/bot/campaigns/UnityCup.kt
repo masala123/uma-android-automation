@@ -34,19 +34,24 @@ class UnityCup(game: Game) : Campaign(game) {
 	override fun handleRaceEvents(): Boolean {
         MessageLog.i(TAG, "\n[UNITY_CUP] Running handleRaceEvents() for Unity Cup.")
 		if (game.imageUtils.findImage("unitycup_race", tries = 1, region = game.imageUtils.regionBottomHalf).first != null) {
-            // Otherwise, handle the Unity Cup race.
+            // Handle the Unity Cup race.
+            MessageLog.i(TAG, "[UNITY_CUP] Will start the process for Unity Cup race handling.")
 			handleRaceEventsUnityCup()
 			return true
 		} else if (
             game.imageUtils.findImage("unitycup_race_skip_results", tries = 1, region = game.imageUtils.regionBottomHalf).first != null &&
             game.imageUtils.findImage("race_skip_locked", tries = 1, region = game.imageUtils.regionBottomHalf).first == null
         ) {
+            // Skip the race results.
+            MessageLog.i(TAG, "[UNITY_CUP] Will skip the Unity Cup race results.")
             game.findAndTapImage("unitycup_race_skip_results", region = game.imageUtils.regionBottomHalf)
             return true
         } else if (
             game.imageUtils.findImage("unitycup_race_manual", tries = 1, region = game.imageUtils.regionBottomHalf).first != null &&
             game.imageUtils.findImage("race_skip_locked", tries = 1, region = game.imageUtils.regionBottomHalf).first != null
         ) {
+            // Manually run the Unity Cup race.
+            MessageLog.i(TAG, "[UNITY_CUP] Will manually run the Unity Cup race.")
             game.findAndTapImage("unitycup_race_manual", region = game.imageUtils.regionBottomHalf)
             return true
         } else if (ButtonRace.click(imageUtils = game.imageUtils)) {
