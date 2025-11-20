@@ -54,8 +54,6 @@ class UnityCup(game: Game) : Campaign(game) {
             MessageLog.i(TAG, "[UNITY_CUP] Will manually run the Unity Cup race.")
             game.findAndTapImage("unitycup_race_manual", region = game.imageUtils.regionBottomHalf)
             return true
-        } else if (ButtonRace.click(imageUtils = game.imageUtils)) {
-            return true
         }
 
 		// Fall back to the regular race handling logic.
