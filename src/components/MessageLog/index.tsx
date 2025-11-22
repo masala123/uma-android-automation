@@ -3,7 +3,7 @@ import { MessageLogContext } from "../../context/MessageLogContext"
 import { BotStateContext } from "../../context/BotStateContext"
 import { StyleSheet, Text, View, TextInput, TouchableOpacity } from "react-native"
 import * as Clipboard from "expo-clipboard"
-import { Copy, Plus, Minus, Type, X } from "lucide-react-native"
+import { Copy, Plus, Minus, Type, X, ArrowUp, ArrowDown, ArrowUpAZ, ArrowDownZA } from "lucide-react-native"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../ui/alert-dialog"
 import { CustomScrollView } from "../CustomScrollView"
@@ -105,6 +105,7 @@ interface LogMessage {
     id: string
     text: string
     type: "normal" | "warning" | "error"
+    messageId?: number
 }
 
 // Memoized LogItem component for better performance.
@@ -139,6 +140,7 @@ const MessageLog = () => {
     const [fontSize, setFontSize] = useState(8)
     const [showErrorDialog, setShowErrorDialog] = useState(false)
     const [errorMessage, setErrorMessage] = useState("")
+    const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
 
     const showError = useCallback((message: string) => {
         setErrorMessage(message)
@@ -280,24 +282,33 @@ ${longTargetsString}
         }))
 
         // Process actual log messages.
-        const logMessages = mlc.messageLog.map((message, index) => {
+        const logMessages = mlc.messageLog.map((entry, index) => {
             let type: "normal" | "warning" | "error" = "normal"
 
-            if (message.includes("[ERROR]")) {
+            if (entry.message.includes("[ERROR]")) {
                 type = "error"
-            } else if (message.includes("[WARNING]")) {
+            } else if (entry.message.includes("[WARNING]")) {
                 type = "warning"
             }
 
             return {
-                id: `log-${index}-${message.substring(0, 20)}`,
-                text: message,
+                id: `log-${index}-${entry.message.substring(0, 20)}`,
+                text: entry.message,
                 type,
+                messageId: entry.id,
             }
         })
 
-        return [...introMessages, ...logMessages]
-    }, [mlc.messageLog, introMessage])
+        // Sort log messages by messageId (timestamp) based on sort order.
+        const sortedLogMessages = [...logMessages].sort((a, b) => {
+            const idA = a.messageId ?? 0
+            const idB = b.messageId ?? 0
+            return sortOrder === "desc" ? idB - idA : idA - idB
+        })
+
+        // Always keep intro message at the top, regardless of sort order.
+        return [...introMessages, ...sortedLogMessages]
+    }, [mlc.messageLog, introMessage, sortOrder])
 
     // Filter messages based on search query (excluding intro messages).
     const filteredMessages = useMemo(() => {
@@ -319,6 +330,11 @@ ${longTargetsString}
     // Force the CustomScrollView to refresh the FlashList when search is cleared by using a key that changes.
     // This ensures a complete remount when transitioning from searching to having no search query.
     const listKey = useMemo(() => (searchQuery.trim().length === 0 ? "all-messages" : `search-${searchQuery}`), [searchQuery])
+
+    // Toggle sort order between ascending and descending.
+    const toggleSortOrder = useCallback(() => {
+        setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
+    }, [])
 
     // Font size control functions.
     const increaseFontSize = useCallback(() => {
@@ -384,6 +400,9 @@ ${longTargetsString}
                 </View>
                 <TouchableOpacity style={styles.actionButton} onPress={copyToClipboard}>
                     <Copy size={16} color="white" />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.actionButton} onPress={toggleSortOrder}>
+                    {sortOrder === "asc" ? <ArrowUpAZ size={16} color="white" /> : <ArrowDownZA size={16} color="white" />}
                 </TouchableOpacity>
                 <Popover>
                     <PopoverTrigger asChild>
