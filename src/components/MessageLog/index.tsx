@@ -109,7 +109,7 @@ interface LogMessage {
 }
 
 // Memoized LogItem component for better performance.
-const LogItem = memo(({ item, fontSize, onLongPress }: { item: LogMessage; fontSize: number; onLongPress: (message: string) => void }) => {
+const LogItem = memo(({ item, fontSize, onLongPress, enableMessageIdDisplay }: { item: LogMessage; fontSize: number; onLongPress: (message: string) => void; enableMessageIdDisplay: boolean }) => {
     const getTextStyle = useCallback(() => {
         const baseStyle = {
             fontSize: fontSize,
@@ -126,9 +126,21 @@ const LogItem = memo(({ item, fontSize, onLongPress }: { item: LogMessage; fontS
         }
     }, [item.type, fontSize])
 
+    // Trim leading newlines when message ID is present to maintain alignment.
+    const displayText = useMemo(() => {
+        if (enableMessageIdDisplay && item.messageId !== undefined) {
+            // Remove leading newlines and whitespace to keep alignment with message ID.
+            return item.text.replace(/^[\n\r\s]+/, "")
+        }
+        return item.text
+    }, [item.text, item.messageId, enableMessageIdDisplay])
+
     return (
         <TouchableOpacity style={styles.logItem} onLongPress={() => onLongPress(item.text)} delayLongPress={500}>
-            <Text style={getTextStyle()}>{item.text}</Text>
+            <View style={{ flexDirection: "row", alignItems: "flex-start" }}>
+                {enableMessageIdDisplay && item.messageId !== undefined && <Text style={[getTextStyle(), { color: "gray", minWidth: 40 }]}>[{item.messageId}]</Text>}
+                <Text style={[getTextStyle(), { flex: 1, flexShrink: 1 }]}>{displayText}</Text>
+            </View>
         </TouchableOpacity>
     )
 })
@@ -373,7 +385,10 @@ ${longTargetsString}
     )
 
     // Render individual log item.
-    const renderLogItem = useCallback(({ item }: { item: LogMessage }) => <LogItem item={item} fontSize={fontSize} onLongPress={handleLongPress} />, [fontSize, handleLongPress])
+    const renderLogItem = useCallback(
+        ({ item }: { item: LogMessage }) => <LogItem item={item} fontSize={fontSize} onLongPress={handleLongPress} enableMessageIdDisplay={bsc.settings.misc.enableMessageIdDisplay} />,
+        [fontSize, handleLongPress, bsc.settings.misc.enableMessageIdDisplay]
+    )
 
     // Key extractor for FlatList.
     const keyExtractor = useCallback((item: LogMessage) => item.id, [])

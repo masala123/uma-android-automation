@@ -250,6 +250,19 @@ const Settings = () => {
                     className="mt-4"
                 />
 
+                <CustomCheckbox
+                    checked={bsc.settings.misc.enableMessageIdDisplay}
+                    onCheckedChange={(checked) => {
+                        bsc.setSettings({
+                            ...bsc.settings,
+                            misc: { ...bsc.settings.misc, enableMessageIdDisplay: checked },
+                        })
+                    }}
+                    label="Enable Message ID Display"
+                    description="Shows message IDs in the message log to help with debugging."
+                    className="mt-4"
+                />
+
                 <Separator style={{ marginVertical: 16 }} />
 
                 <CustomTitle title="Settings Management" description="Import and export settings from JSON file or access the app's data directory." />
