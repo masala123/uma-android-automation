@@ -1,7 +1,7 @@
-import { useContext, useState, useMemo, useCallback, memo, useEffect } from "react"
+import { useContext, useState, useMemo, useCallback, memo, useEffect, useRef } from "react"
 import { MessageLogContext } from "../../context/MessageLogContext"
 import { BotStateContext } from "../../context/BotStateContext"
-import { StyleSheet, Text, View, TextInput, TouchableOpacity } from "react-native"
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, Animated } from "react-native"
 import * as Clipboard from "expo-clipboard"
 import { Copy, Plus, Minus, Type, X, ArrowUp, ArrowDown, ArrowUpAZ, ArrowDownZA } from "lucide-react-native"
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover"
@@ -17,6 +17,7 @@ const styles = StyleSheet.create({
         borderRadius: 25,
         marginBottom: 10,
         elevation: 10,
+        position: "relative",
     },
     searchContainer: {
         flexDirection: "row",
@@ -99,6 +100,24 @@ const styles = StyleSheet.create({
         fontSize: 12,
         fontWeight: "600",
     },
+    floatingButtonContainer: {
+        position: "absolute",
+        bottom: 15,
+        right: 15,
+        flexDirection: "column",
+        gap: 6,
+        zIndex: 1000,
+    },
+    floatingButton: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: "#5a5a5a",
+        alignItems: "center",
+        justifyContent: "center",
+        elevation: 3,
+        opacity: 0.7,
+    },
 })
 
 interface LogMessage {
@@ -153,6 +172,29 @@ const MessageLog = () => {
     const [showErrorDialog, setShowErrorDialog] = useState(false)
     const [errorMessage, setErrorMessage] = useState("")
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
+    const scrollViewRef = useRef<any>(null)
+    const [scrollOffset, setScrollOffset] = useState(0)
+    const [contentHeight, setContentHeight] = useState(0)
+    const [viewportHeight, setViewportHeight] = useState(0)
+
+    // Animated values for smooth scroll button transitions.
+    const topButtonOpacity = useRef(new Animated.Value(0)).current
+    const bottomButtonOpacity = useRef(new Animated.Value(0)).current
+    const topHideTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+    const bottomHideTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+    // Determine if scrolling is needed and scroll buttons visibility.
+    const needsScrolling = contentHeight > viewportHeight + 10 // Add buffer to account for rounding.
+    const scrollThreshold = 50 // Increased threshold for more reliable detection.
+    const maxScrollOffset = Math.max(0, contentHeight - viewportHeight)
+
+    // Check if at top or bottom of log.
+    const isAtTop = scrollOffset <= scrollThreshold
+    const isAtBottom = needsScrolling && maxScrollOffset > 0 && scrollOffset >= Math.max(0, maxScrollOffset - scrollThreshold)
+
+    const showScrollButtons = needsScrolling && contentHeight > 0 && viewportHeight > 0
+    const showScrollToTop = showScrollButtons && !isAtTop
+    const showScrollToBottom = showScrollButtons && !isAtBottom
 
     const showError = useCallback((message: string) => {
         setErrorMessage(message)
@@ -343,10 +385,144 @@ ${longTargetsString}
     // This ensures a complete remount when transitioning from searching to having no search query.
     const listKey = useMemo(() => (searchQuery.trim().length === 0 ? "all-messages" : `search-${searchQuery}`), [searchQuery])
 
+    // Scroll to top when data changes (search or sort).
+    useEffect(() => {
+        // Use setTimeout to ensure the scroll happens after the list has updated.
+        const timeoutId = setTimeout(() => {
+            scrollViewRef.current?.scrollToOffset({
+                offset: 0,
+                animated: false,
+            })
+        }, 0)
+        return () => clearTimeout(timeoutId)
+    }, [listKey, sortOrder])
+
     // Toggle sort order between ascending and descending.
     const toggleSortOrder = useCallback(() => {
         setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"))
     }, [])
+
+    // Scroll to top of the list.
+    const scrollToTop = useCallback(() => {
+        scrollViewRef.current?.scrollToOffset({
+            offset: 0,
+            animated: true,
+        })
+    }, [])
+
+    // Scroll to bottom of the list.
+    const scrollToBottom = useCallback(() => {
+        if (filteredMessages.length > 0) {
+            try {
+                scrollViewRef.current?.scrollToIndex({
+                    index: filteredMessages.length - 1,
+                    animated: true,
+                })
+            } catch (error) {
+                // Fallback to scrolling to a large offset if scrollToIndex fails.
+                scrollViewRef.current?.scrollToOffset({
+                    offset: 999999,
+                    animated: true,
+                })
+            }
+        }
+    }, [filteredMessages.length])
+
+    // Handle scroll events to track position.
+    const handleScroll = useCallback((event: any) => {
+        const nativeEvent = event.nativeEvent
+        const offset = nativeEvent?.contentOffset?.y ?? 0
+        const contentHeight = nativeEvent?.contentSize?.height ?? 0
+        const layoutHeight = nativeEvent?.layoutMeasurement?.height ?? 0
+
+        setScrollOffset(Math.max(0, offset))
+
+        // Update content and viewport height from scroll event if available.
+        if (contentHeight > 0) {
+            setContentHeight(contentHeight)
+        }
+        if (layoutHeight > 0) {
+            setViewportHeight(layoutHeight)
+        }
+    }, [])
+
+    // Handle scroll end to get final position.
+    const handleScrollEnd = useCallback((event: any) => {
+        const nativeEvent = event.nativeEvent
+        const offset = nativeEvent?.contentOffset?.y ?? 0
+        setScrollOffset(Math.max(0, offset))
+    }, [])
+
+    // Handle content size changes to update content height.
+    const handleContentSizeChange = useCallback((width: number, height: number) => {
+        if (height > 0) {
+            setContentHeight(height)
+        }
+    }, [])
+
+    // Handle layout changes to update viewport height.
+    const handleLayout = useCallback((event: any) => {
+        const { height } = event.nativeEvent.layout
+        if (height > 0) {
+            setViewportHeight(height)
+        }
+    }, [])
+
+    // Animate scroll button visibility with smooth transitions.
+    useEffect(() => {
+        // Clear any pending timeouts.
+        if (topHideTimeoutRef.current) {
+            clearTimeout(topHideTimeoutRef.current)
+            topHideTimeoutRef.current = null
+        }
+        if (bottomHideTimeoutRef.current) {
+            clearTimeout(bottomHideTimeoutRef.current)
+            bottomHideTimeoutRef.current = null
+        }
+
+        // Animate top scroll button.
+        if (showScrollToTop) {
+            Animated.timing(topButtonOpacity, {
+                toValue: 1,
+                duration: 100,
+                useNativeDriver: true,
+            }).start()
+        } else {
+            topHideTimeoutRef.current = setTimeout(() => {
+                Animated.timing(topButtonOpacity, {
+                    toValue: 0,
+                    duration: 100,
+                    useNativeDriver: true,
+                }).start()
+            })
+        }
+
+        // Animate bottom scroll button.
+        if (showScrollToBottom) {
+            Animated.timing(bottomButtonOpacity, {
+                toValue: 1,
+                duration: 100,
+                useNativeDriver: true,
+            }).start()
+        } else {
+            bottomHideTimeoutRef.current = setTimeout(() => {
+                Animated.timing(bottomButtonOpacity, {
+                    toValue: 0,
+                    duration: 100,
+                    useNativeDriver: true,
+                }).start()
+            })
+        }
+
+        return () => {
+            if (topHideTimeoutRef.current) {
+                clearTimeout(topHideTimeoutRef.current)
+            }
+            if (bottomHideTimeoutRef.current) {
+                clearTimeout(bottomHideTimeoutRef.current)
+            }
+        }
+    }, [showScrollToTop, showScrollToBottom, topButtonOpacity, bottomButtonOpacity])
 
     // Font size control functions.
     const increaseFontSize = useCallback(() => {
@@ -444,16 +620,49 @@ ${longTargetsString}
             {/* Log Messages */}
             <View style={styles.logContainer}>
                 <CustomScrollView
+                    ref={scrollViewRef}
                     key={listKey}
                     targetProps={{
                         data: filteredMessages,
                         renderItem: renderLogItem,
                         keyExtractor: keyExtractor,
                         removeClippedSubviews: true,
+                        onScroll: handleScroll,
+                        onMomentumScrollEnd: handleScrollEnd,
+                        onScrollEndDrag: handleScrollEnd,
+                        scrollEventThrottle: 16,
+                        onContentSizeChange: handleContentSizeChange,
+                        onLayout: handleLayout,
                     }}
                     hideScrollbar={true}
                 />
             </View>
+
+            {/* Floating Scroll Buttons */}
+            {showScrollButtons && (
+                <View style={styles.floatingButtonContainer}>
+                    <Animated.View
+                        style={{
+                            opacity: topButtonOpacity,
+                            pointerEvents: showScrollToTop ? "auto" : "none",
+                        }}
+                    >
+                        <TouchableOpacity style={styles.floatingButton} onPress={scrollToTop}>
+                            <ArrowUp size={16} color="white" />
+                        </TouchableOpacity>
+                    </Animated.View>
+                    <Animated.View
+                        style={{
+                            opacity: bottomButtonOpacity,
+                            pointerEvents: showScrollToBottom ? "auto" : "none",
+                        }}
+                    >
+                        <TouchableOpacity style={styles.floatingButton} onPress={scrollToBottom}>
+                            <ArrowDown size={16} color="white" />
+                        </TouchableOpacity>
+                    </Animated.View>
+                </View>
+            )}
 
             {/* Error Dialog */}
             <AlertDialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
