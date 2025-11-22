@@ -18,6 +18,7 @@ import java.lang.Integer.max
 import androidx.core.graphics.scale
 import androidx.core.graphics.createBitmap
 import com.steve1316.automation_library.data.SharedData
+import java.util.Collections
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 import kotlin.collections.component1
@@ -66,6 +67,11 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	data class SpiritGaugeResult(
 		val numGaugesCanFill: Int,
 		val numGaugesReadyToBurst: Int
+	)
+
+	data class StatGainResult(
+		val statGains: IntArray,
+		val rowValuesMap: Map<Int, List<Int>>
 	)
 
 	////////////////////////////////////////////////////////////////////
@@ -1009,9 +1015,9 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	 * @param sourceBitmap Bitmap of the source image separately taken. Defaults to null.
 	 * @param skillPointsLocation Point location of the template image separately taken. Defaults to null.
 	 *
-	 * @return Array of 5 detected stat gain values as integers, or -1 for failed detections.
+	 * @return StatGainResult containing the stat gains array and row values map for logging.
 	 */
-	fun determineStatGainFromTraining(trainingName: String, sourceBitmap: Bitmap? = null, skillPointsLocation: Point? = null): IntArray {
+	fun determineStatGainFromTraining(trainingName: String, sourceBitmap: Bitmap? = null, skillPointsLocation: Point? = null): StatGainResult {
         // Scenario-specific checks.
 		val isUnityCup = game.scenario == "Unity Cup"
 
@@ -1039,6 +1045,8 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		}
 
 		val threadSafeResults = IntArray(5)
+		// Store row values to log them sequentially after threads complete.
+		val rowValuesMap = Collections.synchronizedMap(mutableMapOf<Int, List<Int>>())
 
 		if (skillPointsLocation != null) {
 			// Pre-load all template bitmaps for all suffixes to avoid thread contention.
@@ -1204,17 +1212,14 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 						val finalValue = if (rows.size > 1) {
 							// For Unity Cup with multiple rows, sum the values from each row.
 							val rowValues = rowDebugInfo.mapIndexed { index, rowInfo ->
-								val rowValue = constructIntegerFromMatches(rowInfo.matches)
-								rowValue
+								constructIntegerFromMatches(rowInfo.matches)
 							}
-							val sum = rowValues.sum()
-							MessageLog.d(TAG, "[INFO] $statName final constructed values from $trainingName training: $rowValues, sum: $sum.")
-							sum
+                            // Store row values for sequential logging after threads complete.
+                            rowValuesMap[i] = rowValues
+							rowValues.sum()
 						} else {
 							// For single row scenarios, use the existing behavior.
-							val value = constructIntegerFromMatches(rowDebugInfo[0].matches)
-							MessageLog.d(TAG, "[INFO] $statName final constructed value from $trainingName training: $value.")
-							value
+							constructIntegerFromMatches(rowDebugInfo[0].matches)
 						}
 						threadSafeResults[i] = finalValue
 
@@ -1287,12 +1292,13 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
 			// Apply artificial boost to main stat gains if they appear lower than side-effect stats.
 			val boostedResults = applyStatGainBoost(trainingName, threadSafeResults, statNames, trainingToStatIndices)
-			return boostedResults
+			// Return results with row values map for logging in Training.kt after threads complete.
+			return StatGainResult(boostedResults, rowValuesMap.toMap())
 		} else {
 			MessageLog.e(TAG, "Could not find the skill points location to start determining stat gains for $trainingName training.")
 		}
 
-		return threadSafeResults
+		return StatGainResult(threadSafeResults, emptyMap())
 	}
 
 	/**
