@@ -380,7 +380,7 @@ const Settings = () => {
                 {/* Warning message for debug tests */}
                 <View style={[styles.errorContainer, { marginBottom: 16 }]}>
                     <Text style={styles.errorText}>
-                        {"⚠️ Only one debug test can be enabled at a time. Enabling a test will automatically disable the others.\n\nIn addition, it is recommended to enable Debug Mode when testing."}
+                        {"⚠️ Only one debug test can be enabled at a time. Enabling a test will automatically disable the others.\n\nHaving Debug Mode enabled will output more helpful logs."}
                     </Text>
                 </View>
 
