@@ -128,12 +128,8 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ visible, on
     // Format the training settings into a preview string.
     const settingsPreview = useMemo(() => {
         const settings: string[] = []
-        if (currentTrainingSettings.trainingBlacklist.length > 0) {
-            settings.push(`Blacklist: ${currentTrainingSettings.trainingBlacklist.join(", ")}`)
-        }
-        if (currentTrainingSettings.statPrioritization.length > 0) {
-            settings.push(`Prioritization: ${currentTrainingSettings.statPrioritization.join(", ")}`)
-        }
+        settings.push(`Blacklist: ${currentTrainingSettings.trainingBlacklist.length > 0 ? currentTrainingSettings.trainingBlacklist.join(", ") : "None"}`)
+        settings.push(`Prioritization: ${currentTrainingSettings.statPrioritization.length > 0 ? currentTrainingSettings.statPrioritization.join(", ") : "None"}`)
         settings.push(`Max Failure Chance: ${currentTrainingSettings.maximumFailureChance}%`)
         settings.push(`Disable on Maxed: ${currentTrainingSettings.disableTrainingOnMaxedStat ? "Yes" : "No"}`)
         settings.push(`Focus on Sparks: ${currentTrainingSettings.focusOnSparkStatTarget ? "Yes" : "No"}`)
