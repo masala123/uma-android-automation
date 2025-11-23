@@ -1,0 +1,132 @@
+import React, { useMemo } from "react"
+import { View, Text, ScrollView, StyleSheet } from "react-native"
+import { useTheme } from "../../context/ThemeContext"
+import CustomButton from "../CustomButton"
+import { SettingsCategory } from "../../hooks/useProfileManager"
+
+interface ProfileComparisonProps {
+    comparison: Record<string, { current: any; profile: any }>
+    onConfirm: () => void
+    onCancel: () => void
+    actionType?: "switch" | "overwrite"
+    category?: SettingsCategory
+}
+
+const CATEGORY_NAMES: Partial<Record<SettingsCategory, string>> = {
+    training: "Training Settings:",
+}
+
+const formatValue = (value: any): string => {
+    if (Array.isArray(value)) {
+        return value.join(", ") || "[]"
+    }
+    if (typeof value === "object" && value !== null) {
+        return JSON.stringify(value)
+    }
+    return String(value)
+}
+
+const ProfileComparison: React.FC<ProfileComparisonProps> = ({ comparison, onConfirm, onCancel, actionType = "switch", category = "training" }) => {
+    const { colors } = useTheme()
+
+    const hasChanges = Object.keys(comparison).length > 0
+
+    const title = useMemo(() => (actionType === "overwrite" ? "Overwriting current settings will change:" : "Switching profile will change:"), [actionType])
+
+    const sectionTitle = useMemo(() => CATEGORY_NAMES[category] || "Settings:", [category])
+
+    const buttonLabel = useMemo(() => (actionType === "overwrite" ? "Overwrite Settings" : "Apply Profile"), [actionType])
+
+    const styles = StyleSheet.create({
+        container: {
+            marginTop: 16,
+            padding: 16,
+            backgroundColor: colors.warningBg,
+            borderRadius: 8,
+            borderWidth: 1,
+            borderColor: colors.warningBorder,
+        },
+        title: {
+            fontSize: 16,
+            fontWeight: "bold",
+            color: colors.foreground,
+            marginBottom: 12,
+        },
+        section: {
+            marginBottom: 16,
+        },
+        sectionTitle: {
+            fontSize: 14,
+            fontWeight: "600",
+            color: colors.foreground,
+            marginBottom: 8,
+        },
+        scrollView: {
+            maxHeight: 300,
+        },
+        changeItem: {
+            marginBottom: 8,
+            padding: 8,
+            backgroundColor: colors.background,
+            borderRadius: 4,
+        },
+        changeKey: {
+            fontSize: 12,
+            fontWeight: "600",
+            color: colors.foreground,
+            marginBottom: 4,
+        },
+        changeValue: {
+            fontSize: 11,
+            color: colors.foreground,
+            marginLeft: 8,
+        },
+        changeRow: {
+            flexDirection: "row",
+            marginBottom: 2,
+        },
+        buttonRow: {
+            flexDirection: "row",
+            gap: 8,
+            marginTop: 12,
+        },
+    })
+
+    if (!hasChanges) {
+        return null
+    }
+
+    return (
+        <View style={styles.container}>
+            <Text style={styles.title}>{title}</Text>
+
+            <ScrollView style={styles.scrollView} nestedScrollEnabled={true}>
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>{sectionTitle}</Text>
+                    {Object.entries(comparison).map(([key, { current, profile }]) => (
+                        <View key={key} style={styles.changeItem}>
+                            <Text style={styles.changeKey}>{key}:</Text>
+                            <View style={styles.changeRow}>
+                                <Text style={[styles.changeValue, { color: colors.destructive }]}>Current: {formatValue(current)}</Text>
+                            </View>
+                            <View style={styles.changeRow}>
+                                <Text style={[styles.changeValue, { color: colors.primary }]}>→ Profile: {formatValue(profile)}</Text>
+                            </View>
+                        </View>
+                    ))}
+                </View>
+            </ScrollView>
+
+            <View style={styles.buttonRow}>
+                <CustomButton onPress={onCancel} variant="outline">
+                    Cancel
+                </CustomButton>
+                <CustomButton onPress={onConfirm} variant="default">
+                    {buttonLabel}
+                </CustomButton>
+            </View>
+        </View>
+    )
+}
+
+export default ProfileComparison
