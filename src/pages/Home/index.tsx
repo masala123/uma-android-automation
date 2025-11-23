@@ -5,6 +5,7 @@ import { BotStateContext } from "../../context/BotStateContext"
 import { useSettings } from "../../context/SettingsContext"
 import { logWithTimestamp, logErrorWithTimestamp } from "../../lib/logger"
 import { DeviceEventEmitter, StyleSheet, View, NativeModules } from "react-native"
+import { Snackbar } from "react-native-paper"
 import { MessageLogContext } from "../../context/MessageLogContext"
 import { useTheme } from "../../context/ThemeContext"
 import CustomButton from "../../components/CustomButton"
@@ -39,6 +40,8 @@ const Home = () => {
     const { isDark } = useTheme()
     const [isRunning, setIsRunning] = useState<boolean>(false)
     const [showNotReadyDialog, setShowNotReadyDialog] = useState<boolean>(false)
+    const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false)
+    const [snackbarMessage, setSnackbarMessage] = useState<string>("")
 
     const bsc = useContext(BotStateContext)
     const mlc = useContext(MessageLogContext)
@@ -85,7 +88,8 @@ const Home = () => {
                 logWithTimestamp("[Home] Settings saved successfully, starting bot...")
             } catch (error) {
                 logErrorWithTimestamp("[Home] Failed to save settings:", error)
-                mlc.setMessageLog([...mlc.messageLog, `\n[ERROR] Failed to save settings before starting: ${error}`])
+                setSnackbarMessage(`Failed to save settings before starting: ${error}`)
+                setSnackbarOpen(true)
             }
             StartModule.start()
         } else {
@@ -118,6 +122,20 @@ const Home = () => {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            <Snackbar
+                visible={snackbarOpen}
+                onDismiss={() => setSnackbarOpen(false)}
+                action={{
+                    label: "Close",
+                    onPress: () => {
+                        setSnackbarOpen(false)
+                    },
+                }}
+                style={{ backgroundColor: "red", borderRadius: 10 }}
+            >
+                {snackbarMessage}
+            </Snackbar>
         </View>
     )
 }
