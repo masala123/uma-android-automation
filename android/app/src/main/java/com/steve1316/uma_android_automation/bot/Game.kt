@@ -54,6 +54,7 @@ class Game(val myContext: Context) {
 	val skillPointsRequired: Int = SettingsHelper.getIntSetting("general", "skillPointCheck")
 	private val enablePopupCheck: Boolean = SettingsHelper.getBooleanSetting("general", "enablePopupCheck")
     private val enableCraneGameAttempt: Boolean = SettingsHelper.getBooleanSetting("general", "enableCraneGameAttempt")
+    private val enableStopBeforeFinals: Boolean = SettingsHelper.getBooleanSetting("general", "enableStopBeforeFinals")
 
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
@@ -67,6 +68,7 @@ class Game(val myContext: Context) {
 	private var inheritancesDone = 0
     private var needToUpdateAptitudes: Boolean = true
     private var recreationDateCompleted: Boolean = false
+    private var stopBeforeFinalsInitialTurnNumber: Int = -1
 
 	data class Date(
 		val year: Int,
@@ -436,6 +438,37 @@ class Game(val myContext: Context) {
 			MessageLog.i(TAG, "It is not the Finals yet.")
 			false
 		}
+	}
+
+	/**
+	 * Checks if the bot should stop before the finals on turn 72.
+	 *
+	 * @return True if the bot should stop. Otherwise false.
+	 */
+	fun checkFinalsStop(): Boolean {
+		if (!enableStopBeforeFinals) {
+			return false
+		} else if (currentDate.turnNumber > 72) {
+            // If already past turn 72, skip the check to prevent re-checking.
+			return false
+		}
+
+		MessageLog.i(TAG, "\n[FINALS] Checking if bot should stop before the finals.")
+		val sourceBitmap = imageUtils.getSourceBitmap()
+
+		// Check if turn is 72, but only stop if we progressed to turn 72 during this run.
+		if (currentDate.turnNumber == 72 && stopBeforeFinalsInitialTurnNumber != -1) {
+			MessageLog.i(TAG, "[FINALS] Detected turn 72. Stopping bot before the finals.")
+			notificationMessage = "Stopping bot before the finals on turn 72."
+			return true
+		}
+
+        // Track initial turn number on first check to avoid stopping if bot starts on turn 72.
+		if (stopBeforeFinalsInitialTurnNumber == -1) {
+			stopBeforeFinalsInitialTurnNumber = currentDate.turnNumber
+		}
+
+		return false
 	}
 
 	/**

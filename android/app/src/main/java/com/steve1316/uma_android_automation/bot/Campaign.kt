@@ -44,6 +44,12 @@ open class Campaign(val game: Game) {
 			////////////////////////////////////////////////
 			// Most bot operations start at the Main screen.
 			if (game.checkMainScreen()) {
+				// Check if bot should stop before the finals.
+				if (game.checkFinalsStop()) {
+					MessageLog.i(TAG, "\n[END] Stopping bot before the finals.")
+					break
+				}
+
 				var needToRace = false
 				if (!game.racing.encounteredRacingPopup) {
 					// Refresh the stat values in memory.
