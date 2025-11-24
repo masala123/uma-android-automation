@@ -336,6 +336,10 @@ const TrainingSettings = () => {
                             setSnackbarMessage("Current Training settings are already the same.")
                             setSnackbarVisible(true)
                         }}
+                        onError={(message) => {
+                            setSnackbarMessage(message)
+                            setSnackbarVisible(true)
+                        }}
                     />
                     {renderStatSelector(
                         "Blacklist",

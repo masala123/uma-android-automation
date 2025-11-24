@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react"
 import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView } from "react-native"
-import { Snackbar } from "react-native-paper"
 import { useTheme } from "../../context/ThemeContext"
 import CustomButton from "../CustomButton"
 import { Input } from "../ui/input"
@@ -17,15 +16,14 @@ interface ProfileCreationModalProps {
     currentTrainingSettings: Settings["training"]
     currentTrainingStatTargetSettings: Settings["trainingStatTarget"]
     onProfileCreated?: (profileName: string) => void
+    onError?: (message: string) => void
 }
 
-const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ visible, onClose, currentTrainingSettings, currentTrainingStatTargetSettings, onProfileCreated }) => {
+const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ visible, onClose, currentTrainingSettings, currentTrainingStatTargetSettings, onProfileCreated, onError }) => {
     const { colors } = useTheme()
-    const { createProfile } = useProfileManager()
+    const { createProfile } = useProfileManager(onError)
     const [profileName, setProfileName] = useState("")
     const [isCreating, setIsCreating] = useState(false)
-    const [snackbarVisible, setSnackbarVisible] = useState(false)
-    const [snackbarMessage, setSnackbarMessage] = useState("")
 
     const styles = StyleSheet.create({
         modal: {
@@ -190,12 +188,12 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ visible, on
             onProfileCreated?.(createdProfileName)
             onClose()
         } catch (error) {
-            setSnackbarMessage(`Failed to create profile: ${error instanceof Error ? error.message : String(error)}`)
-            setSnackbarVisible(true)
+            const errorMessage = `Failed to create profile: ${error instanceof Error ? error.message : String(error)}`
+            onError?.(errorMessage)
         } finally {
             setIsCreating(false)
         }
-    }, [profileName, createProfile, currentTrainingSettings, currentTrainingStatTargetSettings, onProfileCreated, onClose])
+    }, [profileName, createProfile, currentTrainingSettings, currentTrainingStatTargetSettings, onProfileCreated, onClose, onError])
 
     const handleClose = useCallback(() => {
         setProfileName("")
@@ -270,20 +268,6 @@ const ProfileCreationModal: React.FC<ProfileCreationModalProps> = ({ visible, on
                     </View>
                 </View>
             </View>
-            <Snackbar
-                visible={snackbarVisible}
-                onDismiss={() => setSnackbarVisible(false)}
-                action={{
-                    label: "Close",
-                    onPress: () => {
-                        setSnackbarVisible(false)
-                    },
-                }}
-                style={{ backgroundColor: "red", borderRadius: 10 }}
-                duration={4000}
-            >
-                {snackbarMessage}
-            </Snackbar>
         </Modal>
     )
 }

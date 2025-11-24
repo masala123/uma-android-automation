@@ -23,8 +23,10 @@ export const DEFAULT_PROFILE_NAME = "Default Profile"
 
 /**
  * Hook for managing profiles.
+ *
+ * @param onError - Optional callback to handle errors for UI display (e.g., Snackbar).
  */
-export const useProfileManager = () => {
+export const useProfileManager = (onError?: (message: string) => void) => {
     const [profiles, setProfiles] = useState<Profile[]>([])
     const [currentProfileName, setCurrentProfileName] = useState<string | null>(null)
     const [isLoading, setIsLoading] = useState(true)
@@ -171,7 +173,10 @@ export const useProfileManager = () => {
         async (name: string, settings: Partial<Settings>): Promise<number> => {
             try {
                 if (name.toLowerCase() === DEFAULT_PROFILE_NAME.toLowerCase()) {
-                    throw new Error(`Cannot create a profile with the reserved name '${DEFAULT_PROFILE_NAME}'.`)
+                    const errorMessage = `Cannot create a profile with the reserved name '${DEFAULT_PROFILE_NAME}'.`
+                    logErrorWithTimestamp(`[ProfileManager] ${errorMessage}`)
+                    onError?.(errorMessage)
+                    return 0
                 }
 
                 // Reload profiles to ensure we have the latest list before checking for duplicates.
@@ -179,7 +184,10 @@ export const useProfileManager = () => {
 
                 // Check for name conflicts using current profiles state.
                 if (hasNameConflict(name)) {
-                    throw new Error(`Profile with name "${name}" already exists.`)
+                    const errorMessage = `Profile with name "${name}" already exists.`
+                    logErrorWithTimestamp(`[ProfileManager] ${errorMessage}`)
+                    onError?.(errorMessage)
+                    return 0
                 }
 
                 const profileId = await databaseManager.saveProfile({
@@ -191,11 +199,13 @@ export const useProfileManager = () => {
                 logWithTimestamp(`[ProfileManager] Created profile: ${name}`)
                 return profileId
             } catch (error) {
-                logErrorWithTimestamp(`[ProfileManager] Failed to create profile ${name}:`, error)
-                throw error
+                const errorMessage = `Failed to create profile ${name}: ${error instanceof Error ? error.message : String(error)}`
+                logErrorWithTimestamp(`[ProfileManager] ${errorMessage}`, error)
+                onError?.(errorMessage)
+                return 0
             }
         },
-        [loadProfiles, profiles, hasNameConflict]
+        [loadProfiles, profiles, hasNameConflict, onError]
     )
 
     /**
@@ -216,17 +226,26 @@ export const useProfileManager = () => {
             try {
                 const existingProfile = findProfileById(id)
                 if (!existingProfile) {
-                    throw new Error(`Profile with id ${id} not found.`)
+                    const errorMessage = `Profile with id ${id} not found.`
+                    logErrorWithTimestamp(`[ProfileManager] ${errorMessage}`)
+                    onError?.(errorMessage)
+                    return
                 }
 
                 // Prevent renaming to Default Profile.
                 if (updates.name && updates.name.toLowerCase() === DEFAULT_PROFILE_NAME.toLowerCase()) {
-                    throw new Error(`Cannot use the reserved name '${DEFAULT_PROFILE_NAME}'.`)
+                    const errorMessage = `Cannot use the reserved name '${DEFAULT_PROFILE_NAME}'.`
+                    logErrorWithTimestamp(`[ProfileManager] ${errorMessage}`)
+                    onError?.(errorMessage)
+                    return
                 }
 
                 // Check for name conflicts if name is being updated.
                 if (updates.name && updates.name !== existingProfile.name && hasNameConflict(updates.name, id)) {
-                    throw new Error(`Profile with name "${updates.name}" already exists.`)
+                    const errorMessage = `Profile with name "${updates.name}" already exists.`
+                    logErrorWithTimestamp(`[ProfileManager] ${errorMessage}`)
+                    onError?.(errorMessage)
+                    return
                 }
 
                 // Merge existing settings with updates.
@@ -241,11 +260,12 @@ export const useProfileManager = () => {
                 await loadProfiles()
                 logWithTimestamp(`[ProfileManager] Updated profile: ${updates.name || existingProfile.name}`)
             } catch (error) {
-                logErrorWithTimestamp(`[ProfileManager] Failed to update profile ${id}:`, error)
-                throw error
+                const errorMessage = `Failed to update profile ${id}: ${error instanceof Error ? error.message : String(error)}`
+                logErrorWithTimestamp(`[ProfileManager] ${errorMessage}`, error)
+                onError?.(errorMessage)
             }
         },
-        [profiles, loadProfiles, findProfileById, hasNameConflict]
+        [profiles, loadProfiles, findProfileById, hasNameConflict, onError]
     )
 
     /**
@@ -259,7 +279,10 @@ export const useProfileManager = () => {
             try {
                 const profile = findProfileById(id)
                 if (!profile) {
-                    throw new Error(`Profile with id ${id} not found.`)
+                    const errorMessage = `Profile with id ${id} not found.`
+                    logErrorWithTimestamp(`[ProfileManager] ${errorMessage}`)
+                    onError?.(errorMessage)
+                    return
                 }
 
                 await databaseManager.deleteProfile(id)
@@ -273,11 +296,12 @@ export const useProfileManager = () => {
                 await loadProfiles()
                 logWithTimestamp(`[ProfileManager] Deleted profile: ${profile.name}`)
             } catch (error) {
-                logErrorWithTimestamp(`[ProfileManager] Failed to delete profile ${id}:`, error)
-                throw error
+                const errorMessage = `Failed to delete profile ${id}: ${error instanceof Error ? error.message : String(error)}`
+                logErrorWithTimestamp(`[ProfileManager] ${errorMessage}`, error)
+                onError?.(errorMessage)
             }
         },
-        [profiles, currentProfileName, loadProfiles, findProfileById]
+        [profiles, currentProfileName, loadProfiles, findProfileById, onError]
     )
 
     /**
@@ -298,7 +322,10 @@ export const useProfileManager = () => {
 
                 const profile = findProfileByName(profileName)
                 if (!profile) {
-                    throw new Error(`Profile "${profileName}" not found.`)
+                    const errorMessage = `Profile "${profileName}" not found.`
+                    logErrorWithTimestamp(`[ProfileManager] ${errorMessage}`)
+                    onError?.(errorMessage)
+                    return null
                 }
 
                 await databaseManager.setCurrentProfileName(profileName)
@@ -306,11 +333,13 @@ export const useProfileManager = () => {
                 logWithTimestamp(`[ProfileManager] Switched to profile: ${profileName}`)
                 return profile
             } catch (error) {
-                logErrorWithTimestamp(`[ProfileManager] Failed to switch to profile ${profileName}:`, error)
-                throw error
+                const errorMessage = `Failed to switch to profile ${profileName}: ${error instanceof Error ? error.message : String(error)}`
+                logErrorWithTimestamp(`[ProfileManager] ${errorMessage}`, error)
+                onError?.(errorMessage)
+                return null
             }
         },
-        [profiles, findProfileByName]
+        [profiles, findProfileByName, onError]
     )
 
     /**
@@ -338,18 +367,22 @@ export const useProfileManager = () => {
             try {
                 const profile = findProfileById(profileId)
                 if (!profile) {
-                    throw new Error(`Profile with id ${profileId} not found.`)
+                    const errorMessage = `Profile with id ${profileId} not found.`
+                    logErrorWithTimestamp(`[ProfileManager] ${errorMessage}`)
+                    onError?.(errorMessage)
+                    return
                 }
 
                 // Apply the profile's settings to current settings.
                 await applySettings(profile.settings)
                 logWithTimestamp(`[ProfileManager] Applied profile settings: ${profile.name}`)
             } catch (error) {
-                logErrorWithTimestamp(`[ProfileManager] Failed to overwrite settings with profile ${profileId}:`, error)
-                throw error
+                const errorMessage = `Failed to overwrite settings with profile ${profileId}: ${error instanceof Error ? error.message : String(error)}`
+                logErrorWithTimestamp(`[ProfileManager] ${errorMessage}`, error)
+                onError?.(errorMessage)
             }
         },
-        [profiles, findProfileById]
+        [profiles, findProfileById, onError]
     )
 
     return {

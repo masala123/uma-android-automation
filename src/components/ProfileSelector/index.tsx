@@ -14,6 +14,7 @@ interface ProfileSelectorProps {
     onOverwriteSettings?: (settings: Partial<Settings>) => Promise<void>
     onProfileDeleted?: (deletedProfileName: string) => void
     onNoChangesDetected?: (profileName: string) => void
+    onError?: (message: string) => void
 }
 
 /**
@@ -23,9 +24,9 @@ const getDefaultSelectedProfile = (profiles: Array<{ name: string }>): string =>
     return profiles.length > 0 ? profiles[0].name : DEFAULT_PROFILE_NAME
 }
 
-const ProfileSelector: React.FC<ProfileSelectorProps> = ({ currentTrainingSettings, currentTrainingStatTargetSettings, onOverwriteSettings, onProfileDeleted, onNoChangesDetected }) => {
+const ProfileSelector: React.FC<ProfileSelectorProps> = ({ currentTrainingSettings, currentTrainingStatTargetSettings, onOverwriteSettings, onProfileDeleted, onNoChangesDetected, onError }) => {
     const { colors } = useTheme()
-    const { profiles, loadProfiles } = useProfileManager()
+    const { profiles, loadProfiles } = useProfileManager(onError)
     const [showManageModal, setShowManageModal] = useState(false)
     const [showCreateModal, setShowCreateModal] = useState(false)
     const [selectedProfileName, setSelectedProfileName] = useState<string>(DEFAULT_PROFILE_NAME)
@@ -148,6 +149,7 @@ const ProfileSelector: React.FC<ProfileSelectorProps> = ({ currentTrainingSettin
                     setPendingProfileSwitch(profileName)
                     await loadProfiles()
                 }}
+                onError={onError}
             />
 
             <ProfileManagerModal
@@ -175,10 +177,15 @@ const ProfileSelector: React.FC<ProfileSelectorProps> = ({ currentTrainingSettin
                         onProfileDeleted(deletedProfileName)
                     }
                 }}
-                onProfileUpdated={async () => {
+                onProfileUpdated={async (oldName, newName) => {
                     await loadProfiles()
+                    // If the renamed profile was the selected one, update to the new name.
+                    if (oldName && newName && selectedProfileName === oldName) {
+                        setSelectedProfileName(newName)
+                    }
                 }}
                 onNoChangesDetected={onNoChangesDetected}
+                onError={onError}
             />
         </View>
     )

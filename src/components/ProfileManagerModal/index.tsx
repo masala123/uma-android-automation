@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react"
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Modal as RNModal } from "react-native"
-import { Snackbar } from "react-native-paper"
 import { useTheme } from "../../context/ThemeContext"
 import CustomButton from "../CustomButton"
 import { Input } from "../ui/input"
@@ -16,8 +15,9 @@ interface ProfileManagerModalProps {
     currentTrainingStatTargetSettings: Settings["trainingStatTarget"]
     onOverwriteSettings?: (settings: Partial<Settings>) => Promise<void>
     onProfileDeleted?: (deletedProfileName: string) => void
-    onProfileUpdated?: () => void
+    onProfileUpdated?: (oldName?: string, newName?: string) => void
     onNoChangesDetected?: (profileName: string) => void
+    onError?: (message: string) => void
 }
 
 const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
@@ -29,9 +29,10 @@ const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
     onProfileDeleted,
     onProfileUpdated,
     onNoChangesDetected,
+    onError,
 }) => {
     const { colors } = useTheme()
-    const { profiles, updateProfile, deleteProfile, loadProfiles, compareWithProfile, overwriteProfileSettings } = useProfileManager()
+    const { profiles, updateProfile, deleteProfile, loadProfiles, compareWithProfile } = useProfileManager(onError)
     const [profileName, setProfileName] = useState("")
     const [editingProfileId, setEditingProfileId] = useState<number | null>(null)
     const [deleteProfileId, setDeleteProfileId] = useState<number | null>(null)
@@ -39,8 +40,6 @@ const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
     const [showComparison, setShowComparison] = useState(false)
     const [overwriteProfileId, setOverwriteProfileId] = useState<number | null>(null)
     const [comparisonData, setComparisonData] = useState<Record<string, { current: any; profile: any }> | null>(null)
-    const [snackbarVisible, setSnackbarVisible] = useState(false)
-    const [snackbarMessage, setSnackbarMessage] = useState("")
 
     const styles = StyleSheet.create({
         modal: {
@@ -150,10 +149,10 @@ const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
             // Notify parent that a profile was updated.
             onProfileUpdated?.()
         } catch (error) {
-            setSnackbarMessage(`Failed to update profile: ${error instanceof Error ? error.message : String(error)}`)
-            setSnackbarVisible(true)
+            const errorMessage = `Failed to update profile: ${error instanceof Error ? error.message : String(error)}`
+            onError?.(errorMessage)
         }
-    }, [profileName, editingProfileId, profiles, updateProfile, onProfileUpdated])
+    }, [profileName, editingProfileId, profiles, updateProfile, onProfileUpdated, onError])
 
     const handleDeleteClick = useCallback((profileId: number) => {
         setDeleteProfileId(profileId)
@@ -178,10 +177,10 @@ const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
         } catch (error) {
             setShowDeleteDialog(false)
             setDeleteProfileId(null)
-            setSnackbarMessage(`Failed to delete profile: ${error instanceof Error ? error.message : String(error)}`)
-            setSnackbarVisible(true)
+            const errorMessage = `Failed to delete profile: ${error instanceof Error ? error.message : String(error)}`
+            onError?.(errorMessage)
         }
-    }, [deleteProfileId, profiles, deleteProfile, onProfileDeleted])
+    }, [deleteProfileId, profiles, deleteProfile, onProfileDeleted, onError])
 
     const handleDeleteCancel = useCallback(() => {
         setShowDeleteDialog(false)
@@ -222,22 +221,24 @@ const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
 
     const handleConfirmOverwrite = useCallback(
         async (profileId: number) => {
-            if (!onOverwriteSettings) {
-                return
-            }
-
             try {
-                await overwriteProfileSettings(profileId, onOverwriteSettings)
+                // Update the profile with the current settings (overwrite the profile).
+                const currentSettings: Partial<Settings> = {
+                    training: currentTrainingSettings,
+                    trainingStatTarget: currentTrainingStatTargetSettings,
+                }
+                await updateProfile(profileId, { settings: currentSettings })
                 setOverwriteProfileId(null)
                 setComparisonData(null)
                 setShowComparison(false)
+                onProfileUpdated?.()
                 onClose()
             } catch (error) {
-                setSnackbarMessage(`Failed to overwrite settings: ${error instanceof Error ? error.message : String(error)}`)
-                setSnackbarVisible(true)
+                const errorMessage = `Failed to overwrite settings: ${error instanceof Error ? error.message : String(error)}`
+                onError?.(errorMessage)
             }
         },
-        [onOverwriteSettings, overwriteProfileSettings, onClose]
+        [currentTrainingSettings, currentTrainingStatTargetSettings, updateProfile, onProfileUpdated, onClose, onError]
     )
 
     const handleCancelOverwrite = useCallback(() => {
@@ -348,21 +349,6 @@ const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
                     </View>
                 </View>
             </RNModal>
-
-            <Snackbar
-                visible={snackbarVisible}
-                onDismiss={() => setSnackbarVisible(false)}
-                action={{
-                    label: "Close",
-                    onPress: () => {
-                        setSnackbarVisible(false)
-                    },
-                }}
-                style={{ backgroundColor: "red", borderRadius: 10 }}
-                duration={4000}
-            >
-                {snackbarMessage}
-            </Snackbar>
         </>
     )
 }
