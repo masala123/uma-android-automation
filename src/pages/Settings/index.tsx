@@ -223,6 +223,19 @@ const Settings = () => {
                 />
 
                 <CustomCheckbox
+                    checked={bsc.settings.general.enableStopBeforeFinals}
+                    onCheckedChange={(checked) => {
+                        bsc.setSettings({
+                            ...bsc.settings,
+                            general: { ...bsc.settings.general, enableStopBeforeFinals: checked },
+                        })
+                    }}
+                    label="Stop before Finals"
+                    description="Stops the bot on turn 72 so you can purchase skills before the final races."
+                    className="mt-4"
+                />
+
+                <CustomCheckbox
                     checked={bsc.settings.general.enableCraneGameAttempt}
                     onCheckedChange={(checked) => {
                         bsc.setSettings({
