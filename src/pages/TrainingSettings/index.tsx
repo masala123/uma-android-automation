@@ -55,6 +55,7 @@ const TrainingSettings = () => {
         enableRiskyTraining,
         riskyTrainingMinStatGain,
         riskyTrainingMaxFailureChance,
+        trainWitDuringFinale,
     } = trainingSettings
 
     useEffect(() => {
@@ -469,6 +470,17 @@ const TrainingSettings = () => {
                             onCheckedChange={(checked) => updateTrainingSetting("mustRestBeforeSummer", checked)}
                             label="Must Rest before Summer"
                             description="Forces the bot to rest during June Late Phase in Classic and Senior Years to ensure enough energy for Summer Training in July."
+                            className="my-2"
+                        />
+                    </View>
+
+                    <View style={styles.section}>
+                        <CustomCheckbox
+                            id="train-wit-during-finale"
+                            checked={trainWitDuringFinale}
+                            onCheckedChange={(checked) => updateTrainingSetting("trainWitDuringFinale", checked)}
+                            label="Train Wit During Finale"
+                            description="When enabled, the bot will train Wit during URA finale turns (73, 74, 75) instead of recovering energy or mood, even if the failure chance is high."
                             className="my-2"
                         />
                     </View>
