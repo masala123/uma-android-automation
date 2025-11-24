@@ -97,6 +97,7 @@ class Training(private val game: Game) {
 	private val enableRiskyTraining: Boolean = SettingsHelper.getBooleanSetting("training", "enableRiskyTraining")
 	private val riskyTrainingMinStatGain: Int = SettingsHelper.getIntSetting("training", "riskyTrainingMinStatGain")
 	private val riskyTrainingMaxFailureChance: Int = SettingsHelper.getIntSetting("training", "riskyTrainingMaxFailureChance")
+	private val trainWitDuringFinale: Boolean = SettingsHelper.getBooleanSetting("training", "trainWitDuringFinale")
 	private val manualStatCap: Int = SettingsHelper.getIntSetting("training", "manualStatCap")
 	private val statTargetsByDistance: MutableMap<String, IntArray> = mutableMapOf(
 		"Sprint" to intArrayOf(0, 0, 0, 0, 0),
@@ -235,15 +236,34 @@ class Training(private val game: Game) {
 			analyzeTrainings()
 
 			if (trainingMap.isEmpty()) {
-				MessageLog.i(TAG, "[TRAINING] Backing out of Training and returning on the Main screen.")
-				game.findAndTapImage("back", region = game.imageUtils.regionBottomHalf)
-				game.wait(1.0)
-
-				if (game.checkMainScreen()) {
-					MessageLog.i(TAG, "[TRAINING] Will recover energy due to either failure chance was high enough to do so or no failure chances were detected via OCR.")
-					game.recoverEnergy()
+				// Check if we should force Wit training during the Finale instead of recovering energy.
+				if (trainWitDuringFinale && game.currentDate.turnNumber in 73..75) {
+					MessageLog.i(TAG, "[TRAINING] There is not enough energy for training to be done but the setting to train Wit during the Finale is enabled. Forcing Wit training...")
+					// Directly attempt to tap Wit training.
+					if (game.findAndTapImage("training_wit", region = game.imageUtils.regionBottomHalf, taps = 3)) {
+						MessageLog.i(TAG, "[TRAINING] Successfully forced Wit training during the Finale instead of recovering energy.")
+						firstTrainingCheck = false
+					} else {
+						MessageLog.w(TAG, "[WARNING] Could not find Wit training button. Falling back to recovering energy...")
+						game.findAndTapImage("back", region = game.imageUtils.regionBottomHalf)
+						game.wait(1.0)
+						if (game.checkMainScreen()) {
+							game.recoverEnergy()
+						} else {
+							MessageLog.w(TAG, "[WARNING] Could not head back to the Main screen in order to recover energy.")
+						}
+					}
 				} else {
-					MessageLog.i(TAG, "[ERROR] Could not head back to the Main screen in order to recover energy.")
+					MessageLog.i(TAG, "[TRAINING] Backing out of Training and returning on the Main screen.")
+					game.findAndTapImage("back", region = game.imageUtils.regionBottomHalf)
+					game.wait(1.0)
+
+					if (game.checkMainScreen()) {
+						MessageLog.i(TAG, "[TRAINING] Will recover energy due to either failure chance was high enough to do so or no failure chances were detected via OCR.")
+						game.recoverEnergy()
+					} else {
+						MessageLog.w(TAG, "[WARNING] Could not head back to the Main screen in order to recover energy.")
+					}
 				}
 			} else {
 				// Now select the training option with the highest weight.
