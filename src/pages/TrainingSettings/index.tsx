@@ -791,7 +791,7 @@ const TrainingSettings = () => {
                         setSnackbarVisible(false)
                     },
                 }}
-                style={{ marginBottom: 20 }}
+                style={{ backgroundColor: "red", borderRadius: 10 }}
                 duration={4000}
             >
                 {snackbarMessage}
