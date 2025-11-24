@@ -321,7 +321,7 @@ ${longTargetsString}
 
         // Only include settings string if enabled and no logs exist yet.
         return bsc.settings.misc.enableSettingsDisplay ? `${baseMessage}\n\n${formattedSettingsString}` : baseMessage
-    }, [bsc.settings.misc.enableSettingsDisplay, formattedSettingsString, mlc.messageLog.length])
+    }, [bsc.appName, bsc.appVersion, bsc.settings.misc.enableSettingsDisplay, formattedSettingsString, mlc.messageLog.length])
 
     // Process log messages with color coding and virtualization.
     const processedMessages = useMemo((): LogMessage[] => {
