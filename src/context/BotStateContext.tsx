@@ -56,6 +56,7 @@ export interface Settings {
         statPrioritization: string[]
         maximumFailureChance: number
         disableTrainingOnMaxedStat: boolean
+        manualStatCap: number
         focusOnSparkStatTarget: boolean
         enableRainbowTrainingBonus: boolean
         preferredDistanceOverride: string
@@ -211,6 +212,7 @@ export const defaultSettings: Settings = {
         statPrioritization: ["Speed", "Stamina", "Power", "Wit", "Guts"],
         maximumFailureChance: 20,
         disableTrainingOnMaxedStat: true,
+        manualStatCap: 1200,
         focusOnSparkStatTarget: false,
         enableRainbowTrainingBonus: false,
         preferredDistanceOverride: "Auto",
