@@ -97,6 +97,7 @@ class Training(private val game: Game) {
 	private val enableRiskyTraining: Boolean = SettingsHelper.getBooleanSetting("training", "enableRiskyTraining")
 	private val riskyTrainingMinStatGain: Int = SettingsHelper.getIntSetting("training", "riskyTrainingMinStatGain")
 	private val riskyTrainingMaxFailureChance: Int = SettingsHelper.getIntSetting("training", "riskyTrainingMaxFailureChance")
+	private val manualStatCap: Int = SettingsHelper.getIntSetting("training", "manualStatCap")
 	private val statTargetsByDistance: MutableMap<String, IntArray> = mutableMapOf(
 		"Sprint" to intArrayOf(0, 0, 0, 0, 0),
 		"Mile" to intArrayOf(0, 0, 0, 0, 0),
@@ -105,7 +106,8 @@ class Training(private val game: Game) {
 	)
 	var preferredDistance: String = ""
 	var firstTrainingCheck = true
-	private val currentStatCap = 1200
+	private val currentStatCap: Int
+		get() = if (disableTrainingOnMaxedStat) manualStatCap else 1200
 
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
