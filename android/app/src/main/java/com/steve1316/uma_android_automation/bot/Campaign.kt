@@ -44,6 +44,12 @@ open class Campaign(val game: Game) {
 			////////////////////////////////////////////////
 			// Most bot operations start at the Main screen.
 			if (game.checkMainScreen()) {
+				// Perform scenario validation check.
+				if (!game.validateScenario()) {
+					MessageLog.i(TAG, "\n[END] Stopping bot due to scenario validation failure.")
+					break
+				}
+
 				// Check if bot should stop before the finals.
 				if (game.checkFinalsStop()) {
 					MessageLog.i(TAG, "\n[END] Stopping bot before the finals.")
