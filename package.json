@@ -10,6 +10,8 @@
         "clean": "cd android && ./gradlew --stop && ./gradlew clean --stacktrace",
         "build:debug": "cd android && ./gradlew --stop && ./gradlew assembleDebug",
         "build:release": "cd android && ./gradlew --stop && ./gradlew assembleRelease",
+        "build:debug:bundle": "node android/generate-bundle.js && cd android && ./gradlew --stop && ./gradlew assembleDebug",
+        "build:release:bundle": "node android/generate-bundle.js && cd android && ./gradlew --stop && ./gradlew assembleRelease",
         "build:debug:clean": "cd android && ./gradlew --stop && ./gradlew clean && ./gradlew assembleDebug",
         "build:release:clean": "cd android && ./gradlew --stop && ./gradlew clean && ./gradlew assembleRelease",
         "lint": "expo lint",
