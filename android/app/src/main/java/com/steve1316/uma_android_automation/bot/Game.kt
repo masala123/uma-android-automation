@@ -661,12 +661,16 @@ class Game(val myContext: Context) {
 			// Do the date if it is unlocked.
 			if (!handleRecreationDate(recoverMoodIfCompleted = true)) {
                 // Otherwise, recover mood as normal.
-                findAndTapImage("cancel", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)
-                wait(1.0)
                 if (!findAndTapImage("recover_mood", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
                     findAndTapImage("recover_energy_summer", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)
+                } else if (imageUtils.findImage("recreation_umamusume", region = imageUtils.regionMiddle, suppressError = true).first != null) {
+                    // At this point, the button was already pressed and the Recreation popup is now open.
+                    MessageLog.i(TAG, "[MOOD] Recreation date is already completed. Recovering mood with the Umamusume now...")
+                    findAndTapImage("recreation_umamusume", region = imageUtils.regionMiddle)
+                } else {
+                    // Otherwise, dismiss the popup that says to confirm recreation if the user has not set it to skip the confirmation in their in-game settings.
+                    findAndTapImage("ok", region = imageUtils.regionMiddle, suppressError = true)
                 }
-                findAndTapImage("ok", region = imageUtils.regionMiddle, suppressError = true)
             }
 
             racing.raceRepeatWarningCheck = false
