@@ -91,6 +91,31 @@ class GameDateParser {
 			"Dec" to 12
 		)
 
+		// Check if the date string indicates "Finale Underway" and determine which Finals phase it is.
+		if (dateString.lowercase().contains("finale") || dateString.lowercase().contains("underway")) {
+			val sourceBitmap = imageUtils.getSourceBitmap()
+			val turnNumber = when {
+				imageUtils.findImageWithBitmap("date_final_qualifier", sourceBitmap, suppressError = true, region = imageUtils.regionTopHalf, customConfidence = 0.9) != null -> {
+					MessageLog.i(tag, "[DATE-PARSER] Detected Finale Qualifier (Turn 73) from date string: $dateString.")
+					73
+				}
+				imageUtils.findImageWithBitmap("date_final_semifinal", sourceBitmap, suppressError = true, region = imageUtils.regionTopHalf, customConfidence = 0.9) != null -> {
+					MessageLog.i(tag, "[DATE-PARSER] Detected Finale Semifinal (Turn 74) from date string: $dateString.")
+					74
+				}
+				imageUtils.findImageWithBitmap("date_final_finals", sourceBitmap, suppressError = true, region = imageUtils.regionTopHalf, customConfidence = 0.9) != null -> {
+					MessageLog.i(tag, "[DATE-PARSER] Detected Finale Finals (Turn 75) from date string: $dateString.")
+					75
+				}
+				else -> {
+					MessageLog.w(tag, "[DATE-PARSER] Could not determine Finals phase from date string: $dateString. Defaulting to Finale Qualifier (Turn 73).")
+					73
+				}
+			}
+			// Finals occur at Senior Year Late Dec, only the turn number varies.
+			return Game.Date(3, "Late", 12, turnNumber)
+		}
+
 		// Split the input string by whitespace.
 		val parts = dateString.trim().split(" ")
 		if (parts.size < 3) {
