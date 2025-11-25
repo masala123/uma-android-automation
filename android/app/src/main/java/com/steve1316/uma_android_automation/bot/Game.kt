@@ -68,6 +68,7 @@ class Game(val myContext: Context) {
 	private var inheritancesDone = 0
     private var needToUpdateAptitudes: Boolean = true
     private var recreationDateCompleted: Boolean = false
+    private var isFinals: Boolean = false
     private var stopBeforeFinalsInitialTurnNumber: Int = -1
     private var scenarioCheckPerformed: Boolean = false
 
@@ -300,8 +301,7 @@ class Game(val myContext: Context) {
 	fun startDateOCRTest() {
 		MessageLog.i(TAG, "\n[TEST] Now beginning the Date OCR test on the Main screen.")
 		MessageLog.i(TAG, "[TEST] Note that this test is dependent on having the correct scale.")
-        val finalsLocation = imageUtils.findImage("race_select_extra_locked_uma_finals", tries = 1, suppressError = true, region = imageUtils.regionBottomHalf).first
-        updateDate(isFinals = (finalsLocation != null))
+        updateDate()
 	}
 
 	fun startAptitudesDetectionTest() {
@@ -359,8 +359,7 @@ class Game(val myContext: Context) {
 			MessageLog.i(TAG, "Bot is at the Main screen.")
 
 			// Perform updates here if necessary.
-            val finalsLocation = imageUtils.findImageWithBitmap("race_select_extra_locked_uma_finals", sourceBitmap, suppressError = true, region = imageUtils.regionBottomHalf)
-            updateDate(isFinals = (finalsLocation != null))
+            updateDate()
             if (needToUpdateAptitudes) updateAptitudes()
 			true
 		} else if (!enablePopupCheck && imageUtils.findImageWithBitmap("cancel", sourceBitmap, region = imageUtils.regionBottomHalf) != null &&
@@ -459,15 +458,25 @@ class Game(val myContext: Context) {
 	 */
 	fun checkFinals(): Boolean {
 		MessageLog.i(TAG, "\nChecking if the bot is at the Finals.")
-		val finalsLocation = imageUtils.findImage("race_select_extra_locked_uma_finals", tries = 1, suppressError = true, region = imageUtils.regionBottomHalf).first
-		return if (finalsLocation != null) {
-			MessageLog.i(TAG, "It is currently the Finals.")
-			updateDate(isFinals = true)
-			true
-		} else {
-			MessageLog.i(TAG, "It is not the Finals yet.")
-			false
-		}
+        if (isFinals) {
+            return true
+        } else if (currentDate.turnNumber < 72) {
+            MessageLog.i(TAG, "It is not the Finals yet as the turn number is less than 72.")
+            return false
+        } else {
+            return if (
+                imageUtils.findImage("date_final_qualifier", tries = 1, suppressError = true, region = imageUtils.regionTopHalf).first != null ||
+                imageUtils.findImage("date_final_semifinal", tries = 1, suppressError = true, region = imageUtils.regionTopHalf).first != null ||
+                imageUtils.findImage("date_final_finals", tries = 1, suppressError = true, region = imageUtils.regionTopHalf).first != null
+            ) {
+                MessageLog.i(TAG, "It is currently the Finals.")
+                isFinals = true
+                true
+            } else {
+                MessageLog.i(TAG, "It is not the Finals yet as the date images for the Finals were not detected.")
+                false
+            }
+        }
 	}
 
 	/**
@@ -592,12 +601,10 @@ class Game(val myContext: Context) {
 
 	/**
 	 * Updates the stored date in memory by keeping track of the current year, phase, month and current turn number.
-	 *
-	 * @param isFinals If true, checks for Finals date images instead of parsing a date string. Defaults to false.
 	 */
-	fun updateDate(isFinals: Boolean = false) {
+	fun updateDate() {
 		MessageLog.i(TAG, "\n[DATE] Updating the current date.")
-		if (isFinals) {
+		if (checkFinals()) {
 			// During Finals, check for Finals-specific date images.
 			// The Finals occur at turns 73, 74, and 75.
 			// Date will be kept at Senior Year Late Dec, only the turn number will be updated.
