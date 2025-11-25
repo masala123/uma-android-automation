@@ -1,4 +1,31 @@
 {
+    "Ikuno Dictus": {
+        "(❯) That's How U Solve the Case": [
+            "Maximum Energy +4\nStamina +15\nWit +5\nIkuno Dictus bond +10"
+        ],
+        "(❯❯) Are U the Problem?": [
+            "Stamina +15\nGuts +15\nGo with the Flow hint +1\nIkuno Dictus bond +10",
+            "Energy +20\nSpeed +10\nSkill points +10\nEvent chain ended"
+        ],
+        "(❯❯❯) Just U and I": [
+            "Stamina +30\nGuts +10\nSkill points +20\nThe Bigger Picture hint +3"
+        ],
+        "Ikuno-Style Flawless Method": [
+            "Wit +10\nIkuno Dictus bond +5",
+            "Skill points +30\nIkuno Dictus bond +5"
+        ],
+        "Ikuno-Style Management": [
+            "Stamina +20\nIkuno Dictus bond +5",
+            "Trick (Rear) hint +1\nIkuno Dictus bond +5"
+        ],
+        "(❯) Ikuno-Style Friendship": [
+            "Wit +10\nSkill points +20"
+        ],
+        "(❯❯) Ikuno-Style Support": [
+            "Wit +15\nFrenzied Front Runners hint +3\nIkuno Dictus bond +5",
+            "Wit +15\nFrenzied End Closers hint +3\nIkuno Dictus bond +5"
+        ]
+    },
     "Rice Shower": {
         "(❯) Rainy Day, Floating Flowers": [
             "Power +10\nRice Shower bond +5",
@@ -155,7 +182,7 @@
         ],
         "(❯) Some Very Green Friends": [
             "Speed +5\nSkill points +10\nLucky Seven hint +1\nSweep Tosho bond +5",
-            "Mood -1\nMaverick ○ hint +5"
+            "Mood -1\nMaverick ○ hint +5\nEvent chain ended"
         ],
         "(❯❯) Premeditated Mischief": [
             "Speed +10\nSkill points +20\nLevelheaded hint +1\nSweep Tosho bond +5",
@@ -305,8 +332,8 @@
     },
     "King Halo": {
         "(❯) A Captivating Invitation": [
-            "Power +10\nKing Halo bond +5",
-            "Guts +10\nKing Halo bond +5"
+            "Power +10\nStop Right There! hint +1\nKing Halo bond +5",
+            "Guts +10\nUma Stan hint +1\nKing Halo bond +5"
         ],
         "(❯❯) Dancer's Pride": [
             "Energy -5\nStamina +15\nPower +15\nSkill points +20\nKing Halo bond +5",
@@ -491,8 +518,8 @@
     },
     "Yukino Bijin": {
         "(❯) Cozy Memories of Wanko Soba": [
-            "Mood +1\nYukino Bijin bond +5",
-            "Maximum Energy +4\nYukino Bijin bond +5"
+            "Mood +1\nInner Post Proficiency ○ hint +1\nYukino Bijin bond +5",
+            "Maximum Energy +4\nHydrate hint +1\nYukino Bijin bond +5"
         ],
         "(❯❯) The Class Rep's Intense Crash Course": [
             "Mood +2\nPower +10\nYukino Bijin bond +5\nHeal a negative status effect",
@@ -698,7 +725,7 @@
             "Power +10\nSkill points +15\nVodka bond +5"
         ],
         "(❯❯) A Vow to the Setting Sun": [
-            "Power +15\nSkill points +15\nUpdrafters hint +1\nVodka bond +5"
+            "Power +15\nSkill points +15\nUpdrafters hint +2\nVodka bond +5"
         ],
         "(❯❯❯) Put That on the Record, Okay?": [
             "Power +25\nSkill points +30\nBreath of Fresh Air hint +2\nVodka bond +5"
@@ -790,6 +817,12 @@
         "Reminiscent Clover": [
             "Corner Adept ○ hint +1\nFine Motion bond +5",
             "Guts +15\nFine Motion bond +5"
+        ],
+        "(❯) What Even Is Normal?": [
+            "Energy +15\nPower +5\nSkill points +10"
+        ],
+        "(❯❯) Clovers For You Too ♪": [
+            "Skill points +20\nSteadfast hint +2"
         ]
     },
     "Ines Fujin": {
@@ -889,11 +922,11 @@
     },
     "Smart Falcon": {
         "(❯) Always on Stage ☆": [
-            "Wit +10\nSmart Falcon bond +5",
+            "Wit +10\nGroundwork hint +1\nSmart Falcon bond +5",
             "Energy +25\nFocus hint +1\nSmart Falcon bond +5\nEvent chain ended"
         ],
         "(❯❯) Shining Always and Everywhere ☆": [
-            "Speed +5\nPower +5"
+            "Speed +10\nPower +10\nTop Pick hint +1"
         ],
         "(❯❯❯) My Umadol Way ☆": [
             "Randomly either\n----------\nMaximum Energy +4\nStamina +5\nPower +5\nWit +5\nPrudent Positioning hint +1\n----------\n\n----------\nMaximum Energy +4\nStamina +15\nPower +15\nWit +15\nCenter Stage hint +3"
@@ -1117,23 +1150,6 @@
         "A Tale Entrusted": [
             "Stamina +10\nWit +10\nZenno Rob Roy bond +5",
             "Medium Straightaways ○ hint +1\nZenno Rob Roy bond +5"
-        ]
-    },
-    "Ikuno Dictus": {
-        "(❯) Ikuno-Style Friendship": [
-            "Wit +10\nSkill points +20"
-        ],
-        "(❯❯) Ikuno-Style Support": [
-            "Wit +15\nFrenzied Front Runners hint +3\nIkuno Dictus bond +5",
-            "Wit +15\nFrenzied End Closers hint +3\nIkuno Dictus bond +5"
-        ],
-        "Ikuno-Style Flawless Method": [
-            "Wit +10\nIkuno Dictus bond +5",
-            "Skill points +30\nIkuno Dictus bond +5"
-        ],
-        "Ikuno-Style Management": [
-            "Stamina +20\nIkuno Dictus bond +5",
-            "Trick (Rear) hint +1\nIkuno Dictus bond +5"
         ]
     },
     "Daitaku Helios": {
