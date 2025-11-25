@@ -305,8 +305,18 @@ class Training(private val game: Game) {
 				return
 			}
 
-			if (test || failureChance <= maximumFailureChance) {
-				if (!test) MessageLog.i(TAG, "[TRAINING] $failureChance% within acceptable range of ${maximumFailureChance}%. Proceeding to acquire all other percentages and total stat increases...")
+			// Check if failure chance is acceptable: either within regular threshold or within risky threshold (if enabled).
+			val isWithinRegularThreshold = failureChance <= maximumFailureChance
+			val isWithinRiskyThreshold = enableRiskyTraining && failureChance <= riskyTrainingMaxFailureChance
+			
+			if (test || isWithinRegularThreshold || isWithinRiskyThreshold) {
+				if (!test) {
+					if (isWithinRegularThreshold) {
+						MessageLog.i(TAG, "[TRAINING] $failureChance% within acceptable range of ${maximumFailureChance}%. Proceeding to acquire all other percentages and total stat increases...")
+					} else if (isWithinRiskyThreshold) {
+						MessageLog.i(TAG, "[TRAINING] $failureChance% exceeds regular threshold (${maximumFailureChance}%) but is within risky training threshold (${riskyTrainingMaxFailureChance}%). Proceeding to acquire all other percentages and total stat increases...")
+					}
+				}
 
 				// List to store all training analysis results for parallel processing.
 				val analysisResults = mutableListOf<TrainingAnalysisResult>()
