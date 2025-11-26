@@ -45,6 +45,7 @@ class Training(private val game: Game) {
 		val startTime: Long
 	) {
 		var statGains: Map<StatName, Int> = mapOf()
+		var statGainRowValues: Map<StatName, List<Int>> = emptyMap()
 		var failureChance: Int = -1
 		var relationshipBars: ArrayList<CustomImageUtils.BarFillResult> = arrayListOf()
 		var numRainbow: Int = 0
@@ -320,10 +321,13 @@ class Training(private val game: Game) {
             Thread {
                 val startTimeStatGains = System.currentTimeMillis()
                 try {
-                    result.statGains = game.imageUtils.determineStatGainFromTraining(statName, sourceBitmap, skillPointsLocation)
+                    val statGainResult = game.imageUtils.determineStatGainFromTraining(statName, sourceBitmap, skillPointsLocation)
+                    result.statGains = statGainResult.statGains
+                    result.statGainRowValues = statGainResult.rowValuesMap
                 } catch (e: Exception) {
                     Log.e(TAG, "[ERROR] Error in determineStatGainFromTraining: ${e.stackTraceToString()}")
                     result.statGains = StatName.values().associateWith { 0 }.toMap()
+                    result.statGainRowValues = emptyMap()
                 } finally {
                     latch.countDown()
                     val elapsedTime = System.currentTimeMillis() - startTimeStatGains
@@ -404,6 +408,8 @@ class Training(private val game: Game) {
                 } finally {
                     val elapsedTime = System.currentTimeMillis() - startTime
                     Log.d(TAG, "Total time for $statName training analysis: ${elapsedTime}ms")
+                    // Log stat gain results sequentially after threads complete to ensure correct order.
+					logStatGainResults(statName, result.statGains, result.statGainRowValues)
                     MessageLog.i(TAG, "All 5 stat regions processed for $statName training. Results: ${result.statGains.toString()}")
                 }
 
@@ -483,6 +489,9 @@ class Training(private val game: Game) {
                 while (result.logMessages.isNotEmpty()) {
                     MessageLog.i(TAG, result.logMessages.poll())
                 }
+
+                // Log stat gain results sequentially after threads complete to ensure correct order.
+			    logStatGainResults(result.name, result.statGains, result.statGainRowValues)
 
                 // Check if risky training logic should apply based on main stat gain.
                 val mainStatGain: Int = result.statGains[result.name] ?: 0
@@ -1008,6 +1017,40 @@ class Training(private val game: Game) {
 		MessageLog.i(TAG, "\nStat Gains by Training:")
 		trainingMap.forEach { name, training ->
 			MessageLog.i(TAG, "$name Training stat gains: ${training.statGains}, failure chance: ${training.failureChance}%, rainbow: ${training.numRainbow}.")
+		}
+	}
+
+    /**
+	 * Logs stat gain results sequentially to ensure correct order.
+	 * This is called after threads complete to avoid out-of-order messages.
+	 *
+	 * @param trainingName Name of the training type (Speed, Stamina, Power, Guts, Wit).
+	 * @param statGains Array of 5 stat gains.
+	 * @param rowValuesMap Map of stat index to row values for Unity Cup cases.
+	 */
+	private fun logStatGainResults(trainingName: StatName, statGains: Map<StatName, Int>, rowValuesMap: Map<StatName, List<Int>>) {
+		// Define a mapping of training types to their stat indices.
+        val trainingStatMap = mapOf(
+			StatName.SPEED to listOf(StatName.SPEED, StatName.POWER),
+			StatName.STAMINA to listOf(StatName.STAMINA, StatName.GUTS),
+			StatName.POWER to listOf(StatName.STAMINA, StatName.POWER),
+			StatName.GUTS to listOf(StatName.SPEED, StatName.POWER, StatName.GUTS),
+			StatName.WIT to listOf(StatName.SPEED, StatName.WIT),
+		)
+
+		// Iterate over the StatName enum so we always print stats in the same order.
+        for (statName in StatName.entries) {
+            val appliedStatNames = trainingStatMap[trainingName] ?: emptyList()
+            if (statName in appliedStatNames && statGains.getOrDefault(statName, -1) >= 0) {
+				val rowValues = rowValuesMap[statName]
+				if (rowValues != null) {
+					// Unity Cup case: log with row values.
+					MessageLog.d(TAG, "[INFO] $statName final constructed values from $trainingName training: $rowValues, sum: ${statGains[statName]}.")
+				} else {
+					// Single row case: log simple value.
+					MessageLog.d(TAG, "[INFO] $statName final constructed value from $trainingName training: ${statGains[statName]}.")
+				}
+			}
 		}
 	}
 }

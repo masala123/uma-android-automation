@@ -47,6 +47,7 @@ export interface Settings {
     misc: {
         enableSettingsDisplay: boolean
         formattedSettingsString: string
+        enableMessageIdDisplay: boolean
     }
 
     // Training settings
@@ -150,7 +151,7 @@ export const defaultSettings: Settings = {
         juniorYearRaceStrategy: "Front",
         originalRaceStrategy: "Pace",
         minimumQualityThreshold: 70.0,
-        timeDecayFactor: 0.80,
+        timeDecayFactor: 0.8,
         improvementThreshold: 25.0,
     },
     trainingEvent: {
@@ -203,6 +204,7 @@ export const defaultSettings: Settings = {
     misc: {
         enableSettingsDisplay: false,
         formattedSettingsString: "",
+        enableMessageIdDisplay: false,
     },
     training: {
         trainingBlacklist: [],

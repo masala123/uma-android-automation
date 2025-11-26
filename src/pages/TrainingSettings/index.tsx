@@ -1,8 +1,9 @@
 import React, { useContext, useEffect, useState } from "react"
 import { View, Text, ScrollView, StyleSheet, Modal, TouchableOpacity, Dimensions } from "react-native"
+import { Snackbar } from "react-native-paper"
 import { useNavigation } from "@react-navigation/native"
 import { useTheme } from "../../context/ThemeContext"
-import { BotStateContext, defaultSettings } from "../../context/BotStateContext"
+import { BotStateContext, defaultSettings, Settings } from "../../context/BotStateContext"
 import CustomButton from "../../components/CustomButton"
 import CustomSlider from "../../components/CustomSlider"
 import CustomCheckbox from "../../components/CustomCheckbox"
@@ -10,18 +11,38 @@ import CustomTitle from "../../components/CustomTitle"
 import DraggablePriorityList from "../../components/DraggablePriorityList"
 import CustomAccordion from "../../components/CustomAccordion"
 import CustomSelect from "../../components/CustomSelect"
+import ProfileSelector from "../../components/ProfileSelector"
 import { ArrowLeft } from "lucide-react-native"
+import { useSettings } from "../../context/SettingsContext"
 
 const TrainingSettings = () => {
     const { colors } = useTheme()
     const navigation = useNavigation()
     const bsc = useContext(BotStateContext)
+    const { saveSettingsImmediate } = useSettings()
     const [blacklistModalVisible, setBlacklistModalVisible] = useState(false)
     const [prioritizationModalVisible, setPrioritizationModalVisible] = useState(false)
+    const [snackbarVisible, setSnackbarVisible] = useState(false)
+    const [snackbarMessage, setSnackbarMessage] = useState("")
 
     const { settings, setSettings } = bsc
+
+    // Initialize local state from settings, with fallback to defaults.
+    const [statPrioritizationItems, setStatPrioritizationItems] = useState<string[]>(() =>
+        settings.training?.statPrioritization !== undefined ? settings.training.statPrioritization : defaultSettings.training.statPrioritization
+    )
+    const [blacklistItems, setBlacklistItems] = useState<string[]>(() =>
+        settings.training?.trainingBlacklist !== undefined ? settings.training.trainingBlacklist : defaultSettings.training.trainingBlacklist
+    )
+
     // Merge current training settings with defaults to handle missing properties.
-    const trainingSettings = { ...defaultSettings.training, ...settings.training }
+    // Include local state values to ensure blacklist and prioritization are current.
+    const trainingSettings = {
+        ...defaultSettings.training,
+        ...settings.training,
+        trainingBlacklist: blacklistItems,
+        statPrioritization: statPrioritizationItems,
+    }
     const trainingStatTargetSettings = { ...defaultSettings.trainingStatTarget, ...settings.trainingStatTarget }
     const {
         maximumFailureChance,
@@ -35,13 +56,6 @@ const TrainingSettings = () => {
         riskyTrainingMaxFailureChance,
     } = trainingSettings
 
-    const [statPrioritizationItems, setStatPrioritizationItems] = useState<string[]>(
-        settings.training?.statPrioritization !== undefined ? settings.training.statPrioritization : defaultSettings.training.statPrioritization
-    )
-    const [blacklistItems, setBlacklistItems] = useState<string[]>(
-        settings.training?.trainingBlacklist !== undefined ? settings.training.trainingBlacklist : defaultSettings.training.trainingBlacklist
-    )
-
     useEffect(() => {
         updateTrainingSetting("statPrioritization", statPrioritizationItems)
     }, [statPrioritizationItems])
@@ -49,6 +63,19 @@ const TrainingSettings = () => {
     useEffect(() => {
         updateTrainingSetting("trainingBlacklist", blacklistItems)
     }, [blacklistItems])
+
+    // Sync local state when settings change (e.g., when switching profiles).
+    useEffect(() => {
+        if (settings.training?.trainingBlacklist !== undefined) {
+            setBlacklistItems(settings.training.trainingBlacklist)
+        }
+    }, [settings.training?.trainingBlacklist])
+
+    useEffect(() => {
+        if (settings.training?.statPrioritization !== undefined) {
+            setStatPrioritizationItems(settings.training.statPrioritization)
+        }
+    }, [settings.training?.statPrioritization])
 
     const updateTrainingSetting = (key: keyof typeof settings.training, value: any) => {
         setSettings({
@@ -58,6 +85,18 @@ const TrainingSettings = () => {
                 [key]: value,
             },
         })
+    }
+
+    const handleOverwriteSettings = async (profileSettings: Partial<Settings>) => {
+        // Create the updated settings object by merging profile settings with current settings.
+        const updatedSettings = {
+            ...bsc.settings,
+            ...profileSettings,
+        }
+        // Apply the profile's settings to current settings.
+        setSettings(updatedSettings)
+        // Save settings immediately with the updated settings.
+        await saveSettingsImmediate(updatedSettings)
     }
 
     const updateTrainingStatTarget = (key: keyof typeof settings.trainingStatTarget, value: any) => {
@@ -289,6 +328,19 @@ const TrainingSettings = () => {
             </View>
             <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
                 <View className="m-1">
+                    <ProfileSelector
+                        currentTrainingSettings={trainingSettings}
+                        currentTrainingStatTargetSettings={trainingStatTargetSettings}
+                        onOverwriteSettings={handleOverwriteSettings}
+                        onNoChangesDetected={() => {
+                            setSnackbarMessage("Current Training settings are already the same.")
+                            setSnackbarVisible(true)
+                        }}
+                        onError={(message) => {
+                            setSnackbarMessage(message)
+                            setSnackbarVisible(true)
+                        }}
+                    />
                     {renderStatSelector(
                         "Blacklist",
                         blacklistItems,
@@ -730,6 +782,20 @@ const TrainingSettings = () => {
                     />
                 </View>
             </ScrollView>
+            <Snackbar
+                visible={snackbarVisible}
+                onDismiss={() => setSnackbarVisible(false)}
+                action={{
+                    label: "Close",
+                    onPress: () => {
+                        setSnackbarVisible(false)
+                    },
+                }}
+                style={{ marginBottom: 20 }}
+                duration={4000}
+            >
+                {snackbarMessage}
+            </Snackbar>
         </View>
     )
 }

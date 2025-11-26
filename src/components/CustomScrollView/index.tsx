@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useMemo, Children } from "react"
+import { useEffect, useRef, useState, useMemo, Children, forwardRef } from "react"
 import { Animated, ViewStyle, View, LayoutChangeEvent, NativeSyntheticEvent, NativeScrollEvent, PanResponder } from "react-native"
 import { FlashList, FlashListProps } from "@shopify/flash-list"
 import { getIndicatorPositionStyle } from "./helpers.ts"
@@ -200,7 +200,7 @@ type CustomScrollViewProps<T> = {
  *    - `onScroll` updates the indicator position to match the content offset.
  *    - This keeps the indicator in sync without any user interaction with the thumb.
  */
-export const CustomScrollView = <T = any,>({
+export const CustomScrollView = forwardRef<any, CustomScrollViewProps<any>>(({
     targetProps,
     position = "right",
     horizontal = false,
@@ -211,7 +211,7 @@ export const CustomScrollView = <T = any,>({
     children,
     minIndicatorSize,
     enableCustomIndicator = false,
-}: CustomScrollViewProps<T>) => {
+}, ref) => {
     // Total size of the content inside the scroll view (width for horizontal, height for vertical).
     const [contentSize, setContentSize] = useState(1)
 
@@ -275,6 +275,17 @@ export const CustomScrollView = <T = any,>({
         indicatorScale.setValue(indicatorOffset >= 0 ? (indicatorSize + 2 * scrollableTrackLength - 2 * indicatorOffset) / indicatorSize : (indicatorSize + 2 * indicatorOffset) / indicatorSize)
     }
 
+    // Forward the ref to the FlashList so parent components can control scrolling.
+    useEffect(() => {
+        if (ref) {
+            if (typeof ref === "function") {
+                ref(flashListRef.current)
+            } else {
+                ref.current = flashListRef.current
+            }
+        }
+    }, [ref, flashListRef])
+
     return (
         <View style={containerStyle}>
             <FlashList
@@ -325,6 +336,6 @@ export const CustomScrollView = <T = any,>({
             )}
         </View>
     )
-}
+})
 
 export default CustomScrollView

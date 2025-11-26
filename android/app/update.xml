@@ -1,13 +1,14 @@
 <AppUpdater>
   <update>
-    <latestVersion>4.2.2</latestVersion>
+    <latestVersion>4.2.3</latestVersion>
     <url>https://github.com/steve1316/uma-android-automation/releases</url>
     <releaseNotes>
-v4.2.2 - Changelog
+v4.2.3 - Changelog
 
 Fixed
 ---
-- Fix the app getting stuck trying to skip the race results of the Unity Cup.
+- Fix looping bug where the bot gets stuck trying to complete a mandatory race during Unity Cup.
+- Fix looping bug where the bot gets stuck running races over and over again due to race requirement checks not being cleared.
 
     </releaseNotes>
   </update>

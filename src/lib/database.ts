@@ -28,6 +28,14 @@ export interface DatabaseRace {
     nameFormatted: string
 }
 
+export interface DatabaseProfile {
+    id: number
+    name: string
+    settings: string
+    created_at: string
+    updated_at: string
+}
+
 /**
  * Database utility class for managing settings persistence with SQLite.
  * Stores settings as key-value pairs organized by category for efficient querying.
@@ -119,6 +127,22 @@ export class DatabaseManager {
             `)
             logWithTimestamp("Races table created successfully.")
 
+            // Create profiles table.
+            logWithTimestamp("Creating profiles table...")
+            await this.db.execAsync(`
+                CREATE TABLE IF NOT EXISTS profiles (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT UNIQUE NOT NULL,
+                    settings TEXT NOT NULL,
+                    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                )
+            `)
+            logWithTimestamp("Profiles table created successfully.")
+
+            // Migrate existing profiles from old format (training_settings + trainingStatTarget_settings) to new format (settings JSON).
+            await this.migrateProfilesSchema()
+
             // Create indexes for faster queries.
             logWithTimestamp("Creating indexes...")
             await this.db.execAsync(`
@@ -133,6 +157,10 @@ export class DatabaseManager {
                 CREATE INDEX IF NOT EXISTS idx_races_name_formatted 
                 ON races(nameFormatted)
             `)
+            await this.db.execAsync(`
+                CREATE INDEX IF NOT EXISTS idx_profiles_name 
+                ON profiles(name)
+            `)
             logWithTimestamp("Indexes created successfully.")
 
             logWithTimestamp("Database initialized successfully.")
@@ -140,6 +168,94 @@ export class DatabaseManager {
             logErrorWithTimestamp("Failed to initialize database:", error)
             this.db = null // Reset database on error.
             throw error
+        }
+    }
+
+    /**
+     * Migrate profiles table schema from old to new format (settings JSON).
+     *
+     * @returns A promise that resolves when the profiles table is migrated.
+     */
+    private async migrateProfilesSchema(): Promise<void> {
+        if (!this.db) {
+            return
+        }
+
+        try {
+            const tableInfo = await this.db.getAllAsync<{ name: string; type: string }>("PRAGMA table_info(profiles)")
+            const hasTrainingSettings = tableInfo.some((col) => col.name === "training_settings")
+            const hasTrainingStatTarget = tableInfo.some((col) => col.name === "trainingStatTarget_settings")
+            const hasSettings = tableInfo.some((col) => col.name === "settings")
+
+            // If old columns exist and new column doesn't, migrate.
+            if ((hasTrainingSettings || hasTrainingStatTarget) && !hasSettings) {
+                logWithTimestamp("[DB] Migrating profiles table to new settings format...")
+
+                // Create new table with settings column.
+                await this.db.execAsync(`
+                    CREATE TABLE IF NOT EXISTS profiles_new (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        name TEXT UNIQUE NOT NULL,
+                        settings TEXT NOT NULL,
+                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+                    )
+                `)
+
+                // Migrate existing data: combine training and training stat target settings into a single settings JSON.
+                if (hasTrainingSettings && hasTrainingStatTarget) {
+                    // Both columns exist - combine them into settings JSON.
+                    await this.db.execAsync(`
+                        INSERT INTO profiles_new (id, name, settings, created_at, updated_at)
+                        SELECT 
+                            id, 
+                            name, 
+                            json_object('training', json(training_settings), 'trainingStatTarget', json(trainingStatTarget_settings)) as settings,
+                            created_at, 
+                            updated_at
+                        FROM profiles
+                    `)
+                } else if (hasTrainingSettings) {
+                    // Only training settings exist - create settings with just training settings.
+                    await this.db.execAsync(`
+                        INSERT INTO profiles_new (id, name, settings, created_at, updated_at)
+                        SELECT 
+                            id, 
+                            name, 
+                            json_object('training', json(training_settings)) as settings,
+                            created_at, 
+                            updated_at
+                        FROM profiles
+                    `)
+                } else if (hasTrainingStatTarget) {
+                    // Only training stat target settings exist - create settings with just training stat target settings.
+                    await this.db.execAsync(`
+                        INSERT INTO profiles_new (id, name, settings, created_at, updated_at)
+                        SELECT 
+                            id, 
+                            name, 
+                            json_object('trainingStatTarget', json(trainingStatTarget_settings)) as settings,
+                            created_at, 
+                            updated_at
+                        FROM profiles
+                    `)
+                }
+
+                // Drop old table and rename new one.
+                await this.db.execAsync("DROP TABLE profiles")
+                await this.db.execAsync("ALTER TABLE profiles_new RENAME TO profiles")
+
+                // Recreate index.
+                await this.db.execAsync(`
+                    CREATE INDEX IF NOT EXISTS idx_profiles_name 
+                    ON profiles(name)
+                `)
+
+                logWithTimestamp("[DB] Successfully migrated profiles table to new settings format.")
+            }
+        } catch (error) {
+            logErrorWithTimestamp("[DB] Failed to migrate profiles table:", error)
+            // Don't throw - allow app to continue even if migration fails.
         }
     }
 
@@ -561,6 +677,196 @@ export class DatabaseManager {
     private clearTransactionQueue(): void {
         this.transactionQueue = []
         this.isTransactionActive = false
+    }
+
+    /**
+     * Get all profiles from the database.
+     *
+     * @returns A promise that resolves when all profiles are loaded.
+     */
+    async getAllProfiles(): Promise<DatabaseProfile[]> {
+        const endTiming = startTiming("database_get_all_profiles", "database")
+
+        if (!this.db) {
+            endTiming({ status: "error", error: "database_not_initialized" })
+            throw new Error("Database not initialized")
+        }
+
+        try {
+            const results = await this.db.getAllAsync<DatabaseProfile>("SELECT * FROM profiles ORDER BY name")
+            endTiming({ status: "success", totalProfiles: results.length })
+            return results
+        } catch (error) {
+            logErrorWithTimestamp("[DB] Failed to load all profiles:", error)
+            endTiming({ status: "error", error: error instanceof Error ? error.message : String(error) })
+            throw error
+        }
+    }
+
+    /**
+     * Get a single profile by ID.
+     *
+     * @param id - The ID of the profile to load.
+     * @returns The profile with the given ID, or null if not found.
+     */
+    async getProfile(id: number): Promise<DatabaseProfile | null> {
+        const endTiming = startTiming("database_get_profile", "database")
+
+        if (!this.db) {
+            endTiming({ status: "error", error: "database_not_initialized" })
+            throw new Error("Database not initialized")
+        }
+
+        try {
+            const result = await this.db.getFirstAsync<DatabaseProfile>("SELECT * FROM profiles WHERE id = ?", [id])
+            endTiming({ status: "success", found: !!result })
+            return result || null
+        } catch (error) {
+            logErrorWithTimestamp(`[DB] Failed to load profile ${id}:`, error)
+            endTiming({ status: "error", error: error instanceof Error ? error.message : String(error) })
+            throw error
+        }
+    }
+
+    /**
+     * Save a profile (create or update).
+     *
+     * @param profile - The profile to save.
+     * @returns A promise that resolves when the profile is saved.
+     */
+    async saveProfile(profile: { id?: number; name: string; settings: any }): Promise<number> {
+        const endTiming = startTiming("database_save_profile", "database")
+
+        if (!this.db) {
+            logErrorWithTimestamp("Database is null when trying to save profile.")
+            endTiming({ status: "error", error: "database_not_initialized" })
+            throw new Error("Database not initialized")
+        }
+
+        try {
+            const settingsJson = JSON.stringify(profile.settings)
+
+            if (profile.id) {
+                // Update existing profile.
+                logWithTimestamp(`[DB] Updating profile: ${profile.name} (id: ${profile.id})`)
+                try {
+                    await this.db.runAsync(
+                        `UPDATE profiles 
+                         SET name = ?, settings = ?, updated_at = CURRENT_TIMESTAMP 
+                         WHERE id = ?`,
+                        [profile.name, settingsJson, profile.id]
+                    )
+                    logWithTimestamp(`[DB] Successfully updated profile: ${profile.name}`)
+                    endTiming({ status: "success", profileId: profile.id, isUpdate: true })
+                    return profile.id
+                } catch (updateError: any) {
+                    // If UNIQUE constraint error and name hasn't changed, check if it's the same profile.
+                    if (updateError?.message?.includes("UNIQUE constraint")) {
+                        // Check if this profile already has this name (name wasn't actually changed).
+                        const existingProfile = await this.getProfile(profile.id)
+                        if (existingProfile && existingProfile.name === profile.name) {
+                            // Name is the same, just update settings.
+                            await this.db.runAsync(
+                                `UPDATE profiles 
+                                 SET settings = ?, updated_at = CURRENT_TIMESTAMP 
+                                 WHERE id = ?`,
+                                [settingsJson, profile.id]
+                            )
+                            logWithTimestamp(`[DB] Successfully updated profile settings: ${profile.name}`)
+                            endTiming({ status: "success", profileId: profile.id, isUpdate: true })
+                            return profile.id
+                        }
+                    }
+                    throw updateError
+                }
+            } else {
+                // Create new profile.
+                logWithTimestamp(`[DB] Creating profile: ${profile.name}`)
+                const result = await this.db.runAsync(
+                    `INSERT INTO profiles (name, settings, created_at, updated_at) 
+                     VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+                    [profile.name, settingsJson]
+                )
+                const profileId = result.lastInsertRowId
+                logWithTimestamp(`[DB] Successfully created profile: ${profile.name} (id: ${profileId})`)
+                endTiming({ status: "success", profileId, isUpdate: false })
+                return profileId
+            }
+        } catch (error) {
+            logErrorWithTimestamp(`[DB] Failed to save profile ${profile.name}:`, error)
+            endTiming({ status: "error", profileName: profile.name, error: error instanceof Error ? error.message : String(error) })
+            throw error
+        }
+    }
+
+    /**
+     * Delete a profile by ID.
+     *
+     * @param id - The ID of the profile to delete.
+     * @returns A promise that resolves when the profile is deleted.
+     */
+    async deleteProfile(id: number): Promise<void> {
+        const endTiming = startTiming("database_delete_profile", "database")
+
+        if (!this.db) {
+            logErrorWithTimestamp("Database is null when trying to delete profile.")
+            endTiming({ status: "error", error: "database_not_initialized" })
+            throw new Error("Database not initialized")
+        }
+
+        try {
+            logWithTimestamp(`[DB] Deleting profile with id: ${id}`)
+            await this.db.runAsync("DELETE FROM profiles WHERE id = ?", [id])
+            logWithTimestamp(`[DB] Successfully deleted profile with id: ${id}`)
+            endTiming({ status: "success", profileId: id })
+        } catch (error) {
+            logErrorWithTimestamp(`[DB] Failed to delete profile ${id}:`, error)
+            endTiming({ status: "error", profileId: id, error: error instanceof Error ? error.message : String(error) })
+            throw error
+        }
+    }
+
+    /**
+     * Get the current active profile name from settings.
+     *
+     * @returns The current active profile name, or null if no profile is active.
+     */
+    async getCurrentProfileName(): Promise<string | null> {
+        if (!this.db) {
+            throw new Error("Database not initialized")
+        }
+
+        try {
+            const profileName = await this.loadSetting("misc", "currentProfileName")
+            return profileName || null
+        } catch (error) {
+            logErrorWithTimestamp("[DB] Failed to load current profile name:", error)
+            return null
+        }
+    }
+
+    /**
+     * Set the current active profile name in settings.
+     *
+     * @param profileName - The name of the profile to set as active.
+     * @returns A promise that resolves when the current active profile name is set.
+     */
+    async setCurrentProfileName(profileName: string | null): Promise<void> {
+        if (!this.db) {
+            throw new Error("Database not initialized")
+        }
+
+        try {
+            if (profileName) {
+                await this.saveSetting("misc", "currentProfileName", profileName, true)
+            } else {
+                // Delete the setting if profileName is null.
+                await this.db.runAsync("DELETE FROM settings WHERE category = ? AND key = ?", ["misc", "currentProfileName"])
+            }
+        } catch (error) {
+            logErrorWithTimestamp("[DB] Failed to save current profile name:", error)
+            throw error
+        }
     }
 }
 
