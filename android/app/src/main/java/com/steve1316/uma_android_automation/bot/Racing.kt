@@ -138,8 +138,14 @@ class Racing (private val game: Game) {
                 }
 
                 var runningStyle: RunningStyle? = null
-                val runningStyleString: String = getRunningStyleOption().uppercase()
-                when (runningStyleString) {
+                val runningStyleString: String = when {
+                    // Special case for when the bot has not been able to check the date
+                    // i.e. when the bot starts at the race screen.
+                    game.currentDate.day == 1 -> userSelectedOriginalStrategy
+                    game.currentDate.year == DateYear.JUNIOR -> juniorYearRaceStrategy
+                    else -> userSelectedOriginalStrategy
+                }
+                when (runningStyleString.uppercase()) {
                     // Do not select a strategy. Use what is already selected.
                     "DEFAULT" -> {
                         MessageLog.i(TAG, "[DIALOG] strategy:: Using the default running style.")
@@ -172,8 +178,18 @@ class Racing (private val game: Game) {
                     }
                 }
 
-                game.trainee.bHasSetRunningStyle = true
+                // We only want to set this flag if the date has been checked.
+                // Otherwise, if the day is still 1, that means we probably started
+                // the bot at the racing screen. In this case, we still want to set
+                // the running style the next time we get back to the race
+                // selection screen after verifying the date.
+                if (game.currentDate.day != 1) {
+                    game.trainee.bHasSetRunningStyle = true
+                }
                 dialog.ok(imageUtils = game.imageUtils)
+            }
+            "unlock_requirements" -> {
+                dialog.close(imageUtils = game.imageUtils)
             }
         }
     }
@@ -401,6 +417,7 @@ class Racing (private val game: Game) {
 
         // Handle race strategy override if enabled.
         selectRaceStrategy()
+        game.wait(1.0)
 
         // Skip the race if possible, otherwise run it manually.
         val resultCheck = runRaceWithRetries()
@@ -517,6 +534,7 @@ class Racing (private val game: Game) {
 
         // Handle race strategy override if enabled.
         selectRaceStrategy()
+        game.wait(1.0)
 
         // Skip the race if possible, otherwise run it manually.
         val resultCheck = runRaceWithRetries()
@@ -1013,11 +1031,6 @@ class Racing (private val game: Game) {
         return enableFarmingFans && (turnsRemaining % daysToRunExtraRaces == 0) && !raceRepeatWarningCheck
     }
 
-    fun getRunningStyleOption(): String {
-        val currentYear = game.currentDate.year
-        return if (currentYear == DateYear.JUNIOR) juniorYearRaceStrategy else userSelectedOriginalStrategy
-    }
-
     fun updateRaceScreenRunningStyleAptitudes(): Boolean {
         val bitmap = game.imageUtils.getSourceBitmap()
         var text: String = game.imageUtils.performOCROnRegion(
@@ -1066,7 +1079,7 @@ class Racing (private val game: Game) {
      * During Junior Year: Applies the user-selected strategy and stores the original.
      * After Junior Year: Restores the original strategy and disables the feature.
      */
-    private fun selectRaceStrategy() {
+    fun selectRaceStrategy() {
         if (
             !game.trainee.bHasUpdatedAptitudes &&
             !game.trainee.bTemporaryRunningStyleAptitudesUpdated
@@ -1074,11 +1087,15 @@ class Racing (private val game: Game) {
             // If trainee aptitudes are unknown, this means we probably started the bot
             // at the race screen. We need to open the race strategy dialog and
             // read the aptitudes in from there.
+            MessageLog.i(TAG, "Setting running style and performing temporary initial aptitude check.")
             ButtonChangeRunningStyle.click(imageUtils = game.imageUtils)
+            game.wait(0.5)
             handleDialogs()
         } else if (!game.trainee.bHasSetRunningStyle) {
             // If we haven't set the trainee's running style yet, open the dialog.
+            MessageLog.i(TAG, "Setting running style for the first time.")
             ButtonChangeRunningStyle.click(imageUtils = game.imageUtils)
+            game.wait(0.5)
             handleDialogs()
         }
     }

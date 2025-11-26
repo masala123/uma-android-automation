@@ -69,7 +69,7 @@ enum class RunningStyle(val shortName: String) {
 
         fun fromName(value: String): RunningStyle? = nameMap[value.uppercase()]
         fun fromOrdinal(ordinal: Int): RunningStyle? = ordinalMap[ordinal]
-        fun fromShortName(value: String): RunningStyle? = entries.find { value == it.shortName }
+        fun fromShortName(value: String): RunningStyle? = entries.find { value.uppercase() == it.shortName }
     }
 }
 
@@ -169,7 +169,7 @@ enum class DateMonth(val shortName: String) {
 
         fun fromName(value: String): DateMonth? = nameMap[value.uppercase()]
         fun fromOrdinal(ordinal: Int): DateMonth? = ordinalMap[ordinal]
-        fun fromShortName(value: String): DateMonth? = entries.find { value == it.shortName }
+        fun fromShortName(value: String): DateMonth? = entries.find { value.uppercase() == it.shortName }
     }
 }
 
@@ -184,7 +184,7 @@ enum class DateYear(val longName: String) {
 
         fun fromName(value: String): DateYear? = nameMap[value.uppercase()]
         fun fromOrdinal(ordinal: Int): DateYear? = ordinalMap[ordinal]
-        fun fromLongName(value: String): DateYear? = entries.find { value == it.longName }
+        fun fromLongName(value: String): DateYear? = entries.find { value.uppercase() == it.longName }
     }
 }
 

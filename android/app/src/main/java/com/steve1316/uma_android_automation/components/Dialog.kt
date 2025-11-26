@@ -5,7 +5,7 @@ import org.opencv.core.Point
 
 import com.steve1316.automation_library.data.SharedData
 import com.steve1316.automation_library.utils.ImageUtils
-//import com.steve1316.automation_library.utils.TextUtils
+import com.steve1316.automation_library.utils.TextUtils
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
 import com.steve1316.uma_android_automation.components.ComponentInterface
 
@@ -73,43 +73,37 @@ object DialogUtils {
     *
     * @return The text of the dialog's title bar if one was found, else NULL.
     */
-    fun getTitle(imageUtils: CustomImageUtils, titleLocation: Point? = null, tries: Int = 1): String? {
-        // If the title location isn't passed, try to find it.
-        val titleLocation: Point? = if (titleLocation == null) {
-            var loc: Point? = null
-            for (template in titleGradientTemplates) {
-                loc = imageUtils.findImage(template, tries = tries).first
-                if (loc != null) {
-                    break
-                }
-            }
-            loc
-        } else {
-            titleLocation
-        }
-
-        // If titleLocation is still null, then just return.
-        if (titleLocation == null) {
-            return null
-        }
-
-        val sourceBitmap = imageUtils.getSourceBitmap()
+    fun getTitle(imageUtils: CustomImageUtils, tries: Int = 1): String? {
         var templateBitmap: Bitmap? = null
+        var titleLocation: Point? = null
         for (template in titleGradientTemplates) {
-            templateBitmap = imageUtils.getBitmaps(template).second
-            if (templateBitmap != null) {
+            titleLocation = imageUtils.findImage(template, tries = tries).first
+            if (titleLocation != null) {
+                templateBitmap = imageUtils.getTemplateBitmap(template.substringAfterLast('/'), "images/" + template.substringBeforeLast('/'))
                 break
             }
         }
 
-        // None of our templates could be loaded.
+        // If titleLocation is null, then just return.
+        if (titleLocation == null) {
+            return null
+        }
+
+        // If we failed to find the template bitmap, we can't do any calcs.
         if (templateBitmap == null) {
             return null
         }
 
+        val sourceBitmap = imageUtils.getSourceBitmap()
+
         // Get top left coordinates of the title.
         val x = titleLocation.x - (templateBitmap.width / 2.0)
         val y = titleLocation.y - (templateBitmap.height / 2.0)
+
+        val _x = imageUtils.relX(x, 0)
+        val _y = imageUtils.relY(y, 0)
+        val _w = imageUtils.relWidth((SharedData.displayWidth - (x * 2)).toInt())
+        val _h = imageUtils.relHeight(templateBitmap.height)
 
         val result: String = imageUtils.performOCROnRegion(
             sourceBitmap,
@@ -139,22 +133,11 @@ object DialogUtils {
     * @return The DialogInterface if one was found, else NULL.
     */
     fun getDialog(imageUtils: CustomImageUtils, tries: Int = 1): DialogInterface? {
-        var loc: Point? = null
-        for (template in titleGradientTemplates) {
-            loc = imageUtils.findImage(template, tries = tries).first
-            if (loc != null) {
-                break
-            }
-        }
-        if (loc == null) {
-            return null
-        }
+        val title: String = getTitle(imageUtils = imageUtils) ?: return null
 
-        val title: String = getTitle(imageUtils = imageUtils, titleLocation=loc) ?: return null
-
-        //val match = TextUtils.matchStringInList(title, DialogObjects.map.keys.toList())
-        return if (DialogObjects.map.keys.toList().contains(title)) {
-            DialogObjects.map[title]
+        val match: String? = TextUtils.matchStringInList(title, DialogObjects.map.keys.toList())
+        return if (match != null) {
+            DialogObjects.map[match]
         } else {
             null
         }
@@ -248,6 +231,7 @@ object DialogObjects {
         DialogTryAgain,                     // Career
         DialogUmamusumeClass,               // Career
         DialogUmamusumeDetails,             // Career
+        DialogUnlockRequirements,           // Race Screen
         DialogUnmetRequirements,
         DialogViewStory,                    // Main Screen, end of career
     )
@@ -853,6 +837,17 @@ object DialogUmamusumeDetails : DialogInterface {
     override val TAG: String = "DialogUmamusumeDetails"
     override val name: String = "umamusume_details"
     override val title: String = "Umamusume Details"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
+object DialogUnlockRequirements : DialogInterface {
+    override val TAG: String = "DialogUnlockRequirements"
+    override val name: String = "unlock_requirements"
+    override val title: String = "Unlock Requirements"
     override val closeButton = null
     override val okButton = null
     override val buttons: List<ComponentInterface> = listOf(
