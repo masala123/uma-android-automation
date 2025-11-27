@@ -49,6 +49,7 @@ export interface Settings {
         enableSettingsDisplay: boolean
         formattedSettingsString: string
         enableMessageIdDisplay: boolean
+        currentProfileName: string
     }
 
     // Training settings
@@ -209,6 +210,7 @@ export const defaultSettings: Settings = {
         enableSettingsDisplay: false,
         formattedSettingsString: "",
         enableMessageIdDisplay: false,
+        currentProfileName: "",
     },
     training: {
         trainingBlacklist: [],
