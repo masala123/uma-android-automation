@@ -1131,6 +1131,11 @@ class Training(private val game: Game) {
 			printTrainingMap()
 			MessageLog.i(TAG, "[TRAINING] Executing the $trainingSelected Training.")
 			game.findAndTapImage("training_${trainingSelected.lowercase()}", region = game.imageUtils.regionBottomHalf, taps = 3)
+            game.wait(1.0)
+
+            // Dismiss any popup warning about a scheduled race.
+            game.findAndTapImage("ok", tries = 1, region = game.imageUtils.regionMiddle, suppressError = true)
+
 			MessageLog.i(TAG, "[TRAINING] Process to execute training completed.")
 		} else {
 			MessageLog.i(TAG, "[TRAINING] Conditions have not been met so training will not be done.")
