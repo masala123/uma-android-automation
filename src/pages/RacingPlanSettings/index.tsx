@@ -445,6 +445,12 @@ const RacingPlanSettings = () => {
                     </View>
                 </View>
 
+                <View style={{ flexDirection: "row", marginBottom: 12 }}>
+                    <View style={{ flex: 1 }}>
+                        <Text style={[styles.inputDescription, { marginTop: 0 }]}>Be sure to double check your selected races after making changes to the filters.</Text>
+                    </View>
+                </View>
+
                 <View style={{ marginBottom: 16 }}>
                     <Input style={styles.input} value={searchQuery} onChangeText={setSearchQuery} placeholder="Search races by name or date..." />
                     <View style={{ height: 300 }}>
