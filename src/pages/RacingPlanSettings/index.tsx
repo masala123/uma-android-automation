@@ -38,7 +38,18 @@ const RacingPlanSettings = () => {
 
     // Merge current racing settings with defaults to handle missing properties.
     const racingSettings = { ...defaultSettings.racing, ...settings.racing }
-    const { enableRacingPlan, racingPlan, minFansThreshold, preferredTerrain, lookAheadDays, smartRacingCheckInterval, minimumQualityThreshold, timeDecayFactor, improvementThreshold, preferredGrades } = racingSettings
+    const {
+        enableRacingPlan,
+        racingPlan,
+        minFansThreshold,
+        preferredTerrain,
+        lookAheadDays,
+        smartRacingCheckInterval,
+        minimumQualityThreshold,
+        timeDecayFactor,
+        improvementThreshold,
+        preferredGrades,
+    } = racingSettings
 
     const [searchQuery, setSearchQuery] = useState("")
     // Local state for decimal inputs to preserve intermediate values while typing (e.g., "7.").
