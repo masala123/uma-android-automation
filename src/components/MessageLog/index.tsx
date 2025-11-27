@@ -218,6 +218,7 @@ const MessageLog = () => {
                 : "None Selected"
 
         return `🏁 Campaign Selected: ${settings.general.scenario !== "" ? `${settings.general.scenario}` : "Please select one in the Select Campaign option"}
+👤 Profile Selected: ${settings.misc.currentProfileName ? `${settings.misc.currentProfileName}` : "Default Profile"}
 
 ---------- Training Event Options ----------
 🎭 Special Event Overrides: ${
