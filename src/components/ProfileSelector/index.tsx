@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react"
-import { View, StyleSheet, TouchableOpacity } from "react-native"
+import { View, StyleSheet, TouchableOpacity, Text } from "react-native"
 import { useTheme } from "../../context/ThemeContext"
 import CustomSelect from "../CustomSelect"
 import { useProfileManager, DEFAULT_PROFILE_NAME } from "../../hooks/useProfileManager"
@@ -55,6 +55,11 @@ const ProfileSelector: React.FC<ProfileSelectorProps> = ({ currentTrainingSettin
             backgroundColor: colors.secondary,
             justifyContent: "center",
             alignItems: "center",
+        },
+        description: {
+            fontSize: 12,
+            color: colors.foreground,
+            opacity: 0.7,
         },
     })
 
@@ -136,6 +141,10 @@ const ProfileSelector: React.FC<ProfileSelectorProps> = ({ currentTrainingSettin
                 <TouchableOpacity style={styles.iconButton} onPress={() => setShowManageModal(true)}>
                     <SettingsIcon size={20} color={colors.foreground} />
                 </TouchableOpacity>
+            </View>
+
+            <View style={[styles.row, { marginTop: 12 }]}>
+                <Text style={styles.description}>Profiles constitute only the Training settings and stat targets. Other settings are not saved in profiles.</Text>
             </View>
 
             <ProfileCreationModal
