@@ -191,6 +191,22 @@ export const useSettingsManager = () => {
 
         try {
             const jsonString = JSON.stringify(bsc.settings, null, 4)
+            // Create export object with settings and profiles, excluding large data fields.
+            const settingsForExport = JSON.parse(JSON.stringify(bsc.settings))
+
+            // Remove unnecessary fields before export.
+            delete settingsForExport.racing.racingPlanData
+            delete settingsForExport.trainingEvent.characterEventData
+            delete settingsForExport.trainingEvent.supportEventData
+            delete settingsForExport.misc.formattedSettingsString
+            delete settingsForExport.misc.currentProfileName
+
+            const exportData = {
+                ...settingsForExport,
+                profiles: profiles.length > 0 ? profiles : undefined,
+            }
+
+            const jsonString = JSON.stringify(exportData, null, 4)
 
             // Create a temporary file name with timestamp.
             const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
