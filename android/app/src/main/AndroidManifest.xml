@@ -14,6 +14,9 @@
         tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
+    <!--Grants permission to post notifications.-->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
     <!--Grants permission to download and update the application's Firebase Machine Learning OCR.-->
     <uses-permission android:name="android.permission.INTERNET" />
 

@@ -294,6 +294,14 @@ export const useProfileManager = (onError?: (message: string) => void) => {
                 }
 
                 await loadProfiles()
+
+                // After reloading, check if all profiles are deleted. If so, set currentProfileName to null (default value).
+                const updatedProfiles = await databaseManager.getAllProfiles()
+                if (updatedProfiles.length === 0) {
+                    await databaseManager.setCurrentProfileName(null)
+                    setCurrentProfileName(null)
+                }
+
                 logWithTimestamp(`[ProfileManager] Deleted profile: ${profile.name}`)
             } catch (error) {
                 const errorMessage = `Failed to delete profile ${id}: ${error instanceof Error ? error.message : String(error)}`

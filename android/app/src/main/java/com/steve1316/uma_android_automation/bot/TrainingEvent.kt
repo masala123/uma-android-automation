@@ -275,6 +275,15 @@ class TrainingEvent(private val game: Game) {
                             if (line.lowercase().contains("can start dating")) {
                                 MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 100 to unlock recreation/dating for this support.")
                                 selectionWeight[optionSelected] += 100
+                            } else if (line.lowercase().contains("event chain ended")) {
+                                MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of -200 for event chain ending.")
+                                selectionWeight[optionSelected] += -300
+                            } else if (line.lowercase().contains("(random)")) {
+                                MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of -10 for random reward.")
+                                selectionWeight[optionSelected] += -10
+                            } else if (line.lowercase().contains("randomly")) {
+                                MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 50 for random options.")
+                                selectionWeight[optionSelected] += 50
                             } else if (line.lowercase().contains("energy")) {
                                 val finalEnergyValue = try {
                                     val energyValue = if (formattedLine.contains("/")) {
@@ -311,15 +320,6 @@ class TrainingEvent(private val game: Game) {
                             } else if (line.lowercase().contains("bond")) {
                                 MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 20 for bond.")
                                 selectionWeight[optionSelected] += 20
-                            } else if (line.lowercase().contains("event chain ended")) {
-                                MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of -200 for event chain ending.")
-                                selectionWeight[optionSelected] += -200
-                            } else if (line.lowercase().contains("(random)")) {
-                                MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of -10 for random reward.")
-                                selectionWeight[optionSelected] += -10
-                            } else if (line.lowercase().contains("randomly")) {
-                                MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 50 for random options.")
-                                selectionWeight[optionSelected] += 50
                             } else if (line.lowercase().contains("hint")) {
                                 MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 25 for skill hint(s).")
                                 selectionWeight[optionSelected] += 25

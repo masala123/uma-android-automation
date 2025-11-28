@@ -38,7 +38,18 @@ const RacingPlanSettings = () => {
 
     // Merge current racing settings with defaults to handle missing properties.
     const racingSettings = { ...defaultSettings.racing, ...settings.racing }
-    const { enableRacingPlan, racingPlan, minFansThreshold, preferredTerrain, lookAheadDays, smartRacingCheckInterval, minimumQualityThreshold, timeDecayFactor, improvementThreshold, preferredGrades } = racingSettings
+    const {
+        enableRacingPlan,
+        racingPlan,
+        minFansThreshold,
+        preferredTerrain,
+        lookAheadDays,
+        smartRacingCheckInterval,
+        minimumQualityThreshold,
+        timeDecayFactor,
+        improvementThreshold,
+        preferredGrades,
+    } = racingSettings
 
     const [searchQuery, setSearchQuery] = useState("")
     // Local state for decimal inputs to preserve intermediate values while typing (e.g., "7.").
@@ -431,6 +442,12 @@ const RacingPlanSettings = () => {
                         <CustomButton icon={<Trash2 size={16} />} onPress={() => clearAllRacesFromPlan()}>
                             Clear
                         </CustomButton>
+                    </View>
+                </View>
+
+                <View style={{ flexDirection: "row", marginBottom: 12 }}>
+                    <View style={{ flex: 1 }}>
+                        <Text style={[styles.inputDescription, { marginTop: 0 }]}>Be sure to double check your selected races after making changes to the filters.</Text>
                     </View>
                 </View>
 

@@ -873,7 +873,7 @@ class Racing (private val game: Game) {
 
         // Check for common restrictions that apply to both smart and standard racing via screen checks.
         val sourceBitmap = game.imageUtils.getSourceBitmap()
-        if (game.imageUtils.findImageWithBitmap("race_select_extra_locked_uma_finals", sourceBitmap, region = game.imageUtils.regionBottomHalf) != null) {
+        if (game.checkFinals()) {
             MessageLog.i(TAG, "[RACE] It is UMA Finals right now so there will be no extra races. Stopping extra race check.")
             return false
         } else if (game.imageUtils.findImageWithBitmap("race_select_extra_locked", sourceBitmap, region = game.imageUtils.regionBottomHalf) != null) {

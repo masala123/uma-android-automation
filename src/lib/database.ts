@@ -41,6 +41,12 @@ export interface DatabaseProfile {
  * Stores settings as key-value pairs organized by category for efficient querying.
  */
 export class DatabaseManager {
+    private DATABASE_NAME = "settings.db"
+    private STRING_ONLY_SETTINGS = ["racingPlan", "racingPlanData"]
+    private TABLE_SETTINGS = "settings"
+    private TABLE_RACES = "races"
+    private TABLE_PROFILES = "profiles"
+
     private db: SQLite.SQLiteDatabase | null = null
     private isInitializing = false
     private initializationPromise: Promise<void> | null = null
@@ -48,7 +54,52 @@ export class DatabaseManager {
     private transactionQueue: Array<() => Promise<void>> = []
 
     /**
+     * Serialize a value to a string for storage.
+     *
+     * @param value - The value to serialize.
+     * @returns The serialized string value.
+     */
+    private serializeValue(value: any): string {
+        return typeof value === "string" ? value : JSON.stringify(value)
+    }
+
+    /**
+     * Deserialize a value from a string, handling string-only settings.
+     *
+     * @param key - The setting key to check if it should remain as a string.
+     * @param value - The string value to deserialize.
+     * @returns The deserialized value.
+     */
+    private deserializeValue(key: string, value: string): any {
+        if (this.STRING_ONLY_SETTINGS.includes(key)) {
+            return value
+        }
+        try {
+            return JSON.parse(value)
+        } catch {
+            return value
+        }
+    }
+
+    // ============================================================================
+    // Initialization and Migration Methods
+    // ============================================================================
+
+    /**
+     * Ensure the database is initialized, throwing an error if not.
+     *
+     * @throws Error if database is not initialized.
+     */
+    private ensureInitialized(): void {
+        if (!this.db) {
+            throw new Error("Database not initialized")
+        }
+    }
+
+    /**
      * Initialize the database and create tables if they don't exist.
+     *
+     * @returns A promise that resolves when the database is initialized.
      */
     async initialize(): Promise<void> {
         const endTiming = startTiming("database_initialize", "database")
@@ -79,10 +130,15 @@ export class DatabaseManager {
         }
     }
 
+    /**
+     * Perform the database initialization.
+     *
+     * @returns A promise that resolves when the database is initialized.
+     */
     private async _performInitialization(): Promise<void> {
         try {
             logWithTimestamp("Starting database initialization...")
-            this.db = await SQLite.openDatabaseAsync("settings.db", {
+            this.db = await SQLite.openDatabaseAsync(this.DATABASE_NAME, {
                 useNewConnection: true,
             })
             logWithTimestamp("Database opened successfully")
@@ -94,7 +150,7 @@ export class DatabaseManager {
             // Create settings table.
             logWithTimestamp("Creating settings table...")
             await this.db.execAsync(`
-                CREATE TABLE IF NOT EXISTS settings (
+                CREATE TABLE IF NOT EXISTS ${this.TABLE_SETTINGS} (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     category TEXT NOT NULL,
                     key TEXT NOT NULL,
@@ -108,7 +164,7 @@ export class DatabaseManager {
             // Create races table.
             logWithTimestamp("Creating races table...")
             await this.db.execAsync(`
-                CREATE TABLE IF NOT EXISTS races (
+                CREATE TABLE IF NOT EXISTS ${this.TABLE_RACES} (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     key TEXT UNIQUE NOT NULL,
                     name TEXT NOT NULL,
@@ -130,7 +186,7 @@ export class DatabaseManager {
             // Create profiles table.
             logWithTimestamp("Creating profiles table...")
             await this.db.execAsync(`
-                CREATE TABLE IF NOT EXISTS profiles (
+                CREATE TABLE IF NOT EXISTS ${this.TABLE_PROFILES} (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT UNIQUE NOT NULL,
                     settings TEXT NOT NULL,
@@ -140,26 +196,26 @@ export class DatabaseManager {
             `)
             logWithTimestamp("Profiles table created successfully.")
 
-            // Migrate existing profiles from old format (training_settings + trainingStatTarget_settings) to new format (settings JSON).
+            // Migrate existing profiles from old to new schema.
             await this.migrateProfilesSchema()
 
             // Create indexes for faster queries.
             logWithTimestamp("Creating indexes...")
             await this.db.execAsync(`
                 CREATE INDEX IF NOT EXISTS idx_settings_category_key 
-                ON settings(category, key)
+                ON ${this.TABLE_SETTINGS}(category, key)
             `)
             await this.db.execAsync(`
                 CREATE INDEX IF NOT EXISTS idx_races_turn_number 
-                ON races(turnNumber)
+                ON ${this.TABLE_RACES}(turnNumber)
             `)
             await this.db.execAsync(`
                 CREATE INDEX IF NOT EXISTS idx_races_name_formatted 
-                ON races(nameFormatted)
+                ON ${this.TABLE_RACES}(nameFormatted)
             `)
             await this.db.execAsync(`
                 CREATE INDEX IF NOT EXISTS idx_profiles_name 
-                ON profiles(name)
+                ON ${this.TABLE_PROFILES}(name)
             `)
             logWithTimestamp("Indexes created successfully.")
 
@@ -182,7 +238,7 @@ export class DatabaseManager {
         }
 
         try {
-            const tableInfo = await this.db.getAllAsync<{ name: string; type: string }>("PRAGMA table_info(profiles)")
+            const tableInfo = await this.db.getAllAsync<{ name: string; type: string }>(`PRAGMA table_info(${this.TABLE_PROFILES})`)
             const hasTrainingSettings = tableInfo.some((col) => col.name === "training_settings")
             const hasTrainingStatTarget = tableInfo.some((col) => col.name === "trainingStatTarget_settings")
             const hasSettings = tableInfo.some((col) => col.name === "settings")
@@ -192,92 +248,119 @@ export class DatabaseManager {
                 logWithTimestamp("[DB] Migrating profiles table to new settings format...")
 
                 // Create new table with settings column.
-                await this.db.execAsync(`
-                    CREATE TABLE IF NOT EXISTS profiles_new (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        name TEXT UNIQUE NOT NULL,
-                        settings TEXT NOT NULL,
-                        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                        updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-                    )
-                `)
+                await this.createProfilesMigrationTable()
 
                 // Migrate existing data: combine training and training stat target settings into a single settings JSON.
-                if (hasTrainingSettings && hasTrainingStatTarget) {
-                    // Both columns exist - combine them into settings JSON.
-                    await this.db.execAsync(`
-                        INSERT INTO profiles_new (id, name, settings, created_at, updated_at)
-                        SELECT 
-                            id, 
-                            name, 
-                            json_object('training', json(training_settings), 'trainingStatTarget', json(trainingStatTarget_settings)) as settings,
-                            created_at, 
-                            updated_at
-                        FROM profiles
-                    `)
-                } else if (hasTrainingSettings) {
-                    // Only training settings exist - create settings with just training settings.
-                    await this.db.execAsync(`
-                        INSERT INTO profiles_new (id, name, settings, created_at, updated_at)
-                        SELECT 
-                            id, 
-                            name, 
-                            json_object('training', json(training_settings)) as settings,
-                            created_at, 
-                            updated_at
-                        FROM profiles
-                    `)
-                } else if (hasTrainingStatTarget) {
-                    // Only training stat target settings exist - create settings with just training stat target settings.
-                    await this.db.execAsync(`
-                        INSERT INTO profiles_new (id, name, settings, created_at, updated_at)
-                        SELECT 
-                            id, 
-                            name, 
-                            json_object('trainingStatTarget', json(trainingStatTarget_settings)) as settings,
-                            created_at, 
-                            updated_at
-                        FROM profiles
-                    `)
-                }
+                await this.migrateProfilesData(hasTrainingSettings, hasTrainingStatTarget)
 
-                // Drop old table and rename new one.
-                await this.db.execAsync("DROP TABLE profiles")
-                await this.db.execAsync("ALTER TABLE profiles_new RENAME TO profiles")
-
-                // Recreate index.
-                await this.db.execAsync(`
-                    CREATE INDEX IF NOT EXISTS idx_profiles_name 
-                    ON profiles(name)
-                `)
+                // Complete the migration by replacing the old table.
+                await this.completeProfilesMigration()
 
                 logWithTimestamp("[DB] Successfully migrated profiles table to new settings format.")
             }
         } catch (error) {
+            // Allow app to continue even if migration fails.
             logErrorWithTimestamp("[DB] Failed to migrate profiles table:", error)
-            // Don't throw - allow app to continue even if migration fails.
         }
     }
 
     /**
+     * Create the new profiles table for migration.
+     *
+     * @returns A promise that resolves when the new profiles table is created.
+     */
+    private async createProfilesMigrationTable(): Promise<void> {
+        if (!this.db) {
+            return
+        }
+        await this.db.execAsync(`
+            CREATE TABLE IF NOT EXISTS ${this.TABLE_PROFILES}_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT UNIQUE NOT NULL,
+                settings TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        `)
+    }
+
+    /**
+     * Migrate profiles data from old schema to new schema.
+     *
+     * @param hasTrainingSettings - Whether the training_settings column exists.
+     * @param hasTrainingStatTarget - Whether the trainingStatTarget_settings column exists.
+     * @returns A promise that resolves when the profiles are migrated.
+     */
+    private async migrateProfilesData(hasTrainingSettings: boolean, hasTrainingStatTarget: boolean): Promise<void> {
+        if (!this.db) {
+            return
+        }
+
+        // Build json_object() dynamically based on which columns exist.
+        const jsonObjectParts: string[] = []
+        if (hasTrainingSettings) {
+            jsonObjectParts.push("'training', json(training_settings)")
+        }
+        if (hasTrainingStatTarget) {
+            jsonObjectParts.push("'trainingStatTarget', json(trainingStatTarget_settings)")
+        }
+
+        const jsonObjectSql = `json_object(${jsonObjectParts.join(", ")})`
+
+        await this.db.execAsync(`
+            INSERT INTO ${this.TABLE_PROFILES}_new (id, name, settings, created_at, updated_at)
+            SELECT 
+                id, 
+                name, 
+                ${jsonObjectSql} as settings,
+                created_at, 
+                updated_at
+            FROM ${this.TABLE_PROFILES}
+        `)
+    }
+
+    /**
+     * Complete the profiles migration by replacing the old table with the new one.
+     *
+     * @returns A promise that resolves when the migration is completed.
+     */
+    private async completeProfilesMigration(): Promise<void> {
+        if (!this.db) {
+            return
+        }
+        await this.db.execAsync(`DROP TABLE ${this.TABLE_PROFILES}`)
+        await this.db.execAsync(`ALTER TABLE ${this.TABLE_PROFILES}_new RENAME TO ${this.TABLE_PROFILES}`)
+        await this.db.execAsync(`
+            CREATE INDEX IF NOT EXISTS idx_profiles_name 
+            ON ${this.TABLE_PROFILES}(name)
+        `)
+    }
+
+    // ============================================================================
+    // Settings Methods
+    // ============================================================================
+
+    /**
      * Save settings to database by category and key.
+     *
+     * @param category - The category of the setting to save.
+     * @param key - The key of the setting to save.
+     * @param value - The value of the setting to save.
+     * @param suppressLogging - Whether to suppress logging of the setting being saved.
+     * @returns A promise that resolves when the setting is saved.
      */
     async saveSetting(category: string, key: string, value: any, suppressLogging: boolean = false): Promise<void> {
         const endTiming = startTiming("database_save_setting", "database")
 
-        if (!this.db) {
-            logErrorWithTimestamp("Database is null when trying to save setting.")
-            endTiming({ status: "error", error: "database_not_initialized" })
-            throw new Error("Database not initialized")
-        }
+        this.ensureInitialized()
 
         try {
-            const valueString = typeof value === "string" ? value : JSON.stringify(value)
+            const valueString = this.serializeValue(value)
             if (!suppressLogging) {
                 logWithTimestamp(`[DB] Saving setting: ${category}.${key} = ${valueString.substring(0, 100)}...`)
             }
-            await this.db.runAsync(
-                `INSERT OR REPLACE INTO settings (category, key, value, updated_at) 
+            await this.db!.runAsync(
+                `INSERT OR REPLACE INTO ${this.TABLE_SETTINGS} (category, key, value, updated_at) 
                  VALUES (?, ?, ?, CURRENT_TIMESTAMP)`,
                 [category, key, valueString]
             )
@@ -292,10 +375,18 @@ export class DatabaseManager {
         }
     }
 
+    // ============================================================================
+    // Utility Methods
+    // ============================================================================
+
     /**
-     * Execute a database operation with proper transaction management to prevent nested transactions.
+     * Execute a database operation with queue management to prevent concurrent operations.
+     * Note: This is a queue system, not SQLite transactions. SQLite transactions are handled within the operations.
+     *
+     * @param operation - The operation to execute.
+     * @returns A promise that resolves when the operation is executed.
      */
-    private async executeWithTransaction<T>(operation: () => Promise<T>): Promise<T> {
+    private async executeWithQueue<T>(operation: () => Promise<T>): Promise<T> {
         return new Promise((resolve, reject) => {
             const executeOperation = async () => {
                 if (this.isTransactionActive) {
@@ -333,15 +424,14 @@ export class DatabaseManager {
 
     /**
      * Save multiple settings in a single transaction for better performance.
+     *
+     * @param settings - The settings to save.
+     * @returns A promise that resolves when the settings are saved.
      */
     async saveSettingsBatch(settings: Array<{ category: string; key: string; value: any }>): Promise<void> {
         const endTiming = startTiming("database_save_settings_batch", "database")
 
-        if (!this.db) {
-            logErrorWithTimestamp("Database is null when trying to save settings batch.")
-            endTiming({ status: "error", error: "database_not_initialized" })
-            throw new Error("Database not initialized")
-        }
+        this.ensureInitialized()
 
         if (settings.length === 0) {
             endTiming({ status: "skipped", reason: "no_settings" })
@@ -349,18 +439,18 @@ export class DatabaseManager {
         }
 
         try {
-            await this.executeWithTransaction(async () => {
+            await this.executeWithQueue(async () => {
                 logWithTimestamp(`[DB] Saving ${settings.length} settings in batch.`)
 
                 await this.db!.runAsync("BEGIN TRANSACTION")
                 const stmt = await this.db!.prepareAsync(
-                    `INSERT OR REPLACE INTO settings (category, key, value, updated_at) 
+                    `INSERT OR REPLACE INTO ${this.TABLE_SETTINGS} (category, key, value, updated_at) 
                      VALUES (?, ?, ?, CURRENT_TIMESTAMP)`
                 )
 
                 // Execute all settings in batch.
                 for (const setting of settings) {
-                    const valueString = typeof setting.value === "string" ? setting.value : JSON.stringify(setting.value)
+                    const valueString = this.serializeValue(setting.value)
                     await stmt.executeAsync([setting.category, setting.key, valueString])
                 }
 
@@ -391,50 +481,23 @@ export class DatabaseManager {
     }
 
     /**
-     * Flush the SQLite database to the Kotlin layer.
-     */
-    async flushSQLiteForKotlin(): Promise<void> {
-        const endTiming = startTiming("database_flush_to_kotlin", "database")
-
-        if (this.db) {
-            await this.db.execAsync("PRAGMA wal_checkpoint(FULL);")
-            logWithTimestamp("[DB] Successfully flushed SQLite database to Kotlin layer.")
-            endTiming({ status: "success" })
-        } else {
-            logErrorWithTimestamp("Database is null when trying to flush to Kotlin layer.")
-            endTiming({ status: "error", error: "database_not_initialized" })
-            throw new Error("Database is null when trying to flush to Kotlin layer.")
-        }
-    }
-
-    /**
      * Load a specific setting from database.
+     *
+     * @param category - The category of the setting to load.
+     * @param key - The key of the setting to load.
+     * @returns The value of the setting, or null if not found.
      */
     async loadSetting(category: string, key: string): Promise<any> {
-        if (!this.db) {
-            throw new Error("Database not initialized")
-        }
+        this.ensureInitialized()
 
         try {
-            const result = await this.db.getFirstAsync<DatabaseSettings>("SELECT * FROM settings WHERE category = ? AND key = ?", [category, key])
+            const result = await this.db!.getFirstAsync<DatabaseSettings>(`SELECT * FROM ${this.TABLE_SETTINGS} WHERE category = ? AND key = ?`, [category, key])
 
             if (!result) {
                 return null
             }
 
-            // Settings that should remain as JSON strings (not parsed into objects)
-            const stringOnlySettings = ["racingPlan", "racingPlanData"]
-
-            if (stringOnlySettings.includes(key)) {
-                return result.value
-            } else {
-                // Try to parse as JSON and fallback to string.
-                try {
-                    return JSON.parse(result.value)
-                } catch {
-                    return result.value
-                }
-            }
+            return this.deserializeValue(key, result.value)
         } catch (error) {
             logErrorWithTimestamp(`[DB] Failed to load setting ${category}.${key}:`, error)
             throw error
@@ -443,36 +506,23 @@ export class DatabaseManager {
 
     /**
      * Load all settings from database.
+     *
+     * @returns A promise that resolves with a record of settings organized by category and key.
      */
     async loadAllSettings(): Promise<Record<string, Record<string, any>>> {
         const endTiming = startTiming("database_load_all_settings", "database")
 
-        if (!this.db) {
-            endTiming({ status: "error", error: "database_not_initialized" })
-            throw new Error("Database not initialized")
-        }
+        this.ensureInitialized()
 
         try {
-            const results = await this.db.getAllAsync<DatabaseSettings>("SELECT * FROM settings ORDER BY category, key")
+            const results = await this.db!.getAllAsync<DatabaseSettings>(`SELECT * FROM ${this.TABLE_SETTINGS} ORDER BY category, key`)
 
             const settings: Record<string, Record<string, any>> = {}
             for (const result of results) {
                 if (!settings[result.category]) {
                     settings[result.category] = {}
                 }
-
-                // Settings that should remain as JSON strings (not parsed into objects)
-                const stringOnlySettings = ["racingPlan", "racingPlanData"]
-
-                if (stringOnlySettings.includes(result.key)) {
-                    settings[result.category][result.key] = result.value
-                } else {
-                    try {
-                        settings[result.category][result.key] = JSON.parse(result.value)
-                    } catch {
-                        settings[result.category][result.key] = result.value
-                    }
-                }
+                settings[result.category][result.key] = this.deserializeValue(result.key, result.value)
             }
 
             endTiming({ status: "success", totalSettings: results.length, categoriesCount: Object.keys(settings).length })
@@ -484,59 +534,20 @@ export class DatabaseManager {
         }
     }
 
-    /**
-     * Save a race to the database.
-     */
-    async saveRace(race: Omit<DatabaseRace, "id">): Promise<void> {
-        const endTiming = startTiming("database_save_race", "database")
-
-        if (!this.db) {
-            logErrorWithTimestamp("Database is null when trying to save race.")
-            endTiming({ status: "error", error: "database_not_initialized" })
-            throw new Error("Database not initialized")
-        }
-
-        try {
-            logWithTimestamp(`[DB] Saving race: ${race.name} (${race.turnNumber})`)
-            await this.db.runAsync(
-                `INSERT OR REPLACE INTO races (key, name, date, raceTrack, course, direction, grade, terrain, distanceType, distanceMeters, fans, turnNumber, nameFormatted) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-                [
-                    race.key,
-                    race.name,
-                    race.date,
-                    race.raceTrack,
-                    race.course,
-                    race.direction,
-                    race.grade,
-                    race.terrain,
-                    race.distanceType,
-                    race.distanceMeters,
-                    race.fans,
-                    race.turnNumber,
-                    race.nameFormatted,
-                ]
-            )
-            logWithTimestamp(`[DB] Successfully saved race: ${race.name}`)
-            endTiming({ status: "success", raceName: race.name })
-        } catch (error) {
-            logErrorWithTimestamp(`[DB] Failed to save race ${race.name} (turn ${race.turnNumber}):`, error)
-            endTiming({ status: "error", raceName: race.name, error: error instanceof Error ? error.message : String(error) })
-            throw error
-        }
-    }
+    // ============================================================================
+    // Races Methods
+    // ============================================================================
 
     /**
      * Save multiple races using prepared statements for better performance and security.
+     *
+     * @param races - The races to save.
+     * @returns A promise that resolves when the races are saved.
      */
     async saveRacesBatch(races: Array<Omit<DatabaseRace, "id">>): Promise<void> {
         const endTiming = startTiming("database_save_races_batch", "database")
 
-        if (!this.db) {
-            logErrorWithTimestamp("Database is null when trying to save races batch.")
-            endTiming({ status: "error", error: "database_not_initialized" })
-            throw new Error("Database not initialized")
-        }
+        this.ensureInitialized()
 
         if (races.length === 0) {
             endTiming({ status: "skipped", reason: "no_races" })
@@ -544,12 +555,12 @@ export class DatabaseManager {
         }
 
         try {
-            await this.executeWithTransaction(async () => {
+            await this.executeWithQueue(async () => {
                 logWithTimestamp(`[DB] Saving ${races.length} races using prepared statement.`)
 
                 await this.db!.runAsync("BEGIN TRANSACTION")
                 const stmt = await this.db!.prepareAsync(
-                    `INSERT OR REPLACE INTO races (key, name, date, raceTrack, course, direction, grade, terrain, distanceType, distanceMeters, fans, turnNumber, nameFormatted) 
+                    `INSERT OR REPLACE INTO ${this.TABLE_RACES} (key, name, date, raceTrack, course, direction, grade, terrain, distanceType, distanceMeters, fans, turnNumber, nameFormatted) 
                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
                 )
 
@@ -599,62 +610,17 @@ export class DatabaseManager {
     }
 
     /**
-     * Load all races from database.
-     */
-    async loadAllRaces(): Promise<DatabaseRace[]> {
-        const endTiming = startTiming("database_load_all_races", "database")
-
-        if (!this.db) {
-            endTiming({ status: "error", error: "database_not_initialized" })
-            throw new Error("Database not initialized")
-        }
-
-        try {
-            const results = await this.db.getAllAsync<DatabaseRace>("SELECT * FROM races ORDER BY turnNumber, name")
-            endTiming({ status: "success", totalRaces: results.length })
-            return results
-        } catch (error) {
-            logErrorWithTimestamp("[DB] Failed to load all races:", error)
-            endTiming({ status: "error", error: error instanceof Error ? error.message : String(error) })
-            throw error
-        }
-    }
-
-    /**
-     * Load races by turn number.
-     */
-    async loadRacesByTurnNumber(turnNumber: number): Promise<DatabaseRace[]> {
-        const endTiming = startTiming("database_load_races_by_turn", "database")
-
-        if (!this.db) {
-            endTiming({ status: "error", error: "database_not_initialized" })
-            throw new Error("Database not initialized")
-        }
-
-        try {
-            const results = await this.db.getAllAsync<DatabaseRace>("SELECT * FROM races WHERE turnNumber = ? ORDER BY name", [turnNumber])
-            endTiming({ status: "success", turnNumber, racesCount: results.length })
-            return results
-        } catch (error) {
-            logErrorWithTimestamp(`[DB] Failed to load races for turn ${turnNumber}:`, error)
-            endTiming({ status: "error", turnNumber, error: error instanceof Error ? error.message : String(error) })
-            throw error
-        }
-    }
-
-    /**
      * Clear all races from the database.
+     *
+     * @returns A promise that resolves when the races are cleared.
      */
     async clearRaces(): Promise<void> {
         const endTiming = startTiming("database_clear_races", "database")
 
-        if (!this.db) {
-            endTiming({ status: "error", error: "database_not_initialized" })
-            throw new Error("Database not initialized")
-        }
+        this.ensureInitialized()
 
         try {
-            await this.db.runAsync("DELETE FROM races")
+            await this.db!.runAsync(`DELETE FROM ${this.TABLE_RACES}`)
             logWithTimestamp("[DB] Successfully cleared all races.")
             endTiming({ status: "success" })
         } catch (error) {
@@ -666,6 +632,8 @@ export class DatabaseManager {
 
     /**
      * Check if the database is properly initialized.
+     *
+     * @returns True if the database is initialized, false otherwise.
      */
     isInitialized(): boolean {
         return this.db !== null
@@ -679,21 +647,22 @@ export class DatabaseManager {
         this.isTransactionActive = false
     }
 
+    // ============================================================================
+    // Profiles Methods
+    // ============================================================================
+
     /**
      * Get all profiles from the database.
      *
-     * @returns A promise that resolves when all profiles are loaded.
+     * @returns A promise that resolves with an array of all profiles.
      */
     async getAllProfiles(): Promise<DatabaseProfile[]> {
         const endTiming = startTiming("database_get_all_profiles", "database")
 
-        if (!this.db) {
-            endTiming({ status: "error", error: "database_not_initialized" })
-            throw new Error("Database not initialized")
-        }
+        this.ensureInitialized()
 
         try {
-            const results = await this.db.getAllAsync<DatabaseProfile>("SELECT * FROM profiles ORDER BY name")
+            const results = await this.db!.getAllAsync<DatabaseProfile>(`SELECT * FROM ${this.TABLE_PROFILES} ORDER BY name`)
             endTiming({ status: "success", totalProfiles: results.length })
             return results
         } catch (error) {
@@ -707,18 +676,15 @@ export class DatabaseManager {
      * Get a single profile by ID.
      *
      * @param id - The ID of the profile to load.
-     * @returns The profile with the given ID, or null if not found.
+     * @returns A promise that resolves with the profile of the given ID, or null if not found.
      */
     async getProfile(id: number): Promise<DatabaseProfile | null> {
         const endTiming = startTiming("database_get_profile", "database")
 
-        if (!this.db) {
-            endTiming({ status: "error", error: "database_not_initialized" })
-            throw new Error("Database not initialized")
-        }
+        this.ensureInitialized()
 
         try {
-            const result = await this.db.getFirstAsync<DatabaseProfile>("SELECT * FROM profiles WHERE id = ?", [id])
+            const result = await this.db!.getFirstAsync<DatabaseProfile>(`SELECT * FROM ${this.TABLE_PROFILES} WHERE id = ?`, [id])
             endTiming({ status: "success", found: !!result })
             return result || null
         } catch (error) {
@@ -732,16 +698,12 @@ export class DatabaseManager {
      * Save a profile (create or update).
      *
      * @param profile - The profile to save.
-     * @returns A promise that resolves when the profile is saved.
+     * @returns A promise that resolves with the ID of the saved profile.
      */
     async saveProfile(profile: { id?: number; name: string; settings: any }): Promise<number> {
         const endTiming = startTiming("database_save_profile", "database")
 
-        if (!this.db) {
-            logErrorWithTimestamp("Database is null when trying to save profile.")
-            endTiming({ status: "error", error: "database_not_initialized" })
-            throw new Error("Database not initialized")
-        }
+        this.ensureInitialized()
 
         try {
             const settingsJson = JSON.stringify(profile.settings)
@@ -750,8 +712,8 @@ export class DatabaseManager {
                 // Update existing profile.
                 logWithTimestamp(`[DB] Updating profile: ${profile.name} (id: ${profile.id})`)
                 try {
-                    await this.db.runAsync(
-                        `UPDATE profiles 
+                    await this.db!.runAsync(
+                        `UPDATE ${this.TABLE_PROFILES} 
                          SET name = ?, settings = ?, updated_at = CURRENT_TIMESTAMP 
                          WHERE id = ?`,
                         [profile.name, settingsJson, profile.id]
@@ -766,8 +728,8 @@ export class DatabaseManager {
                         const existingProfile = await this.getProfile(profile.id)
                         if (existingProfile && existingProfile.name === profile.name) {
                             // Name is the same, just update settings.
-                            await this.db.runAsync(
-                                `UPDATE profiles 
+                            await this.db!.runAsync(
+                                `UPDATE ${this.TABLE_PROFILES} 
                                  SET settings = ?, updated_at = CURRENT_TIMESTAMP 
                                  WHERE id = ?`,
                                 [settingsJson, profile.id]
@@ -782,8 +744,8 @@ export class DatabaseManager {
             } else {
                 // Create new profile.
                 logWithTimestamp(`[DB] Creating profile: ${profile.name}`)
-                const result = await this.db.runAsync(
-                    `INSERT INTO profiles (name, settings, created_at, updated_at) 
+                const result = await this.db!.runAsync(
+                    `INSERT INTO ${this.TABLE_PROFILES} (name, settings, created_at, updated_at) 
                      VALUES (?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
                     [profile.name, settingsJson]
                 )
@@ -808,15 +770,11 @@ export class DatabaseManager {
     async deleteProfile(id: number): Promise<void> {
         const endTiming = startTiming("database_delete_profile", "database")
 
-        if (!this.db) {
-            logErrorWithTimestamp("Database is null when trying to delete profile.")
-            endTiming({ status: "error", error: "database_not_initialized" })
-            throw new Error("Database not initialized")
-        }
+        this.ensureInitialized()
 
         try {
             logWithTimestamp(`[DB] Deleting profile with id: ${id}`)
-            await this.db.runAsync("DELETE FROM profiles WHERE id = ?", [id])
+            await this.db!.runAsync(`DELETE FROM ${this.TABLE_PROFILES} WHERE id = ?`, [id])
             logWithTimestamp(`[DB] Successfully deleted profile with id: ${id}`)
             endTiming({ status: "success", profileId: id })
         } catch (error) {
@@ -829,12 +787,10 @@ export class DatabaseManager {
     /**
      * Get the current active profile name from settings.
      *
-     * @returns The current active profile name, or null if no profile is active.
+     * @returns A promise that resolves with the current active profile name, or null if no profile is active.
      */
     async getCurrentProfileName(): Promise<string | null> {
-        if (!this.db) {
-            throw new Error("Database not initialized")
-        }
+        this.ensureInitialized()
 
         try {
             const profileName = await this.loadSetting("misc", "currentProfileName")
@@ -849,19 +805,17 @@ export class DatabaseManager {
      * Set the current active profile name in settings.
      *
      * @param profileName - The name of the profile to set as active.
-     * @returns A promise that resolves when the current active profile name is set.
+     * @returns A promise that resolves when the current active profile name is set or null if no profile is active.
      */
     async setCurrentProfileName(profileName: string | null): Promise<void> {
-        if (!this.db) {
-            throw new Error("Database not initialized")
-        }
+        this.ensureInitialized()
 
         try {
             if (profileName) {
                 await this.saveSetting("misc", "currentProfileName", profileName, true)
             } else {
                 // Delete the setting if profileName is null.
-                await this.db.runAsync("DELETE FROM settings WHERE category = ? AND key = ?", ["misc", "currentProfileName"])
+                await this.db!.runAsync(`DELETE FROM ${this.TABLE_SETTINGS} WHERE category = ? AND key = ?`, ["misc", "currentProfileName"])
             }
         } catch (error) {
             logErrorWithTimestamp("[DB] Failed to save current profile name:", error)
