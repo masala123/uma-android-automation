@@ -1,4 +1,88 @@
 {
+    "Tamamo Cross": {
+        "(❯) Mummy Hunt! Drop the Jokes!": [
+            "Power +10\nTamamo Cross bond +5",
+            "Energy +20\nSpeed +10\nWet Conditions ○ hint +1\nEvent chain ended"
+        ],
+        "(❯❯) Mummy Hunt! The Hunter Awakens!": [
+            "Speed +10\nPower +10"
+        ],
+        "(❯❯❯) Mummy Hunt! Terrifyingly Tender": [
+            "Randomly either\n----------\nSpeed +5\nPower +5\n15,000,000 CC hint +1\n----------\n\n----------\nSpeed +15\nPower +15\n15,000,000 CC hint +3"
+        ],
+        "Tamamo's School Tour": [
+            "Wit +10\nTamamo Cross bond +5",
+            "Stamina +5\nGuts +5\nTamamo Cross bond +5"
+        ],
+        "A Battle I Can't Lose!": [
+            "Calm in a Crowd hint +1\nTamamo Cross bond +5",
+            "Stamina +5\nWit +5\nTamamo Cross bond +5"
+        ],
+        "(❯) Beef, Pork, Chicken, Curry!": [
+            "Stamina +10\nPower +5\nMood +1\nTamamo Cross bond +5"
+        ],
+        "(❯❯) Got My Priorities Straight": [
+            "Stamina +15\nPower +5\nGuts +5\nTail Held High hint +1\nTamamo Cross bond +5"
+        ],
+        "(❯❯❯) My Flaws Make Me Who I Am!": [
+            "Stamina +10\nPower +10\nFast & Furious hint +2\nTamamo Cross bond +5"
+        ]
+    },
+    "Zenno Rob Roy": {
+        "(❯) The Bookworm and the Secret Meeting": [
+            "Skill points +15"
+        ],
+        "(❯❯) The Bookworm and the Mage's Event": [
+            "Stamina +5\nRight-Handed ○ hint +2\nZenno Rob Roy bond +5",
+            "Speed +5\nLeft-Handed ○ hint +2\nZenno Rob Roy bond +5",
+            "Wit +30\nZenno Rob Roy bond +5"
+        ],
+        "(❯❯❯) The Bookworm and Her Froggy Friend": [
+            "Skill points +20\nLie in Wait hint +1"
+        ],
+        "Book-lover Quirks": [
+            "Speed +5\nWit +5\nZenno Rob Roy bond +5",
+            "Energy +10\nPower +5\nZenno Rob Roy bond +5"
+        ],
+        "A Tale Entrusted": [
+            "Stamina +10\nWit +10\nZenno Rob Roy bond +5",
+            "Medium Straightaways ○ hint +1\nZenno Rob Roy bond +5"
+        ],
+        "(❯) The Bookworm and the Magical Girl": [
+            "Stamina +5\nWit +5\nZenno Rob Roy bond +5",
+            "Energy +20\nPower +10\nZenno Rob Roy bond +5\nEvent chain ended"
+        ],
+        "(❯❯) Someday, I'll Be the Main Character": [
+            "Stamina +10\nWit +10\nSharp Gaze hint +1"
+        ]
+    },
+    "Mihono Bourbon": {
+        "(❯) Status—Boring?": [
+            "Speed +10\nMoxie hint +1\nMihono Bourbon bond +5",
+            "Wit +15\nMihono Bourbon bond +5"
+        ],
+        "(❯❯) Status—As I Am": [
+            "Stamina +5\nWit +10"
+        ],
+        "(❯❯❯) Status—Fun!": [
+            "Stamina +5\nWit +10\nTaking the Lead hint +1"
+        ],
+        "Do No Harm": [
+            "Energy -10\nStamina +5\nPower +15\nMihono Bourbon bond +5",
+            "Energy +10\nWit +5\nMihono Bourbon bond +5"
+        ],
+        "Orders Must Be Followed": [
+            "Focus hint +1\nMihono Bourbon bond +5",
+            "Speed +10\nSkill points +15\nMihono Bourbon bond +5"
+        ],
+        "(❯) I'm Not a Cyborg": [
+            "Guts +10\nSkill points +15\nMihono Bourbon bond +5",
+            "Energy -10\nCorner Recovery ○ hint +1\n(random) Mihono Bourbon bond -5\nEvent chain ended"
+        ],
+        "(❯❯) New Values Installed": [
+            "Energy -10\nPower +5\nGuts +5\nFront Runner Straightaways ○ hint +1\nMihono Bourbon bond +5"
+        ]
+    },
     "Ikuno Dictus": {
         "(❯) That's How U Solve the Case": [
             "Maximum Energy +4\nStamina +15\nWit +5\nIkuno Dictus bond +10"
@@ -779,25 +863,6 @@
             "Sunny Days ○ hint +1\nEl Condor Pasa bond +5"
         ]
     },
-    "Tamamo Cross": {
-        "(❯) Beef, Pork, Chicken, Curry!": [
-            "Stamina +10\nPower +5\nMood +1\nTamamo Cross bond +5"
-        ],
-        "(❯❯) Got My Priorities Straight": [
-            "Stamina +15\nPower +5\nGuts +5\nTail Held High hint +1\nTamamo Cross bond +5"
-        ],
-        "(❯❯❯) My Flaws Make Me Who I Am!": [
-            "Stamina +10\nPower +10\nFast & Furious hint +2\nTamamo Cross bond +5"
-        ],
-        "Tamamo's School Tour": [
-            "Wit +10\nTamamo Cross bond +5",
-            "Stamina +5\nGuts +5\nTamamo Cross bond +5"
-        ],
-        "A Battle I Can't Lose!": [
-            "Calm in a Crowd hint +1\nTamamo Cross bond +5",
-            "Stamina +5\nWit +5\nTamamo Cross bond +5"
-        ]
-    },
     "Fine Motion": {
         "(❯) Lovely Training Weather ♪": [
             "Wit +5\nSkill points +20\nFine Motion bond +5",
@@ -1135,23 +1200,6 @@
             "Energy -10\nUma Stan hint +3\nSeeking the Pearl bond +5"
         ]
     },
-    "Zenno Rob Roy": {
-        "(❯) The Bookworm and the Magical Girl": [
-            "Stamina +5\nWit +5\nZenno Rob Roy bond +5",
-            "Energy +20\nPower +10\nZenno Rob Roy bond +5\nEvent chain ended"
-        ],
-        "(❯❯) Someday, I'll Be the Main Character": [
-            "Stamina +10\nWit +10\nSharp Gaze hint +1"
-        ],
-        "Book-lover Quirks": [
-            "Speed +5\nWit +5\nZenno Rob Roy bond +5",
-            "Energy +10\nPower +5\nZenno Rob Roy bond +5"
-        ],
-        "A Tale Entrusted": [
-            "Stamina +10\nWit +10\nZenno Rob Roy bond +5",
-            "Medium Straightaways ○ hint +1\nZenno Rob Roy bond +5"
-        ]
-    },
     "Daitaku Helios": {
         "(❯) #BFF #Party!": [
             "Power +10\nDaitaku Helios bond +5",
@@ -1280,23 +1328,6 @@
         "A Taste of Silence": [
             "Stamina +5\nSkill points +15\nManhattan Cafe bond +5",
             "Non-Standard Distance ○ hint +1\nManhattan Cafe bond +5"
-        ]
-    },
-    "Mihono Bourbon": {
-        "(❯) I'm Not a Cyborg": [
-            "Guts +10\nSkill points +15\nMihono Bourbon bond +5",
-            "Energy -10\nCorner Recovery ○ hint +1\n(random) Mihono Bourbon bond -5\nEvent chain ended"
-        ],
-        "(❯❯) New Values Installed": [
-            "Energy -10\nPower +5\nGuts +5\nFront Runner Straightaways ○ hint +1\nMihono Bourbon bond +5"
-        ],
-        "Do No Harm": [
-            "Energy -10\nStamina +5\nPower +15\nMihono Bourbon bond +5",
-            "Energy +10\nWit +5\nMihono Bourbon bond +5"
-        ],
-        "Orders Must Be Followed": [
-            "Focus hint +1\nMihono Bourbon bond +5",
-            "Speed +10\nSkill points +15\nMihono Bourbon bond +5"
         ]
     },
     "Agnes Tachyon": {
