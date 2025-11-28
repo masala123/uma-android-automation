@@ -728,13 +728,17 @@ class Game(val myContext: Context) {
 		} else if ((currentMood == "Bad/Awful" || currentMood == "Normal") && imageUtils.findImageWithBitmap("recover_energy_summer", sourceBitmap, region = imageUtils.regionBottomHalf, suppressError = true) == null) {
 			MessageLog.i(TAG, "[MOOD] Current mood is not good. Recovering mood now.")
 
-			// Do the date if it is unlocked.
-			if (!handleRecreationDate(recoverMoodIfCompleted = true)) {
+            // Check if a date is available.
+            if (!recreationDateCompleted && imageUtils.findImage("recreation_date", tries = 1, region = imageUtils.regionBottomHalf).first != null) {
+                handleRecreationDate(recoverMoodIfCompleted = true)
+            } else {
                 // Otherwise, recover mood as normal.
+                // Note that if a date was already completed, the Recreation popup will still show so it will require an additional step to recover mood.
+                recreationDateCompleted = true
                 if (!findAndTapImage("recover_mood", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
                     findAndTapImage("recover_energy_summer", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)
                 } else if (imageUtils.findImage("recreation_umamusume", region = imageUtils.regionMiddle, suppressError = true).first != null) {
-                    // At this point, the button was already pressed and the Recreation popup is now open.
+                    // The Recreation popup is now open so an additional step is required to recover mood.
                     MessageLog.i(TAG, "[MOOD] Recreation date is already completed. Recovering mood with the Umamusume now...")
                     findAndTapImage("recreation_umamusume", region = imageUtils.regionMiddle)
                 } else {
@@ -758,8 +762,7 @@ class Game(val myContext: Context) {
      * @return True if the Recreation date event was successfully completed. False otherwise.
      */
     fun handleRecreationDate(recoverMoodIfCompleted: Boolean = false): Boolean {
-        return if (imageUtils.findImage("recreation_date", tries = 1, region = imageUtils.regionBottomHalf).first != null &&
-            findAndTapImage("recover_mood", tries = 1, region = imageUtils.regionBottomHalf)) {
+        return if (findAndTapImage("recover_mood", tries = 1, region = imageUtils.regionBottomHalf)) {
             MessageLog.i(TAG, "\n[RECREATION_DATE] Recreation has a possible date available.")
             wait(1.0)
             // Check if the date is already done.
