@@ -6,6 +6,7 @@ import { useProfileManager, DEFAULT_PROFILE_NAME } from "../../hooks/useProfileM
 import ProfileManagerModal from "../ProfileManagerModal"
 import ProfileCreationModal from "../ProfileCreationModal"
 import { Settings } from "../../context/BotStateContext"
+import { databaseManager } from "../../lib/database"
 import { Plus, Settings as SettingsIcon } from "lucide-react-native"
 
 interface ProfileSelectorProps {
@@ -26,7 +27,7 @@ const getDefaultSelectedProfile = (profiles: Array<{ name: string }>): string =>
 
 const ProfileSelector: React.FC<ProfileSelectorProps> = ({ currentTrainingSettings, currentTrainingStatTargetSettings, onOverwriteSettings, onProfileDeleted, onNoChangesDetected, onError }) => {
     const { colors } = useTheme()
-    const { profiles, loadProfiles } = useProfileManager(onError)
+    const { profiles, loadProfiles, switchProfile } = useProfileManager(onError)
     const [showManageModal, setShowManageModal] = useState(false)
     const [showCreateModal, setShowCreateModal] = useState(false)
     const [selectedProfileName, setSelectedProfileName] = useState<string>(DEFAULT_PROFILE_NAME)
@@ -100,12 +101,19 @@ const ProfileSelector: React.FC<ProfileSelectorProps> = ({ currentTrainingSettin
 
             try {
                 if (value === DEFAULT_PROFILE_NAME) {
-                    // Default Profile - keep current settings as-is.
+                    // Default Profile - keep current settings as-is and clear current profile name.
+                    await switchProfile(null)
+                    // Update settings context to reflect that currentProfileName is now null.
+                    if (onOverwriteSettings) {
+                        await onOverwriteSettings({})
+                    }
                     return
                 } else {
                     // Find the selected profile and apply its settings.
                     const selectedProfile = profiles.find((p) => p.name === value)
                     if (selectedProfile) {
+                        // Switch to the profile (this updates currentProfileName in the database).
+                        await switchProfile(value)
                         // Apply the profile's settings immediately when switching.
                         await onOverwriteSettings(selectedProfile.settings)
                     } else {
@@ -172,16 +180,26 @@ const ProfileSelector: React.FC<ProfileSelectorProps> = ({ currentTrainingSettin
                 currentTrainingStatTargetSettings={currentTrainingStatTargetSettings}
                 onOverwriteSettings={onOverwriteSettings}
                 onProfileDeleted={async (deletedProfileName) => {
+                    // Reload profiles first to get the latest state after deletion.
+                    await loadProfiles()
                     // If the deleted profile was selected, reset appropriately.
                     if (selectedProfileName === deletedProfileName) {
-                        // After deletion, profiles will be reloaded. If no profiles remain, use "Default Profile".
-                        const remainingProfiles = profiles.filter((p) => p.name !== deletedProfileName)
-                        if (remainingProfiles.length === 0) {
-                            await handleProfileChange(DEFAULT_PROFILE_NAME)
+                        // Check database directly to see if any profiles remain.
+                        const updatedProfiles = await databaseManager.getAllProfiles()
+                        if (updatedProfiles.length === 0) {
+                            // All profiles deleted - switch to default and ensure currentProfileName is null.
+                            await switchProfile(null)
+                            setSelectedProfileName(DEFAULT_PROFILE_NAME)
+                            // Update settings context to reflect that currentProfileName is now null.
+                            if (onOverwriteSettings) {
+                                await onOverwriteSettings({})
+                            }
                         } else {
-                            await handleProfileChange(remainingProfiles[0].name)
+                            // Switch to the first remaining profile.
+                            await handleProfileChange(updatedProfiles[0].name)
                         }
                     }
+                    // The useEffect will also handle updating selectedProfileName when profiles state updates.
                     if (onProfileDeleted) {
                         onProfileDeleted(deletedProfileName)
                     }

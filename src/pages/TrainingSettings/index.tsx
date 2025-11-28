@@ -14,12 +14,15 @@ import CustomSelect from "../../components/CustomSelect"
 import ProfileSelector from "../../components/ProfileSelector"
 import { ArrowLeft } from "lucide-react-native"
 import { useSettings } from "../../context/SettingsContext"
+import { useProfileManager } from "../../hooks/useProfileManager"
+import { databaseManager } from "../../lib/database"
 
 const TrainingSettings = () => {
     const { colors } = useTheme()
     const navigation = useNavigation()
     const bsc = useContext(BotStateContext)
     const { saveSettingsImmediate } = useSettings()
+    const { currentProfileName } = useProfileManager()
     const [blacklistModalVisible, setBlacklistModalVisible] = useState(false)
     const [prioritizationModalVisible, setPrioritizationModalVisible] = useState(false)
     const [snackbarVisible, setSnackbarVisible] = useState(false)
@@ -79,6 +82,40 @@ const TrainingSettings = () => {
         }
     }, [settings.training?.statPrioritization])
 
+    // Sync currentProfileName from profile manager to settings context.
+    // Also check database directly to ensure we have the latest value.
+    useEffect(() => {
+        const syncProfileName = async () => {
+            const profileName = currentProfileName || ""
+            // Also check database to ensure we have the latest value.
+            try {
+                const dbProfileName = await databaseManager.getCurrentProfileName()
+                const finalProfileName = dbProfileName || ""
+                if (settings.misc.currentProfileName !== finalProfileName) {
+                    setSettings({
+                        ...bsc.settings,
+                        misc: {
+                            ...bsc.settings.misc,
+                            currentProfileName: finalProfileName,
+                        },
+                    })
+                }
+            } catch (error) {
+                // Fallback to hook value if database read fails.
+                if (settings.misc.currentProfileName !== profileName) {
+                    setSettings({
+                        ...bsc.settings,
+                        misc: {
+                            ...bsc.settings.misc,
+                            currentProfileName: profileName,
+                        },
+                    })
+                }
+            }
+        }
+        syncProfileName()
+    }, [currentProfileName])
+
     const updateTrainingSetting = (key: keyof typeof settings.training, value: any) => {
         setSettings({
             ...bsc.settings,
@@ -90,10 +127,17 @@ const TrainingSettings = () => {
     }
 
     const handleOverwriteSettings = async (profileSettings: Partial<Settings>) => {
+        // Get the current profile name directly from the database to ensure we have the latest value.
+        const dbProfileName = await databaseManager.getCurrentProfileName()
         // Create the updated settings object by merging profile settings with current settings.
         const updatedSettings = {
             ...bsc.settings,
             ...profileSettings,
+            misc: {
+                ...bsc.settings.misc,
+                ...profileSettings.misc,
+                currentProfileName: dbProfileName || "",
+            },
         }
         // Apply the profile's settings to current settings.
         setSettings(updatedSettings)
