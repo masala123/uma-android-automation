@@ -218,6 +218,7 @@ const MessageLog = () => {
                 : "None Selected"
 
         return `🏁 Campaign Selected: ${settings.general.scenario !== "" ? `${settings.general.scenario}` : "Please select one in the Select Campaign option"}
+👤 Profile Selected: ${settings.misc.currentProfileName ? `${settings.misc.currentProfileName}` : "Default Profile"}
 
 ---------- Training Event Options ----------
 🎭 Special Event Overrides: ${
@@ -249,10 +250,12 @@ const MessageLog = () => {
                 : ""
         }
 🔄 Disable Training on Maxed Stat: ${settings.training.disableTrainingOnMaxedStat ? "✅" : "❌"}
-✨ Focus on Sparks for Stat Targets: ${settings.training.focusOnSparkStatTarget ? "✅" : "❌"}
+✨ Focus on Sparks for Stat Targets: ${settings.training.focusOnSparkStatTarget.length === 0 ? "None" : settings.training.focusOnSparkStatTarget.join(", ")}
 📏 Preferred Distance Override: ${settings.training.preferredDistanceOverride === "Auto" ? "Auto" : settings.training.preferredDistanceOverride}
 🌈 Enable Rainbow Training Bonus: ${settings.training.enableRainbowTrainingBonus ? "✅" : "❌"}
 ☀️ Must Rest Before Summer: ${settings.training.mustRestBeforeSummer ? "✅" : "❌"}
+📏 Manual Stat Cap: ${settings.training.manualStatCap}
+🎯 Train Wit During Finale: ${settings.training.trainWitDuringFinale ? "✅" : "❌"}
 
 ---------- Training Stat Targets by Distance ----------
 ${sprintTargetsString}
@@ -280,11 +283,15 @@ ${longTargetsString}
 📅 Look Ahead Days: ${settings.racing.lookAheadDays} days
 ⏰ Smart Racing Check Interval: ${settings.racing.smartRacingCheckInterval} days
 🎯 Race Strategy Override: ${settings.racing.enableRaceStrategyOverride ? `✅ (From ${settings.racing.originalRaceStrategy} to ${settings.racing.juniorYearRaceStrategy})` : "❌"}
+📊 Minimum Quality Threshold: ${settings.racing.minimumQualityThreshold}
+⏱️ Time Decay Factor: ${settings.racing.timeDecayFactor}
+📈 Improvement Threshold: ${settings.racing.improvementThreshold}
 
 ---------- Misc Options ----------
 🔍 Skill Point Check: ${settings.general.enableSkillPointCheck ? `Stop on ${settings.general.skillPointCheck} Skill Points or more` : "❌"}
 🔍 Popup Check: ${settings.general.enablePopupCheck ? "✅" : "❌"}
 🔍 Enable Crane Game Attempt: ${settings.general.enableCraneGameAttempt ? "✅" : "❌"}
+🛑 Stop Before Finals: ${settings.general.enableStopBeforeFinals ? "✅" : "❌"}
 
 ---------- Debug Options ----------
 🐛 Debug Mode: ${settings.debug.enableDebugMode ? "✅" : "❌"}
@@ -321,7 +328,7 @@ ${longTargetsString}
 
         // Only include settings string if enabled and no logs exist yet.
         return bsc.settings.misc.enableSettingsDisplay ? `${baseMessage}\n\n${formattedSettingsString}` : baseMessage
-    }, [bsc.settings.misc.enableSettingsDisplay, formattedSettingsString, mlc.messageLog.length])
+    }, [bsc.appName, bsc.appVersion, bsc.settings.misc.enableSettingsDisplay, formattedSettingsString, mlc.messageLog.length])
 
     // Process log messages with color coding and virtualization.
     const processedMessages = useMemo((): LogMessage[] => {

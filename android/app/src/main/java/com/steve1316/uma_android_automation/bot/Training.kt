@@ -91,12 +91,14 @@ class Training(private val game: Game) {
 	}
 	private val maximumFailureChance: Int = SettingsHelper.getIntSetting("training", "maximumFailureChance")
 	private val disableTrainingOnMaxedStat: Boolean = SettingsHelper.getBooleanSetting("training", "disableTrainingOnMaxedStat")
-	private val focusOnSparkStatTarget: Boolean = SettingsHelper.getBooleanSetting("training", "focusOnSparkStatTarget")
+	private val focusOnSparkStatTarget: List<String> = SettingsHelper.getStringArraySetting("training", "focusOnSparkStatTarget")
 	private val enableRainbowTrainingBonus: Boolean = SettingsHelper.getBooleanSetting("training", "enableRainbowTrainingBonus")
 	private val preferredDistanceOverride: String = SettingsHelper.getStringSetting("training", "preferredDistanceOverride")
 	private val enableRiskyTraining: Boolean = SettingsHelper.getBooleanSetting("training", "enableRiskyTraining")
 	private val riskyTrainingMinStatGain: Int = SettingsHelper.getIntSetting("training", "riskyTrainingMinStatGain")
 	private val riskyTrainingMaxFailureChance: Int = SettingsHelper.getIntSetting("training", "riskyTrainingMaxFailureChance")
+	private val trainWitDuringFinale: Boolean = SettingsHelper.getBooleanSetting("training", "trainWitDuringFinale")
+	private val manualStatCap: Int = SettingsHelper.getIntSetting("training", "manualStatCap")
 	private val statTargetsByDistance: MutableMap<String, IntArray> = mutableMapOf(
 		"Sprint" to intArrayOf(0, 0, 0, 0, 0),
 		"Mile" to intArrayOf(0, 0, 0, 0, 0),
@@ -105,7 +107,8 @@ class Training(private val game: Game) {
 	)
 	var preferredDistance: String = ""
 	var firstTrainingCheck = true
-	private val currentStatCap = 1200
+	private val currentStatCap: Int
+		get() = if (disableTrainingOnMaxedStat) manualStatCap else 1200
 
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
@@ -233,15 +236,34 @@ class Training(private val game: Game) {
 			analyzeTrainings()
 
 			if (trainingMap.isEmpty()) {
-				MessageLog.i(TAG, "[TRAINING] Backing out of Training and returning on the Main screen.")
-				game.findAndTapImage("back", region = game.imageUtils.regionBottomHalf)
-				game.wait(1.0)
-
-				if (game.checkMainScreen()) {
-					MessageLog.i(TAG, "[TRAINING] Will recover energy due to either failure chance was high enough to do so or no failure chances were detected via OCR.")
-					game.recoverEnergy()
+				// Check if we should force Wit training during the Finale instead of recovering energy.
+				if (trainWitDuringFinale && game.currentDate.turnNumber in 73..75) {
+					MessageLog.i(TAG, "[TRAINING] There is not enough energy for training to be done but the setting to train Wit during the Finale is enabled. Forcing Wit training...")
+					// Directly attempt to tap Wit training.
+					if (game.findAndTapImage("training_wit", region = game.imageUtils.regionBottomHalf, taps = 3)) {
+						MessageLog.i(TAG, "[TRAINING] Successfully forced Wit training during the Finale instead of recovering energy.")
+						firstTrainingCheck = false
+					} else {
+						MessageLog.w(TAG, "[WARNING] Could not find Wit training button. Falling back to recovering energy...")
+						game.findAndTapImage("back", region = game.imageUtils.regionBottomHalf)
+						game.wait(1.0)
+						if (game.checkMainScreen()) {
+							game.recoverEnergy()
+						} else {
+							MessageLog.w(TAG, "[WARNING] Could not head back to the Main screen in order to recover energy.")
+						}
+					}
 				} else {
-					MessageLog.i(TAG, "[ERROR] Could not head back to the Main screen in order to recover energy.")
+					MessageLog.i(TAG, "[TRAINING] Backing out of Training and returning on the Main screen.")
+					game.findAndTapImage("back", region = game.imageUtils.regionBottomHalf)
+					game.wait(1.0)
+
+					if (game.checkMainScreen()) {
+						MessageLog.i(TAG, "[TRAINING] Will recover energy due to either failure chance was high enough to do so or no failure chances were detected via OCR.")
+						game.recoverEnergy()
+					} else {
+						MessageLog.w(TAG, "[WARNING] Could not head back to the Main screen in order to recover energy.")
+					}
 				}
 			} else {
 				// Now select the training option with the highest weight.
@@ -283,8 +305,18 @@ class Training(private val game: Game) {
 				return
 			}
 
-			if (test || failureChance <= maximumFailureChance) {
-				if (!test) MessageLog.i(TAG, "[TRAINING] $failureChance% within acceptable range of ${maximumFailureChance}%. Proceeding to acquire all other percentages and total stat increases...")
+			// Check if failure chance is acceptable: either within regular threshold or within risky threshold (if enabled).
+			val isWithinRegularThreshold = failureChance <= maximumFailureChance
+			val isWithinRiskyThreshold = enableRiskyTraining && failureChance <= riskyTrainingMaxFailureChance
+			
+			if (test || isWithinRegularThreshold || isWithinRiskyThreshold) {
+				if (!test) {
+					if (isWithinRegularThreshold) {
+						MessageLog.i(TAG, "[TRAINING] $failureChance% within acceptable range of ${maximumFailureChance}%. Proceeding to acquire all other percentages and total stat increases...")
+					} else if (isWithinRiskyThreshold) {
+						MessageLog.i(TAG, "[TRAINING] $failureChance% exceeds regular threshold (${maximumFailureChance}%) but is within risky training threshold (${riskyTrainingMaxFailureChance}%). Proceeding to acquire all other percentages and total stat increases...")
+					}
+				}
 
 				// List to store all training analysis results for parallel processing.
 				val analysisResults = mutableListOf<TrainingAnalysisResult>()
@@ -655,7 +687,6 @@ class Training(private val game: Game) {
 	 * - **Priority Tiebreaker:** Only matters when stats have similar completion percentages
 	 * - **Main Stat Bonus:** High gains on main stat get bonus (likely undetected rainbow)
 	 * - **Rainbow Detection:** Heavily favored for overall ratio balance
-	 * - **Late Game Stamina:** Ensures 600+ stamina in Year 3
 	 *
 	 * @return The name of the recommended training option, or empty string if no suitable option found.
 	 */
@@ -873,19 +904,10 @@ class Training(private val game: Game) {
 						1.0
 					}
 					
-					// Special case: Ensure Stamina is at least 600 in late game.
-					val isLateGame = game.currentDate.year == 3
-					val isStamina = stat == "Stamina"
-					val staminaBelowMinimum = isStamina && currentStat < 600
-					val lateGameStaminaBonus = if (isLateGame && staminaBelowMinimum) {
-						MessageLog.i(TAG, "[TRAINING] Stamina of $currentStat is currently less than 600 so bringing its score higher for Senior Year.")
-						2.0
-					} else 1.0
-					
-                    // Spark bonus: Prioritize training sessions for 3* sparks for Speed, Stamina, and Power stats below 600 if the setting is enabled.
-                    val isSparkStat = stat in listOf("Speed", "Stamina", "Power")
+                    // Spark bonus: Prioritize training sessions for 3* sparks for selected stats below 600 if the setting is enabled.
+                    val isSparkStat = stat in focusOnSparkStatTarget
                     val canTriggerSpark = currentStat < 600
-                    val sparkBonus = if (focusOnSparkStatTarget && isSparkStat && canTriggerSpark) {
+                    val sparkBonus = if (isSparkStat && canTriggerSpark) {
                         MessageLog.i(TAG, "[TRAINING] $stat is at $currentStat (< 600). Prioritizing this training for potential spark event to get above 600.")
                         2.5
                     } else {
@@ -894,12 +916,11 @@ class Training(private val game: Game) {
                     
                     if (game.debugMode) {
                         val bonusNote = if (isMainStat && statGain >= 30) " [HIGH MAIN STAT]" else ""
-                        val staminaNote = if (isLateGame && staminaBelowMinimum) " [LATE GAME MINIMUM]" else ""
-                        val sparkNote = if (focusOnSparkStatTarget && isSparkStat && canTriggerSpark) " [SPARK PRIORITY]" else ""
+                        val sparkNote = if (isSparkStat && canTriggerSpark) " [SPARK PRIORITY]" else ""
 						MessageLog.d(
                             TAG,
                             "$stat: gain=$statGain, completion=${game.decimalFormat.format(completionPercent)}%, " +
-							"ratioMult=${game.decimalFormat.format(ratioMultiplier)}, priorityMult=${game.decimalFormat.format(priorityMultiplier)}$bonusNote$staminaNote$sparkNote",
+							"ratioMult=${game.decimalFormat.format(ratioMultiplier)}, priorityMult=${game.decimalFormat.format(priorityMultiplier)}$bonusNote$sparkNote",
 						)
 					} else {
 						Log.d(TAG, "$stat: gain=$statGain, completion=${game.decimalFormat.format(completionPercent)}%, ratioMult=$ratioMultiplier, priorityMult=$priorityMultiplier")
@@ -910,7 +931,6 @@ class Training(private val game: Game) {
 					statScore *= ratioMultiplier
 					statScore *= priorityMultiplier
 					statScore *= mainStatBonus
-					statScore *= lateGameStaminaBonus
 					statScore *= sparkBonus
 					
 					score += statScore
@@ -1099,6 +1119,11 @@ class Training(private val game: Game) {
 			printTrainingMap()
 			MessageLog.i(TAG, "[TRAINING] Executing the $trainingSelected Training.")
 			game.findAndTapImage("training_${trainingSelected.lowercase()}", region = game.imageUtils.regionBottomHalf, taps = 3)
+            game.wait(1.0)
+
+            // Dismiss any popup warning about a scheduled race.
+            game.findAndTapImage("ok", tries = 1, region = game.imageUtils.regionMiddle, suppressError = true)
+
 			MessageLog.i(TAG, "[TRAINING] Process to execute training completed.")
 		} else {
 			MessageLog.i(TAG, "[TRAINING] Conditions have not been met so training will not be done.")

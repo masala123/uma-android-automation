@@ -54,6 +54,7 @@ class Game(val myContext: Context) {
 	val skillPointsRequired: Int = SettingsHelper.getIntSetting("general", "skillPointCheck")
 	private val enablePopupCheck: Boolean = SettingsHelper.getBooleanSetting("general", "enablePopupCheck")
     private val enableCraneGameAttempt: Boolean = SettingsHelper.getBooleanSetting("general", "enableCraneGameAttempt")
+    private val enableStopBeforeFinals: Boolean = SettingsHelper.getBooleanSetting("general", "enableStopBeforeFinals")
 
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
@@ -67,6 +68,9 @@ class Game(val myContext: Context) {
 	private var inheritancesDone = 0
     private var needToUpdateAptitudes: Boolean = true
     private var recreationDateCompleted: Boolean = false
+    private var isFinals: Boolean = false
+    private var stopBeforeFinalsInitialTurnNumber: Int = -1
+    private var scenarioCheckPerformed: Boolean = false
 
 	data class Date(
 		val year: Int,
@@ -297,8 +301,7 @@ class Game(val myContext: Context) {
 	fun startDateOCRTest() {
 		MessageLog.i(TAG, "\n[TEST] Now beginning the Date OCR test on the Main screen.")
 		MessageLog.i(TAG, "[TEST] Note that this test is dependent on having the correct scale.")
-        val finalsLocation = imageUtils.findImage("race_select_extra_locked_uma_finals", tries = 1, suppressError = true, region = imageUtils.regionBottomHalf).first
-        updateDate(isFinals = (finalsLocation != null))
+        updateDate()
 	}
 
 	fun startAptitudesDetectionTest() {
@@ -311,6 +314,35 @@ class Game(val myContext: Context) {
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Helper functions to check what screen the bot is at.
+
+	/**
+	 * Validates that the game's current scenario matches the selected scenario in the app.
+	 * This check only runs once per bot session.
+	 *
+	 * @return True if validation passes and bot should continue. False if scenario mismatch detected and bot should stop.
+	 */
+	fun validateScenario(): Boolean {
+		if (scenarioCheckPerformed) {
+			return true
+		}
+
+		if (imageUtils.findImage("unitycup_date_text", tries = 1, region = imageUtils.regionTopHalf, suppressError = true).first != null) {
+			// Unity Cup image was detected, so the game is on Unity Cup scenario.
+			if (scenario != "Unity Cup") {
+				MessageLog.e(TAG, "\n[ERROR] Scenario mismatch detected: Game is on Unity Cup but app is configured for $scenario. Stopping bot to prevent confusion.")
+				notificationMessage = "Scenario mismatch detected: Game is on Unity Cup but app is configured for $scenario. Please select the correct scenario in the app settings."
+				scenarioCheckPerformed = true
+				return false
+			} else {
+				MessageLog.i(TAG, "[INFO] Scenario validation confirmed for Unity Cup.")
+			}
+		} else {
+			// Unity Cup image was not detected, so the game is on URA Finale scenario.
+			MessageLog.i(TAG, "[INFO] Scenario validation confirmed for URA Finale.")
+		}
+        scenarioCheckPerformed = true
+		return true
+	}
 
 	/**
 	 * Checks if the bot is at the Main screen or the screen with available options to undertake.
@@ -327,8 +359,7 @@ class Game(val myContext: Context) {
 			MessageLog.i(TAG, "Bot is at the Main screen.")
 
 			// Perform updates here if necessary.
-            val finalsLocation = imageUtils.findImageWithBitmap("race_select_extra_locked_uma_finals", sourceBitmap, suppressError = true, region = imageUtils.regionBottomHalf)
-            updateDate(isFinals = (finalsLocation != null))
+            updateDate()
             if (needToUpdateAptitudes) updateAptitudes()
 			true
 		} else if (!enablePopupCheck && imageUtils.findImageWithBitmap("cancel", sourceBitmap, region = imageUtils.regionBottomHalf) != null &&
@@ -427,15 +458,56 @@ class Game(val myContext: Context) {
 	 */
 	fun checkFinals(): Boolean {
 		MessageLog.i(TAG, "\nChecking if the bot is at the Finals.")
-		val finalsLocation = imageUtils.findImage("race_select_extra_locked_uma_finals", tries = 1, suppressError = true, region = imageUtils.regionBottomHalf).first
-		return if (finalsLocation != null) {
-			MessageLog.i(TAG, "It is currently the Finals.")
-			updateDate(isFinals = true)
-			true
-		} else {
-			MessageLog.i(TAG, "It is not the Finals yet.")
-			false
+        if (isFinals) {
+            return true
+        } else if (currentDate.turnNumber < 72) {
+            MessageLog.i(TAG, "It is not the Finals yet as the turn number is less than 72.")
+            return false
+        } else {
+            return if (
+                imageUtils.findImage("date_final_qualifier", tries = 1, suppressError = true, region = imageUtils.regionTopHalf).first != null ||
+                imageUtils.findImage("date_final_semifinal", tries = 1, suppressError = true, region = imageUtils.regionTopHalf).first != null ||
+                imageUtils.findImage("date_final_finals", tries = 1, suppressError = true, region = imageUtils.regionTopHalf).first != null
+            ) {
+                MessageLog.i(TAG, "It is currently the Finals.")
+                isFinals = true
+                true
+            } else {
+                MessageLog.i(TAG, "It is not the Finals yet as the date images for the Finals were not detected.")
+                false
+            }
+        }
+	}
+
+	/**
+	 * Checks if the bot should stop before the finals on turn 72.
+	 *
+	 * @return True if the bot should stop. Otherwise false.
+	 */
+	fun checkFinalsStop(): Boolean {
+		if (!enableStopBeforeFinals) {
+			return false
+		} else if (currentDate.turnNumber > 72) {
+            // If already past turn 72, skip the check to prevent re-checking.
+			return false
 		}
+
+		MessageLog.i(TAG, "\n[FINALS] Checking if bot should stop before the finals.")
+		val sourceBitmap = imageUtils.getSourceBitmap()
+
+		// Check if turn is 72, but only stop if we progressed to turn 72 during this run.
+		if (currentDate.turnNumber == 72 && stopBeforeFinalsInitialTurnNumber != -1) {
+			MessageLog.i(TAG, "[FINALS] Detected turn 72. Stopping bot before the finals.")
+			notificationMessage = "Stopping bot before the finals on turn 72."
+			return true
+		}
+
+        // Track initial turn number on first check to avoid stopping if bot starts on turn 72.
+		if (stopBeforeFinalsInitialTurnNumber == -1) {
+			stopBeforeFinalsInitialTurnNumber = currentDate.turnNumber
+		}
+
+		return false
 	}
 
 	/**
@@ -529,12 +601,10 @@ class Game(val myContext: Context) {
 
 	/**
 	 * Updates the stored date in memory by keeping track of the current year, phase, month and current turn number.
-	 *
-	 * @param isFinals If true, checks for Finals date images instead of parsing a date string. Defaults to false.
 	 */
-	fun updateDate(isFinals: Boolean = false) {
+	fun updateDate() {
 		MessageLog.i(TAG, "\n[DATE] Updating the current date.")
-		if (isFinals) {
+		if (checkFinals()) {
 			// During Finals, check for Finals-specific date images.
 			// The Finals occur at turns 73, 74, and 75.
 			// Date will be kept at Senior Year Late Dec, only the turn number will be updated.
@@ -658,15 +728,23 @@ class Game(val myContext: Context) {
 		} else if ((currentMood == "Bad/Awful" || currentMood == "Normal") && imageUtils.findImageWithBitmap("recover_energy_summer", sourceBitmap, region = imageUtils.regionBottomHalf, suppressError = true) == null) {
 			MessageLog.i(TAG, "[MOOD] Current mood is not good. Recovering mood now.")
 
-			// Do the date if it is unlocked.
-			if (!handleRecreationDate(recoverMoodIfCompleted = true)) {
+            // Check if a date is available.
+            if (!recreationDateCompleted && imageUtils.findImage("recreation_date", tries = 1, region = imageUtils.regionBottomHalf).first != null) {
+                handleRecreationDate(recoverMoodIfCompleted = true)
+            } else {
                 // Otherwise, recover mood as normal.
-                findAndTapImage("cancel", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)
-                wait(1.0)
+                // Note that if a date was already completed, the Recreation popup will still show so it will require an additional step to recover mood.
+                recreationDateCompleted = true
                 if (!findAndTapImage("recover_mood", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
                     findAndTapImage("recover_energy_summer", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)
+                } else if (imageUtils.findImage("recreation_umamusume", region = imageUtils.regionMiddle, suppressError = true).first != null) {
+                    // The Recreation popup is now open so an additional step is required to recover mood.
+                    MessageLog.i(TAG, "[MOOD] Recreation date is already completed. Recovering mood with the Umamusume now...")
+                    findAndTapImage("recreation_umamusume", region = imageUtils.regionMiddle)
+                } else {
+                    // Otherwise, dismiss the popup that says to confirm recreation if the user has not set it to skip the confirmation in their in-game settings.
+                    findAndTapImage("ok", region = imageUtils.regionMiddle, suppressError = true)
                 }
-                findAndTapImage("ok", region = imageUtils.regionMiddle, suppressError = true)
             }
 
             racing.raceRepeatWarningCheck = false
@@ -684,8 +762,7 @@ class Game(val myContext: Context) {
      * @return True if the Recreation date event was successfully completed. False otherwise.
      */
     fun handleRecreationDate(recoverMoodIfCompleted: Boolean = false): Boolean {
-        return if (imageUtils.findImage("recreation_date", tries = 1, region = imageUtils.regionBottomHalf).first != null &&
-            findAndTapImage("recover_mood", tries = 1, region = imageUtils.regionBottomHalf)) {
+        return if (findAndTapImage("recover_mood", tries = 1, region = imageUtils.regionBottomHalf)) {
             MessageLog.i(TAG, "\n[RECREATION_DATE] Recreation has a possible date available.")
             wait(1.0)
             // Check if the date is already done.

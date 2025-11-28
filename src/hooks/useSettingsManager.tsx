@@ -38,6 +38,27 @@ const convertSettingsToBatch = (settings: Settings) => {
 }
 
 /**
+ * Applies all registered migrations to the settings object.
+ * Add new migrations here as needed.
+ */
+export const applyMigrations = (settings: Settings): { settings: Settings; anyMigrated: boolean } => {
+    let anyMigrated = false
+    let migratedSettings = settings
+
+    // Migration: focusOnSparkStatTarget from boolean to string array format.
+    const focusOnSparkStatTargetValue = migratedSettings.training?.focusOnSparkStatTarget
+    if (typeof focusOnSparkStatTargetValue === "boolean") {
+        migratedSettings.training.focusOnSparkStatTarget = focusOnSparkStatTargetValue ? ["Speed", "Stamina", "Power"] : []
+        anyMigrated = true
+        logWithTimestamp("[SettingsManager] Migrated focusOnSparkStatTarget from boolean to array format.")
+    }
+
+    // Add future migrations here.
+
+    return { settings: migratedSettings, anyMigrated }
+}
+
+/**
  * Manages settings persistence using SQLite database.
  */
 export const useSettingsManager = () => {
@@ -121,6 +142,20 @@ export const useSettingsManager = () => {
                 console.warn(sqliteError)
             }
 
+            // Apply all migrations to the settings.
+            const { settings: migratedSettings, anyMigrated } = applyMigrations(newSettings)
+            newSettings = migratedSettings
+
+            // If any migration occurred, save the migrated settings back to the database.
+            if (anyMigrated) {
+                try {
+                    await databaseManager.saveSettingsBatch(convertSettingsToBatch(newSettings))
+                    logWithTimestamp("[SettingsManager] Saved migrated settings to database.")
+                } catch (migrationSaveError) {
+                    logErrorWithTimestamp("[SettingsManager] Error saving migrated settings:", migrationSaveError)
+                }
+            }
+
             bsc.setSettings(newSettings)
             logWithTimestamp(`[SettingsManager] Settings loaded and applied to context${context}.`)
             logWithTimestamp(`[SettingsManager] Scenario value after load: "${newSettings.general.scenario}"`)
@@ -134,14 +169,20 @@ export const useSettingsManager = () => {
     }
 
     // Import settings from a JSON file.
-    const loadFromJSONFile = async (fileUri: string): Promise<Settings> => {
+    const loadFromJSONFile = async (fileUri: string): Promise<{ settings: Settings; profiles?: Array<{ id: number; name: string; settings: any; created_at: string; updated_at: string }> }> => {
         try {
             const data = await FileSystem.readAsStringAsync(fileUri)
-            const parsed: Settings = JSON.parse(data)
-            const fixedSettings: Settings = fixSettings(parsed)
+            const parsed: any = JSON.parse(data)
+
+            // Extract profiles if they exist.
+            const profiles = parsed.profiles
+            delete parsed.profiles
+
+            // Parse as Settings and fix missing fields.
+            const fixedSettings: Settings = fixSettings(parsed as Settings)
 
             logWithTimestamp("Settings imported from JSON file successfully.")
-            return fixedSettings
+            return { settings: fixedSettings, profiles }
         } catch (error: any) {
             logErrorWithTimestamp(`Error reading settings from JSON file: ${error}`)
             throw error
@@ -150,7 +191,10 @@ export const useSettingsManager = () => {
 
     // Ensure all required settings fields exist by filling missing ones with defaults.
     const fixSettings = (decoded: Settings): Settings => {
-        return deepMerge(defaultSettings, decoded as Partial<Settings>)
+        const merged = deepMerge(defaultSettings, decoded as Partial<Settings>)
+        // Apply all migrations to the settings.
+        const { settings } = applyMigrations(merged)
+        return settings
     }
 
     // Import settings from a JSON file and save to SQLite.
@@ -167,14 +211,53 @@ export const useSettingsManager = () => {
                 await databaseManager.initialize()
             }
 
-            // Save to SQLite database.
-            const importedSettings = await loadFromJSONFile(fileUri)
+            // Check for current active profile name before importing profiles.
+            let previousActiveProfileName: string | null = null
+            try {
+                previousActiveProfileName = await databaseManager.getCurrentProfileName()
+            } catch (error) {
+                logErrorWithTimestamp("[SettingsManager] Error getting current profile name (continuing with import):", error)
+            }
+
+            // Load settings and profiles from JSON file.
+            const { settings: importedSettings, profiles } = await loadFromJSONFile(fileUri)
+
+            // Save settings to SQLite database.
             await databaseManager.saveSettingsBatch(convertSettingsToBatch(importedSettings))
             bsc.setSettings(importedSettings)
 
+            // Import profiles if they exist.
+            if (profiles && Array.isArray(profiles) && profiles.length > 0) {
+                try {
+                    // Delete all existing profiles.
+                    const existingProfiles = await databaseManager.getAllProfiles()
+                    for (const profile of existingProfiles) {
+                        await databaseManager.deleteProfile(profile.id)
+                    }
+                    logWithTimestamp(`[SettingsManager] Deleted ${existingProfiles.length} existing profiles.`)
+
+                    // Import all profiles from the JSON file.
+                    for (const profile of profiles) {
+                        await databaseManager.saveProfile({
+                            name: profile.name,
+                            settings: profile.settings,
+                        })
+                    }
+                    logWithTimestamp(`[SettingsManager] Imported ${profiles.length} profiles.`)
+
+                    // If there was a previously active profile and at least one profile was imported, set active profile to the first imported profile.
+                    if (previousActiveProfileName && profiles.length > 0) {
+                        await databaseManager.setCurrentProfileName(profiles[0].name)
+                        logWithTimestamp(`[SettingsManager] Set active profile to first imported profile: ${profiles[0].name}`)
+                    }
+                } catch (profileError) {
+                    logErrorWithTimestamp("[SettingsManager] Error importing profiles (settings import succeeded):", profileError)
+                }
+            }
+
             logWithTimestamp("Settings imported successfully.")
 
-            endTiming({ status: "success", fileUri })
+            endTiming({ status: "success", fileUri, profilesImported: profiles?.length || 0 })
             return true
         } catch (error) {
             logErrorWithTimestamp("Error importing settings:", error)
@@ -190,7 +273,40 @@ export const useSettingsManager = () => {
         const endTiming = startTiming("settings_manager_export_settings", "settings")
 
         try {
-            const jsonString = JSON.stringify(bsc.settings, null, 4)
+            // Fetch all profiles from database.
+            let profiles: Array<{ id: number; name: string; settings: any; created_at: string; updated_at: string }> = []
+            try {
+                if (isSQLiteInitialized) {
+                    const dbProfiles = await databaseManager.getAllProfiles()
+                    profiles = dbProfiles.map((p) => ({
+                        id: p.id,
+                        name: p.name,
+                        settings: JSON.parse(p.settings),
+                        created_at: p.created_at,
+                        updated_at: p.updated_at,
+                    }))
+                    logWithTimestamp(`[SettingsManager] Exported ${profiles.length} profiles.`)
+                }
+            } catch (profileError) {
+                logErrorWithTimestamp("[SettingsManager] Error exporting profiles (continuing with settings export):", profileError)
+            }
+
+            // Create export object with settings and profiles, excluding large data fields.
+            const settingsForExport = JSON.parse(JSON.stringify(bsc.settings))
+
+            // Remove unnecessary fields before export.
+            delete settingsForExport.racing.racingPlanData
+            delete settingsForExport.trainingEvent.characterEventData
+            delete settingsForExport.trainingEvent.supportEventData
+            delete settingsForExport.misc.formattedSettingsString
+            delete settingsForExport.misc.currentProfileName
+
+            const exportData = {
+                ...settingsForExport,
+                profiles: profiles.length > 0 ? profiles : undefined,
+            }
+
+            const jsonString = JSON.stringify(exportData, null, 4)
 
             // Create a temporary file name with timestamp.
             const timestamp = new Date().toISOString().replace(/[:.]/g, "-")
@@ -202,7 +318,7 @@ export const useSettingsManager = () => {
 
             logWithTimestamp(`Settings exported successfully to: ${fileUri}`)
 
-            endTiming({ status: "success", fileName, fileSize: jsonString.length })
+            endTiming({ status: "success", fileName, fileSize: jsonString.length, profilesCount: profiles.length })
             return fileUri
         } catch (error) {
             logErrorWithTimestamp("Error exporting settings:", error)

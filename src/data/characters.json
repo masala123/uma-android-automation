@@ -1,4 +1,212 @@
 {
+    "Agnes Digital": {
+        "Teach Us Your Ways, Digital!": [
+            "Wit +20",
+            "Power +20"
+        ],
+        "I \"Simp\"ly Wanna Help...": [
+            "Speed +10\nPower +10",
+            "Stamina +10\nGuts +10"
+        ],
+        "Give Freely, for She Is My Oshi!": [
+            "Stamina +10\nSkill points +15\n(random) Get Hot Topic status",
+            "Power +20\n(random) Get Hot Topic status"
+        ],
+        "The Endless Possibilities of Moe": [
+            "Speed +10",
+            "Stamina +10"
+        ],
+        "When Fantasy Becomes Real": [
+            "Power +5\nGuts +5",
+            "Energy +5\nWit +5"
+        ],
+        "The Cafeteria is Basically a Collab Cafe NGL": [
+            "Top Pick hint +1",
+            "Acceleration hint +1"
+        ],
+        "Umamusume Quiz ☆ –Relationships Arc–": [
+            "Speed +15\nHomestretch Haste hint +1",
+            "Speed +5"
+        ],
+        "Umamusume Quiz ☆ –Preferences Arc–": [
+            "Stamina +5",
+            "Stamina +15\nKyoto Racecourse ○ hint +1"
+        ],
+        "Umamusume Quiz ☆ –Roots Arc–": [
+            "Power +15\nMile Corners ○ hint +1",
+            "Power +5"
+        ],
+        "I'd Be Honored to Trade!": [
+            "Energy +10\nSkill points +5",
+            "Randomly either\n----------\nEnergy +30\nSkill points +10\nor (~10%)\nor (~10%)\nEnergy +30\nSkill points +10\nSpeed -5\nPower +5\nGet Slow Metabolism status"
+        ],
+        "The Oshi Report –Induction Arc–": [
+            "Stamina +10",
+            "Speed +10"
+        ],
+        "The Oshi Report –Peak Arc–": [
+            "Stamina +10",
+            "Wit +10"
+        ],
+        "The Oshi Report –Recognition Arc–": [
+            "Guts +10",
+            "Speed +10",
+            "Skill points +30"
+        ],
+        "The Best Life Is the Simp Life": [
+            "Speed +10",
+            "Guts +10"
+        ],
+        "Oshi Proximity Alert?!": [
+            "Power +10",
+            "Energy +10"
+        ],
+        "All-Round Ruler": [
+            "Speed +20\nPower +20\nSkill points +30\nUpdrafters hint +1\nUnyielding Spirit hint +1"
+        ],
+        "After the Takarazuka Kinen: On Fire Like No One's Ever Seen": [
+            "1 random stat +4/+5/+10\nSkill points +25/+40/+45"
+        ],
+        "Bonus at start": [
+            "Skill points +120"
+        ],
+        "Failed training (Get Well Soon!)": [
+            "Mood -1\nLast trained stat -5\n(random) Get Practice Poor status",
+            "Randomly either\n----------\nMood -1\nLast trained stat -10\n(random) Get Practice Poor status\n----------\n\n----------\nGet Practice Perfect ○ status"
+        ],
+        "Failed training (Don't Overdo It!)": [
+            "Energy +10\nMood -2\nLast trained stat -10\n2 random stats -10\n(random) Get Practice Poor status",
+            "Randomly either\n----------\nMood -3\nLast trained stat -10\n2 random stats -10\nGet Practice Poor status\n----------\n\n----------\nEnergy +10\nGet Practice Perfect ○ status"
+        ],
+        "Extra Training": [
+            "Energy -5\nLast trained stat +5\n(random) Heal a negative status effect\nYayoi Akikawa bond +5",
+            "Energy +5"
+        ],
+        "At Summer Camp (Year 2)": [
+            "Power +10",
+            "Guts +10"
+        ],
+        "Fan Letter": [
+            "Mood +1\nSkill points +30"
+        ],
+        "Dance Lesson": [
+            "Power +10",
+            "Wit +10"
+        ],
+        "New Year's Resolutions": [
+            "Power +10",
+            "Energy +20",
+            "Skill points +20"
+        ],
+        "New Year's Shrine Visit": [
+            "Energy +30",
+            "All stats +5",
+            "Skill points +35"
+        ],
+        "Acupuncture (Just an Acupuncturist, No Worries! ☆)": [
+            "Randomly either\n----------\nAll stats +20\nor (~70%)\nor (~70%)\nMood -2\nAll stats -15\nGet Night Owl status",
+            "Randomly either\n----------\nObtain Corner Recovery ○ skill\nObtain Straightaway Recovery skill\nor (~55%)\nor (~55%)\nEnergy -20\nMood -2",
+            "Randomly either\n----------\nMaximum Energy +12\nEnergy +40\nHeal all negative status effects\nor (~30%)\nor (~30%)\nEnergy -20\nMood -2\nGet Practice Poor status",
+            "Randomly either\n----------\nEnergy +20\nMood +1\nGet Charming ○ status\nor (~15%)\nor (~15%)\nEnergy -10/-20\nMood -1\n(random) Get Practice Poor status",
+            "Energy +10"
+        ],
+        "Victory! (G1)\n1st": [
+            "Energy -15\n1 random stat +10\nSkill points +45\n(random) Hint for a skill related to the race",
+            "Energy -5/-20\n1 random stat +10\nSkill points +45\n(random) Hint for a skill related to the race"
+        ],
+        "Victory! (G2/G3)\n1st": [
+            "Energy -15\n1 random stat +8\nSkill points +35\n(random) Hint for a skill related to the race",
+            "Energy -5/-20\n1 random stat +8\nSkill points +35\n(random) Hint for a skill related to the race"
+        ],
+        "Victory! (Pre/OP)\n1st": [
+            "Energy -15\n1 random stat +5\nSkill points +30\n(random) Hint for a skill related to the race",
+            "Energy -5/-20\n1 random stat +5\nSkill points +30\n(random) Hint for a skill related to the race"
+        ],
+        "Solid Showing (G1)\n2nd-5th": [
+            "Energy -20\n1 random stat +8\nSkill points +45\n(random) Hint for a skill related to the race",
+            "Energy -10/-30\n1 random stat +8\nSkill points +45\n(random) Hint for a skill related to the race"
+        ],
+        "Solid Showing (G2/G3)\n2nd-5th": [
+            "Energy -20\n1 random stat +5\nSkill points +35\n(random) Hint for a skill related to the race",
+            "Energy -10/-30\n1 random stat +5\nSkill points +35\n(random) Hint for a skill related to the race"
+        ],
+        "Solid Showing (Pre/OP)\n2nd-5th": [
+            "Energy -20\n1 random stat +3\nSkill points +30\n(random) Hint for a skill related to the race",
+            "Energy -10/-30\n1 random stat +3\nSkill points +30\n(random) Hint for a skill related to the race"
+        ],
+        "Defeat (G1)\n6th or worse": [
+            "Energy -25\n1 random stat +4\nSkill points +25\n(random) Hint for a skill related to the race",
+            "Energy -15/-35\n1 random stat +4\nSkill points +25\n(random) Hint for a skill related to the race"
+        ],
+        "Defeat (G2/G3)\n6th or worse": [
+            "Energy -25\n1 random stat +3\nSkill points +20\n(random) Hint for a skill related to the race",
+            "Energy -15/-35\n1 random stat +3\nSkill points +20\n(random) Hint for a skill related to the race"
+        ],
+        "Defeat (Pre/OP)\n6th or worse": [
+            "Energy -25\nSkill points +10\n(random) Hint for a skill related to the race",
+            "Energy -15/-35\nSkill points +10\n(random) Hint for a skill related to the race"
+        ],
+        "Etsuko's Elated Coverage (G1)": [
+            "Energy -15\nMood +1\n1 random stat +10\nSkill points +45\nFans +500\n(random) Hint for a skill related to the race\nEtsuko Otonashi bond +15"
+        ],
+        "Etsuko's Elated Coverage (G2/G3)": [
+            "Energy -15\nMood +1\n1 random stat +8\nSkill points +35\nFans +500\n(random) Hint for a skill related to the race\nEtsuko Otonashi bond +15"
+        ],
+        "Etsuko's Elated Coverage (Pre/OP)": [
+            "Energy -15\nMood +1\n1 random stat +5\nSkill points +30\nFans +500\n(random) Hint for a skill related to the race\nEtsuko Otonashi bond +15"
+        ],
+        "Etsuko's Exhaustive Coverage (G1)": [
+            "Randomly either\n----------\nEnergy -25\nMood -1\n1 random stat +4\nSkill points +25\nEtsuko Otonashi bond -10\n----------\n\n----------\nEnergy -15\nMood +1\n1 random stat +4\nSkill points +25\nEtsuko Otonashi bond +15",
+            "Energy -20\n1 random stat +4\nSkill points +25\nEtsuko Otonashi bond +10"
+        ],
+        "Etsuko's Exhaustive Coverage (G2/G3)": [
+            "Randomly either\n----------\nEnergy -25\nMood -1\n1 random stat +3\nSkill points +20\nEtsuko Otonashi bond -10\n----------\n\n----------\nEnergy -15\nMood +1\n1 random stat +3\nSkill points +20\nEtsuko Otonashi bond +15",
+            "Energy -20\n1 random stat +3\nSkill points +20\nEtsuko Otonashi bond +10"
+        ],
+        "Etsuko's Exhaustive Coverage (Pre/OP)": [
+            "Randomly either\n----------\nEnergy -25\nMood -1\nSkill points +10\nEtsuko Otonashi bond -10\n----------\n\n----------\nEnergy -15\nMood +1\nSkill points +10\nEtsuko Otonashi bond +15",
+            "Energy -20\nSkill points +10\nEtsuko Otonashi bond +10"
+        ],
+        "No Backseating!": [
+            "Wit +5"
+        ],
+        "What Comes of Connecting": [
+            "Power +5"
+        ],
+        "Takarazuka Showdown!": [
+            "Nothing happens"
+        ],
+        "First-Rate Terms": [
+            "Guts +5"
+        ],
+        "I'm Rooting For You!": [
+            "Speed +5"
+        ],
+        "This Time, Whatever It Takes": [
+            "Power +10"
+        ],
+        "Repost to Apply": [
+            "Wit -5\nMood -1"
+        ],
+        "Master Trainer": [
+            "Power +10\n(random) Get Practice Perfect ○ status"
+        ],
+        "World-Class All-Rounder": [
+            "All stats +5\nSkill points +5"
+        ],
+        "A Raffle Is a Raffle": [
+            "Mood -1"
+        ],
+        "I Smell Moe": [
+            "Energy -10\nMood -1"
+        ],
+        "Lucid Daydreaming!": [
+            "All stats +5\nSkill points +30\nMood +2\n(random) Get Fast Learner status"
+        ],
+        "One More Song! Just One More!": [
+            "Randomly either\n----------\nEnergy +15\nMood -1\nGuts -5\n----------\n\n----------\nEnergy +15\nGuts -5\nGet Slacker status\n----------\n\n----------\nEnergy +15\nMood -1\nGuts -5\nGet Slacker status"
+        ]
+    },
     "Agnes Tachyon": {
         "Expression of Conviction": [
             "Stamina +20",
@@ -665,7 +873,7 @@
             "Mood +1"
         ],
         "Summer Sprint Series Conquered!": [
-            "Energy +25\nMood +1\nSpeed +15\nPower +15\nSprinting Gear hint +2"
+            "Energy +25\nMood +1\nSpeed +15\nPower +15\nGuts +15\nSprinting Gear hint +2"
         ],
         "Bonus at start": [
             "Skill points +120"
@@ -862,7 +1070,7 @@
             "Mood +1\nWit +5"
         ],
         "Number One and the Coolest": [
-            "All stats +15\nSkill points +50\nUnyielding Spirit hint +2\nHead-On hint +2\nNimble Navigator hint +1"
+            "All stats +15\nSkill points +50\nUnyielding Spirit hint +2\nHead-On hint +2"
         ],
         "The Japanese Derby": [
             "Standard race rewards\nMood +1"
@@ -1039,7 +1247,7 @@
             "Standard Distance ○ hint +1"
         ],
         "Flash's Plan Put to the Test": [
-            "Mood +1\n4 random types of training will be disabled for one turn\nEvent 「結果：フラッシュプラン」 will occur next turn",
+            "Mood +1\n4 random types of training will be disabled for one turn\nEvent 「The Outcome of Flash's Plan」 will occur next turn",
             "Nothing happens"
         ],
         "Fried, Crispy, and Fresh!": [
@@ -3621,7 +3829,7 @@
             "Wit +10\n(random) Get Fast Learner status"
         ],
         "Get Me in the Mood ☆": [
-            "Randomly either\n----------\nMood +2\nAll stats +5\n----------\n\n----------\nMood +1\nAll stats +3\n----------\n\n----------\nMood -1"
+            "Randomly either\n----------\nMood +2\nAll stats +5\n----------\n\n----------\nMood +1\nAll stats +3\n----------\n\n----------\nMood -1\nWit +10"
         ],
         "Master Trainer": [
             "Stamina +10\n(random) Get Practice Perfect ○ status"
@@ -4727,7 +4935,7 @@
             "Speed +5\nPower +5"
         ],
         "Forever Fervent": [
-            "\nPower +30\nSkill points +15\nEarly Start hint +2\n\n\nPower +25\n\n\nPower +10"
+            "※ 7+\nPower +30\nSkill points +15\nEarly Start hint +2\n\n※ 4-6\nPower +25\n\n※ 0-3\nPower +10"
         ],
         "After the Nikkei Sho: Here Is Fine": [
             "※ Practice Poor was healed\nMood +4\nAll stats +20\nSkill points +70\nGet Practice Perfect ◎ status\n\n※ Practice Poor was not healed\nMood +4\nAll stats +15\nSkill points +70\nHeal Practice Poor"
@@ -5279,17 +5487,17 @@
         ]
     },
     "Rice Shower": {
-        "Am I Enough?": [
-            "Guts +20",
-            "Power +20"
+        "A Treat from Rice!": [
+            "Deep Breaths hint +2",
+            "Stamina +20"
         ],
-        "Sweet & Lively Joy": [
-            "Speed +10\nStamina +10",
-            "Wit +20"
+        "Rice's Guide to Vampire Eradication": [
+            "Energy +15",
+            "Speed +10\nPower +10"
         ],
-        "I Am Enough": [
-            "Guts +10\nWit +10\n(random) Get Charming ○ status",
-            "Stamina +10\nPower +10\n(random) Get Charming ○ status"
+        "A Trick from Rice!": [
+            "Wit +20\n(random) Get Practice Perfect ○ status",
+            "Frenzied Pace Chasers hint +2\n(random) Get Practice Perfect ○ status"
         ],
         "Training Inspiration": [
             "Energy -10\nGuts +20",
@@ -5332,7 +5540,7 @@
             "Stamina +5\nWit +5"
         ],
         "A Tale That Blooms from the Heart": [
-            "※ 3-5\nSpeed +10\nStamina +10\nKyoto Racecourse ○ hint +2\n\n※ 6+\nSpeed +10\nStamina +10\nGuts +10\nKyoto Racecourse ○ hint +2\nFirm Conditions ○ hint +2"
+            "※ 5+\nSpeed +10\nStamina +10\nGuts +10\nKyoto Racecourse ○ hint +2\nFirm Conditions ○ hint +2\n\n※ 3-4\nSpeed +10\nStamina +10\nKyoto Racecourse ○ hint +2\n\n※ 2\nSpeed +5\nStamina +5\nKyoto Racecourse ○ hint +2"
         ],
         "Bonus at start": [
             "Skill points +120"
@@ -5469,6 +5677,18 @@
         ],
         "A Page about Books": [
             "Randomly either\n----------\nEnergy +15\nMood -1\nGuts -5\n----------\n\n----------\nEnergy +15\nGuts -5\nGet Slacker status\n----------\n\n----------\nEnergy +15\nMood -1\nGuts -5\nGet Slacker status"
+        ],
+        "Am I Enough?": [
+            "Guts +20",
+            "Power +20"
+        ],
+        "Sweet & Lively Joy": [
+            "Speed +10\nStamina +10",
+            "Wit +20"
+        ],
+        "I Am Enough": [
+            "Guts +10\nWit +10\n(random) Get Charming ○ status",
+            "Stamina +10\nPower +10\n(random) Get Charming ○ status"
         ]
     },
     "Sakura Bakushin O": {
@@ -6474,17 +6694,17 @@
         ]
     },
     "Super Creek": {
-        "A Self-Satisfying Wish": [
-            "Power +20",
-            "Stamina +20"
+        "Search or Story Time": [
+            "Wit +20",
+            "Studious hint +2"
         ],
-        "Fill Life with Love": [
-            "Randomly either\n----------\nSpeed +10\nStamina +10\n----------\n\n----------\nWit +20",
-            "Wit +20"
+        "Spook or Fluke": [
+            "Stamina +10\nSkill points +15",
+            "Power +20"
         ],
-        "Patience Is Key": [
-            "Guts +20\n(random) Get Hot Topic status",
-            "Stamina +10\nPower +10\n(random) Get Hot Topic status"
+        "Curse or Comfort": [
+            "Steadfast hint +2\n(random) Get Charming ○ status",
+            "Speed +20\n(random) Get Charming ○ status"
         ],
         "One-Day Experience ☆ Ceramics Class": [
             "Speed +5\nWit +5",
@@ -6678,6 +6898,18 @@
         ],
         "I Feel Like Cooking": [
             "Randomly either\n----------\nEnergy +15\nMood -1\nGuts -5\n----------\n\n----------\nEnergy +15\nGuts -5\nGet Slacker status\n----------\n\n----------\nEnergy +15\nMood -1\nGuts -5\nGet Slacker status"
+        ],
+        "A Self-Satisfying Wish": [
+            "Power +20",
+            "Stamina +20"
+        ],
+        "Fill Life with Love": [
+            "Randomly either\n----------\nSpeed +10\nStamina +10\n----------\n\n----------\nWit +20",
+            "Wit +20"
+        ],
+        "Patience Is Key": [
+            "Guts +20\n(random) Get Hot Topic status",
+            "Stamina +10\nPower +10\n(random) Get Hot Topic status"
         ]
     },
     "Symboli Rudolf": {
@@ -7580,7 +7812,7 @@
             "Standard race rewards\nNimble Navigator hint +1"
         ],
         "After the Yasuda Kinen: Consecutive Celebration": [
-            "All stats +3\nSkill points +45\nNimble Navigator hint +1\nGet Practice Perfect ○ status\nYayoi Akikawa bond +4"
+            "All stats +3\nPower +20\nSkill points +65\nNimble Navigator hint +1\nGet Practice Perfect ○ status\nYayoi Akikawa bond +4"
         ],
         "Bonus at start": [
             "Skill points +120"

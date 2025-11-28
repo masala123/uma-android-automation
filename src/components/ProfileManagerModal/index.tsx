@@ -168,6 +168,8 @@ const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
             const profileToDelete = profiles.find((p) => p.id === deleteProfileId)
             const deletedProfileName = profileToDelete?.name || ""
             await deleteProfile(deleteProfileId)
+            // Reload profiles to ensure the modal shows the updated list immediately.
+            await loadProfiles()
             setShowDeleteDialog(false)
             setDeleteProfileId(null)
             // Notify parent that a profile was deleted.
@@ -180,7 +182,7 @@ const ProfileManagerModal: React.FC<ProfileManagerModalProps> = ({
             const errorMessage = `Failed to delete profile: ${error instanceof Error ? error.message : String(error)}`
             onError?.(errorMessage)
         }
-    }, [deleteProfileId, profiles, deleteProfile, onProfileDeleted, onError])
+    }, [deleteProfileId, profiles, deleteProfile, loadProfiles, onProfileDeleted, onError])
 
     const handleDeleteCancel = useCallback(() => {
         setShowDeleteDialog(false)

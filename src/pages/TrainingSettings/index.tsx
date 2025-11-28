@@ -14,14 +14,19 @@ import CustomSelect from "../../components/CustomSelect"
 import ProfileSelector from "../../components/ProfileSelector"
 import { ArrowLeft } from "lucide-react-native"
 import { useSettings } from "../../context/SettingsContext"
+import { useProfileManager } from "../../hooks/useProfileManager"
+import { applyMigrations } from "../../hooks/useSettingsManager"
+import { databaseManager } from "../../lib/database"
 
 const TrainingSettings = () => {
     const { colors } = useTheme()
     const navigation = useNavigation()
     const bsc = useContext(BotStateContext)
     const { saveSettingsImmediate } = useSettings()
+    const { currentProfileName } = useProfileManager()
     const [blacklistModalVisible, setBlacklistModalVisible] = useState(false)
     const [prioritizationModalVisible, setPrioritizationModalVisible] = useState(false)
+    const [sparkStatTargetModalVisible, setSparkStatTargetModalVisible] = useState(false)
     const [snackbarVisible, setSnackbarVisible] = useState(false)
     const [snackbarMessage, setSnackbarMessage] = useState("")
 
@@ -34,6 +39,14 @@ const TrainingSettings = () => {
     const [blacklistItems, setBlacklistItems] = useState<string[]>(() =>
         settings.training?.trainingBlacklist !== undefined ? settings.training.trainingBlacklist : defaultSettings.training.trainingBlacklist
     )
+    const [sparkStatTargetItems, setSparkStatTargetItems] = useState<string[]>(() => {
+        const value = settings.training?.focusOnSparkStatTarget
+        // Ensure we always have an array (migration should handle this, but be safe).
+        if (Array.isArray(value)) {
+            return value
+        }
+        return defaultSettings.training.focusOnSparkStatTarget
+    })
 
     // Merge current training settings with defaults to handle missing properties.
     // Include local state values to ensure blacklist and prioritization are current.
@@ -42,18 +55,20 @@ const TrainingSettings = () => {
         ...settings.training,
         trainingBlacklist: blacklistItems,
         statPrioritization: statPrioritizationItems,
+        focusOnSparkStatTarget: sparkStatTargetItems,
     }
     const trainingStatTargetSettings = { ...defaultSettings.trainingStatTarget, ...settings.trainingStatTarget }
     const {
         maximumFailureChance,
         disableTrainingOnMaxedStat,
-        focusOnSparkStatTarget,
+        manualStatCap,
         enableRainbowTrainingBonus,
         preferredDistanceOverride,
         mustRestBeforeSummer,
         enableRiskyTraining,
         riskyTrainingMinStatGain,
         riskyTrainingMaxFailureChance,
+        trainWitDuringFinale,
     } = trainingSettings
 
     useEffect(() => {
@@ -63,6 +78,10 @@ const TrainingSettings = () => {
     useEffect(() => {
         updateTrainingSetting("trainingBlacklist", blacklistItems)
     }, [blacklistItems])
+
+    useEffect(() => {
+        updateTrainingSetting("focusOnSparkStatTarget", sparkStatTargetItems)
+    }, [sparkStatTargetItems])
 
     // Sync local state when settings change (e.g., when switching profiles).
     useEffect(() => {
@@ -77,6 +96,47 @@ const TrainingSettings = () => {
         }
     }, [settings.training?.statPrioritization])
 
+    useEffect(() => {
+        const value = settings.training?.focusOnSparkStatTarget
+        if (value !== undefined && Array.isArray(value)) {
+            setSparkStatTargetItems(value)
+        }
+    }, [settings.training?.focusOnSparkStatTarget])
+
+    // Sync currentProfileName from profile manager to settings context.
+    // Also check database directly to ensure we have the latest value.
+    useEffect(() => {
+        const syncProfileName = async () => {
+            const profileName = currentProfileName || ""
+            // Also check database to ensure we have the latest value.
+            try {
+                const dbProfileName = await databaseManager.getCurrentProfileName()
+                const finalProfileName = dbProfileName || ""
+                if (settings.misc.currentProfileName !== finalProfileName) {
+                    setSettings({
+                        ...bsc.settings,
+                        misc: {
+                            ...bsc.settings.misc,
+                            currentProfileName: finalProfileName,
+                        },
+                    })
+                }
+            } catch (error) {
+                // Fallback to hook value if database read fails.
+                if (settings.misc.currentProfileName !== profileName) {
+                    setSettings({
+                        ...bsc.settings,
+                        misc: {
+                            ...bsc.settings.misc,
+                            currentProfileName: profileName,
+                        },
+                    })
+                }
+            }
+        }
+        syncProfileName()
+    }, [currentProfileName])
+
     const updateTrainingSetting = (key: keyof typeof settings.training, value: any) => {
         setSettings({
             ...bsc.settings,
@@ -88,10 +148,26 @@ const TrainingSettings = () => {
     }
 
     const handleOverwriteSettings = async (profileSettings: Partial<Settings>) => {
-        // Create the updated settings object by merging profile settings with current settings.
-        const updatedSettings = {
+        // Get the current profile name directly from the database to ensure we have the latest value.
+        const dbProfileName = await databaseManager.getCurrentProfileName()
+        
+        // Merge profile settings with current settings to create a complete Settings object for migration.
+        const mergedSettings = {
             ...bsc.settings,
             ...profileSettings,
+        } as Settings
+        
+        // Apply migrations to the merged settings (this handles focusOnSparkStatTarget and any future migrations).
+        const { settings: migratedSettings } = applyMigrations(mergedSettings)
+        
+        // Create the updated settings object with the migrated profile settings.
+        const updatedSettings = {
+            ...migratedSettings,
+            misc: {
+                ...bsc.settings.misc,
+                ...migratedSettings.misc,
+                currentProfileName: dbProfileName || "",
+            },
         }
         // Apply the profile's settings to current settings.
         setSettings(updatedSettings)
@@ -363,9 +439,7 @@ const TrainingSettings = () => {
 
                     {bsc.settings.general.scenario === "Unity Cup" && (
                         <View style={styles.errorContainer}>
-                            <Text style={styles.errorText}>
-                                ⚠️ Unity Cup Note: Unity trainings will take priority over stat prioritization up till Senior Year.
-                            </Text>
+                            <Text style={styles.errorText}>⚠️ Unity Cup Note: Unity trainings will take priority over stat prioritization up till Senior Year.</Text>
                         </View>
                     )}
 
@@ -378,6 +452,21 @@ const TrainingSettings = () => {
                             description="When enabled, training will be skipped for stats that have reached their maximum value."
                             className="my-2"
                         />
+                        {disableTrainingOnMaxedStat && (
+                            <CustomSlider
+                                value={manualStatCap || defaultSettings.training.manualStatCap}
+                                placeholder={defaultSettings.training.manualStatCap}
+                                onValueChange={(value) => updateTrainingSetting("manualStatCap", value)}
+                                min={1000}
+                                max={2000}
+                                step={10}
+                                label="Manual Stat Cap"
+                                labelUnit=""
+                                showValue={true}
+                                showLabels={true}
+                                description="Set a custom stat cap for all stats. Training will be skipped when any stat reaches this value (if 'Disable Training on Maxed Stats' is enabled)."
+                            />
+                        )}
                     </View>
 
                     <View style={styles.section}>
@@ -437,16 +526,15 @@ const TrainingSettings = () => {
                         )}
                     </View>
 
-                    <View style={styles.section}>
-                        <CustomCheckbox
-                            id="focus-on-spark-stat-targets"
-                            checked={focusOnSparkStatTarget}
-                            onCheckedChange={(checked) => updateTrainingSetting("focusOnSparkStatTarget", checked)}
-                            label="Focus on Sparks for Stat Targets"
-                            description="When enabled, the bot will prioritize training sessions that have a chance to trigger spark events for stats that are below their target values."
-                            className="my-2"
-                        />
-                    </View>
+                    {renderStatSelector(
+                        "Focus on Sparks",
+                        sparkStatTargetItems,
+                        (value) => setSparkStatTargetItems(value),
+                        sparkStatTargetModalVisible,
+                        setSparkStatTargetModalVisible,
+                        "Select which stats should receive priority to get to at least 600 to get the best chance to receive 3* sparks.",
+                        "checkbox"
+                    )}
 
                     <View style={styles.section}>
                         <CustomCheckbox
@@ -455,6 +543,17 @@ const TrainingSettings = () => {
                             onCheckedChange={(checked) => updateTrainingSetting("mustRestBeforeSummer", checked)}
                             label="Must Rest before Summer"
                             description="Forces the bot to rest during June Late Phase in Classic and Senior Years to ensure enough energy for Summer Training in July."
+                            className="my-2"
+                        />
+                    </View>
+
+                    <View style={styles.section}>
+                        <CustomCheckbox
+                            id="train-wit-during-finale"
+                            checked={trainWitDuringFinale}
+                            onCheckedChange={(checked) => updateTrainingSetting("trainWitDuringFinale", checked)}
+                            label="Train Wit During Finale"
+                            description="When enabled, the bot will train Wit during URA finale turns (73, 74, 75) instead of recovering energy or mood, even if the failure chance is high."
                             className="my-2"
                         />
                     </View>
@@ -490,7 +589,8 @@ const TrainingSettings = () => {
                         <Text style={[styles.label, { fontSize: 14, color: colors.foreground, opacity: 0.7, marginTop: 4 }]}>
                             Set the preferred race distance for training targets. "Auto" will automatically determine based on character aptitudes reading from left to right (S {">"} A priority).
                             {"\n\n"}
-                            For example, if Gold Ship has an aptitude of A for both Medium and Long, Auto will use Medium as the preferred distance. Whereas if Medium is A and Long is S, then Auto will instead use Long as the preferred distance.
+                            For example, if Gold Ship has an aptitude of A for both Medium and Long, Auto will use Medium as the preferred distance. Whereas if Medium is A and Long is S, then Auto
+                            will instead use Long as the preferred distance.
                         </Text>
                     </View>
 
@@ -791,7 +891,7 @@ const TrainingSettings = () => {
                         setSnackbarVisible(false)
                     },
                 }}
-                style={{ marginBottom: 20 }}
+                style={{ backgroundColor: "red", borderRadius: 10 }}
                 duration={4000}
             >
                 {snackbarMessage}

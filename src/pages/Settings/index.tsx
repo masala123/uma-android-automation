@@ -100,9 +100,7 @@ const Settings = () => {
                 />
                 {bsc.settings.general.scenario === "Unity Cup" && (
                     <View style={styles.errorContainer}>
-                        <Text style={styles.errorText}>
-                            ⚠️ Unity Cup Warning: Running extra races via fan farming being enabled is highly discouraged in order to focus more on unity trainings.
-                        </Text>
+                        <Text style={styles.errorText}>⚠️ Unity Cup Warning: Running extra races via fan farming being enabled is highly discouraged in order to focus more on unity trainings.</Text>
                     </View>
                 )}
                 {!bsc.settings.general.scenario && (
@@ -221,6 +219,19 @@ const Settings = () => {
                     }}
                     label="Enable Popup Check"
                     description="Enables check for warning popups like lack of fans or lack of trophies gained. Stops the bot if detected for the user to deal with them manually."
+                    className="mt-4"
+                />
+
+                <CustomCheckbox
+                    checked={bsc.settings.general.enableStopBeforeFinals}
+                    onCheckedChange={(checked) => {
+                        bsc.setSettings({
+                            ...bsc.settings,
+                            general: { ...bsc.settings.general, enableStopBeforeFinals: checked },
+                        })
+                    }}
+                    label="Stop before Finals"
+                    description="Stops the bot on turn 72 so you can purchase skills before the final races."
                     className="mt-4"
                 />
 

@@ -71,7 +71,7 @@ const Home = () => {
         const appName = Application.applicationName || "App"
         var version = Application.nativeApplicationVersion || "0.0.0"
         version += " (" + (Application.nativeBuildVersion || "0") + ")"
-        logWithTimestamp("Android app version is " + version)
+        logWithTimestamp(`Android app ${appName} version is ${version}`)
         bsc.setAppName(appName)
         bsc.setAppVersion(version)
     }

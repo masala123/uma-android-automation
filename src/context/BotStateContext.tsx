@@ -10,6 +10,7 @@ export interface Settings {
         skillPointCheck: number
         enablePopupCheck: boolean
         enableCraneGameAttempt: boolean
+        enableStopBeforeFinals: boolean
     }
 
     // Racing settings
@@ -48,6 +49,7 @@ export interface Settings {
         enableSettingsDisplay: boolean
         formattedSettingsString: string
         enableMessageIdDisplay: boolean
+        currentProfileName: string
     }
 
     // Training settings
@@ -56,13 +58,15 @@ export interface Settings {
         statPrioritization: string[]
         maximumFailureChance: number
         disableTrainingOnMaxedStat: boolean
-        focusOnSparkStatTarget: boolean
+        manualStatCap: number
+        focusOnSparkStatTarget: string[]
         enableRainbowTrainingBonus: boolean
         preferredDistanceOverride: string
         mustRestBeforeSummer: boolean
         enableRiskyTraining: boolean
         riskyTrainingMinStatGain: number
         riskyTrainingMaxFailureChance: number
+        trainWitDuringFinale: boolean
     }
 
     // Training Stat Target settings
@@ -126,6 +130,7 @@ export const defaultSettings: Settings = {
         skillPointCheck: 750,
         enablePopupCheck: false,
         enableCraneGameAttempt: false,
+        enableStopBeforeFinals: false,
     },
     racing: {
         enableFarmingFans: false,
@@ -205,19 +210,22 @@ export const defaultSettings: Settings = {
         enableSettingsDisplay: false,
         formattedSettingsString: "",
         enableMessageIdDisplay: false,
+        currentProfileName: "",
     },
     training: {
         trainingBlacklist: [],
         statPrioritization: ["Speed", "Stamina", "Power", "Wit", "Guts"],
         maximumFailureChance: 20,
         disableTrainingOnMaxedStat: true,
-        focusOnSparkStatTarget: false,
+        manualStatCap: 1200,
+        focusOnSparkStatTarget: ["Speed", "Stamina", "Power"],
         enableRainbowTrainingBonus: false,
         preferredDistanceOverride: "Auto",
         mustRestBeforeSummer: false,
         enableRiskyTraining: false,
         riskyTrainingMinStatGain: 30,
         riskyTrainingMaxFailureChance: 30,
+        trainWitDuringFinale: false,
     },
     trainingStatTarget: {
         trainingSprintStatTarget_speedStatTarget: 900,
