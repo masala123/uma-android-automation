@@ -38,6 +38,27 @@ const convertSettingsToBatch = (settings: Settings) => {
 }
 
 /**
+ * Applies all registered migrations to the settings object.
+ * Add new migrations here as needed.
+ */
+export const applyMigrations = (settings: Settings): { settings: Settings; anyMigrated: boolean } => {
+    let anyMigrated = false
+    let migratedSettings = settings
+
+    // Migration: focusOnSparkStatTarget from boolean to string array format.
+    const focusOnSparkStatTargetValue = migratedSettings.training?.focusOnSparkStatTarget
+    if (typeof focusOnSparkStatTargetValue === "boolean") {
+        migratedSettings.training.focusOnSparkStatTarget = focusOnSparkStatTargetValue ? ["Speed", "Stamina", "Power"] : []
+        anyMigrated = true
+        logWithTimestamp("[SettingsManager] Migrated focusOnSparkStatTarget from boolean to array format.")
+    }
+
+    // Add future migrations here.
+
+    return { settings: migratedSettings, anyMigrated }
+}
+
+/**
  * Manages settings persistence using SQLite database.
  */
 export const useSettingsManager = () => {
@@ -121,6 +142,20 @@ export const useSettingsManager = () => {
                 console.warn(sqliteError)
             }
 
+            // Apply all migrations to the settings.
+            const { settings: migratedSettings, anyMigrated } = applyMigrations(newSettings)
+            newSettings = migratedSettings
+
+            // If any migration occurred, save the migrated settings back to the database.
+            if (anyMigrated) {
+                try {
+                    await databaseManager.saveSettingsBatch(convertSettingsToBatch(newSettings))
+                    logWithTimestamp("[SettingsManager] Saved migrated settings to database.")
+                } catch (migrationSaveError) {
+                    logErrorWithTimestamp("[SettingsManager] Error saving migrated settings:", migrationSaveError)
+                }
+            }
+
             bsc.setSettings(newSettings)
             logWithTimestamp(`[SettingsManager] Settings loaded and applied to context${context}.`)
             logWithTimestamp(`[SettingsManager] Scenario value after load: "${newSettings.general.scenario}"`)
@@ -156,7 +191,10 @@ export const useSettingsManager = () => {
 
     // Ensure all required settings fields exist by filling missing ones with defaults.
     const fixSettings = (decoded: Settings): Settings => {
-        return deepMerge(defaultSettings, decoded as Partial<Settings>)
+        const merged = deepMerge(defaultSettings, decoded as Partial<Settings>)
+        // Apply all migrations to the settings.
+        const { settings } = applyMigrations(merged)
+        return settings
     }
 
     // Import settings from a JSON file and save to SQLite.

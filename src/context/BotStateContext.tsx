@@ -59,7 +59,7 @@ export interface Settings {
         maximumFailureChance: number
         disableTrainingOnMaxedStat: boolean
         manualStatCap: number
-        focusOnSparkStatTarget: boolean
+        focusOnSparkStatTarget: string[]
         enableRainbowTrainingBonus: boolean
         preferredDistanceOverride: string
         mustRestBeforeSummer: boolean
@@ -218,7 +218,7 @@ export const defaultSettings: Settings = {
         maximumFailureChance: 20,
         disableTrainingOnMaxedStat: true,
         manualStatCap: 1200,
-        focusOnSparkStatTarget: false,
+        focusOnSparkStatTarget: ["Speed", "Stamina", "Power"],
         enableRainbowTrainingBonus: false,
         preferredDistanceOverride: "Auto",
         mustRestBeforeSummer: false,

@@ -91,7 +91,7 @@ class Training(private val game: Game) {
 	}
 	private val maximumFailureChance: Int = SettingsHelper.getIntSetting("training", "maximumFailureChance")
 	private val disableTrainingOnMaxedStat: Boolean = SettingsHelper.getBooleanSetting("training", "disableTrainingOnMaxedStat")
-	private val focusOnSparkStatTarget: Boolean = SettingsHelper.getBooleanSetting("training", "focusOnSparkStatTarget")
+	private val focusOnSparkStatTarget: List<String> = SettingsHelper.getStringArraySetting("training", "focusOnSparkStatTarget")
 	private val enableRainbowTrainingBonus: Boolean = SettingsHelper.getBooleanSetting("training", "enableRainbowTrainingBonus")
 	private val preferredDistanceOverride: String = SettingsHelper.getStringSetting("training", "preferredDistanceOverride")
 	private val enableRiskyTraining: Boolean = SettingsHelper.getBooleanSetting("training", "enableRiskyTraining")
@@ -687,7 +687,6 @@ class Training(private val game: Game) {
 	 * - **Priority Tiebreaker:** Only matters when stats have similar completion percentages
 	 * - **Main Stat Bonus:** High gains on main stat get bonus (likely undetected rainbow)
 	 * - **Rainbow Detection:** Heavily favored for overall ratio balance
-	 * - **Late Game Stamina:** Ensures 600+ stamina in Year 3
 	 *
 	 * @return The name of the recommended training option, or empty string if no suitable option found.
 	 */
@@ -905,19 +904,10 @@ class Training(private val game: Game) {
 						1.0
 					}
 					
-					// Special case: Ensure Stamina is at least 600 in late game.
-					val isLateGame = game.currentDate.year == 3
-					val isStamina = stat == "Stamina"
-					val staminaBelowMinimum = isStamina && currentStat < 600
-					val lateGameStaminaBonus = if (isLateGame && staminaBelowMinimum) {
-						MessageLog.i(TAG, "[TRAINING] Stamina of $currentStat is currently less than 600 so bringing its score higher for Senior Year.")
-						2.0
-					} else 1.0
-					
-                    // Spark bonus: Prioritize training sessions for 3* sparks for Speed, Stamina, and Power stats below 600 if the setting is enabled.
-                    val isSparkStat = stat in listOf("Speed", "Stamina", "Power")
+                    // Spark bonus: Prioritize training sessions for 3* sparks for selected stats below 600 if the setting is enabled.
+                    val isSparkStat = stat in focusOnSparkStatTarget
                     val canTriggerSpark = currentStat < 600
-                    val sparkBonus = if (focusOnSparkStatTarget && isSparkStat && canTriggerSpark) {
+                    val sparkBonus = if (isSparkStat && canTriggerSpark) {
                         MessageLog.i(TAG, "[TRAINING] $stat is at $currentStat (< 600). Prioritizing this training for potential spark event to get above 600.")
                         2.5
                     } else {
@@ -926,12 +916,11 @@ class Training(private val game: Game) {
                     
                     if (game.debugMode) {
                         val bonusNote = if (isMainStat && statGain >= 30) " [HIGH MAIN STAT]" else ""
-                        val staminaNote = if (isLateGame && staminaBelowMinimum) " [LATE GAME MINIMUM]" else ""
-                        val sparkNote = if (focusOnSparkStatTarget && isSparkStat && canTriggerSpark) " [SPARK PRIORITY]" else ""
+                        val sparkNote = if (isSparkStat && canTriggerSpark) " [SPARK PRIORITY]" else ""
 						MessageLog.d(
                             TAG,
                             "$stat: gain=$statGain, completion=${game.decimalFormat.format(completionPercent)}%, " +
-							"ratioMult=${game.decimalFormat.format(ratioMultiplier)}, priorityMult=${game.decimalFormat.format(priorityMultiplier)}$bonusNote$staminaNote$sparkNote",
+							"ratioMult=${game.decimalFormat.format(ratioMultiplier)}, priorityMult=${game.decimalFormat.format(priorityMultiplier)}$bonusNote$sparkNote",
 						)
 					} else {
 						Log.d(TAG, "$stat: gain=$statGain, completion=${game.decimalFormat.format(completionPercent)}%, ratioMult=$ratioMultiplier, priorityMult=$priorityMultiplier")
@@ -942,7 +931,6 @@ class Training(private val game: Game) {
 					statScore *= ratioMultiplier
 					statScore *= priorityMultiplier
 					statScore *= mainStatBonus
-					statScore *= lateGameStaminaBonus
 					statScore *= sparkBonus
 					
 					score += statScore

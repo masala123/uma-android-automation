@@ -15,6 +15,7 @@ import ProfileSelector from "../../components/ProfileSelector"
 import { ArrowLeft } from "lucide-react-native"
 import { useSettings } from "../../context/SettingsContext"
 import { useProfileManager } from "../../hooks/useProfileManager"
+import { applyMigrations } from "../../hooks/useSettingsManager"
 import { databaseManager } from "../../lib/database"
 
 const TrainingSettings = () => {
@@ -25,6 +26,7 @@ const TrainingSettings = () => {
     const { currentProfileName } = useProfileManager()
     const [blacklistModalVisible, setBlacklistModalVisible] = useState(false)
     const [prioritizationModalVisible, setPrioritizationModalVisible] = useState(false)
+    const [sparkStatTargetModalVisible, setSparkStatTargetModalVisible] = useState(false)
     const [snackbarVisible, setSnackbarVisible] = useState(false)
     const [snackbarMessage, setSnackbarMessage] = useState("")
 
@@ -37,6 +39,14 @@ const TrainingSettings = () => {
     const [blacklistItems, setBlacklistItems] = useState<string[]>(() =>
         settings.training?.trainingBlacklist !== undefined ? settings.training.trainingBlacklist : defaultSettings.training.trainingBlacklist
     )
+    const [sparkStatTargetItems, setSparkStatTargetItems] = useState<string[]>(() => {
+        const value = settings.training?.focusOnSparkStatTarget
+        // Ensure we always have an array (migration should handle this, but be safe).
+        if (Array.isArray(value)) {
+            return value
+        }
+        return defaultSettings.training.focusOnSparkStatTarget
+    })
 
     // Merge current training settings with defaults to handle missing properties.
     // Include local state values to ensure blacklist and prioritization are current.
@@ -45,13 +55,13 @@ const TrainingSettings = () => {
         ...settings.training,
         trainingBlacklist: blacklistItems,
         statPrioritization: statPrioritizationItems,
+        focusOnSparkStatTarget: sparkStatTargetItems,
     }
     const trainingStatTargetSettings = { ...defaultSettings.trainingStatTarget, ...settings.trainingStatTarget }
     const {
         maximumFailureChance,
         disableTrainingOnMaxedStat,
         manualStatCap,
-        focusOnSparkStatTarget,
         enableRainbowTrainingBonus,
         preferredDistanceOverride,
         mustRestBeforeSummer,
@@ -69,6 +79,10 @@ const TrainingSettings = () => {
         updateTrainingSetting("trainingBlacklist", blacklistItems)
     }, [blacklistItems])
 
+    useEffect(() => {
+        updateTrainingSetting("focusOnSparkStatTarget", sparkStatTargetItems)
+    }, [sparkStatTargetItems])
+
     // Sync local state when settings change (e.g., when switching profiles).
     useEffect(() => {
         if (settings.training?.trainingBlacklist !== undefined) {
@@ -81,6 +95,13 @@ const TrainingSettings = () => {
             setStatPrioritizationItems(settings.training.statPrioritization)
         }
     }, [settings.training?.statPrioritization])
+
+    useEffect(() => {
+        const value = settings.training?.focusOnSparkStatTarget
+        if (value !== undefined && Array.isArray(value)) {
+            setSparkStatTargetItems(value)
+        }
+    }, [settings.training?.focusOnSparkStatTarget])
 
     // Sync currentProfileName from profile manager to settings context.
     // Also check database directly to ensure we have the latest value.
@@ -129,13 +150,22 @@ const TrainingSettings = () => {
     const handleOverwriteSettings = async (profileSettings: Partial<Settings>) => {
         // Get the current profile name directly from the database to ensure we have the latest value.
         const dbProfileName = await databaseManager.getCurrentProfileName()
-        // Create the updated settings object by merging profile settings with current settings.
-        const updatedSettings = {
+        
+        // Merge profile settings with current settings to create a complete Settings object for migration.
+        const mergedSettings = {
             ...bsc.settings,
             ...profileSettings,
+        } as Settings
+        
+        // Apply migrations to the merged settings (this handles focusOnSparkStatTarget and any future migrations).
+        const { settings: migratedSettings } = applyMigrations(mergedSettings)
+        
+        // Create the updated settings object with the migrated profile settings.
+        const updatedSettings = {
+            ...migratedSettings,
             misc: {
                 ...bsc.settings.misc,
-                ...profileSettings.misc,
+                ...migratedSettings.misc,
                 currentProfileName: dbProfileName || "",
             },
         }
@@ -496,16 +526,15 @@ const TrainingSettings = () => {
                         )}
                     </View>
 
-                    <View style={styles.section}>
-                        <CustomCheckbox
-                            id="focus-on-spark-stat-targets"
-                            checked={focusOnSparkStatTarget}
-                            onCheckedChange={(checked) => updateTrainingSetting("focusOnSparkStatTarget", checked)}
-                            label="Focus on Sparks for Stat Targets"
-                            description="When enabled, the bot will prioritize training sessions that have a chance to trigger spark events for stats that are below their target values."
-                            className="my-2"
-                        />
-                    </View>
+                    {renderStatSelector(
+                        "Focus on Sparks",
+                        sparkStatTargetItems,
+                        (value) => setSparkStatTargetItems(value),
+                        sparkStatTargetModalVisible,
+                        setSparkStatTargetModalVisible,
+                        "Select which stats should receive priority to get to at least 600 to get the best chance to receive 3* sparks.",
+                        "checkbox"
+                    )}
 
                     <View style={styles.section}>
                         <CustomCheckbox
