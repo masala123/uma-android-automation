@@ -233,6 +233,8 @@ class Training(private val game: Game) {
         // If not doing single training and speed training isn't active, make it active.
         if (!singleTraining && !IconTrainingHeaderSpeed.check(imageUtils = game.imageUtils)) {
             ButtonTrainingSpeed.click(imageUtils = game.imageUtils)
+            // Wait for screen to finish updating before proceeding.
+            game.wait(0.2)
         }
 
         // List to store all training analysis results for parallel processing.
