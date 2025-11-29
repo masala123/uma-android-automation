@@ -249,57 +249,77 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	 *
 	 * @param sourceBitmap Bitmap of the source image separately taken. Defaults to null.
 	 * @param trainingSelectionLocation Point location of the template image separately taken. Defaults to null.
+     * @param tries The number of retry attempts to make when detecting failure chance.
+     *              Only applies when sourceBitmap and trainingSelectionLocation are NULL.
 	 *
-	 * @return Integer representing the percentage.
+	 * @return Integer representing the percentage. On failed detection, returns -1.
 	 */
-	fun findTrainingFailureChance(sourceBitmap: Bitmap? = null, trainingSelectionLocation: Point? = null): Int {
-		// Crop the source screenshot to hold the success percentage only.
-		val (trainingSelectionLocation, sourceBitmap) = if (sourceBitmap == null && trainingSelectionLocation == null) {
-			findImage("training_failure_chance")
-		} else {
-			Pair(trainingSelectionLocation, sourceBitmap)
-		}
+	fun findTrainingFailureChance(sourceBitmap: Bitmap? = null, trainingSelectionLocation: Point? = null, tries: Int = 1): Int {
+        fun detectTrainingFailureChance(sourceBitmap: Bitmap? = null, trainingSelectionLocation: Point? = null): Int {
+            // Crop the source screenshot to hold the success percentage only.
+            val (trainingSelectionLocation, sourceBitmap) = if (sourceBitmap == null && trainingSelectionLocation == null) {
+                findImage("training_failure_chance")
+            } else {
+                Pair(trainingSelectionLocation, sourceBitmap)
+            }
 
-		if (trainingSelectionLocation == null) {
-			return -1
-		}
+            if (trainingSelectionLocation == null) {
+                return -1
+            }
 
-		// Determine crop region based on device type.
-		val (offsetX, offsetY, width, height) = if (isTablet) {
-			listOf(-65, 23, relWidth(130), relHeight(50))
-		} else {
-			listOf(-45, 15, relWidth(100), relHeight(37))
-		}
+            // Determine crop region based on device type.
+            val (offsetX, offsetY, width, height) = if (isTablet) {
+                listOf(-65, 23, relWidth(130), relHeight(50))
+            } else {
+                listOf(-45, 15, relWidth(100), relHeight(37))
+            }
 
-		// Perform OCR with 2x scaling and no thresholding.
-		val detectedText = performOCROnRegion(
-			sourceBitmap!!,
-			relX(trainingSelectionLocation.x, offsetX),
-			relY(trainingSelectionLocation.y, offsetY),
-			width,
-			height,
-			useThreshold = false,
-			useGrayscale = true,
-			scale = 2.0,
-			ocrEngine = "mlkit",
-			debugName = "TrainingFailureChance"
-		)
+            // Perform OCR with 2x scaling and no thresholding.
+            val detectedText = performOCROnRegion(
+                sourceBitmap!!,
+                relX(trainingSelectionLocation.x, offsetX),
+                relY(trainingSelectionLocation.y, offsetY),
+                width,
+                height,
+                useThreshold = false,
+                useGrayscale = true,
+                scale = 2.0,
+                ocrEngine = "mlkit",
+                debugName = "TrainingFailureChance"
+            )
 
-		// Parse the result.
-		val result = try {
-			val cleanedResult = detectedText.replace("%", "").replace(Regex("[^0-9]"), "").trim()
-			cleanedResult.toInt()
-		} catch (_: NumberFormatException) {
-			MessageLog.e(TAG, "Could not convert \"$detectedText\" to integer for training failure chance.")
-			-1
-		}
+            // Parse the result.
+            return try {
+                val cleanedResult = detectedText.replace("%", "").replace(Regex("[^0-9]"), "").trim()
+                cleanedResult.toInt()
+            } catch (_: NumberFormatException) {
+                MessageLog.e(TAG, "Could not convert \"$detectedText\" to integer for training failure chance.")
+                -1
+            }
+        }
 
-		if (debugMode) {
-			MessageLog.d(TAG, "Failure chance detected to be at $result%.")
-		} else {
-			Log.d(TAG, "Failure chance detected to be at $result%.")
-		}
+        val tries: Int = maxOf(1, tries)
+        var numAttempts: Int = 0
+        var result: Int = -1
+        for (i in 1..tries) {
+            // We only use the passed parameters on the first iteration since if
+            // we have to retry, then we want a new source bitmap.
+            if (i == 1) {
+                result = detectTrainingFailureChance(sourceBitmap, trainingSelectionLocation)
+            } else {
+                result = detectTrainingFailureChance()
+            }
 
+            if (result == -1) {
+                MessageLog.w(TAG, "Failed to detect training failure chance (attempt $i of $tries)")
+            }
+        }
+
+        if (debugMode) {
+            MessageLog.d(TAG, "Failure chance detected to be at $result%.")
+        } else {
+            Log.d(TAG, "Failure chance detected to be at $result%.")
+        }
 		return result
 	}
 

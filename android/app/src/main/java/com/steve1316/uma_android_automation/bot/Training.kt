@@ -242,7 +242,7 @@ class Training(private val game: Game) {
 
         // Check if failure chance is acceptable: either within regular threshold or within risky threshold (if enabled).
         // This acts as an early exit from training analysis to speed up training.
-        val failureChance: Int = game.imageUtils.findTrainingFailureChance()
+        val failureChance: Int = game.imageUtils.findTrainingFailureChance(tries = 3)
         if (failureChance == -1) {
             MessageLog.w(TAG, "Skipping training due to not being able to confirm whether or not the bot is at the Training screen.")
             return
@@ -437,6 +437,17 @@ class Training(private val game: Game) {
                     riskyTrainingMaxFailureChance
                 } else {
                     maximumFailureChance
+                }
+
+                // If we failed to detect a failure chance, fallback to detecting it
+                // synchronously a couple more times.
+                if (result.failureChance == -1) {
+                    result.failureChance = game.imageUtils.findTrainingFailureChance(tries = 3)
+                }
+
+                if (result.failureChance == -1) {
+                    MessageLog.w(TAG, "Failed to analyze failure chance for $statName.")
+                    continue
                 }
 
                 // Filter out trainings that exceed the effective failure chance threshold.
