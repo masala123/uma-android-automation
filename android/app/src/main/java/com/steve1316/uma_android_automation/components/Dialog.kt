@@ -183,12 +183,14 @@ interface DialogInterface {
 // This is used to easily iterate over all dialogs.
 object DialogObjects {
     val items: List<DialogInterface> = listOf(
+        DialogAgendaDetails,                // Career
         DialogAutoSelect,                   // Career Selection
         DialogBorrowCard,                   // Career Selection
         DialogBorrowCardConfirmation,       // Career Selection
         DialogCareer,                       // Career
         DialogCareerComplete,               // Career
         DialogCareerOptions,                // Career
+        DialogChoices,                      // Career (training event effects)
         DialogCompleteCareer,               // Career (yes this is different from above...)
         DialogConcertSkipConfirmation,      // Career
         DialogConfirmAutoSelect,            // Career Selection
@@ -208,6 +210,7 @@ object DialogObjects {
         DialogInsufficientFans,             // Career
         DialogItemsSelected,                // Team Trials, Special Events, Daily Races
         DialogMenu,                         // Career
+        DialogMyAgendas,                    // Career
         DialogNotices,                      // Main Screen
         DialogOpenSoon,                     // Shop (only when clicking inactive daily sales button)
         DialogPresents,                     // Main Screen (i think?)
@@ -220,6 +223,8 @@ object DialogObjects {
         DialogRest,                         // Career
         DialogRestAndRecreation,            // Career
         DialogRewardsCollected,             // Main Screen, Special Events
+        DialogScheduledRaces,               // Career
+        DialogScheduleSettings,             // Career
         DialogSessionError,                 // Anywhere
         DialogSkillListConfirmation,        // Career
         DialogSkillsLearned,                // Career
@@ -237,6 +242,21 @@ object DialogObjects {
     )
 
     val map: Map<String, DialogInterface> = items.associateBy { it.title }
+}
+
+// =========================
+//      DIALOG OBJECTS
+// =========================
+
+object DialogAgendaDetails : DialogInterface {
+    override val TAG: String = "DialogAgendaDetails"
+    override val name: String = "agenda_details"
+    override val title: String = "Agenda Details"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
 }
 
 object DialogAutoSelect : DialogInterface {
@@ -295,6 +315,17 @@ object DialogCareerComplete : DialogInterface {
     override val buttons: List<ComponentInterface> = listOf(
         ButtonToHome,
         ButtonEditTeam,
+    )
+}
+
+object DialogChoices : DialogInterface {
+    override val TAG: String = "DialogChoices"
+    override val name: String = "choices"
+    override val title: String = "Choices"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
     )
 }
 
@@ -540,6 +571,17 @@ object DialogMenu : DialogInterface {
     )
 }
 
+object DialogMyAgendas : DialogInterface {
+    override val TAG: String = "DialogMyAgendas"
+    override val name: String = "my_agendas"
+    override val title: String = "My Agendas"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
 object DialogNotices : DialogInterface {
     override val TAG: String = "DialogNotices"
     override val name: String = "notices"
@@ -712,6 +754,29 @@ object DialogRewardsCollected : DialogInterface {
     override val okButton = null
     override val buttons: List<ComponentInterface> = listOf(
         ButtonClose,
+    )
+}
+
+object DialogScheduledRaces : DialogInterface {
+    override val TAG: String = "DialogScheduledRaces"
+    override val name: String = "scheduled_races"
+    override val title: String = "Scheduled Races"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
+object DialogScheduleSettings : DialogInterface {
+    override val TAG: String = "DialogScheduleSettings"
+    override val name: String = "schedule_settings"
+    override val title: String = "Schedule Settings"
+    override val closeButton = null
+    override val okButton: ComponentInterface = ButtonSaveSchedule
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonCancel,
+        ButtonSaveSchedule,
     )
 }
 
