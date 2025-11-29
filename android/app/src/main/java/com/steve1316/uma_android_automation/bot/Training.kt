@@ -21,6 +21,11 @@ import com.steve1316.uma_android_automation.components.ButtonTrainingStamina
 import com.steve1316.uma_android_automation.components.ButtonTrainingPower
 import com.steve1316.uma_android_automation.components.ButtonTrainingGuts
 import com.steve1316.uma_android_automation.components.ButtonTrainingWit
+import com.steve1316.uma_android_automation.components.IconTrainingHeaderSpeed
+import com.steve1316.uma_android_automation.components.IconTrainingHeaderStamina
+import com.steve1316.uma_android_automation.components.IconTrainingHeaderPower
+import com.steve1316.uma_android_automation.components.IconTrainingHeaderGuts
+import com.steve1316.uma_android_automation.components.IconTrainingHeaderWit
 import com.steve1316.uma_android_automation.components.LabelTrainingFailureChance
 import com.steve1316.uma_android_automation.components.LabelStatTableHeaderSkillPoints
 import java.util.concurrent.CountDownLatch
@@ -101,7 +106,7 @@ class Training(private val game: Game) {
 	}
 	private val maximumFailureChance: Int = SettingsHelper.getIntSetting("training", "maximumFailureChance")
 	private val disableTrainingOnMaxedStat: Boolean = SettingsHelper.getBooleanSetting("training", "disableTrainingOnMaxedStat")
-	private val focusOnSparkStatTarget: List<String> = SettingsHelper.getStringArraySetting("training", "focusOnSparkStatTarget")
+	private val focusOnSparkStatTarget: List<StatName> = SettingsHelper.getStringArraySetting("training", "focusOnSparkStatTarget").map { StatName.fromName(it)!! }
 	private val enableRainbowTrainingBonus: Boolean = SettingsHelper.getBooleanSetting("training", "enableRainbowTrainingBonus")
 	private val enableRiskyTraining: Boolean = SettingsHelper.getBooleanSetting("training", "enableRiskyTraining")
 	private val riskyTrainingMinStatGain: Int = SettingsHelper.getIntSetting("training", "riskyTrainingMinStatGain")
@@ -154,7 +159,7 @@ class Training(private val game: Game) {
 
 			if (trainingMap.isEmpty()) {
 				// Check if we should force Wit training during the Finale instead of recovering energy.
-				if (trainWitDuringFinale && game.currentDate.turnNumber in 73..75) {
+				if (trainWitDuringFinale && game.currentDate.day > 72) {
 					MessageLog.i(TAG, "[TRAINING] There is not enough energy for training to be done but the setting to train Wit during the Finale is enabled. Forcing Wit training...")
 					// Directly attempt to tap Wit training.
 					if (game.findAndTapImage("training_wit", region = game.imageUtils.regionBottomHalf, taps = 3)) {
@@ -209,36 +214,39 @@ class Training(private val game: Game) {
             MessageLog.i(TAG, "\n[TRAINING] Now starting process to analyze all 5 Trainings.")
         }
 
-        // Only need to swipe across if not doing single training.
-        if (!singleTraining) {
-            // Find the speed training button location so we can swipe across.
-            val point: Point? = ButtonTrainingSpeed.find(imageUtils = game.imageUtils).first
-            if (point == null) {
-                MessageLog.e(TAG, "[TRAINING] Could not find SPEED training button.")
-                return
-            }
+        val trainingButtons: Map<StatName, ComponentInterface> = mapOf(
+            StatName.SPEED to ButtonTrainingSpeed,
+            StatName.STAMINA to ButtonTrainingStamina,
+            StatName.POWER to ButtonTrainingPower,
+            StatName.GUTS to ButtonTrainingGuts,
+            StatName.WIT to ButtonTrainingWit,
+        )
 
-            
-            // Swipe across once to make sure that ButtonTrainingSpeed isn't clicked.
-            // If it were clicked, then when we click it later when scanning trainings, it will be trained.
-            // This allows us to ensure that we always start at the speed training button in our loop.
-            if (!singleTraining) {
-                game.gestureUtils.swipe(
-                    point.x.toFloat(),
-                    point.y.toFloat(),
-                    (point.x + 500.0).toFloat(),
-                    point.y.toFloat(),
-                )
-            }
+        val iconTrainingHeaders: Map<StatName, ComponentInterface> = mapOf(
+            StatName.SPEED to IconTrainingHeaderSpeed,
+            StatName.STAMINA to IconTrainingHeaderStamina,
+            StatName.POWER to IconTrainingHeaderPower,
+            StatName.GUTS to IconTrainingHeaderGuts,
+            StatName.WIT to IconTrainingHeaderWit,
+        )
+
+        // If not doing single training and speed training isn't active, make it active.
+        if (!singleTraining && !IconTrainingHeaderSpeed.check(imageUtils = game.imageUtils)) {
+            ButtonTrainingSpeed.click(imageUtils = game.imageUtils)
         }
 
         // List to store all training analysis results for parallel processing.
         val analysisResults = mutableListOf<TrainingAnalysisResult>()
 
         // Check if failure chance is acceptable: either within regular threshold or within risky threshold (if enabled).
+        // This acts as an early exit from training analysis to speed up training.
+        val failureChance: Int = game.imageUtils.findTrainingFailureChance()
+        if (failureChance == -1) {
+            MessageLog.w(TAG, "Skipping training due to not being able to confirm whether or not the bot is at the Training screen.")
+            return
+        }
         val isWithinRegularThreshold = failureChance <= maximumFailureChance
         val isWithinRiskyThreshold = enableRiskyTraining && failureChance <= riskyTrainingMaxFailureChance
-
         if (test || isWithinRegularThreshold || isWithinRiskyThreshold) {
             if (!test) {
                 if (isWithinRegularThreshold) {
@@ -248,28 +256,42 @@ class Training(private val game: Game) {
                 }
             }
         }
+        
+        // Now analyze each stat.
         for (statName in StatName.entries) {
             if (!test && statName in blacklist) {
                 MessageLog.i(TAG, "[TRAINING] Skipping $statName training due to being blacklisted.")
                 continue
             }
 
+            // Keep iterating until the current training is found.
             if (singleTraining) {
-                if (game.imageUtils.findImage("${statName.name.lowercase()}_training_header", tries = 1, region = game.imageUtils.regionTopHalf, suppressError = true).first == null) {
-                    // Keep iterating until the current training is found.
+                val iconTrainingHeader = iconTrainingHeaders[statName]!!
+                if (!iconTrainingHeader.check(imageUtils = game.imageUtils)) {
                     continue
                 }
                 MessageLog.i(TAG, "[TRAINING] The $statName training is currently selected on the screen.")
             }
 
-            // Get the training button for this stat then click it.
-            val trainingButton = when (statName) {
-                StatName.SPEED -> ButtonTrainingSpeed
-                StatName.STAMINA -> ButtonTrainingStamina
-                StatName.POWER -> ButtonTrainingPower
-                StatName.GUTS -> ButtonTrainingGuts
-                StatName.WIT -> ButtonTrainingWit
+
+            // Only click the button if we arent doing single training.
+            if (!singleTraining) {
+                if (!trainingButtons[statName]!!.click(imageUtils = game.imageUtils)) {
+                    MessageLog.e(TAG, "[TRAINING] Failed to click training button for $statName. Aborting training...")
+                    return
+                }
             }
+
+            // Slight delay for UI to update after clicking button.
+            game.wait(0.2)
+
+            // Get bitmaps and locations before starting threads to make them safe for parallel processing.
+            val sourceBitmap = game.imageUtils.getSourceBitmap()
+            val skillPointsLocation = LabelStatTableHeaderSkillPoints.find(imageUtils = game.imageUtils).first
+            val failureChanceLocation = LabelTrainingFailureChance.find(imageUtils = game.imageUtils).first
+
+            // Record start time for elapsed time measurement.
+            val startTime = System.currentTimeMillis()
 
             // Unified approach: always use result object and start threads the same way.
             // Use CountDownLatch to run the operations in parallel to cut down on processing time.
@@ -280,9 +302,6 @@ class Training(private val game: Game) {
             // Create log message buffer for this training.
             val logMessages = ConcurrentLinkedQueue<String>()
 
-            // Record start time for elapsed time measurement.
-            val startTime = System.currentTimeMillis()
-
             // Create result object to store analysis state.
             val result = TrainingAnalysisResult(
                 name = statName,
@@ -290,46 +309,6 @@ class Training(private val game: Game) {
                 latch = latch,
                 startTime = startTime,
             )
-
-            // Only click the button if we arent doing single training.
-            if (!singleTraining) {
-                if (!trainingButton.click(imageUtils = game.imageUtils)) {
-                    MessageLog.e(TAG, "[TRAINING] Failed to click training button for $statName. Aborting training...")
-                    return
-                }
-            }
-
-            // Slight delay for UI to update after clicking button.
-            game.wait(0.2)
-
-            val (skillPointsLocation, sourceBitmap) = LabelStatTableHeaderSkillPoints.find(imageUtils = game.imageUtils)
-            if (skillPointsLocation == null) {
-                MessageLog.e(TAG, "[TRAINING] Could not find LabelStatTableHeaderSkillPoints. Aborting training...")
-                return
-            }
-
-            val (failureChanceLocation, _) = LabelTrainingFailureChance.find(imageUtils = game.imageUtils)
-            if (failureChanceLocation == null) {
-                MessageLog.e(TAG, "[TRAINING] Could not find LabelTrainingFailureChance. Aborting training...")
-                return
-            }
-
-            val failureChance: Int = game.imageUtils.findTrainingFailureChance(sourceBitmap, failureChanceLocation)
-            if (failureChance == -1) {
-                MessageLog.w(TAG, "[TRAINING] Skipping training due to not being able to confirm whether or not the bot is at the Training screen.")
-                return
-            }
-
-            if (!test && failureChance > maximumFailureChance) {
-                // Clear the Training map if the bot failed to have enough energy to conduct the training.
-                MessageLog.i(TAG, "[TRAINING] $failureChance% is not within acceptable range of ${maximumFailureChance}%. Proceeding to recover energy.")
-                trainingMap.clear()
-                return
-            }
-
-            if (!test) {
-                MessageLog.i(TAG, "[TRAINING] $failureChance% within acceptable range of ${maximumFailureChance}%. Proceeding to acquire all other percentages and total stat increases...")
-            }
 
             // For Unity Cup in parallel mode, run Spirit Explosion Gauge analysis synchronously before moving to next training.
             // This ensures if retry is needed, it can take a new screenshot while still on the correct training.
@@ -357,7 +336,7 @@ class Training(private val game: Game) {
             Thread {
                 val startTimeStatGains = System.currentTimeMillis()
                 try {
-                    val statGainResult = game.imageUtils.determineStatGainFromTraining(statName, sourceBitmap, skillPointsLocation)
+                    val statGainResult = game.imageUtils.determineStatGainFromTraining(statName, sourceBitmap, skillPointsLocation!!)
                     result.statGains = statGainResult.statGains
                     result.statGainRowValues = statGainResult.rowValuesMap
                 } catch (e: Exception) {
@@ -378,7 +357,7 @@ class Training(private val game: Game) {
             Thread {
                 val startTimeFailureChance = System.currentTimeMillis()
                 try {
-                    result.failureChance = game.imageUtils.findTrainingFailureChance(sourceBitmap, failureChanceLocation)
+                    result.failureChance = game.imageUtils.findTrainingFailureChance(sourceBitmap, failureChanceLocation!!)
                 } catch (e: Exception) {
                     MessageLog.e(TAG, "Error in findTrainingFailureChance: ${e.stackTraceToString()}")
                     result.failureChance = -1
@@ -810,10 +789,10 @@ class Training(private val game: Game) {
 					
 					val isLateGame = game.currentDate.year == DateYear.SENIOR
                     // Spark bonus: Prioritize training sessions for 3* sparks for selected stats below 600 if the setting is enabled.
-                    val isSparkStat = stat in focusOnSparkStatTarget
+                    val isSparkStat = statName in focusOnSparkStatTarget
                     val canTriggerSpark = currentStat < 600
                     val sparkBonus = if (isSparkStat && canTriggerSpark) {
-                        MessageLog.i(TAG, "[TRAINING] $stat is at $currentStat (< 600). Prioritizing this training for potential spark event to get above 600.")
+                        MessageLog.i(TAG, "[TRAINING] $statName is at $currentStat (< 600). Prioritizing this training for potential spark event to get above 600.")
                         2.5
                     } else {
                         1.0
@@ -824,7 +803,7 @@ class Training(private val game: Game) {
                         val sparkNote = if (isSparkStat && canTriggerSpark) " [SPARK PRIORITY]" else ""
 						MessageLog.d(
                             TAG,
-                            "$stat: gain=$statGain, completion=${game.decimalFormat.format(completionPercent)}%, " +
+                            "$statName: gain=$statGain, completion=${game.decimalFormat.format(completionPercent)}%, " +
 							"ratioMult=${game.decimalFormat.format(ratioMultiplier)}, priorityMult=${game.decimalFormat.format(priorityMultiplier)}$bonusNote$sparkNote",
 						)
 					} else {
@@ -1025,7 +1004,7 @@ class Training(private val game: Game) {
 		if (trainingSelected != null) {
 			printTrainingMap()
 			MessageLog.i(TAG, "[TRAINING] Executing the $trainingSelected Training.")
-			game.findAndTapImage("training_${trainingSelected.lowercase()}", region = game.imageUtils.regionBottomHalf, taps = 3)
+			game.findAndTapImage("training_${trainingSelected.name.lowercase()}", region = game.imageUtils.regionBottomHalf, taps = 3)
             game.wait(1.0)
 
             // Dismiss any popup warning about a scheduled race.

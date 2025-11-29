@@ -71,17 +71,17 @@ class Trainee {
     private val statTargetsByDistance = mutableMapOf<TrackDistance, Stats>()
 
     val stats: Stats = Stats()
-    val trackSurfaceAptitudes: MutableMap<TrackSurface, Aptitude> = mutableMapOf<TrackSurface, Aptitude>(
+    val trackSurfaceAptitudes: MutableMap<TrackSurface, Aptitude> = mutableMapOf(
         TrackSurface.TURF to Aptitude.G,
         TrackSurface.DIRT to Aptitude.G,
     )
-    val trackDistanceAptitudes: MutableMap<TrackDistance, Aptitude> = mutableMapOf<TrackDistance, Aptitude>(
+    val trackDistanceAptitudes: MutableMap<TrackDistance, Aptitude> = mutableMapOf(
         TrackDistance.SPRINT to Aptitude.G,
         TrackDistance.MILE to Aptitude.G,
         TrackDistance.MEDIUM to Aptitude.G,
         TrackDistance.LONG to Aptitude.G,
     )
-    val runningStyleAptitudes: MutableMap<RunningStyle, Aptitude> = mutableMapOf<RunningStyle, Aptitude>(
+    val runningStyleAptitudes: MutableMap<RunningStyle, Aptitude> = mutableMapOf(
         RunningStyle.FRONT_RUNNER to Aptitude.G,
         RunningStyle.PACE_CHASER to Aptitude.G,
         RunningStyle.LATE_SURGER to Aptitude.G,
@@ -235,16 +235,17 @@ class Trainee {
         imageUtils: CustomImageUtils,
         label: ComponentInterface,
     ): Map<T, Aptitude>? {
-        var result = mutableMapOf<T, Aptitude>()
+        val result = mutableMapOf<T, Aptitude>()
 
-        val (point, bitmap) = label.find(imageUtils = imageUtils)
+        val bitmap: Bitmap = imageUtils.getSourceBitmap()
+        val point: Point? = label.find(imageUtils = imageUtils).first
         if (point == null) {
             MessageLog.e(TAG, "findAptitudesInBitmap<${T::class.simpleName}>:: point is NULL.")
             return null
         }
 
         enumEntries<T>().forEachIndexed { index, option ->
-            val croppedBitmap = imageUtils.createSafeBitmap(
+            val croppedBitmap: Bitmap? = imageUtils.createSafeBitmap(
                 bitmap,
                 imageUtils.relX(point.x, 108 + (index * 190)),
                 imageUtils.relY(point.y, -25),
@@ -351,16 +352,20 @@ class Trainee {
         }
     }
 
-    fun updateMood(imageUtils: CustomImageUtils) {
-        mood = when {
+    fun checkMood(imageUtils: CustomImageUtils): Mood? {
+        return when {
             IconMoodAwful.check(imageUtils = imageUtils) -> Mood.AWFUL
             IconMoodBad.check(imageUtils = imageUtils) -> Mood.BAD
             IconMoodNormal.check(imageUtils = imageUtils) -> Mood.NORMAL
             IconMoodGood.check(imageUtils = imageUtils) -> Mood.GOOD
             IconMoodGreat.check(imageUtils = imageUtils) -> Mood.GREAT
-            // Fallback to AWFUL mood so we can always assume worst case.
-            else -> Mood.AWFUL
+            else -> null
         }
+    }
+
+    fun updateMood(imageUtils: CustomImageUtils) {
+        // If checkMood returns NULL, then make no change to the mood state.
+        mood = checkMood(imageUtils) ?: mood
     }
 
     /**
@@ -374,7 +379,7 @@ class Trainee {
                 val trackDistanceString = trackDistance.name.lowercase().replaceFirstChar { it.uppercase() }
                 val target: Int = SettingsHelper.getIntSetting(
                     "trainingStatTarget",
-                    "training${trackDistanceString}StatTarget_${statName.name.lowercase()}StatTarget",
+                    "training${trackDistanceString}StatTarget_${statNameString}StatTarget",
                 )
                 newStats.setStat(statName, target)
             }

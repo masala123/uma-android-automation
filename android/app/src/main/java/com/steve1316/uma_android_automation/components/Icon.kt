@@ -37,3 +37,38 @@ object IconMoodAwful : ComponentInterface {
         Template("components/icon/mood_awful")
     )
 }
+
+object IconTrainingHeaderSpeed : ComponentInterface {
+    override val TAG: String = "IconTrainingHeaderSpeed"
+    override val templates: List<Template> = listOf<Template>(
+        Template("components/icon/training_header_speed")
+    )
+}
+
+object IconTrainingHeaderStamina : ComponentInterface {
+    override val TAG: String = "IconTrainingHeaderStamina"
+    override val templates: List<Template> = listOf<Template>(
+        Template("components/icon/training_header_stamina")
+    )
+}
+
+object IconTrainingHeaderPower : ComponentInterface {
+    override val TAG: String = "IconTrainingHeaderPower"
+    override val templates: List<Template> = listOf<Template>(
+        Template("components/icon/training_header_power")
+    )
+}
+
+object IconTrainingHeaderGuts : ComponentInterface {
+    override val TAG: String = "IconTrainingHeaderGuts"
+    override val templates: List<Template> = listOf<Template>(
+        Template("components/icon/training_header_guts")
+    )
+}
+
+object IconTrainingHeaderWit : ComponentInterface {
+    override val TAG: String = "IconTrainingHeaderWit"
+    override val templates: List<Template> = listOf<Template>(
+        Template("components/icon/training_header_wit")
+    )
+}

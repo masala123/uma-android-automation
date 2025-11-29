@@ -20,6 +20,7 @@ import com.steve1316.uma_android_automation.components.ButtonHomeFullStats
 import com.steve1316.uma_android_automation.utils.types.FanCountClass
 import com.steve1316.uma_android_automation.utils.types.BoundingBox
 import com.steve1316.uma_android_automation.utils.types.Aptitude
+import com.steve1316.uma_android_automation.utils.types.Mood
 import com.steve1316.uma_android_automation.components.LabelUmamusumeClassFans
 import com.steve1316.uma_android_automation.components.ButtonHomeFansInfo
 
@@ -557,7 +558,7 @@ class Game(val myContext: Context) {
 	fun checkFinalsStop(): Boolean {
 		if (!enableStopBeforeFinals) {
 			return false
-		} else if (currentDate.turnNumber > 72) {
+		} else if (currentDate.day > 72) {
             // If already past turn 72, skip the check to prevent re-checking.
 			return false
 		}
@@ -566,7 +567,7 @@ class Game(val myContext: Context) {
 		val sourceBitmap = imageUtils.getSourceBitmap()
 
 		// Check if turn is 72, but only stop if we progressed to turn 72 during this run.
-		if (currentDate.turnNumber == 72 && stopBeforeFinalsInitialTurnNumber != -1) {
+		if (currentDate.day == 72 && stopBeforeFinalsInitialTurnNumber != -1) {
 			MessageLog.i(TAG, "[FINALS] Detected turn 72. Stopping bot before the finals.")
 			notificationMessage = "Stopping bot before the finals on turn 72."
 			return true
@@ -574,7 +575,7 @@ class Game(val myContext: Context) {
 
         // Track initial turn number on first check to avoid stopping if bot starts on turn 72.
 		if (stopBeforeFinalsInitialTurnNumber == -1) {
-			stopBeforeFinalsInitialTurnNumber = currentDate.turnNumber
+			stopBeforeFinalsInitialTurnNumber = currentDate.day
 		}
 
 		return false
@@ -722,31 +723,19 @@ class Game(val myContext: Context) {
 	fun recoverMood(): Boolean {
 		MessageLog.i(TAG, "\n[MOOD] Detecting current mood on ${currentDate}.")
 
-		// Detect what Mood the bot is at.
         val sourceBitmap = imageUtils.getSourceBitmap()
-		val currentMood: String = when {
-			imageUtils.findImageWithBitmap("mood_normal", sourceBitmap, region = imageUtils.regionTopHalf, suppressError = true) != null -> {
-				"Normal"
-			}
-			imageUtils.findImageWithBitmap("mood_good", sourceBitmap, region = imageUtils.regionTopHalf, suppressError = true) != null -> {
-				"Good"
-			}
-			imageUtils.findImageWithBitmap("mood_great", sourceBitmap, region = imageUtils.regionTopHalf, suppressError = true) != null -> {
-				"Great"
-			}
-			else -> {
-				"Bad/Awful"
-			}
-		}
 
-		MessageLog.i(TAG, "[MOOD] Detected mood to be $currentMood.")
+        // Make sure the trainee's mood is up to date.
+        trainee.updateMood(imageUtils)
+
+		MessageLog.i(TAG, "[MOOD] Detected mood to be ${trainee.mood}.")
 
 		// Only recover mood if its below Good mood and its not Summer.
-		return if (training.firstTrainingCheck && currentMood == "Normal" && imageUtils.findImageWithBitmap("recover_energy_summer", sourceBitmap, region = imageUtils.regionBottomHalf, suppressError = true) == null) {
+		return if (training.firstTrainingCheck && trainee.mood == Mood.NORMAL && imageUtils.findImageWithBitmap("recover_energy_summer", sourceBitmap, region = imageUtils.regionBottomHalf, suppressError = true) == null) {
 			MessageLog.i(TAG, "[MOOD] Current mood is Normal. Not recovering mood due to firstTrainingCheck flag being active. Will need to complete a training first before being allowed to recover mood.")
 			false
-		} else if ((currentMood == "Bad/Awful" || currentMood == "Normal") && imageUtils.findImageWithBitmap("recover_energy_summer", sourceBitmap, region = imageUtils.regionBottomHalf, suppressError = true) == null) {
-			MessageLog.i(TAG, "[MOOD] Current mood is not good. Recovering mood now.")
+		} else if ((trainee.mood < Mood.GOOD) && imageUtils.findImageWithBitmap("recover_energy_summer", sourceBitmap, region = imageUtils.regionBottomHalf, suppressError = true) == null) {
+			MessageLog.i(TAG, "[MOOD] Current mood is not good (${trainee.mood}). Recovering mood now.")
 
             // Check if a date is available.
             if (!recreationDateCompleted && imageUtils.findImage("recreation_date", tries = 1, region = imageUtils.regionBottomHalf).first != null) {
