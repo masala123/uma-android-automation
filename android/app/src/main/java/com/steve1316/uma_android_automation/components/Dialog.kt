@@ -214,6 +214,7 @@ object DialogObjects {
         DialogNotices,                      // Main Screen
         DialogOpenSoon,                     // Shop (only when clicking inactive daily sales button)
         DialogPresents,                     // Main Screen (i think?)
+        DialogPurchaseAlarmClock,           // Career
         DialogPurchaseDailyRaceTicket,      // Daily Races
         DialogQuickModeSettings,            // Career
         DialogRaceDetails,                  // Daily Races, Special Events, and Career
@@ -625,6 +626,18 @@ object DialogPresents : DialogInterface {
     override val buttons: List<ComponentInterface> = listOf(
         ButtonClose,
         ButtonCollectAll,
+    )
+}
+
+object DialogPurchaseAlarmClock : DialogInterface {
+    override val TAG: String = "DialogPurchaseAlarmClock"
+    override val name: String = "purchase_alarm_clock"
+    override val title: String = "Purchase Alarm Clock"
+    override val closeButton = null
+    override val okButton: ComponentInterface = ButtonOk
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonCancel,
+        ButtonOk,
     )
 }
 
