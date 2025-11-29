@@ -8,6 +8,21 @@ import com.steve1316.uma_android_automation.utils.types.DateYear
 import com.steve1316.uma_android_automation.utils.types.DateMonth
 import com.steve1316.uma_android_automation.utils.types.DatePhase
 
+import com.steve1316.uma_android_automation.components.ButtonRaceRecommendationsCenterStage
+import com.steve1316.uma_android_automation.components.ButtonCareerSkipOff
+import com.steve1316.uma_android_automation.components.ButtonCareerSkip1
+import com.steve1316.uma_android_automation.components.ButtonCareerQuick
+import com.steve1316.uma_android_automation.components.ButtonCareerQuickEnabled
+import com.steve1316.uma_android_automation.components.Checkbox
+import com.steve1316.uma_android_automation.components.DialogUtils
+import com.steve1316.uma_android_automation.components.DialogInterface
+import com.steve1316.uma_android_automation.components.LabelUmamusumeClassFans
+import com.steve1316.uma_android_automation.components.RadioCareerQuickShortenAllEvents
+import com.steve1316.uma_android_automation.components.RadioPortrait
+
+import android.graphics.Bitmap
+import org.opencv.core.Point
+
 /**
  * Base campaign class that contains all shared logic for campaign automation.
  * Campaign-specific logic should be implemented in subclasses by overriding the appropriate methods.
@@ -18,6 +33,164 @@ open class Campaign(val game: Game) {
 
     private val mustRestBeforeSummer: Boolean = SettingsHelper.getBooleanSetting("training", "mustRestBeforeSummer")
     private val enableFarmingFans: Boolean = SettingsHelper.getBooleanSetting("racing", "enableFarmingFans")
+
+    protected var bHasSetQuickMode: Boolean = false
+
+    open fun handleDialogs(): Boolean {
+        val dialog: DialogInterface? = DialogUtils.getDialog(imageUtils = game.imageUtils)
+        if (dialog == null) {
+            return false
+        }
+
+        MessageLog.d(TAG, "[DIALOG] ${dialog.name}")
+
+        when (dialog.name) {
+            "agenda_details" -> dialog.close(imageUtils = game.imageUtils)
+            "bonus_umamusume_details" -> dialog.close(imageUtils = game.imageUtils)
+            "career" -> dialog.close(imageUtils = game.imageUtils)
+            "career_event_details" -> dialog.close(imageUtils = game.imageUtils)
+            "career_profile" -> dialog.close(imageUtils = game.imageUtils)
+            "concert_skip_confirmation" -> {
+                // Click the checkbox to prevent this popup in the future.
+                Checkbox.click(imageUtils = game.imageUtils)
+                dialog.ok(imageUtils = game.imageUtils)
+            }
+            "consecutive_race_warning" -> {
+                dialog.ok(imageUtils = game.imageUtils)
+            }
+            "epithets" -> dialog.close(imageUtils = game.imageUtils)
+            "fans" -> dialog.close(imageUtils = game.imageUtils)
+            "featured_cards" -> dialog.close(imageUtils = game.imageUtils)
+            "give_up" -> dialog.close(imageUtils = game.imageUtils)
+            "goals" -> dialog.close(imageUtils = game.imageUtils)
+            "infirmary" -> {
+                Checkbox.click(imageUtils = game.imageUtils)
+                dialog.ok(imageUtils = game.imageUtils)
+            }
+            "insufficient_fans" -> {
+                // We are handling the logic for when to race on our own.
+                // Thus we just close this warning."
+                dialog.close(imageUtils = game.imageUtils)
+            }
+            "log" -> dialog.close(imageUtils = game.imageUtils)
+            "menu" -> dialog.close(imageUtils = game.imageUtils)
+            "mood_effect" -> dialog.close(imageUtils = game.imageUtils)
+            "my_agendas" -> dialog.close(imageUtils = game.imageUtils)
+            "options" -> dialog.close(imageUtils = game.imageUtils)
+            "perks" -> dialog.close(imageUtils = game.imageUtils)
+            "quick_mode_settings" -> {
+                RadioCareerQuickShortenAllEvents.click(imageUtils = game.imageUtils)
+                dialog.ok(imageUtils = game.imageUtils)
+                bHasSetQuickMode = true
+            }
+            "race_details" -> {
+                dialog.ok(imageUtils = game.imageUtils)
+            }
+            "race_playback" -> {
+                // Select portrait mode to prevent game from switching to landscape.
+                RadioPortrait.click(imageUtils = game.imageUtils)
+                // Click the checkbox to prevent this popup in the future.
+                Checkbox.click(imageUtils = game.imageUtils)
+                dialog.ok(imageUtils = game.imageUtils)
+            }
+            "race_recommendations" -> {
+                ButtonRaceRecommendationsCenterStage.click(imageUtils = game.imageUtils)
+                Checkbox.click(imageUtils = game.imageUtils)
+                dialog.ok(imageUtils = game.imageUtils)
+            }
+            "recreation" -> {
+                Checkbox.click(imageUtils = game.imageUtils)
+                dialog.ok(imageUtils = game.imageUtils)
+            }
+            "rest" -> {
+                Checkbox.click(imageUtils = game.imageUtils)
+                dialog.ok(imageUtils = game.imageUtils)
+            }
+            "rest_and_recreation" -> {
+                // Does not have a checkbox unlike the other rest/rec/etc.
+                // TODO: Go through menu to set this option.
+                dialog.ok(imageUtils = game.imageUtils)
+            }
+            "scheduled_races" -> dialog.close(imageUtils = game.imageUtils)
+            "schedule_settings" -> dialog.close(imageUtils = game.imageUtils)
+            "skill_details" -> dialog.close(imageUtils = game.imageUtils)
+            "song_acquired" -> dialog.close(imageUtils = game.imageUtils)
+            "spark_details" -> dialog.close(imageUtils = game.imageUtils)
+            "sparks" -> dialog.close(imageUtils = game.imageUtils)
+            "team_info" -> dialog.close(imageUtils = game.imageUtils)
+            "trophy_won" -> dialog.close(imageUtils = game.imageUtils)
+            "try_again" -> {
+                dialog.ok(imageUtils = game.imageUtils)
+                game.wait(5.0)
+            }
+            "umamusume_class" -> {
+                val bitmap: Bitmap = game.imageUtils.getSourceBitmap()
+                val templateBitmap: Bitmap? = game.imageUtils.getBitmaps(LabelUmamusumeClassFans.template.path).second
+                if (templateBitmap == null) {
+                    MessageLog.e(TAG, "[DIALOG] umamusume_class: Could not get template bitmap for LabelUmamusumeClassFans: ${LabelUmamusumeClassFans.template.path}.")
+                    dialog.close(imageUtils = game.imageUtils)
+                    return true
+                }
+                val point: Point? = LabelUmamusumeClassFans.find(imageUtils = game.imageUtils).first
+                if (point == null) {
+                    MessageLog.w(TAG, "[DIALOG] umamusume_class: Could not find LabelUmamusumeClassFans.")
+                    dialog.close(imageUtils = game.imageUtils)
+                    return true
+                }
+
+                // Add a small 8px buffer to vertical component.
+                val x = (point.x + (templateBitmap.width / 2)).toInt()
+                val y = (point.y - (templateBitmap.height / 2) - 4).toInt()
+                val w = 300
+                val h = templateBitmap.height + 4
+
+                val croppedBitmap = game.imageUtils.createSafeBitmap(
+                    bitmap,
+                    x,
+                    y,
+                    w,
+                    h,
+                    "dialog::umamusume_class: Cropped bitmap.",
+                )
+                if (croppedBitmap == null) {
+                    MessageLog.e(TAG, "[DIALOG] umamusume_class: Failed to crop bitmap.")
+                    dialog.close(imageUtils = game.imageUtils)
+                    return true
+                }
+                val fans = game.imageUtils.getUmamusumeClassDialogFanCount(croppedBitmap)
+                if (fans != null) {
+                    game.trainee.fans = fans
+                    game.bNeedToCheckFans = false
+                    MessageLog.d(TAG, "[DIALOG] umamusume_class: Updated fan count: ${game.trainee.fans}")
+                } else {
+                    MessageLog.w(TAG, "[DIALOG] umamusume_class: getUmamusumeClassDialogFanCount returned NULL.")
+                }
+                
+                dialog.close(imageUtils = game.imageUtils)
+            }
+            "umamusume_details" -> {
+                val prevTrackSurface = game.trainee.trackSurface
+                val prevTrackDistance = game.trainee.trackDistance
+                val prevRunningStyle = game.trainee.runningStyle
+                game.trainee.updateAptitudes(imageUtils = game.imageUtils)
+                game.trainee.bTemporaryRunningStyleAptitudesUpdated = false
+
+                if (game.trainee.runningStyle != prevRunningStyle) {
+                    // Reset this flag since our preferred running style has changed.
+                    game.trainee.bHasSetRunningStyle = false
+                }
+
+                dialog.close(imageUtils = game.imageUtils)
+            }
+            "unity_cup_available" -> dialog.close(imageUtils = game.imageUtils)
+            "unmet_requirements" -> dialog.close(imageUtils = game.imageUtils)
+            else -> {
+                return false
+            }
+        }
+
+        return true
+    }
 
 	/**
 	 * Campaign-specific training event handling.
@@ -46,6 +219,13 @@ open class Campaign(val game: Game) {
 	 */
 	fun start() {
 		while (true) {
+            try {
+                handleDialogs()
+                game.handleDialogs()
+            } catch (e: InterruptedException) {
+                MessageLog.e(TAG, "Dialog handler triggered bot to stop: ${e.message}")
+                break
+            }
 			////////////////////////////////////////////////
 			// Most bot operations start at the Main screen.
 			if (game.checkMainScreen()) {
@@ -54,6 +234,23 @@ open class Campaign(val game: Game) {
 					MessageLog.i(TAG, "\n[END] Stopping bot due to scenario validation failure.")
 					break
 				}
+
+                if (!bHasSetQuickMode) {
+                    // Click the Quick Mode button regardless of its state
+                    // so that we can verify the correct setting.
+                    if (!ButtonCareerQuick.click(imageUtils = game.imageUtils)) {
+                        ButtonCareerQuickEnabled.click(imageUtils = game.imageUtils)
+                        continue // forces handleDialogs.
+                    }
+                }
+
+                // Set the `skip` button to 2x.
+                if (ButtonCareerSkipOff.click(imageUtils = game.imageUtils)) {
+                    continue // restart loop
+                }
+                if (ButtonCareerSkip1.click(imageUtils = game.imageUtils)) {
+                    continue // restart loop
+                }
 
 				// Check if bot should stop before the finals.
 				if (game.checkFinalsStop()) {

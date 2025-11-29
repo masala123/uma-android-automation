@@ -21,7 +21,6 @@ import com.steve1316.uma_android_automation.utils.types.FanCountClass
 import com.steve1316.uma_android_automation.utils.types.BoundingBox
 import com.steve1316.uma_android_automation.utils.types.Aptitude
 import com.steve1316.uma_android_automation.utils.types.Mood
-import com.steve1316.uma_android_automation.components.LabelUmamusumeClassFans
 import com.steve1316.uma_android_automation.components.ButtonHomeFansInfo
 
 import com.steve1316.uma_android_automation.components.ButtonCraneGame
@@ -68,6 +67,12 @@ class Game(val myContext: Context) {
 	private val enablePopupCheck: Boolean = SettingsHelper.getBooleanSetting("general", "enablePopupCheck")
     private val enableCraneGameAttempt: Boolean = SettingsHelper.getBooleanSetting("general", "enableCraneGameAttempt")
     private val enableStopBeforeFinals: Boolean = SettingsHelper.getBooleanSetting("general", "enableStopBeforeFinals")
+    
+    // Tracks the number of connection error retries. After hitting max, bot stops.
+    private val maxConnectionErrorRetryAttempts: Int = 3
+    private var connectionErrorRetryAttempts: Int = 0
+    private var lastConnectionErrorRetryTimeMs: Long = 0
+    private val connectionErrorRetryCooldownTimeMs: Long = 10000 // 10 seconds
 
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
@@ -75,7 +80,6 @@ class Game(val myContext: Context) {
     var currentDate: GameDate = GameDate(day = 1)
 	private var inheritancesDone = 0
 
-    protected var bTemporaryRunningStyleAptitudesUpdated: Boolean = false
     // Should always check fan count at bot start unless in pre-debut.
     var bNeedToCheckFans: Boolean = true
     private var recreationDateCompleted: Boolean = false
@@ -93,9 +97,9 @@ class Game(val myContext: Context) {
         // button so they are easily mistaken by OCR.
         // Thus we just tap their location manually.
         if (scenario == "Unity Cup") {
-            tap(264.0, 1184.0, ButtonHomeFansInfo.templates[0].name, ignoreWaiting = true)
+            tap(264.0, 1184.0, ButtonHomeFansInfo.template.path, ignoreWaiting = true)
         } else {
-            tap(240.0, 330.0, ButtonHomeFansInfo.templates[0].name, ignoreWaiting = true)
+            tap(240.0, 330.0, ButtonHomeFansInfo.template.path, ignoreWaiting = true)
         }
     }
 
@@ -108,9 +112,9 @@ class Game(val myContext: Context) {
     }
 
     fun getFanCountClass(bitmap: Bitmap? = null): FanCountClass? {
-        val (bitmap, templateBitmap) = imageUtils.getBitmaps(ButtonHomeFansInfo.templates[0].name)
+        val (bitmap, templateBitmap) = imageUtils.getBitmaps(ButtonHomeFansInfo.template.path)
         if (templateBitmap == null) {
-            MessageLog.e(TAG, "getFanCountClass: Could not get template bitmap for ButtonHomeFansInfo: ${ButtonHomeFansInfo.templates[0].name}.")
+            MessageLog.e(TAG, "getFanCountClass: Could not get template bitmap for ButtonHomeFansInfo: ${ButtonHomeFansInfo.template.path}.")
             return null
         }
         val point: Point? = ButtonHomeFansInfo.find(imageUtils = imageUtils).first
@@ -145,72 +149,41 @@ class Game(val myContext: Context) {
         return fanCountClass
     }
 
-    fun handleDialogs() {
+    fun handleDialogs(): Boolean {
         val dialog: DialogInterface? = DialogUtils.getDialog(imageUtils = imageUtils)
         if (dialog == null) {
-            return
+            return false
         }
 
-        MessageLog.d(TAG, "[DIALOG] Found Dialog: ${dialog.name}")
+        MessageLog.d(TAG, "[DIALOG] ${dialog.name}")
 
         when (dialog.name) {
-            "umamusume_class" -> {
-                MessageLog.d(TAG, "Dialog Event: Campaign: umamusume_class")
-                val (bitmap, templateBitmap) = imageUtils.getBitmaps(LabelUmamusumeClassFans.templates[0].name)
-                if (templateBitmap == null) {
-                    MessageLog.e(TAG, "[DIALOG] umamusume_class: Could not get template bitmap for LabelUmamusumeClassFans: ${LabelUmamusumeClassFans.templates[0].name}.")
-                    return
-                }
-                val point: Point? = LabelUmamusumeClassFans.find(imageUtils = imageUtils).first
-                if (point == null) {
-                    MessageLog.w(TAG, "[DIALOG] umamusume_class: Could not find LabelUmamusumeClassFans.")
-                    return
+            "connection_error" -> {
+                val currTime: Long = System.currentTimeMillis()
+                // If the cooldown period has lapsed, reset our count.
+                if (currTime - lastConnectionErrorRetryTimeMs > connectionErrorRetryCooldownTimeMs) {
+                    connectionErrorRetryAttempts = 0
+                    lastConnectionErrorRetryTimeMs = currTime
                 }
 
-                // Add a small 8px buffer to vertical component.
-                val x = (point.x + (templateBitmap.width / 2)).toInt()
-                val y = (point.y - (templateBitmap.height / 2) - 4).toInt()
-                val w = 300
-                val h = templateBitmap.height + 4
+                if (connectionErrorRetryAttempts >= maxConnectionErrorRetryAttempts) {
+                    throw InterruptedException("Max connection error retry attempts reached. Stopping bot...")
+                }
 
-                val croppedBitmap = imageUtils.createSafeBitmap(
-                    bitmap,
-                    x,
-                    y,
-                    w,
-                    h,
-                    "dialog::umamusume_class: Cropped bitmap.",
-                )
-                if (croppedBitmap == null) {
-                    MessageLog.e(TAG, "[DIALOG] umamusume_class: Failed to crop bitmap.")
-                    return
-                }
-                val fans = imageUtils.getUmamusumeClassDialogFanCount(croppedBitmap)
-                if (fans != null) {
-                    trainee.fans = fans
-                    bNeedToCheckFans = false
-                    MessageLog.d(TAG, "[DIALOG] umamusume_class: Updated fan count: ${trainee.fans}")
-                } else {
-                    MessageLog.w(TAG, "[DIALOG] umamusume_class: getUmamusumeClassDialogFanCount returned NULL.")
-                }
-                
-                dialog.close(imageUtils = imageUtils)
+                connectionErrorRetryAttempts++
+                dialog.ok(imageUtils = imageUtils)
             }
-            "umamusume_details" -> {
-                val prevTrackSurface = trainee.trackSurface
-                val prevTrackDistance = trainee.trackDistance
-                val prevRunningStyle = trainee.runningStyle
-                trainee.updateAptitudes(imageUtils = imageUtils)
-                bTemporaryRunningStyleAptitudesUpdated = false
-
-                if (trainee.runningStyle != prevRunningStyle) {
-                    // Reset this flag since our preferred running style has changed.
-                    trainee.bHasSetRunningStyle = false
-                }
-
-                dialog.close(imageUtils = imageUtils)
+            "display_settings" -> dialog.close(imageUtils = imageUtils)
+            "help_and_glossary" -> dialog.close(imageUtils = imageUtils)
+            "session_error" -> {
+                throw InterruptedException("Session error. Stopping bot...")
+            }
+            else -> {
+                return false
             }
         }
+
+        return true
     }
 
 	////////////////////////////////////////////////////////////////////
@@ -431,7 +404,7 @@ class Game(val myContext: Context) {
 
             // Since we're at the main screen, we don't need to worry about this
             // flag anymore since we will update our aptitudes here if needed.
-            bTemporaryRunningStyleAptitudesUpdated = false
+            trainee.bTemporaryRunningStyleAptitudesUpdated = false
             // Update the fan count class every time we're at the main screen.
             val fanCountClass: FanCountClass? = getFanCountClass()
             if (fanCountClass != null) {
@@ -813,7 +786,7 @@ class Game(val myContext: Context) {
 			return false
 		}
 
-		val imageName = ButtonCraneGame.templates.first().name
+		val imageName = ButtonCraneGame.template.path
 		val pressDurations = listOf(1.95, 1.00, 0.60)
 
 		// Perform three attempts with different press durations.
@@ -890,9 +863,6 @@ class Game(val myContext: Context) {
         ) {
             ButtonCraneGameOk.click(imageUtils = imageUtils)
             MessageLog.i(TAG, "[CRANE GAME] Event exited.")
-		} else if (findAndTapImage("race_retry", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
-			MessageLog.i(TAG, "[MISC] There is a race retry popup.")
-			wait(5.0)
 		} else if (scenario != "Unity Cup" && findAndTapImage("close", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
 			MessageLog.i(TAG, "[MISC] There is a possible popup to accept a trophy.")
 			racing.finalizeRaceResults(true, isExtra = true)
