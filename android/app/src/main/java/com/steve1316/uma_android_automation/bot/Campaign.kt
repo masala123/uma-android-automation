@@ -78,6 +78,10 @@ open class Campaign(val game: Game) {
             "my_agendas" -> dialog.close(imageUtils = game.imageUtils)
             "options" -> dialog.close(imageUtils = game.imageUtils)
             "perks" -> dialog.close(imageUtils = game.imageUtils)
+            "placing" -> dialog.close(imageUtils = game.imageUtils)
+            "purchase_alarm_clock" -> {
+                throw InterruptedException("Ran out of alarm clocks. Stopping bot...")
+            }
             "quick_mode_settings" -> {
                 RadioCareerQuickShortenAllEvents.click(imageUtils = game.imageUtils)
                 dialog.ok(imageUtils = game.imageUtils)
