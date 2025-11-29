@@ -386,6 +386,13 @@ object ButtonSave : ComponentInterface {
     )
 }
 
+object ButtonSaveSchedule : ComponentInterface {
+    override val TAG: String = "ButtonSaveSchedule"
+    override val templates: List<Template> = listOf(
+        Template("components/button/save_schedule")
+    )
+}
+
 object ButtonSaveAndExit : ComponentInterface {
     override val TAG: String = "ButtonSaveAndExit"
     override val templates: List<Template> = listOf(
