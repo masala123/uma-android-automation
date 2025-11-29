@@ -225,6 +225,7 @@ object DialogObjects {
         DialogOpenSoon,                     // Shop (only when clicking inactive daily sales button)
         DialogOptions,                      // Anywhere
         DialogPerks,                        // Career -> Career Profile dialog
+        DialogPlacing,                      // Career -> DialogTryAgain
         DialogPresents,                     // Main Screen (i think?)
         DialogPurchaseAlarmClock,           // Career
         DialogPurchaseDailyRaceTicket,      // Daily Races
@@ -768,6 +769,17 @@ object DialogPerks : DialogInterface {
     )
 }
 
+object DialogPlacing : DialogInterface {
+    override val TAG: String = "DialogPlacing"
+    override val name: String = "placing"
+    override val title: String = "Placing"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
 object DialogPresents : DialogInterface {
     override val TAG: String = "DialogPresents"
     override val name: String = "presents"
@@ -1096,7 +1108,7 @@ object DialogTryAgain : DialogInterface {
     override val closeButton = null
     override val okButton: ComponentInterface = ButtonTryAgain
     override val buttons: List<ComponentInterface> = listOf(
-        ButtonEndCareer,
+        ButtonCancel,
         ButtonTryAgain,
     )
 }
