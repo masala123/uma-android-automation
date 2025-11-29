@@ -275,15 +275,16 @@ class Training(private val game: Game) {
 
 
             // Only click the button if we arent doing single training.
-            if (!singleTraining) {
+            // Also speed should be selected at beginning so we don't want to click it again
+            // otherwise it will be trained.
+            if (!singleTraining && statName != StatName.SPEED) {
                 if (!trainingButtons[statName]!!.click(imageUtils = game.imageUtils)) {
                     MessageLog.e(TAG, "[TRAINING] Failed to click training button for $statName. Aborting training...")
                     return
                 }
+                // Slight delay for UI to update after clicking button.
+                game.wait(0.2)
             }
-
-            // Slight delay for UI to update after clicking button.
-            game.wait(0.2)
 
             // Get bitmaps and locations before starting threads to make them safe for parallel processing.
             val sourceBitmap = game.imageUtils.getSourceBitmap()
