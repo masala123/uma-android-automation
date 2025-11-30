@@ -667,7 +667,7 @@ class Game(val myContext: Context) {
 		
 		// First, try to handle recreation date which also recovers energy if a date is available.
 		// Skip recreation date if it's already completed (will only be used for mood recovery).
-		if (!recreationDateCompleted && handleRecreationDate(recoverMoodIfCompleted = false)) {
+		if (!recreationDateCompleted && imageUtils.findImage("recreation_date", tries = 1, region = imageUtils.regionBottomHalf).first != null && handleRecreationDate(recoverMoodIfCompleted = false)) {
 			MessageLog.i(TAG, "[ENERGY] Successfully recovered energy via recreation date.")
 			racing.raceRepeatWarningCheck = false
 			return true
