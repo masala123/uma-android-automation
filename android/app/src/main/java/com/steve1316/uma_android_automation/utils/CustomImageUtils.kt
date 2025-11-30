@@ -299,7 +299,6 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         }
 
         val tries: Int = maxOf(1, tries)
-        var numAttempts: Int = 0
         var result: Int = -1
         for (i in 1..tries) {
             // We only use the passed parameters on the first iteration since if
