@@ -6,14 +6,14 @@ app-buildToolsVersion = "36.0.0"
 app-minSdk = "24"
 #noinspection ExpiredTargetSdkVersion
 app-targetSdk = "30"
-app-versionCode = "36"
-app-versionName = "4.2.4"
+app-versionCode = "37"
+app-versionName = "4.2.5"
 app-jvm-toolchain = "17"
 
 
 androidGradleBuildTools = "8.13.0"
 kotlinGradlePlugin = "2.2.0"
-androidCvAutomationLibrary = "2.2.1"
+androidCvAutomationLibrary = "2.2.2"
 lottie = "6.6.9"
 
 [libraries]
