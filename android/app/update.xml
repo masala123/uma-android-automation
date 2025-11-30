@@ -1,13 +1,13 @@
 <AppUpdater>
   <update>
-    <latestVersion>4.2.5</latestVersion>
+    <latestVersion>4.2.6</latestVersion>
     <url>https://github.com/steve1316/uma-android-automation/releases</url>
     <releaseNotes>
-v4.2.5 - Changelog
+v4.2.6 - Changelog
 
 Fixed
 ---
-- Updated the Automation Library to version 2.2.2 to fix the message log not being saved to text files.
+- Fix bug where the bot would do mood recovery instead of energy recovery in its search for dating completion.
 
     </releaseNotes>
   </update>
