@@ -1,44 +1,13 @@
 <AppUpdater>
   <update>
-    <latestVersion>4.2.4</latestVersion>
+    <latestVersion>4.2.5</latestVersion>
     <url>https://github.com/steve1316/uma-android-automation/releases</url>
     <releaseNotes>
-v4.2.4 - Changelog
-
-New
----
-- Add new buttons to the MessageLog component to sort ascending or descending.
-- Add new buttons to the MessageLog component to scroll to the top/bottom of the log.
-- Add a preview screen to review what settings will be overwritten when importing a settings JSON file.
-- Add a new option to the Misc section of the Settings page to display message log IDs.
-- Add a new Profile function to the Training Settings page to allow for creation/management of profiles to switch between. Import/Export logic has also been updated to handle Profiles as well. Example: Keeping separate customized profiles for Mile and Long runners.
-- Add a new option to the Training Settings page to allow the user to set a custom stat cap to stop training on other than the default of 1200.
-- Add a new option to the Training Settings page to allow the user to train Wit during the Final instead of recovering energy.
-- Add a new option in the Misc section of the Settings page to stop the bot before the Finals on turn 72
-- Add POST_NOTIFICATIONS permission to the AndroidManifest.xml file to potentially help people who are not encountering the popup to enable notification permission.
-- The package.json file now has 2 new commands for quicker testing of the app.
-- Add Android logic to perform one-time scenario validation check to ensure that the bot is running the correct scenario (Unity Cup for now).
-- Add a note to the Racing Plan Settings page to remind users to check their selected races after making changes to the filters.
-
-Adjustments
----
-- Update game data up to Halloween Rice Shower and Super Creek.
-- Bump version of Automation Library to incorporate some improvements to the message log handling.
-- Adjust warning message regarding Debug tests in the Settings page to clarify that it is not required for the tests to run.
-- Change some error messages to be shown as Snackbar notifications.
-- Shift priority weight for event chains for TrainingEvent class to prioritize guaranteed recreation/dating for supports like Riko.
-- Update date detection logic to better handle the Finals in-game dates.
-- Update logic to dismiss the scheduled race popup warning when executing a training at the end of the Training process.
-- Remove unnecessary fields from settings before exporting to cut down on the size of the exported JSON file.
-- Change the Focus on Spark 
+v4.2.5 - Changelog
 
 Fixed
 ---
-- Fix most instances of log messages being out of order in the MessageLog component.
-- Fix bug where mood recovery could not be completed if dating was available and already completed. Example: Riko Support.
-- Fix rare bug where the intro message in the MessageLog component would be missing the app name and version due to missing dependency in the callback function.
-- Fix bug where "Finale Underway" was not being parsed correctly by GameDateParser.
-- Fix bug where risky training was not being started when the initial failure chance was not being checked with the risky training threshold.
+- Updated the Automation Library to version 2.2.2 to fix the message log not being saved to text files.
 
     </releaseNotes>
   </update>
