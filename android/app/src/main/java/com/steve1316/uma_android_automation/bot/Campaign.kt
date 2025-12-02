@@ -52,6 +52,7 @@ open class Campaign(val game: Game) {
             "career" -> dialog.close(imageUtils = game.imageUtils)
             "career_event_details" -> dialog.close(imageUtils = game.imageUtils)
             "career_profile" -> dialog.close(imageUtils = game.imageUtils)
+            "choices" -> dialog.close(imageUtils = game.imageUtils)
             "concert_skip_confirmation" -> {
                 // Click the checkbox to prevent this popup in the future.
                 Checkbox.click(imageUtils = game.imageUtils)
