@@ -139,6 +139,8 @@ class Racing (private val game: Game) {
 
                 var runningStyle: RunningStyle? = null
                 val runningStyleString: String = when {
+                    // If race strategy override is disabled, just use the AUTO strategy.
+                    !enableRaceStrategyOverride -> "AUTO"
                     // Special case for when the bot has not been able to check the date
                     // i.e. when the bot starts at the race screen.
                     game.currentDate.day == 1 -> userSelectedOriginalStrategy
