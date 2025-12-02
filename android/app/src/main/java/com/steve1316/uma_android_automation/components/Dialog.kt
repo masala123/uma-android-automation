@@ -212,6 +212,7 @@ object DialogObjects {
         DialogFinalConfirmation,            // Career Selection
         DialogFollowTrainer,                // Career
         DialogGiveUp,                       // Career
+        DialogGoalNotReached,               // Career
         DialogGoals,                        // Career
         DialogHelpAndGlossary,              // Anywhere (from options dialog)
         DialogInfirmary,                    // Career
@@ -593,6 +594,18 @@ object DialogGiveUp : DialogInterface {
     override val buttons: List<ComponentInterface> = listOf(
         ButtonCancel,
         ButtonGiveUp,
+    )
+}
+
+object DialogGoalNotReached : DialogInterface {
+    override val TAG: String = "DialogGoalNotReached"
+    override val name: String = "goal_not_reached"
+    override val title: String = "Goal Not Reached"
+    override val closeButton = null
+    override val okButton: ComponentInterface = ButtonRace
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonCancel,
+        ButtonRace,
     )
 }
 

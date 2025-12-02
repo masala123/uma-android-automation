@@ -64,6 +64,11 @@ open class Campaign(val game: Game) {
             "fans" -> dialog.close(imageUtils = game.imageUtils)
             "featured_cards" -> dialog.close(imageUtils = game.imageUtils)
             "give_up" -> dialog.close(imageUtils = game.imageUtils)
+            "goal_not_reached" -> {
+                // We are handling the logic for when to race on our own.
+                // Thus we just close this warning.
+                dialog.close(imageUtils = game.imageUtils)
+            }
             "goals" -> dialog.close(imageUtils = game.imageUtils)
             "infirmary" -> {
                 Checkbox.click(imageUtils = game.imageUtils)
@@ -71,7 +76,7 @@ open class Campaign(val game: Game) {
             }
             "insufficient_fans" -> {
                 // We are handling the logic for when to race on our own.
-                // Thus we just close this warning."
+                // Thus we just close this warning.
                 dialog.close(imageUtils = game.imageUtils)
             }
             "log" -> dialog.close(imageUtils = game.imageUtils)
