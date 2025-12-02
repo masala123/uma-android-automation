@@ -219,14 +219,45 @@ open class Campaign(val game: Game) {
 		return false
 	}
 
+    /**
+     * Clicks the career Quick Mode button and selects the fastest option.
+     */
+    fun handleCareerQuickMode() {
+        if (!bHasSetQuickMode) {
+            // Click the Quick Mode button regardless of its state
+            // so that we can verify the correct setting.
+            if (!ButtonCareerQuick.click(imageUtils = game.imageUtils)) {
+                ButtonCareerQuickEnabled.click(imageUtils = game.imageUtils)
+                game.wait(0.1)
+                handleDialogs()
+            }
+        }
+    }
+
+    /**
+     * Clicks the career skip button so that it is at its fastest speed (2x).
+     */
+    fun handleCareerSkipButton() {
+        if (!ButtonCareerSkip2.check(imageUtils = game.imageUtils)) {
+            // Set the `skip` button to 2x.
+            ButtonCareerSkipOff.click(imageUtils = game.imageUtils, taps = 2)
+            ButtonCareerSkip1.click(imageUtils = game.imageUtils, taps = 1)
+        }
+    }
+
 	/**
 	 * Main automation loop that handles all shared logic.
 	 */
 	fun start() {
 		while (true) {
+            // First thing we should always check is if there are any dialogs.
             try {
-                handleDialogs()
-                game.handleDialogs()
+                if (handleDialogs()) {
+                    continue
+                }
+                if (game.handleDialogs()) {
+                    continue
+                }
             } catch (e: InterruptedException) {
                 MessageLog.e(TAG, "Dialog handler triggered bot to stop: ${e.message}")
                 break
@@ -240,22 +271,8 @@ open class Campaign(val game: Game) {
 					break
 				}
 
-                if (!bHasSetQuickMode) {
-                    // Click the Quick Mode button regardless of its state
-                    // so that we can verify the correct setting.
-                    if (!ButtonCareerQuick.click(imageUtils = game.imageUtils)) {
-                        ButtonCareerQuickEnabled.click(imageUtils = game.imageUtils)
-                        continue // forces handleDialogs.
-                    }
-                }
-
-                // Set the `skip` button to 2x.
-                if (ButtonCareerSkipOff.click(imageUtils = game.imageUtils)) {
-                    continue // restart loop
-                }
-                if (ButtonCareerSkip1.click(imageUtils = game.imageUtils)) {
-                    continue // restart loop
-                }
+                handleCareerQuickMode()
+                handleCareerSkipButton()
 
 				// Check if bot should stop before the finals.
 				if (game.checkFinalsStop()) {
