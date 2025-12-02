@@ -52,3 +52,8 @@ object IconTrainingHeaderWit : ComponentInterface {
     override val TAG: String = "IconTrainingHeaderWit"
     override val template = Template("components/icon/training_header_wit")
 }
+
+object IconHorseshoe : ComponentInterface {
+    override val TAG: String = "IconHorseshoe"
+    override val template = Template("components/icon/horseshoe")
+}

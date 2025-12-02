@@ -11,6 +11,7 @@ import com.steve1316.uma_android_automation.utils.types.DatePhase
 import com.steve1316.uma_android_automation.components.ButtonRaceRecommendationsCenterStage
 import com.steve1316.uma_android_automation.components.ButtonCareerSkipOff
 import com.steve1316.uma_android_automation.components.ButtonCareerSkip1
+import com.steve1316.uma_android_automation.components.ButtonCareerSkip2
 import com.steve1316.uma_android_automation.components.ButtonCareerQuick
 import com.steve1316.uma_android_automation.components.ButtonCareerQuickEnabled
 import com.steve1316.uma_android_automation.components.Checkbox
@@ -19,6 +20,7 @@ import com.steve1316.uma_android_automation.components.DialogInterface
 import com.steve1316.uma_android_automation.components.LabelUmamusumeClassFans
 import com.steve1316.uma_android_automation.components.RadioCareerQuickShortenAllEvents
 import com.steve1316.uma_android_automation.components.RadioPortrait
+import com.steve1316.uma_android_automation.components.IconHorseshoe
 
 import android.graphics.Bitmap
 import org.opencv.core.Point
@@ -83,7 +85,20 @@ open class Campaign(val game: Game) {
                 throw InterruptedException("Ran out of alarm clocks. Stopping bot...")
             }
             "quick_mode_settings" -> {
-                RadioCareerQuickShortenAllEvents.click(imageUtils = game.imageUtils)
+                val optionLocations: ArrayList<Point> = IconHorseshoe.findAll(
+                    imageUtils = game.imageUtils,
+                    region = intArrayOf(160, 770, 70, 460),
+                )
+                if (optionLocations.size == 4) {
+                    MessageLog.d(TAG, "[DIALOG] quick_mode_settings: Using findAll method.")
+                    val loc: Point = optionLocations[1]
+                    game.tap(loc.x, loc.y, IconHorseshoe.template.path)
+                } else {
+                    MessageLog.d(TAG, "[DIALOG] quick_mode_settings: Using image OCR method.")
+                    // Fallback to image detection.
+                    RadioCareerQuickShortenAllEvents.click(imageUtils = game.imageUtils)
+                }
+                
                 dialog.ok(imageUtils = game.imageUtils)
                 bHasSetQuickMode = true
             }
@@ -226,10 +241,13 @@ open class Campaign(val game: Game) {
         if (!bHasSetQuickMode) {
             // Click the Quick Mode button regardless of its state
             // so that we can verify the correct setting.
-            if (!ButtonCareerQuick.click(imageUtils = game.imageUtils)) {
+            if (
+                ButtonCareerQuick.click(imageUtils = game.imageUtils) ||
                 ButtonCareerQuickEnabled.click(imageUtils = game.imageUtils)
+            ) {
                 game.wait(0.1)
                 handleDialogs()
+                game.wait(0.1)
             }
         }
     }

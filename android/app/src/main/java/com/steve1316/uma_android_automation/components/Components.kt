@@ -49,6 +49,10 @@ interface ComponentInterface: BaseComponentInterface {
         return imageUtils.findImage(template.path, region = template.region, tries = tries)
     }
 
+    fun findAll(imageUtils: CustomImageUtils, region: IntArray, confidence: Double = 0.0): ArrayList<Point> {
+        return imageUtils.findAll(template.path, region = region, confidence = confidence)
+    }
+
     override fun check(imageUtils: CustomImageUtils, tries: Int): Boolean {
         return find(imageUtils = imageUtils, tries = tries).first != null
     }

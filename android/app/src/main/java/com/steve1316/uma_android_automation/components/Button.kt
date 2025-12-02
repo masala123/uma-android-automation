@@ -3,6 +3,8 @@ package com.steve1316.uma_android_automation.components
 import com.steve1316.uma_android_automation.components.ComponentInterface
 import com.steve1316.uma_android_automation.components.Template
 
+import com.steve1316.automation_library.data.SharedData
+
 object ButtonAutoSelect : ComponentInterface {
     override val TAG: String = "ButtonAutoSelect"
     override val template = Template("components/button/auto_select")
@@ -105,8 +107,6 @@ object ButtonToHome : ComponentInterface {
     override val TAG: String = "ButtonToHome"
     override val template = Template("components/button/to_home")
 }
-
-
 
 object ButtonHomeSpecialMissions : ComponentInterface {
     override val TAG: String = "ButtonHomeSpecialMissions"
@@ -403,26 +403,41 @@ object ButtonMenuBarRace : MultiStateButtonInterface {
 
 object ButtonCareerQuick : ComponentInterface {
     override val TAG: String = "ButtonCareerQuick"
-    override val template = Template("components/button/career_quick")
+    override val template = Template(
+        "components/button/career_quick",
+        region = intArrayOf(0, SharedData.displayHeight - 100, SharedData.displayWidth, 100),
+    )
 }
 
 object ButtonCareerQuickEnabled : ComponentInterface {
     override val TAG: String = "ButtonCareerQuickEnabled"
-    override val template = Template("components/button/career_quick_enabled")
+    override val template = Template(
+        "components/button/career_quick_enabled",
+        region = intArrayOf(0, SharedData.displayHeight - 100, SharedData.displayWidth, 100),
+    )
 }
 
 object ButtonCareerSkip1 : ComponentInterface {
     override val TAG: String = "ButtonCareerSkip1"
-    override val template = Template("components/button/career_skip_1")
+    override val template = Template(
+        "components/button/career_skip_1",
+        region = intArrayOf(0, SharedData.displayHeight - 100, SharedData.displayWidth, 100),
+    )
 }
 object ButtonCareerSkip2 : ComponentInterface {
     override val TAG: String = "ButtonCareerSkip2"
-    override val template = Template("components/button/career_skip_2")
+    override val template = Template(
+        "components/button/career_skip_2",
+        region = intArrayOf(0, SharedData.displayHeight - 100, SharedData.displayWidth, 100),
+    )
 }
 
 object ButtonCareerSkipOff : ComponentInterface {
     override val TAG: String = "ButtonCareerSkipOff"
-    override val template = Template("components/button/career_skip_off")
+    override val template = Template(
+        "components/button/career_skip_off",
+        region = intArrayOf(0, SharedData.displayHeight - 100, SharedData.displayWidth, 100),
+    )
 }
 
 object ButtonCompleteCareer : ComponentInterface {
