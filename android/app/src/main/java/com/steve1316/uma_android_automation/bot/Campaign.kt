@@ -207,8 +207,9 @@ open class Campaign(val game: Game) {
 	 * Campaign-specific race event handling.
 	 */
 	open fun handleRaceEvents(): Boolean {
-        game.bNeedToCheckFans = true
-		return game.racing.handleRaceEvents()
+        val bDidRace: Boolean = game.racing.handleRaceEvents()
+        game.bNeedToCheckFans = bDidRace
+		return bDidRace
 	}
 
 	/**
