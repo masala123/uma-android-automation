@@ -303,6 +303,8 @@ ${longTargetsString}
 🔍 Start Date OCR Test: ${settings.debug.debugMode_startDateOCRTest ? "✅" : "❌"}
 🔍 Start Race List Detection Test: ${settings.debug.debugMode_startRaceListDetectionTest ? "✅" : "❌"}
 🔍 Start Aptitudes Detection Test: ${settings.debug.debugMode_startAptitudesDetectionTest ? "✅" : "❌"}
+🔍 Start Main Screen OCR Test: ${settings.debug.debugMode_startMainScreenOCRTest ? "✅" : "❌"}
+🔍 Start Training Screen OCR Test: ${settings.debug.debugMode_startTrainingScreenOCRTest ? "✅" : "❌"}
 🔍 Hide String Comparison Results: ${settings.debug.enableHideOCRComparisonResults ? "✅" : "❌"}
 
 ****************************************`

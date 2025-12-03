@@ -934,6 +934,12 @@ class Game(val myContext: Context) {
 
 		val startTime: Long = System.currentTimeMillis()
 
+        val campaign = if (scenario == "Unity Cup") {
+            UnityCup(this)
+        } else {
+            Campaign(this)
+        }
+
 		// Start debug tests here if enabled. Otherwise, proceed with regular bot operations.
 		if (SettingsHelper.getBooleanSetting("debug", "debugMode_startTemplateMatchingTest")) {
 			startTemplateMatchingTest()
@@ -947,16 +953,13 @@ class Game(val myContext: Context) {
 			racing.startRaceListDetectionTest()
 		} else if (SettingsHelper.getBooleanSetting("debug", "debugMode_startAptitudesDetectionTest")) {
 			startAptitudesDetectionTest()
+		} else if (SettingsHelper.getBooleanSetting("debug", "debugMode_startMainScreenOCRTest")) {
+			campaign.startMainScreenOCRTest()
+		} else if (SettingsHelper.getBooleanSetting("debug", "debugMode_startTrainingScreenOCRTest")) {
+			campaign.startTrainingScreenOCRTest()
 		} else {
 			wait(5.0)
-
-			if (scenario == "Unity Cup") {
-				val unityCupCampaign = UnityCup(this)
-                unityCupCampaign.start()
-			} else {
-				val uraFinaleCampaign = Campaign(this)
-				uraFinaleCampaign.start()
-			}
+            campaign.start()
 		}
 
 		val endTime: Long = System.currentTimeMillis()

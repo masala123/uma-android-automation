@@ -410,6 +410,8 @@ const Settings = () => {
                                     debugMode_startDateOCRTest: false,
                                     debugMode_startRaceListDetectionTest: false,
                                     debugMode_startAptitudesDetectionTest: false,
+                                    debugMode_startMainScreenOCRTest: false,
+                                    debugMode_startTrainingScreenOCRTest: false,
                                 },
                             })
                         } else {
@@ -439,6 +441,8 @@ const Settings = () => {
                                     debugMode_startDateOCRTest: false,
                                     debugMode_startRaceListDetectionTest: false,
                                     debugMode_startAptitudesDetectionTest: false,
+                                    debugMode_startMainScreenOCRTest: false,
+                                    debugMode_startTrainingScreenOCRTest: false,
                                 },
                             })
                         } else {
@@ -468,6 +472,8 @@ const Settings = () => {
                                     debugMode_startDateOCRTest: false,
                                     debugMode_startRaceListDetectionTest: false,
                                     debugMode_startAptitudesDetectionTest: false,
+                                    debugMode_startMainScreenOCRTest: false,
+                                    debugMode_startTrainingScreenOCRTest: false,
                                 },
                             })
                         } else {
@@ -497,6 +503,8 @@ const Settings = () => {
                                     debugMode_startDateOCRTest: true,
                                     debugMode_startRaceListDetectionTest: false,
                                     debugMode_startAptitudesDetectionTest: false,
+                                    debugMode_startMainScreenOCRTest: false,
+                                    debugMode_startTrainingScreenOCRTest: false,
                                 },
                             })
                         } else {
@@ -526,6 +534,8 @@ const Settings = () => {
                                     debugMode_startDateOCRTest: false,
                                     debugMode_startRaceListDetectionTest: true,
                                     debugMode_startAptitudesDetectionTest: false,
+                                    debugMode_startMainScreenOCRTest: false,
+                                    debugMode_startTrainingScreenOCRTest: false,
                                 },
                             })
                         } else {
@@ -555,6 +565,8 @@ const Settings = () => {
                                     debugMode_startDateOCRTest: false,
                                     debugMode_startRaceListDetectionTest: false,
                                     debugMode_startAptitudesDetectionTest: true,
+                                    debugMode_startMainScreenOCRTest: false,
+                                    debugMode_startTrainingScreenOCRTest: false,
                                 },
                             })
                         } else {
@@ -566,6 +578,66 @@ const Settings = () => {
                     }}
                     label="Start Aptitudes Detection Test"
                     description="Disables normal bot operations and starts the Aptitudes detection test. Only on the Main screen and tests detecting the current aptitudes."
+                    style={{ marginTop: 10 }}
+                />
+                <CustomCheckbox
+                    checked={bsc.settings.debug.debugMode_startMainScreenOCRTest}
+                    onCheckedChange={(checked) => {
+                        if (checked) {
+                            // Disable other tests when enabling this one.
+                            bsc.setSettings({
+                                ...bsc.settings,
+                                debug: {
+                                    ...bsc.settings.debug,
+                                    debugMode_startTemplateMatchingTest: false,
+                                    debugMode_startSingleTrainingOCRTest: false,
+                                    debugMode_startComprehensiveTrainingOCRTest: false,
+                                    debugMode_startDateOCRTest: false,
+                                    debugMode_startRaceListDetectionTest: false,
+                                    debugMode_startAptitudesDetectionTest: false,
+                                    debugMode_startMainScreenOCRTest: true,
+                                    debugMode_startTrainingScreenOCRTest: false,
+                                },
+                            })
+                        } else {
+                            bsc.setSettings({
+                                ...bsc.settings,
+                                debug: { ...bsc.settings.debug, debugMode_startMainScreenOCRTest: false },
+                            })
+                        }
+                    }}
+                    label="Start Main Screen OCR Test"
+                    description="Disables normal bot operations and starts the main screen OCR test. Only on the main screen, tests detection of all components."
+                    style={{ marginTop: 10 }}
+                />
+                <CustomCheckbox
+                    checked={bsc.settings.debug.debugMode_startTrainingScreenOCRTest}
+                    onCheckedChange={(checked) => {
+                        if (checked) {
+                            // Disable other tests when enabling this one.
+                            bsc.setSettings({
+                                ...bsc.settings,
+                                debug: {
+                                    ...bsc.settings.debug,
+                                    debugMode_startTemplateMatchingTest: false,
+                                    debugMode_startSingleTrainingOCRTest: false,
+                                    debugMode_startComprehensiveTrainingOCRTest: false,
+                                    debugMode_startDateOCRTest: false,
+                                    debugMode_startRaceListDetectionTest: false,
+                                    debugMode_startAptitudesDetectionTest: false,
+                                    debugMode_startMainScreenOCRTest: false,
+                                    debugMode_startTrainingScreenOCRTest: true,
+                                },
+                            })
+                        } else {
+                            bsc.setSettings({
+                                ...bsc.settings,
+                                debug: { ...bsc.settings.debug, debugMode_startTrainingScreenOCRTest: false },
+                            })
+                        }
+                    }}
+                    label="Start Training Screen OCR Test"
+                    description="Disables normal bot operations and starts the training screen OCR test. Only on the training screen, tests detection of all components."
                     style={{ marginTop: 10 }}
                 />
             </View>
