@@ -10,7 +10,6 @@ object ButtonAutoSelect : ComponentInterface {
     override val template = Template("components/button/auto_select")
 }
 
-
 object ButtonBack : ComponentInterface {
     override val TAG: String = "ButtonBack"
     override val template = Template("components/button/back")
@@ -19,6 +18,11 @@ object ButtonBack : ComponentInterface {
 object ButtonBackGreen : ComponentInterface {
     override val TAG: String = "ButtonBackGreen"
     override val template = Template("components/button/back_green")
+}
+
+object ButtonBeginShowdown : ComponentInterface {
+    override val TAG: String = "ButtonBeginShowdown"
+    override val template = Template("components/button/begin_showdown")
 }
 
 object ButtonBorrowSupportCard : ComponentInterface {
@@ -291,6 +295,11 @@ object ButtonSaveAndExit : ComponentInterface {
 object ButtonSeeResults : ComponentInterface {
     override val TAG: String = "ButtonSeeResults"
     override val template = Template("components/button/see_results")
+}
+
+object ButtonSelectOpponent : ComponentInterface {
+    override val TAG: String = "ButtonSelectOpponent"
+    override val template = Template("components/button/select_opponent")
 }
 
 object ButtonSelectLegacy : ComponentInterface {

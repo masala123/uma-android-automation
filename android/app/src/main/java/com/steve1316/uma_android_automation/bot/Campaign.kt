@@ -38,10 +38,18 @@ open class Campaign(val game: Game) {
 
     protected var bHasSetQuickMode: Boolean = false
 
-    open fun handleDialogs(): Boolean {
+    /**
+     * Detects and handles any dialog popups.
+     *
+     * @return A pair of a boolean and a nullable DialogInterface.
+     * The boolean is true when a dialog has been handled by this function.
+     * The DialogInterface is the detected dialog, or NULL if no dialogs were found.
+     */
+    open fun handleDialogs(): Pair<Boolean, DialogInterface?> {
+        game.wait(0.1)
         val dialog: DialogInterface? = DialogUtils.getDialog(imageUtils = game.imageUtils)
         if (dialog == null) {
-            return false
+            return Pair(false, null)
         }
 
         MessageLog.d(TAG, "[DIALOG] ${dialog.name}")
@@ -154,13 +162,15 @@ open class Campaign(val game: Game) {
                 if (templateBitmap == null) {
                     MessageLog.e(TAG, "[DIALOG] umamusume_class: Could not get template bitmap for LabelUmamusumeClassFans: ${LabelUmamusumeClassFans.template.path}.")
                     dialog.close(imageUtils = game.imageUtils)
-                    return true
+                    game.wait(0.1)
+                    return Pair(true, dialog)
                 }
                 val point: Point? = LabelUmamusumeClassFans.find(imageUtils = game.imageUtils).first
                 if (point == null) {
                     MessageLog.w(TAG, "[DIALOG] umamusume_class: Could not find LabelUmamusumeClassFans.")
                     dialog.close(imageUtils = game.imageUtils)
-                    return true
+                    game.wait(0.1)
+                    return Pair(true, dialog)
                 }
 
                 // Add a small 8px buffer to vertical component.
@@ -180,7 +190,8 @@ open class Campaign(val game: Game) {
                 if (croppedBitmap == null) {
                     MessageLog.e(TAG, "[DIALOG] umamusume_class: Failed to crop bitmap.")
                     dialog.close(imageUtils = game.imageUtils)
-                    return true
+                    game.wait(0.1)
+                    return Pair(true, dialog)
                 }
                 val fans = game.imageUtils.getUmamusumeClassDialogFanCount(croppedBitmap)
                 if (fans != null) {
@@ -210,11 +221,12 @@ open class Campaign(val game: Game) {
             "unity_cup_available" -> dialog.close(imageUtils = game.imageUtils)
             "unmet_requirements" -> dialog.close(imageUtils = game.imageUtils)
             else -> {
-                return false
+                return Pair(false, dialog)
             }
         }
 
-        return true
+        game.wait(0.1)
+        return Pair(true, dialog)
     }
 
 	/**
@@ -276,10 +288,10 @@ open class Campaign(val game: Game) {
 		while (true) {
             // First thing we should always check is if there are any dialogs.
             try {
-                if (handleDialogs()) {
+                if (handleDialogs().first) {
                     continue
                 }
-                if (game.handleDialogs()) {
+                if (game.handleDialogs().first) {
                     continue
                 }
             } catch (e: InterruptedException) {

@@ -149,10 +149,17 @@ class Game(val myContext: Context) {
         return fanCountClass
     }
 
-    fun handleDialogs(): Boolean {
+    /**
+     * Detects and handles any dialog popups.
+     *
+     * @return A pair of a boolean and a nullable DialogInterface.
+     * The boolean is true when a dialog has been handled by this function.
+     * The DialogInterface is the detected dialog, or NULL if no dialogs were found.
+     */
+    fun handleDialogs(): Pair<Boolean, DialogInterface?> {
         val dialog: DialogInterface? = DialogUtils.getDialog(imageUtils = imageUtils)
         if (dialog == null) {
-            return false
+            return Pair(false, null)
         }
 
         MessageLog.d(TAG, "[DIALOG] ${dialog.name}")
@@ -179,11 +186,11 @@ class Game(val myContext: Context) {
                 throw InterruptedException("Session error. Stopping bot...")
             }
             else -> {
-                return false
+                return Pair(false, dialog)
             }
         }
 
-        return true
+        return Pair(true, dialog)
     }
 
 	////////////////////////////////////////////////////////////////////

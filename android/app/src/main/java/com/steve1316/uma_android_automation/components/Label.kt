@@ -32,3 +32,8 @@ object LabelTrainingFailureChance : ComponentInterface {
     override val TAG: String = "LabelTrainingFailureChance"
     override val template = Template("components/label/training_failure_chance")
 }
+
+object LabelWinToBecomeRank : ComponentInterface {
+    override val TAG: String = "LabelWinToBecomeRank"
+    override val template = Template("components/label/win_to_become_rank")
+}

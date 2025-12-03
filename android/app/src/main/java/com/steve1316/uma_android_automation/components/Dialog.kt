@@ -184,6 +184,7 @@ interface DialogInterface {
 object DialogObjects {
     val items: List<DialogInterface> = listOf(
         DialogAgendaDetails,                // Career
+        DialogAutoFill,                     // Career (Unity Cup)
         DialogAutoSelect,                   // Career Selection
         DialogBonusUmamusumeDetails,        // Career -> Career Profile dialog
         DialogBorrowCard,                   // Career Selection
@@ -256,6 +257,7 @@ object DialogObjects {
         DialogUmamusumeClass,               // Career
         DialogUmamusumeDetails,             // Career
         DialogUnityCupAvailable,            // Career (Unity Cup)
+        DialogUnityCupConfirmation,         // Career (Unity Cup)
         DialogUnlockRequirements,           // Race Screen
         DialogUnmetRequirements,
         DialogViewStory,                    // Main Screen, end of career
@@ -276,6 +278,18 @@ object DialogAgendaDetails : DialogInterface {
     override val okButton = null
     override val buttons: List<ComponentInterface> = listOf(
         ButtonClose,
+    )
+}
+
+object DialogAutoFill : DialogInterface {
+    override val TAG: String = "DialogAutoFill"
+    override val name: String = "auto_fill"
+    override val title: String = "Auto-Fill"
+    override val closeButton = null
+    override val okButton: ComponentInterface = ButtonEditTeam
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+        ButtonEditTeam,
     )
 }
 
@@ -1156,6 +1170,18 @@ object DialogUnityCupAvailable : DialogInterface {
     override val okButton = null
     override val buttons: List<ComponentInterface> = listOf(
         ButtonClose,
+    )
+}
+
+object DialogUnityCupConfirmation : DialogInterface {
+    override val TAG: String = "DialogUnityCupConfirmation"
+    override val name: String = "unity_cup_confirmation"
+    override val title: String = "Confirmation"
+    override val closeButton = null
+    override val okButton: ComponentInterface = ButtonBeginShowdown
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonCancel,
+        ButtonBeginShowdown,
     )
 }
 
