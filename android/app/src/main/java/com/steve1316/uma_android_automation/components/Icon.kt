@@ -73,3 +73,13 @@ object IconTazuna : ComponentInterface {
     override val TAG: String = "IconTazuna"
     override val template = Template("components/icon/tazuna", region = Region.topHalf)
 }
+
+object IconRaceDayRibbon : ComponentInterface {
+    override val TAG: String = "IconRaceDayRibbon"
+    override val template = Template("components/icon/race_day_ribbon", region = Region.bottomHalf)
+}
+
+object IconGoalRibbon : ComponentInterface {
+    override val TAG: String = "IconGoalRibbon"
+    override val template = Template("components/icon/goal_ribbon", region = Region.leftHalf)
+}

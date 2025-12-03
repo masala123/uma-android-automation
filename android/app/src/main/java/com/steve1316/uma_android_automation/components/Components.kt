@@ -85,7 +85,7 @@ interface ComplexComponentInterface: BaseComponentInterface {
 
     override fun find(imageUtils: CustomImageUtils, tries: Int): Pair<Point?, Bitmap> {
         for (template in templates) {
-            val result: Pair<Point?, Bitmap> = imageUtils.findImage(template.path, region = template.region, tries = tries)
+            val result: Pair<Point?, Bitmap> = imageUtils.findImage(template.path, region = template.region, tries = tries, suppressError = true)
             if (result.first != null) {
                 return result
             }
@@ -101,7 +101,7 @@ interface ComplexComponentInterface: BaseComponentInterface {
         var resultTemplate: Template? = null
         var resultPoint: Point? = null
         for (template in templates) {
-            resultPoint = imageUtils.findImage(template.path, region = template.region, tries = tries).first
+            resultPoint = imageUtils.findImage(template.path, region = template.region, tries = tries, suppressError = true).first
             if (resultPoint != null) {
                 resultTemplate = template
                 break
@@ -125,7 +125,7 @@ interface MultiStateButtonInterface : ComplexComponentInterface {
     /** Finds image on screen and returns its location if it exists. */
     override fun find(imageUtils: CustomImageUtils, tries: Int): Pair<Point?, Bitmap> {
         for (template in templates) {
-            val (point, bitmap) = imageUtils.findImage(template.path, region = template.region, tries = tries)
+            val (point, bitmap) = imageUtils.findImage(template.path, region = template.region, tries = tries, suppressError = true)
             if (point != null) {
                 return Pair(point, bitmap)
             }

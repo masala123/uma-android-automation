@@ -57,7 +57,7 @@ object DialogUtils {
     fun check(imageUtils: CustomImageUtils, tries: Int = 1): Boolean {
         var loc: Point? = null
         for (template in titleGradientTemplates) {
-            loc = imageUtils.findImage(template, tries = tries).first
+            loc = imageUtils.findImage(template, tries = tries, suppressError = true).first
             if (loc != null) {
                 break
             }
@@ -77,7 +77,7 @@ object DialogUtils {
         var templateBitmap: Bitmap? = null
         var titleLocation: Point? = null
         for (template in titleGradientTemplates) {
-            titleLocation = imageUtils.findImage(template, tries = tries).first
+            titleLocation = imageUtils.findImage(template, tries = tries, suppressError = true).first
             if (titleLocation != null) {
                 templateBitmap = imageUtils.getTemplateBitmap(template.substringAfterLast('/'), "images/" + template.substringBeforeLast('/'))
                 break

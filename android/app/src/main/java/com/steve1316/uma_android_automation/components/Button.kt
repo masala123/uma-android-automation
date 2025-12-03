@@ -478,9 +478,14 @@ object ButtonRaceSelectExtraLocked : ComponentInterface {
     override val template = Template("components/button/race_select_extra_locked", region = Region.bottomHalf)
 }
 
-object ButtonRaceSelectExtraLockedUmaFinals : ComponentInterface {
-    override val TAG: String = "ButtonRaceSelectExtraLockedUmaFinals"
-    override val template = Template("components/button/race_select_extra_locked_uma_finals", region = Region.bottomHalf)
+object ButtonRaceSelectExtraLockedUraFinals : ComponentInterface {
+    override val TAG: String = "ButtonRaceSelectExtraLockedUraFinals"
+    override val template = Template("components/button/race_select_extra_locked_ura_finals", region = Region.bottomHalf)
+}
+
+object ButtonUnityCupRace : ComponentInterface {
+    override val TAG: String = "ButtonUnityCupRace"
+    override val template = Template("components/button/unitycup_race", region = Region.bottomHalf)
 }
 
 object ButtonRest : ComponentInterface {
