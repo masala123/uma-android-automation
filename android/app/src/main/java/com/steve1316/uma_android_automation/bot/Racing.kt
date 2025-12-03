@@ -26,6 +26,8 @@ import com.steve1316.uma_android_automation.components.ButtonRaceStrategyFront
 import com.steve1316.uma_android_automation.components.ButtonRaceStrategyPace
 import com.steve1316.uma_android_automation.components.ButtonRaceStrategyLate
 import com.steve1316.uma_android_automation.components.ButtonRaceStrategyEnd
+import com.steve1316.uma_android_automation.components.IconRaceDayRibbon
+import com.steve1316.uma_android_automation.components.ButtonRaceSelectExtra
 
 class Racing (private val game: Game) {
     private val TAG: String = "[${MainActivity.loggerTag}]Racing"
@@ -354,9 +356,12 @@ class Racing (private val game: Game) {
         // First, check if there is a mandatory or a extra race available. If so, head into the Race Selection screen.
         // Note: If there is a mandatory race, the bot would be on the Home screen.
         // Otherwise, it would have found itself at the Race Selection screen already (by way of the insufficient fans popup).
-        if (game.findAndTapImage("race_select_mandatory", tries = 1, region = game.imageUtils.regionBottomHalf)) {
+        val loc: Point? = IconRaceDayRibbon.find(imageUtils = game.imageUtils).first
+        if (loc != null) {
+            // Offset 100px down from the ribbon since the ribbon isn't clickable.
+            game.tap(loc.x, loc.y + 100, IconRaceDayRibbon.template.path, ignoreWaiting = true)
             return handleMandatoryRace()
-        } else if (!game.currentDate.bIsPreDebut && game.findAndTapImage("race_select_extra", tries = 1, region = game.imageUtils.regionBottomHalf)) {
+        } else if (!game.currentDate.bIsPreDebut && ButtonRaceSelectExtra.click(imageUtils = game.imageUtils)) {
             return handleExtraRace()
         }
 

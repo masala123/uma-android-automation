@@ -14,18 +14,24 @@ import com.steve1316.automation_library.utils.MyAccessibilityService
 import com.steve1316.uma_android_automation.utils.SettingsHelper
 import com.steve1316.uma_android_automation.utils.GameDate
 import com.steve1316.uma_android_automation.bot.Trainee
-import com.steve1316.uma_android_automation.components.DialogUtils
-import com.steve1316.uma_android_automation.components.DialogInterface
-import com.steve1316.uma_android_automation.components.ButtonHomeFullStats
-import com.steve1316.uma_android_automation.utils.types.FanCountClass
+
 import com.steve1316.uma_android_automation.utils.types.BoundingBox
 import com.steve1316.uma_android_automation.utils.types.Aptitude
 import com.steve1316.uma_android_automation.utils.types.Mood
-import com.steve1316.uma_android_automation.components.ButtonHomeFansInfo
 
+import com.steve1316.uma_android_automation.components.DialogUtils
+import com.steve1316.uma_android_automation.components.DialogInterface
+import com.steve1316.uma_android_automation.components.ButtonHomeFullStats
+import com.steve1316.uma_android_automation.components.ButtonHomeFansInfo
 import com.steve1316.uma_android_automation.components.ButtonCraneGame
 import com.steve1316.uma_android_automation.components.ButtonCraneGameOk
 import com.steve1316.uma_android_automation.components.ButtonSkip
+import com.steve1316.uma_android_automation.components.IconTazuna
+import com.steve1316.uma_android_automation.components.IconRaceDayRibbon
+import com.steve1316.uma_android_automation.components.IconGoalRibbon
+import com.steve1316.uma_android_automation.components.ButtonBack
+import com.steve1316.uma_android_automation.components.ButtonUnityCupRace
+
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.opencv.core.Point
@@ -58,6 +64,11 @@ class Game(val myContext: Context) {
 	val training: Training = Training(this)
 	val racing: Racing = Racing(this)
 	val trainingEvent: TrainingEvent = TrainingEvent(this)
+    val campaign: Campaign = if (scenario == "Unity Cup") {
+        UnityCup(this)
+    } else {
+        Campaign(this)
+    }
 
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
@@ -80,74 +91,10 @@ class Game(val myContext: Context) {
     var currentDate: GameDate = GameDate(day = 1)
 	private var inheritancesDone = 0
 
-    // Should always check fan count at bot start unless in pre-debut.
-    var bNeedToCheckFans: Boolean = true
     private var recreationDateCompleted: Boolean = false
     private var isFinals: Boolean = false
     private var stopBeforeFinalsInitialTurnNumber: Int = -1
     private var scenarioCheckPerformed: Boolean = false
-
-    fun checkFans() {
-        MessageLog.d(TAG, "Checking fans...")
-        // Detect the new fan count by clicking the fans info button.
-        // This opens the "Umamusume Class" dialog.
-        // We process this dialog in the dialog handler.
-        // This button is in a different position for Unity/URA scenarios.
-        // The Unity scenario has an info button just like the ButtonHomeFansInfo
-        // button so they are easily mistaken by OCR.
-        // Thus we just tap their location manually.
-        if (scenario == "Unity Cup") {
-            tap(264.0, 1184.0, ButtonHomeFansInfo.template.path, ignoreWaiting = true)
-        } else {
-            tap(240.0, 330.0, ButtonHomeFansInfo.template.path, ignoreWaiting = true)
-        }
-    }
-
-    fun checkAptitudes() {
-        MessageLog.d(TAG, "Checking aptitudes...")
-        // We update the trainee aptitudes by checking the stats dialog.
-        // So in here we just open the dialog then the dialog handler
-        // will take care of the rest.
-        ButtonHomeFullStats.click(imageUtils = imageUtils)
-    }
-
-    fun getFanCountClass(bitmap: Bitmap? = null): FanCountClass? {
-        val (bitmap, templateBitmap) = imageUtils.getBitmaps(ButtonHomeFansInfo.template.path)
-        if (templateBitmap == null) {
-            MessageLog.e(TAG, "getFanCountClass: Could not get template bitmap for ButtonHomeFansInfo: ${ButtonHomeFansInfo.template.path}.")
-            return null
-        }
-        val point: Point? = ButtonHomeFansInfo.find(imageUtils = imageUtils).first
-        if (point == null) {
-            MessageLog.w(TAG, "getFanCountClass: Could not find ButtonHomeFansInfo.")
-            return null
-        }
-
-        val x = (point.x - (templateBitmap.width / 2)).toInt() - 180
-        // Add a small buffer to vertical component.
-        val y = (point.y - 16).toInt()
-        val w = 180
-        // 32px minimum for google ML kit.
-        val h = 32
-
-        val text: String = imageUtils.performOCROnRegion(
-            bitmap,
-            x,
-            y,
-            w,
-            h,
-			useThreshold = false,
-            useGrayscale = true,
-            scale = 1.0,
-            ocrEngine = "tesseract",
-            debugName = "getFanCountClass",
-        )
-        val fanCountClass: FanCountClass? = FanCountClass.fromName(text.replace(" ", "_"))
-        if (fanCountClass == null) {
-            MessageLog.w(TAG, "getFanCountClass:: Failed to match text to a FanCountClass: $text")
-        }
-        return fanCountClass
-    }
 
     /**
      * Detects and handles any dialog popups.
@@ -343,20 +290,13 @@ class Game(val myContext: Context) {
 		}
 	}
 
-	/**
+    /**
 	 * Handles the test to perform OCR on the current date and elapsed turn number.
 	 */
 	fun startDateOCRTest() {
 		MessageLog.i(TAG, "\n[TEST] Now beginning the Date OCR test on the Main screen.")
 		MessageLog.i(TAG, "[TEST] Note that this test is dependent on having the correct scale.")
         updateDate()
-	}
-
-	fun startAptitudesDetectionTest() {
-		MessageLog.i(TAG, "\n[TEST] Now beginning the Aptitudes Detection test on the Main screen.")
-		MessageLog.i(TAG, "[TEST] Note that this test is dependent on having the correct scale.")
-        checkAptitudes()
-        handleDialogs()
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -399,59 +339,7 @@ class Game(val myContext: Context) {
 	 * @return True if the bot is at the Main screen. Otherwise false.
 	 */
 	fun checkMainScreen(): Boolean {
-		// Current date should be printed here to section off the tasks undertaken for this date.
-		MessageLog.i(TAG, "\nChecking if the bot is sitting at the Main screen.")
-        val sourceBitmap = imageUtils.getSourceBitmap()
-		return if (imageUtils.findImageWithBitmap("tazuna", sourceBitmap, region = imageUtils.regionTopHalf, suppressError = true) != null &&
-			imageUtils.findImageWithBitmap("race_select_mandatory", sourceBitmap, region = imageUtils.regionBottomHalf, suppressError = true) == null) {
-			MessageLog.i(TAG, "Bot is at the Main screen.")
-
-			// Perform updates here if necessary.
-            updateDate()
-
-            // Since we're at the main screen, we don't need to worry about this
-            // flag anymore since we will update our aptitudes here if needed.
-            trainee.bTemporaryRunningStyleAptitudesUpdated = false
-            // Update the fan count class every time we're at the main screen.
-            val fanCountClass: FanCountClass? = getFanCountClass()
-            if (fanCountClass != null) {
-                trainee.fanCountClass = fanCountClass
-            }
-            // Update trainee information.
-            trainee.updateStats(imageUtils = imageUtils)
-            trainee.updateSkillPoints(imageUtils = imageUtils)
-            trainee.updateMood(imageUtils = imageUtils)
-
-            if (!trainee.bHasUpdatedAptitudes) {
-                checkAptitudes()
-                wait(0.5)
-                // After clicking the FullStats button, need to handle dialogs
-                // since this will open the Umamusume Details dialog.
-                handleDialogs()
-                wait(0.5)
-            }
-
-            if (bNeedToCheckFans) {
-                checkFans()
-                wait(0.5)
-                // After clicking the UmamusumeClass button, need to handle dialogs
-                // since this will open the Umamusume Class dialog.
-                handleDialogs()
-                wait(0.5)
-            }
-
-			true
-		} else if (!enablePopupCheck && imageUtils.findImageWithBitmap("cancel", sourceBitmap, region = imageUtils.regionBottomHalf) != null &&
-			imageUtils.findImageWithBitmap("race_confirm", sourceBitmap, region = imageUtils.regionBottomHalf) != null) {
-			// This popup is most likely the insufficient fans popup. Force an extra race to catch up on the required fans.
-			MessageLog.i(TAG, "There is a possible insufficient fans or maiden race popup.")
-			racing.encounteredRacingPopup = true
-			racing.skipRacing = false
-			true
-		} else {
-			MessageLog.i(TAG, "Bot is not at the Main screen.")
-			false
-		}
+        return ButtonHomeFullStats.check(imageUtils) && IconTazuna.check(imageUtils)
 	}
 
 	/**
@@ -478,19 +366,19 @@ class Game(val myContext: Context) {
 	fun checkMandatoryRacePrepScreen(): Boolean {
 		MessageLog.i(TAG, "\nChecking if the bot is sitting on the Race Preparation screen for a mandatory race.")
         val sourceBitmap = imageUtils.getSourceBitmap()
-		return if (imageUtils.findImageWithBitmap("race_select_mandatory", sourceBitmap, region = imageUtils.regionBottomHalf) != null) {
+		return if (IconRaceDayRibbon.check(imageUtils = imageUtils)) {
 			MessageLog.i(TAG, "Bot is at the preparation screen with a mandatory race ready to be completed.")
             if (scenario == "Unity Cup") wait(1.0)
 			true
-		} else if (imageUtils.findImageWithBitmap("race_select_mandatory_goal", sourceBitmap, region = imageUtils.regionMiddle) != null) {
+		} else if (IconGoalRibbon.check(imageUtils = imageUtils)) {
 			// Most likely the user started the bot here so a delay will need to be placed to allow the start banner of the Service to disappear.
 			wait(2.0)
 			MessageLog.i(TAG, "Bot is at the Race Selection screen with a mandatory race needing to be selected.")
 			// Walk back to the preparation screen.
-			findAndTapImage("back", tries = 1, region = imageUtils.regionBottomHalf)
+            ButtonBack.click(imageUtils = imageUtils)
 			wait(1.0)
 			true
-		} else if (scenario == "Unity Cup" && imageUtils.findImageWithBitmap("unitycup_race", sourceBitmap, region = imageUtils.regionBottomHalf) != null) {
+		} else if (scenario == "Unity Cup" && ButtonUnityCupRace.check(imageUtils = imageUtils)) {
             MessageLog.i(TAG, "Bot is awaiting opponent selection for a Unity Cup race.")
             true
         } else {
@@ -624,17 +512,22 @@ class Game(val myContext: Context) {
     /**
      * Updates the currentDate GameDate object by detecting the date on screen.
      *
-     * @return Whether the operation was successful.
+     * @return Whether the date changed.
      */
 	fun updateDate(): Boolean {
-		MessageLog.i(TAG, "\n[DATE] Updating the current date.")
+		MessageLog.i(TAG, "[DATE] Attempting to update the current date.")
+        val prevDay: Int = currentDate.day
         if (!currentDate.update(imageUtils = imageUtils)) {
             MessageLog.e(TAG, "[DATE] currentDate.update() failed to update date.")
             return false
         }
 
-		MessageLog.i(TAG, "[DATE] Updated date ${currentDate}.")
-        return true
+        if (currentDate.day == prevDay) {
+            return false
+        } else {
+            MessageLog.i(TAG, "[DATE] New date: ${currentDate}")
+            return true
+        }
 	}
 
 	/**
@@ -934,12 +827,6 @@ class Game(val myContext: Context) {
 
 		val startTime: Long = System.currentTimeMillis()
 
-        val campaign = if (scenario == "Unity Cup") {
-            UnityCup(this)
-        } else {
-            Campaign(this)
-        }
-
 		// Start debug tests here if enabled. Otherwise, proceed with regular bot operations.
 		if (SettingsHelper.getBooleanSetting("debug", "debugMode_startTemplateMatchingTest")) {
 			startTemplateMatchingTest()
@@ -952,7 +839,7 @@ class Game(val myContext: Context) {
 		} else if (SettingsHelper.getBooleanSetting("debug", "debugMode_startRaceListDetectionTest")) {
 			racing.startRaceListDetectionTest()
 		} else if (SettingsHelper.getBooleanSetting("debug", "debugMode_startAptitudesDetectionTest")) {
-			startAptitudesDetectionTest()
+			campaign.startAptitudesDetectionTest()
 		} else if (SettingsHelper.getBooleanSetting("debug", "debugMode_startMainScreenOCRTest")) {
 			campaign.startMainScreenOCRTest()
 		} else if (SettingsHelper.getBooleanSetting("debug", "debugMode_startTrainingScreenOCRTest")) {

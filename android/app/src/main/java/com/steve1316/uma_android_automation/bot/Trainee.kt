@@ -258,7 +258,7 @@ class Trainee {
                 return@forEachIndexed
             }
             for (aptitude in Aptitude.entries) {
-                if (imageUtils.findImageWithBitmap("stat_aptitude_${aptitude.name}", croppedBitmap) != null) {
+                if (imageUtils.findImageWithBitmap("stat_aptitude_${aptitude.name}", croppedBitmap, suppressError = true) != null) {
                     result[option] = aptitude
                     break
                 }

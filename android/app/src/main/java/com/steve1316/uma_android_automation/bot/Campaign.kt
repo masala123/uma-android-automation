@@ -7,6 +7,7 @@ import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.uma_android_automation.utils.types.DateYear
 import com.steve1316.uma_android_automation.utils.types.DateMonth
 import com.steve1316.uma_android_automation.utils.types.DatePhase
+import com.steve1316.uma_android_automation.utils.types.FanCountClass
 
 import com.steve1316.uma_android_automation.components.*
 
@@ -26,6 +27,9 @@ open class Campaign(val game: Game) {
 
     protected var bHasSetQuickMode: Boolean = false
 
+    // Should always check fan count at bot start unless in pre-debut.
+    protected var bNeedToCheckFans: Boolean = true
+
     /**
      * Detects and handles any dialog popups.
      *
@@ -39,8 +43,6 @@ open class Campaign(val game: Game) {
         if (dialog == null) {
             return Pair(false, null)
         }
-
-        MessageLog.d(TAG, "[DIALOG] ${dialog.name}")
 
         when (dialog.name) {
             "agenda_details" -> dialog.close(imageUtils = game.imageUtils)
@@ -64,6 +66,8 @@ open class Campaign(val game: Game) {
             "goal_not_reached" -> {
                 // We are handling the logic for when to race on our own.
                 // Thus we just close this warning.
+                game.racing.encounteredRacingPopup = true
+                game.racing.skipRacing = false
                 dialog.close(imageUtils = game.imageUtils)
             }
             "goals" -> dialog.close(imageUtils = game.imageUtils)
@@ -74,6 +78,8 @@ open class Campaign(val game: Game) {
             "insufficient_fans" -> {
                 // We are handling the logic for when to race on our own.
                 // Thus we just close this warning.
+                game.racing.encounteredRacingPopup = true
+                game.racing.skipRacing = false
                 dialog.close(imageUtils = game.imageUtils)
             }
             "log" -> dialog.close(imageUtils = game.imageUtils)
@@ -184,7 +190,7 @@ open class Campaign(val game: Game) {
                 val fans = game.imageUtils.getUmamusumeClassDialogFanCount(croppedBitmap)
                 if (fans != null) {
                     game.trainee.fans = fans
-                    game.bNeedToCheckFans = false
+                    bNeedToCheckFans = false
                     MessageLog.d(TAG, "[DIALOG] umamusume_class: Updated fan count: ${game.trainee.fans}")
                 } else {
                     MessageLog.w(TAG, "[DIALOG] umamusume_class: getUmamusumeClassDialogFanCount returned NULL.")
@@ -217,6 +223,67 @@ open class Campaign(val game: Game) {
         return Pair(true, dialog)
     }
 
+    fun checkAptitudes() {
+        MessageLog.d(TAG, "Checking aptitudes...")
+        // We update the trainee aptitudes by checking the stats dialog.
+        // So in here we just open the dialog then the dialog handler
+        // will take care of the rest.
+        ButtonHomeFullStats.click(imageUtils = game.imageUtils)
+    }
+
+    fun checkFans() {
+        MessageLog.d(TAG, "Checking fans...")
+        // Detect the new fan count by clicking the fans info button.
+        // This opens the "Umamusume Class" dialog.
+        // We process this dialog in the dialog handler.
+        // This button is in a different position for Unity/URA scenarios.
+        // The Unity scenario has an info button just like the ButtonHomeFansInfo
+        // button so they are easily mistaken by OCR, thus we just tap the location manually.
+        if (game.scenario == "Unity Cup") {
+            game.tap(264.0, 1184.0, ButtonHomeFansInfo.template.path, ignoreWaiting = true)
+        } else {
+            game.tap(240.0, 330.0, ButtonHomeFansInfo.template.path, ignoreWaiting = true)
+        }
+    }
+
+    fun getFanCountClass(bitmap: Bitmap? = null): FanCountClass? {
+        val (bitmap, templateBitmap) = game.imageUtils.getBitmaps(ButtonHomeFansInfo.template.path)
+        if (templateBitmap == null) {
+            MessageLog.e(TAG, "getFanCountClass: Could not get template bitmap for ButtonHomeFansInfo: ${ButtonHomeFansInfo.template.path}.")
+            return null
+        }
+        val point: Point? = ButtonHomeFansInfo.find(imageUtils = game.imageUtils).first
+        if (point == null) {
+            MessageLog.w(TAG, "getFanCountClass: Could not find ButtonHomeFansInfo.")
+            return null
+        }
+
+        val x = (point.x - (templateBitmap.width / 2)).toInt() - 180
+        // Add a small buffer to vertical component.
+        val y = (point.y - 16).toInt()
+        val w = 180
+        // 32px minimum for google ML kit.
+        val h = 32
+
+        val text: String = game.imageUtils.performOCROnRegion(
+            bitmap,
+            x,
+            y,
+            w,
+            h,
+			useThreshold = false,
+            useGrayscale = true,
+            scale = 1.0,
+            ocrEngine = "tesseract",
+            debugName = "getFanCountClass",
+        )
+        val fanCountClass: FanCountClass? = FanCountClass.fromName(text.replace(" ", "_"))
+        if (fanCountClass == null) {
+            MessageLog.w(TAG, "getFanCountClass:: Failed to match text to a FanCountClass: $text")
+        }
+        return fanCountClass
+    }
+
 	/**
 	 * Campaign-specific training event handling.
 	 */
@@ -229,7 +296,7 @@ open class Campaign(val game: Game) {
 	 */
 	open fun handleRaceEvents(): Boolean {
         val bDidRace: Boolean = game.racing.handleRaceEvents()
-        game.bNeedToCheckFans = bDidRace
+        bNeedToCheckFans = bDidRace
 		return bDidRace
 	}
 
@@ -242,9 +309,11 @@ open class Campaign(val game: Game) {
 
     /**
      * Clicks the career Quick Mode button and selects the fastest option.
+     *
+     * @return Whether we clicked any buttons in this call.
      */
-    fun handleCareerQuickMode() {
-        if (!bHasSetQuickMode) {
+    fun handleCareerQuickMode(): Boolean {
+        if (!bHasSetQuickMode || ButtonCareerQuick.check(imageUtils = game.imageUtils)) {
             // Click the Quick Mode button regardless of its state
             // so that we can verify the correct setting.
             if (
@@ -254,20 +323,36 @@ open class Campaign(val game: Game) {
                 game.wait(0.1)
                 handleDialogs()
                 game.wait(0.1)
+                return true
             }
         }
+        return false
     }
 
     /**
      * Clicks the career skip button so that it is at its fastest speed (2x).
+     *
+     * @return Whether we clicked any buttons in this call.
      */
-    fun handleCareerSkipButton() {
+    fun handleCareerSkipButton(): Boolean {
         if (!ButtonCareerSkip2.check(imageUtils = game.imageUtils)) {
             // Set the `skip` button to 2x.
-            ButtonCareerSkipOff.click(imageUtils = game.imageUtils, taps = 2)
-            ButtonCareerSkip1.click(imageUtils = game.imageUtils, taps = 1)
+            if (ButtonCareerSkipOff.click(imageUtils = game.imageUtils, taps = 2)) {
+                return true
+            }
+            if (ButtonCareerSkip1.click(imageUtils = game.imageUtils, taps = 1)) {
+                return true
+            }
         }
+        return false
     }
+
+	fun startAptitudesDetectionTest() {
+		MessageLog.i(TAG, "\n[TEST] Now beginning the Aptitudes Detection test on the Main screen.")
+		MessageLog.i(TAG, "[TEST] Note that this test is dependent on having the correct scale.")
+        checkAptitudes()
+        handleDialogs()
+	}
 
     fun startTrainingScreenOCRTest() {
         MessageLog.i(TAG, "---- startTrainingScreenOCRTest START ----")
@@ -438,135 +523,157 @@ open class Campaign(val game: Game) {
         MessageLog.i(TAG, "---- startMainScreenOCRTest END: PASS=$numPass, FAIL=$numFail ----")
     }
 
+    fun handleMainScreen(): Boolean {
+        if (!game.checkMainScreen()) {
+            return false
+        }
+
+        // Operations to be done every time the date changes.
+        if (game.updateDate()) {
+            // Update the fan count class every time we're at the main screen.
+            val fanCountClass: FanCountClass? = getFanCountClass()
+            if (fanCountClass != null) {
+                game.trainee.fanCountClass = fanCountClass
+            }
+            // Update trainee information.
+            game.trainee.updateStats(imageUtils = game.imageUtils)
+            game.trainee.updateSkillPoints(imageUtils = game.imageUtils)
+            game.trainee.updateMood(imageUtils = game.imageUtils)
+        }
+
+        // Perform scenario validation check.
+        if (!game.validateScenario()) {
+            throw InterruptedException("Failed to validate scenario. Stopping bot...")
+        }
+
+        // Since we're at the main screen, we don't need to worry about this
+        // flag anymore since we will update our aptitudes here if needed.
+        game.trainee.bTemporaryRunningStyleAptitudesUpdated = false
+
+        if (!game.trainee.bHasUpdatedAptitudes) {
+            checkAptitudes()
+            return true
+        }
+
+        if (bNeedToCheckFans) {
+            checkFans()
+            return true
+        }
+
+        // Check if bot should stop before the finals.
+        if (game.checkFinalsStop()) {
+            throw InterruptedException("Reached finals. Stopping bot...")
+        }
+
+        var needToRace = false
+        if (IconRaceDayRibbon.check(imageUtils = game.imageUtils)) {
+            needToRace = true
+        } else if (!game.racing.encounteredRacingPopup) {
+            // Check if there are fan or trophy requirements that need to be met with racing.
+            game.racing.checkRacingRequirements()
+
+            // If the required skill points has been reached, stop the bot.
+            if (game.enableSkillPointCheck && game.imageUtils.determineSkillPoints() >= game.skillPointsRequired) {
+                throw InterruptedException("Bot reached skill point check threshold. Stopping bot...")
+            }
+
+            if (game.racing.enableForceRacing) {
+                // If force racing is enabled, skip all other activities and go straight to racing
+                MessageLog.i(TAG, "Force racing enabled - skipping all other activities and going straight to racing.")
+                needToRace = true
+            } else if (
+                mustRestBeforeSummer &&
+                (   game.currentDate.year == DateYear.CLASSIC ||
+                    game.currentDate.year == DateYear.SENIOR
+                ) &&
+                game.currentDate.month == DateMonth.JUNE &&
+                game.currentDate.phase == DatePhase.LATE
+            ) {
+                // Check if we need to rest before Summer Training (June Early/Late in Classic/Senior Year).
+                MessageLog.i(TAG, "Forcing rest during ${game.currentDate} in preparation for Summer Training.")
+                game.recoverEnergy()
+                game.racing.skipRacing = false
+            } else if (game.checkInjury() && !game.checkFinals()) {
+                game.findAndTapImage("ok", region = game.imageUtils.regionMiddle)
+                game.wait(3.0)
+                game.racing.skipRacing = false
+            } else if (game.recoverMood() && !game.checkFinals()) {
+                game.racing.skipRacing = false
+            } else if (game.currentDate.day >= 16 && game.racing.checkEligibilityToStartExtraRacingProcess()) {
+                MessageLog.i(TAG, "[INFO] Bot has no injuries, mood is sufficient and extra races can be run today. Setting the needToRace flag to true.")
+                needToRace = true
+            } else {
+                MessageLog.i(TAG, "[INFO] Training due to it not being an extra race day.")
+                game.training.handleTraining()
+                game.racing.skipRacing = false
+            }
+        }
+
+        if (game.racing.encounteredRacingPopup || needToRace) {
+            MessageLog.i(TAG, "[INFO] All checks are cleared for racing.")
+            if (!handleRaceEvents()) {
+                if (game.racing.detectedMandatoryRaceCheck) {
+                    throw InterruptedException("Mandatory race detected. Stopping bot...")
+                }
+                ButtonBack.click(imageUtils = game.imageUtils)
+                game.racing.skipRacing = !game.racing.enableForceRacing
+                game.wait(1.0)
+                game.training.handleTraining()
+            }
+        }
+        return true
+    }
+
 	/**
 	 * Main automation loop that handles all shared logic.
 	 */
 	fun start() {
 		while (true) {
-            // First thing we should always check is if there are any dialogs.
             try {
+                // We always check for dialogs first.
                 if (handleDialogs().first) {
                     continue
-                }
-                if (game.handleDialogs().first) {
+                } else if (game.handleDialogs().first) {
                     continue
+                } else if (handleMainScreen()) {
+                    continue
+                } else if (game.checkTrainingEventScreen()) {
+                    // If the bot is at the Training Event screen, that means there are selectable options for rewards.
+                    handleTrainingEvent()
+                    game.racing.skipRacing = false
+                } else if (game.checkMandatoryRacePrepScreen()) {
+                    // If the bot is at the Main screen with the button to select a race visible,
+                    // that means the bot needs to handle a mandatory race.
+                    if (!handleRaceEvents() && game.racing.detectedMandatoryRaceCheck) {
+                        throw InterruptedException("Mandatory race detected. Stopping bot...")
+                    }
+                } else if (game.checkRacingScreen()) {
+                    // If the bot is already at the Racing screen, then complete this standalone race.
+                    game.racing.handleStandaloneRace()
+                    game.racing.skipRacing = false
+                } else if (game.checkEndScreen()) {
+                    // Stop when the bot has reached the screen where it details the overall result of the run.
+                    throw InterruptedException("Bot had reached end of run. Stopping bot...")
+                } else if (checkCampaignSpecificConditions()) {
+                    MessageLog.i(TAG, "Campaign-specific checks complete.")
+                    game.racing.skipRacing = false
+                } else if (handleCareerQuickMode()) {
+                    continue
+                } else if (handleCareerSkipButton()) {
+                    continue
+                } else if (game.handleInheritanceEvent()) {
+                    // If the bot is at the Inheritance screen, then accept the inheritance.
+                    game.racing.skipRacing = false
+                } else if (game.performMiscChecks()) {
+                    MessageLog.d(TAG, "Misc checks complete.")
+                } else {
+                    MessageLog.v(TAG, "Did not detect the bot being at the following screens: Main, Training Event, Inheritance, Mandatory Race Preparation, Racing and Career End.")
                 }
             } catch (e: InterruptedException) {
-                MessageLog.e(TAG, "Dialog handler triggered bot to stop: ${e.message}")
+                game.notificationMessage = "Campaign main loop exiting: ${e.message}"
+                MessageLog.e(TAG, "Campaign main loop exiting: ${e.message}")
                 break
             }
-			////////////////////////////////////////////////
-			// Most bot operations start at the Main screen.
-			if (game.checkMainScreen()) {
-				// Perform scenario validation check.
-				if (!game.validateScenario()) {
-					MessageLog.i(TAG, "\n[END] Stopping bot due to scenario validation failure.")
-					break
-				}
-
-                handleCareerQuickMode()
-                handleCareerSkipButton()
-
-				// Check if bot should stop before the finals.
-				if (game.checkFinalsStop()) {
-					MessageLog.i(TAG, "\n[END] Stopping bot before the finals.")
-					break
-				}
-
-				var needToRace = false
-				if (!game.racing.encounteredRacingPopup) {
-                    // Check if there are fan or trophy requirements that need to be met with racing.
-					game.racing.checkRacingRequirements()
-
-					// If the required skill points has been reached, stop the bot.
-					if (game.enableSkillPointCheck && game.imageUtils.determineSkillPoints() >= game.skillPointsRequired) {
-						MessageLog.i(TAG, "\n[END] Bot has acquired the set amount of skill points. Exiting now...")
-						game.notificationMessage = "Bot has acquired the set amount of skill points."
-						break
-					}
-
-					// If force racing is enabled, skip all other activities and go straight to racing
-					if (game.racing.enableForceRacing) {
-						MessageLog.i(TAG, "Force racing enabled - skipping all other activities and going straight to racing.")
-						needToRace = true
-					} else {
-						// Check if we need to rest before Summer Training (June Early/Late in Classic/Senior Year).
-						if (mustRestBeforeSummer &&
-                            (   game.currentDate.year == DateYear.CLASSIC ||
-                                game.currentDate.year == DateYear.SENIOR
-                            ) &&
-                            game.currentDate.month == DateMonth.JUNE &&
-                            game.currentDate.phase == DatePhase.LATE
-                        ) {
-							MessageLog.i(TAG, "Forcing rest during ${game.currentDate} in preparation for Summer Training.")
-							game.recoverEnergy()
-							game.racing.skipRacing = false
-						} else if (game.checkInjury() && !game.checkFinals()) {
-							game.findAndTapImage("ok", region = game.imageUtils.regionMiddle)
-							game.wait(3.0)
-							game.racing.skipRacing = false
-						} else if (game.recoverMood() && !game.checkFinals()) {
-							game.racing.skipRacing = false
-						} else if (game.currentDate.day >= 16 && game.racing.checkEligibilityToStartExtraRacingProcess()) {
-							MessageLog.i(TAG, "[INFO] Bot has no injuries, mood is sufficient and extra races can be run today. Setting the needToRace flag to true.")
-							needToRace = true
-                        } else {
-                            MessageLog.i(TAG, "[INFO] Training due to it not being an extra race day.")
-                            game.training.handleTraining()
-                            game.racing.skipRacing = false
-                        }
-					}
-				}
-
-                if (game.racing.encounteredRacingPopup || needToRace) {
-                    MessageLog.i(TAG, "[INFO] All checks are cleared for racing.")
-                    if (!handleRaceEvents()) {
-                        if (game.racing.detectedMandatoryRaceCheck) {
-                            MessageLog.i(TAG, "\n[END] Stopping bot due to detection of Mandatory Race.")
-                            game.notificationMessage = "Stopping bot due to detection of Mandatory Race."
-                            break
-                        }
-                        game.findAndTapImage("back", tries = 1, region = game.imageUtils.regionBottomHalf)
-                        game.racing.skipRacing = !game.racing.enableForceRacing
-                        game.wait(1.0)
-                        game.training.handleTraining()
-                    }
-                }
-			} else if (game.checkTrainingEventScreen()) {
-				// If the bot is at the Training Event screen, that means there are selectable options for rewards.
-				handleTrainingEvent()
-				game.racing.skipRacing = false
-			} else if (game.handleInheritanceEvent()) {
-				// If the bot is at the Inheritance screen, then accept the inheritance.
-				game.racing.skipRacing = false
-			} else if (game.checkMandatoryRacePrepScreen()) {
-				// If the bot is at the Main screen with the button to select a race visible, that means the bot needs to handle a mandatory race.
-				if (!handleRaceEvents() && game.racing.detectedMandatoryRaceCheck) {
-					MessageLog.i(TAG, "\n[END] Stopping bot due to detection of Mandatory Race.")
-					game.notificationMessage = "Stopping bot due to detection of Mandatory Race."
-					break
-				}
-			} else if (game.checkRacingScreen()) {
-				// If the bot is already at the Racing screen, then complete this standalone race.
-				game.racing.handleStandaloneRace()
-				game.racing.skipRacing = false
-			} else if (game.checkEndScreen()) {
-				// Stop when the bot has reached the screen where it details the overall result of the run.
-				MessageLog.i(TAG, "\n[END] Bot has reached the end of the run. Exiting now...")
-				game.notificationMessage = "Bot has reached the end of the run"
-				break
-			} else if (checkCampaignSpecificConditions()) {
-				MessageLog.i(TAG, "Campaign-specific checks complete.")
-				game.racing.skipRacing = false
-				continue
-			} else {
-				MessageLog.i(TAG, "Did not detect the bot being at the following screens: Main, Training Event, Inheritance, Mandatory Race Preparation, Racing and Career End.")
-			}
-
-			// Various miscellaneous checks
-			if (!game.performMiscChecks()) {
-				break
-			}
 		}
 	}
 }
