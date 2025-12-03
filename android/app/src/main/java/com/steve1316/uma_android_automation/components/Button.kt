@@ -2,8 +2,7 @@ package com.steve1316.uma_android_automation.components
 
 import com.steve1316.uma_android_automation.components.ComponentInterface
 import com.steve1316.uma_android_automation.components.Template
-
-import com.steve1316.automation_library.data.SharedData
+import com.steve1316.uma_android_automation.components.Region
 
 object ButtonAutoSelect : ComponentInterface {
     override val TAG: String = "ButtonAutoSelect"
@@ -12,12 +11,12 @@ object ButtonAutoSelect : ComponentInterface {
 
 object ButtonBack : ComponentInterface {
     override val TAG: String = "ButtonBack"
-    override val template = Template("components/button/back")
+    override val template = Template("components/button/back", region = Region.bottomHalf)
 }
 
 object ButtonBackGreen : ComponentInterface {
     override val TAG: String = "ButtonBackGreen"
-    override val template = Template("components/button/back_green")
+    override val template = Template("components/button/back_green", region = Region.bottomHalf)
 }
 
 object ButtonBeginShowdown : ComponentInterface {
@@ -32,12 +31,12 @@ object ButtonBorrowSupportCard : ComponentInterface {
 
 object ButtonBurger : ComponentInterface {
     override val TAG: String = "ButtonBurger"
-    override val template = Template("components/button/burger")
+    override val template = Template("components/button/burger", region = Region.bottomHalf)
 }
 
 object ButtonCancel : ComponentInterface {
     override val TAG: String = "ButtonCancel"
-    override val template = Template("components/button/cancel")
+    override val template = Template("components/button/cancel", region = Region.bottomHalf)
 }
 
 object ButtonChangeRunningStyle : ComponentInterface {
@@ -47,23 +46,23 @@ object ButtonChangeRunningStyle : ComponentInterface {
 
 object ButtonClose : ComponentInterface {
     override val TAG: String = "ButtonClose"
-    override val template = Template("components/button/close")
+    override val template = Template("components/button/close", region = Region.bottomHalf)
 }
 
 object ButtonCollectAll : ComponentInterface {
     override val TAG: String = "ButtonCollectAll"
-    override val template = Template("components/button/collect_all")
+    override val template = Template("components/button/collect_all", region = Region.bottomHalf)
 }
 
 
 object ButtonConfirm : ComponentInterface {
     override val TAG: String = "ButtonConfirm"
-    override val template = Template("components/button/confirm")
+    override val template = Template("components/button/confirm", region = Region.bottomHalf)
 }
 
 object ButtonConfirmExclamation : ComponentInterface {
     override val TAG: String = "ButtonConfirmExclamation"
-    override val template = Template("components/button/confirm_exclamation")
+    override val template = Template("components/button/confirm_exclamation", region = Region.bottomHalf)
 }
 
 
@@ -167,29 +166,34 @@ object ButtonLegendRaceHomeSpecialMissions : ComponentInterface {
     override val template = Template("components/button/legend_race_special_missions")
 }
 
+object ButtonLog : ComponentInterface {
+    override val TAG: String = "ButtonLog"
+    override val template = Template("components/button/log", region = Region.bottomHalf)
+}
+
 object ButtonNext : ComponentInterface {
     override val TAG: String = "ButtonNext"
-    override val template = Template("components/button/next")
+    override val template = Template("components/button/next", region = Region.bottomHalf)
 }
 
 object ButtonNextWithImage : ComponentInterface {
     override val TAG: String = "ButtonNextWithImage"
-    override val template = Template("components/button/next_with_image")
+    override val template = Template("components/button/next_with_image", region = Region.bottomHalf)
 }
 
 object ButtonNo : ComponentInterface {
     override val TAG: String = "ButtonNo"
-    override val template = Template("components/button/no")
+    override val template = Template("components/button/no", region = Region.bottomHalf)
 }
 
 object ButtonOk : ComponentInterface {
     override val TAG: String = "ButtonOk"
-    override val template = Template("components/button/ok")
+    override val template = Template("components/button/ok", region = Region.bottomHalf)
 }
 
 object ButtonOptions : ComponentInterface {
     override val TAG: String = "ButtonOptions"
-    override val template = Template("components/button/options")
+    override val template = Template("components/button/options", region = Region.bottomHalf)
 }
 
 object ButtonLearn : ComponentInterface {
@@ -199,27 +203,27 @@ object ButtonLearn : ComponentInterface {
 
 object ButtonReset : ComponentInterface {
     override val TAG: String = "ButtonReset"
-    override val template = Template("components/button/reset")
+    override val template = Template("components/button/reset", region = Region.bottomHalf)
 }
 
 object ButtonRace : ComponentInterface {
     override val TAG: String = "ButtonRace"
-    override val template = Template("components/button/race")
+    override val template = Template("components/button/race", region = Region.bottomHalf)
 }
 
 object ButtonRaceAgain : ComponentInterface {
     override val TAG: String = "ButtonRaceAgain"
-    override val template = Template("components/button/race_again")
+    override val template = Template("components/button/race_again", region = Region.bottomHalf)
 }
 
 object ButtonRaceDetails : ComponentInterface {
     override val TAG: String = "ButtonRaceDetails"
-    override val template = Template("components/button/race_details")
+    override val template = Template("components/button/race_details", region = Region.bottomHalf)
 }
 
 object ButtonRaceEnd : ComponentInterface {
     override val TAG: String = "ButtonRaceEnd"
-    override val template = Template("components/button/race_end")
+    override val template = Template("components/button/race_end", region = Region.bottomHalf)
 }
 
 object ButtonRaceEvents : ComponentInterface {
@@ -229,17 +233,17 @@ object ButtonRaceEvents : ComponentInterface {
 
 object ButtonRaceExclamation : ComponentInterface {
     override val TAG: String = "ButtonRaceExclamation"
-    override val template = Template("components/button/race_exclamation")
+    override val template = Template("components/button/race_exclamation", region = Region.bottomHalf)
 }
 
 object ButtonRaceExclamationShiftedUp : ComponentInterface {
     override val TAG: String = "ButtonRaceExclamationShiftedUp"
-    override val template = Template("components/button/race_exclamation_shifted_up")
+    override val template = Template("components/button/race_exclamation_shifted_up", region = Region.middle)
 }
 
 object ButtonRaceManual : ComponentInterface {
     override val TAG: String = "ButtonRaceManual"
-    override val template = Template("components/button/race_manual")
+    override val template = Template("components/button/race_manual", region = Region.bottomHalf)
 }
 
 object ButtonRaceRecommendationsCenterStage : ComponentInterface {
@@ -279,27 +283,27 @@ object ButtonResume : ComponentInterface {
 
 object ButtonSave : ComponentInterface {
     override val TAG: String = "ButtonSave"
-    override val template = Template("components/button/save")
+    override val template = Template("components/button/save", region = Region.bottomHalf)
 }
 
 object ButtonSaveSchedule : ComponentInterface {
     override val TAG: String = "ButtonSaveSchedule"
-    override val template = Template("components/button/save_schedule")
+    override val template = Template("components/button/save_schedule", region = Region.bottomHalf)
 }
 
 object ButtonSaveAndExit : ComponentInterface {
     override val TAG: String = "ButtonSaveAndExit"
-    override val template = Template("components/button/save_and_exit")
+    override val template = Template("components/button/save_and_exit", region = Region.bottomHalf)
 }
 
 object ButtonSeeResults : ComponentInterface {
     override val TAG: String = "ButtonSeeResults"
-    override val template = Template("components/button/see_results")
+    override val template = Template("components/button/see_results", region = Region.bottomHalf)
 }
 
 object ButtonSelectOpponent : ComponentInterface {
     override val TAG: String = "ButtonSelectOpponent"
-    override val template = Template("components/button/select_opponent")
+    override val template = Template("components/button/select_opponent", region = Region.bottomHalf)
 }
 
 object ButtonSelectLegacy : ComponentInterface {
@@ -314,17 +318,22 @@ object ButtonShop : ComponentInterface {
 
 object ButtonSkip : ComponentInterface {
     override val TAG: String = "ButtonSkip"
-    override val template = Template("components/button/skip")
+    override val template = Template("components/button/skip", region = Region.bottomHalf)
+}
+
+object ButtonSkills : ComponentInterface {
+    override val TAG: String = "ButtonSkills"
+    override val template = Template("components/button/skills", region = Region.bottomHalf)
 }
 
 object ButtonStartCareer : ComponentInterface {
     override val TAG: String = "ButtonStartCareer"
-    override val template = Template("components/button/start_career")
+    override val template = Template("components/button/start_career", region = Region.bottomHalf)
 }
 
 object ButtonStartCareerOffset : ComponentInterface {
     override val TAG: String = "ButtonStartCareerOffset"
-    override val template = Template("components/button/start_career_offset")
+    override val template = Template("components/button/start_career_offset", region = Region.bottomHalf)
 }
 
 object ButtonTeamRace : ComponentInterface {
@@ -344,32 +353,32 @@ object ButtonTitleScreen : ComponentInterface {
 
 object ButtonTryAgain : ComponentInterface {
     override val TAG: String = "ButtonTryAgain"
-    override val template = Template("components/button/try_again")
+    override val template = Template("components/button/try_again", region = Region.bottomHalf)
 }
 
 object ButtonViewResults : ComponentInterface {
     override val TAG: String = "ButtonViewResults"
-    override val template = Template("components/button/view_results")
+    override val template = Template("components/button/view_results", region = Region.bottomHalf)
 }
 
 object ButtonRaceStrategyFront : ComponentInterface {
     override val TAG: String = "ButtonRaceStrategyFront"
-    override val template = Template("components/button/strategy_front_select")
+    override val template = Template("components/button/strategy_front_select", region = Region.middle)
 }
 
 object ButtonRaceStrategyPace : ComponentInterface {
     override val TAG: String = "ButtonRaceStrategyPace"
-    override val template = Template("components/button/strategy_pace_select")
+    override val template = Template("components/button/strategy_pace_select", region = Region.middle)
 }
 
 object ButtonRaceStrategyLate : ComponentInterface {
     override val TAG: String = "ButtonRaceStrategyLate"
-    override val template = Template("components/button/strategy_late_select")
+    override val template = Template("components/button/strategy_late_select", region = Region.middle)
 }
 
 object ButtonRaceStrategyEnd : ComponentInterface {
     override val TAG: String = "ButtonRaceStrategyEnd"
-    override val template = Template("components/button/strategy_end_select")
+    override val template = Template("components/button/strategy_end_select", region = Region.middle)
 }
 
 // More complex buttons
@@ -412,46 +421,31 @@ object ButtonMenuBarRace : MultiStateButtonInterface {
 
 object ButtonCareerQuick : ComponentInterface {
     override val TAG: String = "ButtonCareerQuick"
-    override val template = Template(
-        "components/button/career_quick",
-        region = intArrayOf(0, SharedData.displayHeight - 100, SharedData.displayWidth, 100),
-    )
+    override val template = Template("components/button/career_quick", region = Region.bottomHalf)
 }
 
 object ButtonCareerQuickEnabled : ComponentInterface {
     override val TAG: String = "ButtonCareerQuickEnabled"
-    override val template = Template(
-        "components/button/career_quick_enabled",
-        region = intArrayOf(0, SharedData.displayHeight - 100, SharedData.displayWidth, 100),
-    )
+    override val template = Template("components/button/career_quick_enabled", region = Region.bottomHalf)
 }
 
 object ButtonCareerSkip1 : ComponentInterface {
     override val TAG: String = "ButtonCareerSkip1"
-    override val template = Template(
-        "components/button/career_skip_1",
-        region = intArrayOf(0, SharedData.displayHeight - 100, SharedData.displayWidth, 100),
-    )
+    override val template = Template("components/button/career_skip_1", region = Region.bottomHalf)
 }
 object ButtonCareerSkip2 : ComponentInterface {
     override val TAG: String = "ButtonCareerSkip2"
-    override val template = Template(
-        "components/button/career_skip_2",
-        region = intArrayOf(0, SharedData.displayHeight - 100, SharedData.displayWidth, 100),
-    )
+    override val template = Template("components/button/career_skip_2", region = Region.bottomHalf)
 }
 
 object ButtonCareerSkipOff : ComponentInterface {
     override val TAG: String = "ButtonCareerSkipOff"
-    override val template = Template(
-        "components/button/career_skip_off",
-        region = intArrayOf(0, SharedData.displayHeight - 100, SharedData.displayWidth, 100),
-    )
+    override val template = Template("components/button/career_skip_off", region = Region.bottomHalf)
 }
 
 object ButtonCompleteCareer : ComponentInterface {
     override val TAG: String = "ButtonCompleteCareer"
-    override val template = Template("components/button/complete_career")
+    override val template = Template("components/button/complete_career", region = Region.bottomHalf)
 }
 
 object ButtonCareerEndSkills : ComponentInterface {
@@ -461,115 +455,110 @@ object ButtonCareerEndSkills : ComponentInterface {
 
 object ButtonCraneGame : ComponentInterface {
     override val TAG: String = "ButtonCraneGame"
-    override val template = Template("components/button/crane_game")
+    override val template = Template("components/button/crane_game", region = Region.bottomHalf)
 }
 
 object ButtonCraneGameOk : ComponentInterface {
     override val TAG: String = "ButtonCraneGameOk"
-    override val template = Template("components/button/crane_game_ok")
+    override val template = Template("components/button/crane_game_ok", region = Region.bottomHalf)
 }
 
 object ButtonInheritance : ComponentInterface {
     override val TAG: String = "ButtonInheritance"
-    override val template = Template("components/button/inheritance")
+    override val template = Template("components/button/inheritance", region = Region.bottomHalf)
 }
 
 object ButtonRaceSelectExtra : ComponentInterface {
     override val TAG: String = "ButtonRaceSelectExtra"
-    override val template = Template("components/button/race_select_extra")
+    override val template = Template("components/button/race_select_extra", region = Region.bottomHalf)
 }
 
 object ButtonRaceSelectExtraLocked : ComponentInterface {
     override val TAG: String = "ButtonRaceSelectExtraLocked"
-    override val template = Template("components/button/race_select_extra_locked")
+    override val template = Template("components/button/race_select_extra_locked", region = Region.bottomHalf)
 }
 
 object ButtonRaceSelectExtraLockedUmaFinals : ComponentInterface {
     override val TAG: String = "ButtonRaceSelectExtraLockedUmaFinals"
-    override val template = Template("components/button/race_select_extra_locked_uma_finals")
+    override val template = Template("components/button/race_select_extra_locked_uma_finals", region = Region.bottomHalf)
 }
 
 object ButtonRest : ComponentInterface {
     override val TAG: String = "ButtonRest"
-    override val template = Template("components/button/rest")
+    override val template = Template("components/button/rest", region = Region.bottomHalf)
 }
 
 object ButtonRestAndRecreation : ComponentInterface {
     override val TAG: String = "ButtonRestAndRecreation"
-    override val template = Template("components/button/rest_and_recreation")
+    override val template = Template("components/button/rest_and_recreation", region = Region.bottomHalf)
 }
 
 object ButtonInfirmary : ComponentInterface {
     override val TAG: String = "ButtonInfirmary"
-    override val template = Template("components/button/infirmary")
+    override val template = Template("components/button/infirmary", region = Region.bottomHalf)
 }
 
 object ButtonRecreation : ComponentInterface {
     override val TAG: String = "ButtonRecreation"
-    override val template = Template("components/button/recreation")
+    override val template = Template("components/button/recreation", region = Region.bottomHalf)
 }
 
 object ButtonViewResultsLocked : ComponentInterface {
     override val TAG: String = "ButtonViewResultsLocked"
-    override val template = Template("components/button/view_results_locked")
+    override val template = Template("components/button/view_results_locked", region = Region.bottomHalf)
 }
 
 object ButtonEndCareer : ComponentInterface {
     override val TAG: String = "ButtonEndCareer"
-    override val template = Template("components/button/end_career")
+    override val template = Template("components/button/end_career", region = Region.bottomHalf)
 }
 
 object ButtonRaceListFullStats : ComponentInterface {
     override val TAG: String = "ButtonRaceListFullStats"
-    override val template = Template("components/button/race_list_full_stats")
+    override val template = Template("components/button/race_list_full_stats", region = Region.middle)
 }
 
 object ButtonHomeFullStats : ComponentInterface {
     override val TAG: String = "ButtonHomeFullStats"
-    override val template = Template("components/button/home_full_stats")
-}
-
-object ButtonRecreationDate : ComponentInterface {
-    override val TAG: String = "ButtonRecreationDate"
-    override val template = Template("components/button/recreation_date")
+    override val template = Template("components/button/home_full_stats", region = Region.middle)
 }
 
 object ButtonTrainingSpeed : ComponentInterface {
     override val TAG: String = "ButtonTrainingSpeed"
-    override val template = Template("components/button/training_speed")
+    override val template = Template("components/button/training_speed", region = Region.bottomHalf)
 }
 
 object ButtonTrainingStamina : ComponentInterface {
     override val TAG: String = "ButtonTrainingStamina"
-    override val template = Template("components/button/training_stamina")
+    override val template = Template("components/button/training_stamina", region = Region.bottomHalf)
 }
 
 object ButtonTrainingPower : ComponentInterface {
     override val TAG: String = "ButtonTrainingPower"
-    override val template = Template("components/button/training_power")
+    override val template = Template("components/button/training_power", region = Region.bottomHalf)
 }
 
 object ButtonTrainingGuts : ComponentInterface {
     override val TAG: String = "ButtonTrainingGuts"
-    override val template = Template("components/button/training_guts")
+    override val template = Template("components/button/training_guts", region = Region.bottomHalf)
 }
 
 object ButtonTrainingWit : ComponentInterface {
     override val TAG: String = "ButtonTrainingWit"
-    override val template = Template("components/button/training_wit")
+    override val template = Template("components/button/training_wit", region = Region.bottomHalf)
 }
 
 object ButtonTraining : ComponentInterface {
     override val TAG: String = "ButtonTraining"
-    override val template = Template("components/button/training")
+    override val template = Template("components/button/training", region = Region.bottomHalf)
 }
 
 object ButtonRaces : ComponentInterface {
     override val TAG: String = "ButtonRaces"
-    override val template = Template("components/button/races")
+    override val template = Template("components/button/races", region = Region.bottomHalf)
 }
 
 object ButtonHomeFansInfo : ComponentInterface {
     override val TAG: String = "ButtonHomeFansInfo"
-    override val template = Template("components/button/home_fans_info")
+    override val template = Template("components/button/home_fans_info", region = Region.leftHalf)
 }

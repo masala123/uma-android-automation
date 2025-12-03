@@ -7,6 +7,18 @@ import org.opencv.core.Point
 import com.steve1316.uma_android_automation.components.ComponentUtils
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
 
+import com.steve1316.automation_library.data.SharedData
+
+object Region {
+    val topHalf: IntArray = intArrayOf(0, 0, SharedData.displayWidth, SharedData.displayHeight / 2)
+    val topQuarter: IntArray = intArrayOf(0, 0, SharedData.displayWidth, SharedData.displayHeight / 4)
+    val bottomHalf: IntArray = intArrayOf(0, SharedData.displayHeight / 2, SharedData.displayWidth, SharedData.displayHeight / 2)
+    val bottomQuarter: IntArray = intArrayOf(0, SharedData.displayHeight / 4, SharedData.displayWidth, SharedData.displayHeight / 4)
+    val middle: IntArray = intArrayOf(0, SharedData.displayHeight / 4, SharedData.displayWidth, SharedData.displayHeight / 2)
+    val leftHalf: IntArray = intArrayOf(0, 0, SharedData.displayWidth / 2, SharedData.displayHeight)
+    val rightHalf: IntArray = intArrayOf(SharedData.displayWidth / 2, 0, SharedData.displayWidth / 2, SharedData.displayHeight)
+}
+
 enum class TemplateComparisonMode {AND, OR}
 data class Template(val path: String, val region: IntArray = intArrayOf(0, 0, 0, 0)) {
     val dirname: String
@@ -46,7 +58,7 @@ interface ComponentInterface: BaseComponentInterface {
     val template: Template
     
     override fun find(imageUtils: CustomImageUtils, tries: Int): Pair<Point?, Bitmap> {
-        return imageUtils.findImage(template.path, region = template.region, tries = tries)
+        return imageUtils.findImage(template.path, region = template.region, tries = tries, suppressError = true)
     }
 
     fun findAll(imageUtils: CustomImageUtils, region: IntArray, confidence: Double = 0.0): ArrayList<Point> {
