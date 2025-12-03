@@ -8,19 +8,7 @@ import com.steve1316.uma_android_automation.utils.types.DateYear
 import com.steve1316.uma_android_automation.utils.types.DateMonth
 import com.steve1316.uma_android_automation.utils.types.DatePhase
 
-import com.steve1316.uma_android_automation.components.ButtonRaceRecommendationsCenterStage
-import com.steve1316.uma_android_automation.components.ButtonCareerSkipOff
-import com.steve1316.uma_android_automation.components.ButtonCareerSkip1
-import com.steve1316.uma_android_automation.components.ButtonCareerSkip2
-import com.steve1316.uma_android_automation.components.ButtonCareerQuick
-import com.steve1316.uma_android_automation.components.ButtonCareerQuickEnabled
-import com.steve1316.uma_android_automation.components.Checkbox
-import com.steve1316.uma_android_automation.components.DialogUtils
-import com.steve1316.uma_android_automation.components.DialogInterface
-import com.steve1316.uma_android_automation.components.LabelUmamusumeClassFans
-import com.steve1316.uma_android_automation.components.RadioCareerQuickShortenAllEvents
-import com.steve1316.uma_android_automation.components.RadioPortrait
-import com.steve1316.uma_android_automation.components.IconHorseshoe
+import com.steve1316.uma_android_automation.components.*
 
 import android.graphics.Bitmap
 import org.opencv.core.Point
@@ -279,6 +267,88 @@ open class Campaign(val game: Game) {
             ButtonCareerSkipOff.click(imageUtils = game.imageUtils, taps = 2)
             ButtonCareerSkip1.click(imageUtils = game.imageUtils, taps = 1)
         }
+    }
+
+    fun startMainScreenOCRTest() {
+        MessageLog.i(TAG, "---- TESTING MAIN SCREEN COMPONENTS ----")
+
+        // Simple components to test.
+        val componentsToTest: List<ComponentInterface> = listOf(
+            ButtonHomeFansInfo,
+            IconTazuna,
+            LabelStatTableHeaderSkillPoints,
+            ButtonHomeFullStats,
+            ButtonRest,
+            ButtonTraining,
+            ButtonSkills,
+            ButtonInfirmary,
+            ButtonRecreation,
+            ButtonLog,
+            ButtonBurger,
+        )
+        for (componentToTest in componentsToTest) {
+            if (componentToTest.check(game.imageUtils)) {
+                MessageLog.i(TAG, "[PASS] ${componentToTest.template.path}")
+            } else {
+                MessageLog.e(TAG, "[FAIL] ${componentToTest.template.path}")
+            }
+        }
+
+        // More complex components to test that have multiple different states.
+
+        if (ButtonRaceSelectExtra.check(game.imageUtils)) {
+            MessageLog.i(TAG, "[PASS] ${ButtonRaceSelectExtra.template.path}")
+        } else if (ButtonRaceSelectExtraLocked.check(game.imageUtils)) {
+            MessageLog.i(TAG, "[PASS] ${ButtonRaceSelectExtraLocked.template.path}")
+        } else {
+            MessageLog.e(TAG, "[FAIL] ${ButtonRaceSelectExtra.template.path}, ${ButtonRaceSelectExtraLocked.template.path}")
+        }
+
+        MessageLog.i(TAG, "Testing mood components...")
+        when {
+            IconMoodGreat.check(game.imageUtils) -> MessageLog.i(TAG, "[PASS] ${IconMoodGreat.template.path}")
+            IconMoodGood.check(game.imageUtils) -> MessageLog.i(TAG, "[PASS] ${IconMoodGood.template.path}")
+            IconMoodNormal.check(game.imageUtils) -> MessageLog.i(TAG, "[PASS] ${IconMoodNormal.template.path}")
+            IconMoodBad.check(game.imageUtils) -> MessageLog.i(TAG, "[PASS] ${IconMoodBad.template.path}")
+            IconMoodAwful.check(game.imageUtils) -> MessageLog.i(TAG, "[PASS] ${IconMoodAwful.template.path}")
+            else -> MessageLog.e(TAG, "[FAIL] Could not detect any mood icons.")
+        }
+
+        MessageLog.i(TAG, "Testing energy bar components...")
+        if (LabelEnergy.check(game.imageUtils)) {
+            MessageLog.i(TAG, "[PASS] ${LabelEnergy.template.path}")
+        } else {
+            MessageLog.e(TAG, "[FAIL] ${LabelEnergy.template.path}")
+        }
+        if (LabelEnergyBarLeftPart.check(game.imageUtils)) {
+            MessageLog.i(TAG, "[PASS] ${LabelEnergyBarLeftPart.template.path}")
+        } else {
+            MessageLog.e(TAG, "[FAIL] ${LabelEnergyBarLeftPart.template.path}")
+        }
+        if (LabelEnergyBarRightPart.check(game.imageUtils)) {
+            MessageLog.i(TAG, "[PASS] ${LabelEnergyBarRightPart.template.path}")
+        } else {
+            if (LabelEnergyBarExtendedRightPart.check(game.imageUtils)) {
+                MessageLog.i(TAG, "[PASS] ${LabelEnergyBarExtendedRightPart.template.path}")
+            } else {
+                MessageLog.e(TAG, "[FAIL] ${LabelEnergyBarRightPart.template.path}, ${LabelEnergyBarExtendedRightPart.template.path}")
+            }
+        }
+
+        MessageLog.i(TAG, "Testing multi-state buttons...")
+        when {
+            ButtonCareerSkip1.check(game.imageUtils) -> MessageLog.i(TAG, "[PASS] ${ButtonCareerSkip1.template.path}")
+            ButtonCareerSkip2.check(game.imageUtils) -> MessageLog.i(TAG, "[PASS] ${ButtonCareerSkip2.template.path}")
+            ButtonCareerSkipOff.check(game.imageUtils) -> MessageLog.i(TAG, "[PASS] ${ButtonCareerSkipOff.template.path}")
+            else -> MessageLog.e(TAG, "[FAIL] Could not detect any Career Skip buttons.")
+        }
+        when {
+            ButtonCareerQuick.check(game.imageUtils) -> MessageLog.i(TAG, "[PASS] ${ButtonCareerQuick.template.path}")
+            ButtonCareerQuickEnabled.check(game.imageUtils) -> MessageLog.i(TAG, "[PASS] ${ButtonCareerQuickEnabled.template.path}")
+            else -> MessageLog.e(TAG, "[FAIL] Could not detect any Career Quick Mode buttons.")
+        }
+
+        MessageLog.i(TAG, "---- MAIN SCREEN COMPONENT TEST COMPLETE ----")
     }
 
 	/**
