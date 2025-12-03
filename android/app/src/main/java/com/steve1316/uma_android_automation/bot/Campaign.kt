@@ -269,13 +269,77 @@ open class Campaign(val game: Game) {
         }
     }
 
+    fun startTrainingScreenOCRTest() {
+        MessageLog.i(TAG, "---- startTrainingScreenOCRTest START ----")
+
+        var numPass: Int = 0
+        var numFail: Int = 0
+
+        // Simple components to test.
+        val componentsToTest: List<ComponentInterface> = listOf(
+            LabelEnergy,
+            LabelStatTableHeaderSkillPoints,
+            LabelTrainingFailureChance,
+            ButtonTrainingSpeed,
+            ButtonTrainingStamina,
+            ButtonTrainingPower,
+            ButtonTrainingGuts,
+            ButtonTrainingWit,
+            ButtonBack,
+            ButtonLog,
+            ButtonBurger,
+        )
+        for (componentToTest in componentsToTest) {
+            if (componentToTest.check(game.imageUtils)) {
+                MessageLog.i(TAG, "[PASS] ${componentToTest.template.path}")
+                numPass++
+            } else {
+                MessageLog.e(TAG, "[FAIL] ${componentToTest.template.path}")
+                numFail++
+            }
+        }
+
+        when {
+            IconTrainingHeaderSpeed.check(game.imageUtils) -> {
+                MessageLog.i(TAG, "[PASS] ${IconTrainingHeaderSpeed.template.path}")
+                numPass++
+            }
+            IconTrainingHeaderStamina.check(game.imageUtils) -> {
+                MessageLog.i(TAG, "[PASS] ${IconTrainingHeaderStamina.template.path}")
+                numPass++
+            }
+            IconTrainingHeaderPower.check(game.imageUtils) -> {
+                MessageLog.i(TAG, "[PASS] ${IconTrainingHeaderPower.template.path}")
+                numPass++
+            }
+            IconTrainingHeaderGuts.check(game.imageUtils) -> {
+                MessageLog.i(TAG, "[PASS] ${IconTrainingHeaderGuts.template.path}")
+                numPass++
+            }
+            IconTrainingHeaderWit.check(game.imageUtils) -> {
+                MessageLog.i(TAG, "[PASS] ${IconTrainingHeaderWit.template.path}")
+                numPass++
+            }
+            else -> {
+                MessageLog.e(TAG, "[FAIL] Could not detect any training header icons.")
+                numFail++
+            }
+        }
+
+        MessageLog.i(TAG, "---- startTrainingScreenOCRTest END: PASS=$numPass, FAIL=$numFail ----")
+    }
+
     fun startMainScreenOCRTest() {
-        MessageLog.i(TAG, "---- TESTING MAIN SCREEN COMPONENTS ----")
+        MessageLog.i(TAG, "---- startMainScreenOCRTest START ----")
+
+        var numPass: Int = 0
+        var numFail: Int = 0
 
         // Simple components to test.
         val componentsToTest: List<ComponentInterface> = listOf(
             ButtonHomeFansInfo,
             IconTazuna,
+            LabelEnergy,
             LabelStatTableHeaderSkillPoints,
             ButtonHomeFullStats,
             ButtonRest,
@@ -289,8 +353,10 @@ open class Campaign(val game: Game) {
         for (componentToTest in componentsToTest) {
             if (componentToTest.check(game.imageUtils)) {
                 MessageLog.i(TAG, "[PASS] ${componentToTest.template.path}")
+                numPass++
             } else {
                 MessageLog.e(TAG, "[FAIL] ${componentToTest.template.path}")
+                numFail++
             }
         }
 
@@ -298,57 +364,78 @@ open class Campaign(val game: Game) {
 
         if (ButtonRaceSelectExtra.check(game.imageUtils)) {
             MessageLog.i(TAG, "[PASS] ${ButtonRaceSelectExtra.template.path}")
+            numPass++
         } else if (ButtonRaceSelectExtraLocked.check(game.imageUtils)) {
             MessageLog.i(TAG, "[PASS] ${ButtonRaceSelectExtraLocked.template.path}")
+            numPass++
         } else {
             MessageLog.e(TAG, "[FAIL] ${ButtonRaceSelectExtra.template.path}, ${ButtonRaceSelectExtraLocked.template.path}")
+            numFail++
         }
 
         MessageLog.i(TAG, "Testing mood components...")
         when {
-            IconMoodGreat.check(game.imageUtils) -> MessageLog.i(TAG, "[PASS] ${IconMoodGreat.template.path}")
-            IconMoodGood.check(game.imageUtils) -> MessageLog.i(TAG, "[PASS] ${IconMoodGood.template.path}")
-            IconMoodNormal.check(game.imageUtils) -> MessageLog.i(TAG, "[PASS] ${IconMoodNormal.template.path}")
-            IconMoodBad.check(game.imageUtils) -> MessageLog.i(TAG, "[PASS] ${IconMoodBad.template.path}")
-            IconMoodAwful.check(game.imageUtils) -> MessageLog.i(TAG, "[PASS] ${IconMoodAwful.template.path}")
-            else -> MessageLog.e(TAG, "[FAIL] Could not detect any mood icons.")
-        }
-
-        MessageLog.i(TAG, "Testing energy bar components...")
-        if (LabelEnergy.check(game.imageUtils)) {
-            MessageLog.i(TAG, "[PASS] ${LabelEnergy.template.path}")
-        } else {
-            MessageLog.e(TAG, "[FAIL] ${LabelEnergy.template.path}")
-        }
-        if (LabelEnergyBarLeftPart.check(game.imageUtils)) {
-            MessageLog.i(TAG, "[PASS] ${LabelEnergyBarLeftPart.template.path}")
-        } else {
-            MessageLog.e(TAG, "[FAIL] ${LabelEnergyBarLeftPart.template.path}")
-        }
-        if (LabelEnergyBarRightPart.check(game.imageUtils)) {
-            MessageLog.i(TAG, "[PASS] ${LabelEnergyBarRightPart.template.path}")
-        } else {
-            if (LabelEnergyBarExtendedRightPart.check(game.imageUtils)) {
-                MessageLog.i(TAG, "[PASS] ${LabelEnergyBarExtendedRightPart.template.path}")
-            } else {
-                MessageLog.e(TAG, "[FAIL] ${LabelEnergyBarRightPart.template.path}, ${LabelEnergyBarExtendedRightPart.template.path}")
+            IconMoodGreat.check(game.imageUtils) -> {
+                MessageLog.i(TAG, "[PASS] ${IconMoodGreat.template.path}")
+                numPass++
+            }
+            IconMoodGood.check(game.imageUtils) -> {
+                MessageLog.i(TAG, "[PASS] ${IconMoodGood.template.path}")
+                numPass++
+            }
+            IconMoodNormal.check(game.imageUtils) -> {
+                MessageLog.i(TAG, "[PASS] ${IconMoodNormal.template.path}")
+                numPass++
+            }
+            IconMoodBad.check(game.imageUtils) -> {
+                MessageLog.i(TAG, "[PASS] ${IconMoodBad.template.path}")
+                numPass++
+            }
+            IconMoodAwful.check(game.imageUtils) -> {
+                MessageLog.i(TAG, "[PASS] ${IconMoodAwful.template.path}")
+                numPass++
+            }
+            else -> {
+                MessageLog.e(TAG, "[FAIL] Could not detect any mood icons.")
+                numFail++
             }
         }
 
         MessageLog.i(TAG, "Testing multi-state buttons...")
         when {
-            ButtonCareerSkip1.check(game.imageUtils) -> MessageLog.i(TAG, "[PASS] ${ButtonCareerSkip1.template.path}")
-            ButtonCareerSkip2.check(game.imageUtils) -> MessageLog.i(TAG, "[PASS] ${ButtonCareerSkip2.template.path}")
-            ButtonCareerSkipOff.check(game.imageUtils) -> MessageLog.i(TAG, "[PASS] ${ButtonCareerSkipOff.template.path}")
-            else -> MessageLog.e(TAG, "[FAIL] Could not detect any Career Skip buttons.")
+            ButtonCareerSkip1.check(game.imageUtils) -> {
+                MessageLog.i(TAG, "[PASS] ${ButtonCareerSkip1.template.path}")
+                numPass++
+            }
+            ButtonCareerSkip2.check(game.imageUtils) -> {
+                MessageLog.i(TAG, "[PASS] ${ButtonCareerSkip2.template.path}")
+                numPass++
+            }
+            ButtonCareerSkipOff.check(game.imageUtils) -> {
+                MessageLog.i(TAG, "[PASS] ${ButtonCareerSkipOff.template.path}")
+                numPass++
+            }
+            else -> {
+                MessageLog.e(TAG, "[FAIL] Could not detect any Career Skip buttons.")
+                numFail++
+            }
         }
         when {
-            ButtonCareerQuick.check(game.imageUtils) -> MessageLog.i(TAG, "[PASS] ${ButtonCareerQuick.template.path}")
-            ButtonCareerQuickEnabled.check(game.imageUtils) -> MessageLog.i(TAG, "[PASS] ${ButtonCareerQuickEnabled.template.path}")
-            else -> MessageLog.e(TAG, "[FAIL] Could not detect any Career Quick Mode buttons.")
+            ButtonCareerQuick.check(game.imageUtils) -> {
+                MessageLog.i(TAG, "[PASS] ${ButtonCareerQuick.template.path}")
+                numPass++
+            }
+            ButtonCareerQuickEnabled.check(game.imageUtils) -> {
+                MessageLog.i(TAG, "[PASS] ${ButtonCareerQuickEnabled.template.path}")
+                numPass++
+            }
+            else -> {
+                MessageLog.e(TAG, "[FAIL] Could not detect any Career Quick Mode buttons.")
+                numFail++
+            }
         }
 
-        MessageLog.i(TAG, "---- MAIN SCREEN COMPONENT TEST COMPLETE ----")
+        MessageLog.i(TAG, "---- startMainScreenOCRTest END: PASS=$numPass, FAIL=$numFail ----")
     }
 
 	/**
