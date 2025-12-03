@@ -21,6 +21,8 @@ import com.steve1316.uma_android_automation.components.ButtonTrainingStamina
 import com.steve1316.uma_android_automation.components.ButtonTrainingPower
 import com.steve1316.uma_android_automation.components.ButtonTrainingGuts
 import com.steve1316.uma_android_automation.components.ButtonTrainingWit
+import com.steve1316.uma_android_automation.components.ButtonTraining
+import com.steve1316.uma_android_automation.components.ButtonBack
 import com.steve1316.uma_android_automation.components.IconTrainingHeaderSpeed
 import com.steve1316.uma_android_automation.components.IconTrainingHeaderStamina
 import com.steve1316.uma_android_automation.components.IconTrainingHeaderPower
@@ -152,7 +154,7 @@ class Training(private val game: Game) {
         val startTime = System.currentTimeMillis()
 
 		// Enter the Training screen.
-		if (game.findAndTapImage("training_option", region = game.imageUtils.regionBottomHalf)) {
+		if (ButtonTraining.click(imageUtils = game.imageUtils)) {
 			// Acquire the percentages and stat gains for each training.
 			game.wait(0.5)
 			analyzeTrainings()
@@ -162,12 +164,12 @@ class Training(private val game: Game) {
 				if (trainWitDuringFinale && game.currentDate.day > 72) {
 					MessageLog.i(TAG, "[TRAINING] There is not enough energy for training to be done but the setting to train Wit during the Finale is enabled. Forcing Wit training...")
 					// Directly attempt to tap Wit training.
-					if (game.findAndTapImage("training_wit", region = game.imageUtils.regionBottomHalf, taps = 3)) {
+					if (ButtonTrainingWit.click(imageUtils = game.imageUtils)) {
 						MessageLog.i(TAG, "[TRAINING] Successfully forced Wit training during the Finale instead of recovering energy.")
 						firstTrainingCheck = false
 					} else {
 						MessageLog.w(TAG, "[WARNING] Could not find Wit training button. Falling back to recovering energy...")
-						game.findAndTapImage("back", region = game.imageUtils.regionBottomHalf)
+						ButtonBack.click(imageUtils = game.imageUtils)
 						game.wait(1.0)
 						if (game.checkMainScreen()) {
 							game.recoverEnergy()
@@ -177,7 +179,7 @@ class Training(private val game: Game) {
 					}
 				} else {
 					MessageLog.i(TAG, "[TRAINING] Backing out of Training and returning on the Main screen.")
-					game.findAndTapImage("back", region = game.imageUtils.regionBottomHalf)
+					ButtonBack.click(imageUtils = game.imageUtils)
 					game.wait(1.0)
 
 					if (game.checkMainScreen()) {
