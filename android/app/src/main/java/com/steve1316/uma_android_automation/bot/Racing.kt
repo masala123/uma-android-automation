@@ -1125,13 +1125,15 @@ class Racing (private val game: Game) {
             // at the race screen. We need to open the race strategy dialog and
             // read the aptitudes in from there.
             MessageLog.i(TAG, "Setting running style and performing temporary initial aptitude check.")
-            ButtonChangeRunningStyle.click(imageUtils = game.imageUtils)
-            handleDialogs()
+            while (!handleDialogs().first) {
+                ButtonChangeRunningStyle.click(imageUtils = game.imageUtils)
+            }
         } else if (!game.trainee.bHasSetRunningStyle) {
             // If we haven't set the trainee's running style yet, open the dialog.
             MessageLog.i(TAG, "Setting running style for the first time.")
-            ButtonChangeRunningStyle.click(imageUtils = game.imageUtils)
-            handleDialogs()
+            while (!handleDialogs().first) {
+                ButtonChangeRunningStyle.click(imageUtils = game.imageUtils)
+            }
         }
     }
 
