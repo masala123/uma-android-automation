@@ -430,7 +430,7 @@ class Training(private val game: Game) {
                     Log.d(TAG, "Total time for $statName training analysis: ${elapsedTime}ms")
                     // Log stat gain results sequentially after threads complete to ensure correct order.
 					logStatGainResults(statName, result.statGains, result.statGainRowValues)
-                    MessageLog.i(TAG, "All 5 stat regions processed for $statName training. Results: ${result.statGains.toString()}")
+                    MessageLog.i(TAG, "All 5 stat regions processed for $statName training. Results: ${result.statGains.toSortedMap(compareBy { it.ordinal }).toString()}")
                 }
 
                 // Check if risky training logic should apply based on main stat gain.
@@ -499,7 +499,7 @@ class Training(private val game: Game) {
                             val elapsedTime = System.currentTimeMillis() - result.startTime
                             Log.d(TAG, "Total time for ${result.name} training analysis: ${elapsedTime}ms")
                             result.logMessages.offer("[TRAINING] [${result.name}] All analysis threads completed. Total time: ${elapsedTime}ms")
-                            result.logMessages.offer("[TRAINING] [${result.name}] All 5 stat regions processed. Results: ${result.statGains.toString()}")
+                            result.logMessages.offer("[TRAINING] [${result.name}] All 5 stat regions processed. Results: ${result.statGains.toSortedMap(compareBy { it.ordinal }).toString()}")
                         }
                     }
                 }
@@ -1041,7 +1041,7 @@ class Training(private val game: Game) {
 	private fun printTrainingMap() {
 		MessageLog.i(TAG, "\nStat Gains by Training:")
 		trainingMap.forEach { name, training ->
-			MessageLog.i(TAG, "$name Training stat gains: ${training.statGains}, failure chance: ${training.failureChance}%, rainbow: ${training.numRainbow}.")
+			MessageLog.i(TAG, "$name Training stat gains: ${training.statGains.toSortedMap(compareBy { it.ordinal }).toString()}, failure chance: ${training.failureChance}%, rainbow: ${training.numRainbow}.")
 		}
 	}
 
