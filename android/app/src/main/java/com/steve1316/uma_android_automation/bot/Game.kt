@@ -99,11 +99,18 @@ class Game(val myContext: Context) {
     /**
      * Detects and handles any dialog popups.
      *
+     * To prevent the bot moving too fast, we add a 250ms delay to both the
+     * entry of this function, and to the exit whenever we close the dialog.
+     * This gives the dialog time to open and close since there is a very short
+     * animation that plays when a dialog opens or closes.
+     *
      * @return A pair of a boolean and a nullable DialogInterface.
      * The boolean is true when a dialog has been handled by this function.
      * The DialogInterface is the detected dialog, or NULL if no dialogs were found.
      */
     fun handleDialogs(): Pair<Boolean, DialogInterface?> {
+        wait(0.25, skipWaitingForLoading = true)
+
         val dialog: DialogInterface? = DialogUtils.getDialog(imageUtils = imageUtils)
         if (dialog == null) {
             return Pair(false, null)
@@ -137,6 +144,7 @@ class Game(val myContext: Context) {
             }
         }
 
+        wait(0.25, skipWaitingForLoading = true)
         return Pair(true, dialog)
     }
 

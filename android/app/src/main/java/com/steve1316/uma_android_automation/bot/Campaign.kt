@@ -33,12 +33,17 @@ open class Campaign(val game: Game) {
     /**
      * Detects and handles any dialog popups.
      *
+     * To prevent the bot moving too fast, we add a 250ms delay to both the
+     * entry of this function, and to the exit whenever we close the dialog.
+     * This gives the dialog time to open and close since there is a very short
+     * animation that plays when a dialog opens or closes.
+     *
      * @return A pair of a boolean and a nullable DialogInterface.
      * The boolean is true when a dialog has been handled by this function.
      * The DialogInterface is the detected dialog, or NULL if no dialogs were found.
      */
     open fun handleDialogs(): Pair<Boolean, DialogInterface?> {
-        game.wait(0.1)
+        game.wait(0.25, skipWaitingForLoading = true)
         val dialog: DialogInterface? = DialogUtils.getDialog(imageUtils = game.imageUtils)
         if (dialog == null) {
             return Pair(false, null)
@@ -148,7 +153,6 @@ open class Campaign(val game: Game) {
             "trophy_won" -> dialog.close(imageUtils = game.imageUtils)
             "try_again" -> {
                 dialog.ok(imageUtils = game.imageUtils)
-                game.wait(5.0)
             }
             "umamusume_class" -> {
                 val bitmap: Bitmap = game.imageUtils.getSourceBitmap()
@@ -156,14 +160,14 @@ open class Campaign(val game: Game) {
                 if (templateBitmap == null) {
                     MessageLog.e(TAG, "[DIALOG] umamusume_class: Could not get template bitmap for LabelUmamusumeClassFans: ${LabelUmamusumeClassFans.template.path}.")
                     dialog.close(imageUtils = game.imageUtils)
-                    game.wait(0.1)
+                    game.wait(0.25, skipWaitingForLoading = true)
                     return Pair(true, dialog)
                 }
                 val point: Point? = LabelUmamusumeClassFans.find(imageUtils = game.imageUtils).first
                 if (point == null) {
                     MessageLog.w(TAG, "[DIALOG] umamusume_class: Could not find LabelUmamusumeClassFans.")
                     dialog.close(imageUtils = game.imageUtils)
-                    game.wait(0.1)
+                    game.wait(0.25, skipWaitingForLoading = true)
                     return Pair(true, dialog)
                 }
 
@@ -184,7 +188,7 @@ open class Campaign(val game: Game) {
                 if (croppedBitmap == null) {
                     MessageLog.e(TAG, "[DIALOG] umamusume_class: Failed to crop bitmap.")
                     dialog.close(imageUtils = game.imageUtils)
-                    game.wait(0.1)
+                    game.wait(0.25, skipWaitingForLoading = true)
                     return Pair(true, dialog)
                 }
                 val fans = game.imageUtils.getUmamusumeClassDialogFanCount(croppedBitmap)
@@ -219,7 +223,7 @@ open class Campaign(val game: Game) {
             }
         }
 
-        game.wait(0.1)
+        game.wait(0.25, skipWaitingForLoading = true)
         return Pair(true, dialog)
     }
 
@@ -320,9 +324,7 @@ open class Campaign(val game: Game) {
                 ButtonCareerQuick.click(imageUtils = game.imageUtils) ||
                 ButtonCareerQuickEnabled.click(imageUtils = game.imageUtils)
             ) {
-                game.wait(0.1)
                 handleDialogs()
-                game.wait(0.1)
                 return true
             }
         }
@@ -555,7 +557,12 @@ open class Campaign(val game: Game) {
             return true
         }
 
-        if (bNeedToCheckFans) {
+        val bIsMandatoryRaceDay = IconRaceDayRibbon.check(imageUtils = game.imageUtils)
+        var needToRace = bIsMandatoryRaceDay
+        // On mandatory race days, the button to check fans is shifted down
+        // so we wouldn't be able to call checkFans(). This is fine, we'll just
+        // check fans next time we're at the home screen.
+        if (!bIsMandatoryRaceDay && bNeedToCheckFans) {
             checkFans()
             return true
         }
@@ -565,8 +572,7 @@ open class Campaign(val game: Game) {
             throw InterruptedException("Reached finals. Stopping bot...")
         }
 
-        var needToRace = false
-        if (IconRaceDayRibbon.check(imageUtils = game.imageUtils)) {
+        if (bIsMandatoryRaceDay) {
             needToRace = true
         } else if (!game.racing.encounteredRacingPopup) {
             // Check if there are fan or trophy requirements that need to be met with racing.

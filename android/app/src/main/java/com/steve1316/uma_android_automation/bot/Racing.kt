@@ -127,13 +127,29 @@ class Racing (private val game: Game) {
         val priority: Int
     )
 
-    fun handleDialogs() {
+    /**
+     * Detects and handles any dialog popups.
+     *
+     * To prevent the bot moving too fast, we add a 250ms delay to both the
+     * entry of this function, and to the exit whenever we close the dialog.
+     * This gives the dialog time to open and close since there is a very short
+     * animation that plays when a dialog opens or closes.
+     *
+     * @return A pair of a boolean and a nullable DialogInterface.
+     * The boolean is true when a dialog has been handled by this function.
+     * The DialogInterface is the detected dialog, or NULL if no dialogs were found.
+     */
+    fun handleDialogs(): Pair<Boolean, DialogInterface?> {
+        game.wait(0.25, skipWaitingForLoading = true)
+
         val dialog: DialogInterface? = DialogUtils.getDialog(imageUtils = game.imageUtils)
         if (dialog == null) {
-            return
+            return Pair(false, null)
         }
 
         when (dialog.name) {
+            "race_details" -> dialog.close(imageUtils = game.imageUtils)
+            "runners" -> dialog.close(imageUtils = game.imageUtils)
             "strategy" -> {
                 if (!game.trainee.bHasUpdatedAptitudes) {
                     game.trainee.bTemporaryRunningStyleAptitudesUpdated = updateRaceScreenRunningStyleAptitudes()
@@ -155,7 +171,7 @@ class Racing (private val game: Game) {
                         MessageLog.i(TAG, "[DIALOG] strategy:: Using the default running style.")
                         dialog.ok(imageUtils = game.imageUtils)
                         game.trainee.bHasSetRunningStyle = true
-                        return
+                        return Pair(true, dialog)
                     }
                     // Auto-select the optimal running style based on trainee aptitudes.
                     "AUTO" -> {
@@ -178,7 +194,8 @@ class Racing (private val game: Game) {
                         MessageLog.e(TAG, "[DIALOG] strategy:: Invalid running style: $runningStyle")
                         dialog.close(imageUtils = game.imageUtils)
                         game.trainee.bHasSetRunningStyle = false
-                        return
+                        game.wait(0.25, skipWaitingForLoading = true)
+                        return Pair(true, dialog)
                     }
                 }
 
@@ -192,10 +209,19 @@ class Racing (private val game: Game) {
                 }
                 dialog.ok(imageUtils = game.imageUtils)
             }
-            "unlock_requirements" -> {
-                dialog.close(imageUtils = game.imageUtils)
+            "unlock_requirements" -> dialog.close(imageUtils = game.imageUtils)
+            // This dialog shows runner details other than our own.
+            // We have to make sure we're handling this before handling dialogs
+            // in the Campaign class since this dialog has the same name as
+            // the one in Campaign.
+            "umamusume_details" -> dialog.close(imageUtils = game.imageUtils)
+            else -> {
+                return Pair(false, dialog)
             }
         }
+
+        game.wait(0.25, skipWaitingForLoading = true)
+        return Pair(true, dialog)
     }
 
     /**
@@ -360,6 +386,10 @@ class Racing (private val game: Game) {
         if (loc != null) {
             // Offset 100px down from the ribbon since the ribbon isn't clickable.
             game.tap(loc.x, loc.y + 100, IconRaceDayRibbon.template.path, ignoreWaiting = true)
+            // Make sure we handle any dialogs that may have popped up before continuing.
+            if (!game.handleDialogs().first) {
+                game.campaign.handleDialogs()
+            }
             return handleMandatoryRace()
         } else if (!game.currentDate.bIsPreDebut && ButtonRaceSelectExtra.click(imageUtils = game.imageUtils)) {
             return handleExtraRace()
@@ -1096,13 +1126,11 @@ class Racing (private val game: Game) {
             // read the aptitudes in from there.
             MessageLog.i(TAG, "Setting running style and performing temporary initial aptitude check.")
             ButtonChangeRunningStyle.click(imageUtils = game.imageUtils)
-            game.wait(0.5)
             handleDialogs()
         } else if (!game.trainee.bHasSetRunningStyle) {
             // If we haven't set the trainee's running style yet, open the dialog.
             MessageLog.i(TAG, "Setting running style for the first time.")
             ButtonChangeRunningStyle.click(imageUtils = game.imageUtils)
-            game.wait(0.5)
             handleDialogs()
         }
     }
