@@ -186,6 +186,7 @@ object DialogObjects {
         DialogAgendaDetails,                // Career
         DialogAutoFill,                     // Career (Unity Cup)
         DialogAutoSelect,                   // Career Selection
+        DialogAllRewardsEarned,             // Career (event only)
         DialogBonusUmamusumeDetails,        // Career -> Career Profile dialog
         DialogBorrowCard,                   // Career Selection
         DialogBorrowCardConfirmation,       // Career Selection
@@ -236,6 +237,7 @@ object DialogObjects {
         DialogRacePlayback,                 // Career
         DialogRaceRecommendations,          // Career
         DialogRecreation,                   // Career
+        DialogRequestFulfilled,             // Transfer Requests
         DialogRest,                         // Career
         DialogRestAndRecreation,            // Career
         DialogRewardsCollected,             // Main Screen, Special Events
@@ -303,6 +305,17 @@ object DialogAutoSelect : DialogInterface {
         ButtonCancel,
         ButtonOk,
         Checkbox,
+    )
+}
+
+object DialogAllRewardsEarned : DialogInterface {
+    override val TAG: String = "DialogAllRewardsEarned"
+    override val name: String = "all_rewards_earned"
+    override val title: String = "ALL REWARDS EARNED!"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
     )
 }
 
@@ -925,6 +938,17 @@ object DialogRecreation : DialogInterface {
         ButtonCancel,
         ButtonOk,
         Checkbox,
+    )
+}
+
+object DialogRequestFulfilled : DialogInterface {
+    override val TAG: String = "DialogRequestFulfilled"
+    override val name: String = "request_fulfilled"
+    override val title: String = "REQUEST FULFILLED"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
     )
 }
 
