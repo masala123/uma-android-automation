@@ -373,8 +373,20 @@ object DialogCareerComplete : DialogInterface {
     override val okButton: ComponentInterface = ButtonEditTeam
     override val buttons: List<ComponentInterface> = listOf(
         ButtonToHome,
+        ButtonClose,
         ButtonEditTeam,
     )
+
+    // This dialog is unique in that there are two versions of it.
+    // The dialog's close button can be one of two different buttons:
+    // "To Home" and "Close"
+    override fun close(imageUtils: CustomImageUtils, tries: Int): Boolean {
+        if (ButtonToHome.click(imageUtils = imageUtils, tries = tries)) {
+            return true
+        }
+        
+        return ButtonClose.click(imageUtils = imageUtils, tries = tries)
+    }
 }
 
 object DialogChoices : DialogInterface {
