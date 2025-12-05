@@ -582,6 +582,9 @@ open class Campaign(val game: Game) {
             } catch (_: InterruptedException) {
                 MessageLog.e(TAG, "Trainee update threads timed out.")
             }
+
+            MessageLog.i(TAG, "\n[TRAINEE] Current stats:\n${game.trainee.getStatsString()}")
+            MessageLog.i(TAG, "[TRAINEE] Current mood: ${game.trainee.mood}")
         }
 
         // If the required skill points has been reached, stop the bot.
@@ -600,6 +603,7 @@ open class Campaign(val game: Game) {
 
         if (!game.trainee.bHasUpdatedAptitudes) {
             checkAptitudes()
+            MessageLog.i(TAG, "\n[TRAINEE] Current aptitudes:\n${game.trainee.getAptitudesString()}")
             return true
         }
 
