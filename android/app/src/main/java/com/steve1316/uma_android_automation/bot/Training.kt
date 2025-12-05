@@ -164,7 +164,7 @@ class Training(private val game: Game) {
 				if (trainWitDuringFinale && game.currentDate.day > 72) {
 					MessageLog.i(TAG, "[TRAINING] There is not enough energy for training to be done but the setting to train Wit during the Finale is enabled. Forcing Wit training...")
 					// Directly attempt to tap Wit training.
-					if (ButtonTrainingWit.click(imageUtils = game.imageUtils)) {
+					if (ButtonTrainingWit.click(imageUtils = game.imageUtils, taps = 3)) {
 						MessageLog.i(TAG, "[TRAINING] Successfully forced Wit training during the Finale instead of recovering energy.")
 						firstTrainingCheck = false
 					} else {
