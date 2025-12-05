@@ -164,7 +164,7 @@ class Training(private val game: Game) {
 				if (trainWitDuringFinale && game.currentDate.day > 72) {
 					MessageLog.i(TAG, "[TRAINING] There is not enough energy for training to be done but the setting to train Wit during the Finale is enabled. Forcing Wit training...")
 					// Directly attempt to tap Wit training.
-					if (ButtonTrainingWit.click(imageUtils = game.imageUtils)) {
+					if (ButtonTrainingWit.click(imageUtils = game.imageUtils, taps = 3)) {
 						MessageLog.i(TAG, "[TRAINING] Successfully forced Wit training during the Finale instead of recovering energy.")
 						firstTrainingCheck = false
 					} else {
@@ -259,300 +259,303 @@ class Training(private val game: Game) {
                     MessageLog.i(TAG, "[TRAINING] $failureChance% exceeds regular threshold (${maximumFailureChance}%) but is within risky training threshold (${riskyTrainingMaxFailureChance}%). Proceeding to acquire all other percentages and total stat increases...")
                 }
             }
-        }
-        
-        // Now analyze each stat.
-        for (statName in StatName.entries) {
-            if (!test && statName in blacklist) {
-                MessageLog.i(TAG, "[TRAINING] Skipping $statName training due to being blacklisted.")
-                continue
-            }
-
-            // Keep iterating until the current training is found.
-            if (singleTraining) {
-                val iconTrainingHeader = iconTrainingHeaders[statName]!!
-                if (!iconTrainingHeader.check(imageUtils = game.imageUtils)) {
+            
+            // Now analyze each stat.
+            for (statName in StatName.entries) {
+                if (!test && statName in blacklist) {
+                    MessageLog.i(TAG, "[TRAINING] Skipping $statName training due to being blacklisted.")
                     continue
                 }
-                MessageLog.i(TAG, "[TRAINING] The $statName training is currently selected on the screen.")
-            }
 
-
-            // Only click the button if we arent doing single training.
-            // Also speed should be selected at beginning so we don't want to click it again
-            // otherwise it will be trained.
-            if (!singleTraining && statName != StatName.SPEED) {
-                if (!trainingButtons[statName]!!.click(imageUtils = game.imageUtils)) {
-                    MessageLog.e(TAG, "[TRAINING] Failed to click training button for $statName. Aborting training...")
-                    return
-                }
-                // Slight delay for UI to update after clicking button.
-                game.wait(0.2)
-            }
-
-            // Get bitmaps and locations before starting threads to make them safe for parallel processing.
-            val sourceBitmap = game.imageUtils.getSourceBitmap()
-            val skillPointsLocation = LabelStatTableHeaderSkillPoints.find(imageUtils = game.imageUtils).first
-            val failureChanceLocation = LabelTrainingFailureChance.find(imageUtils = game.imageUtils).first
-
-            // Record start time for elapsed time measurement.
-            val startTime = System.currentTimeMillis()
-
-            // Unified approach: always use result object and start threads the same way.
-            // Use CountDownLatch to run the operations in parallel to cut down on processing time.
-            // Note: For parallel processing, Spirit Explosion Gauge is handled synchronously for Unity Cup, so latch count is 4.
-            // For singleTraining, Spirit Explosion Gauge runs in a thread for Unity Cup, so latch count is 5.
-            val latch = CountDownLatch(if (singleTraining && game.scenario == "Unity Cup") 4 else 3)
-
-            // Create log message buffer for this training.
-            val logMessages = ConcurrentLinkedQueue<String>()
-
-            // Create result object to store analysis state.
-            val result = TrainingAnalysisResult(
-                name = statName,
-                logMessages = logMessages,
-                latch = latch,
-                startTime = startTime,
-            )
-
-            // For Unity Cup in parallel mode, run Spirit Explosion Gauge analysis synchronously before moving to next training.
-            // This ensures if retry is needed, it can take a new screenshot while still on the correct training.
-            // For singleTraining mode, handle it in a thread like the other analyses.
-            if (game.scenario == "Unity Cup" && BotService.isRunning && !singleTraining) {
-                val startTimeSpiritGauge = System.currentTimeMillis()
-                val gaugeResult = game.imageUtils.analyzeSpiritExplosionGauges(sourceBitmap)
-                if (gaugeResult != null) {
-                    result.numSpiritGaugesCanFill = gaugeResult.numGaugesCanFill
-                    result.numSpiritGaugesReadyToBurst = gaugeResult.numGaugesReadyToBurst
-                } else {
-                    result.numSpiritGaugesCanFill = 0
-                    result.numSpiritGaugesReadyToBurst = 0
-                }
-                Log.d(TAG, "Total time to analyze Spirit Explosion Gauge for $statName: ${System.currentTimeMillis() - startTimeSpiritGauge}ms")
-            }
-
-            // Check if bot is still running before starting parallel threads.
-            if (!BotService.isRunning) {
-                MessageLog.i(TAG, "Bot stopped before training analysis could complete.")
-                return
-            }
-
-            // Thread 1: Determine stat gains.
-            Thread {
-                val startTimeStatGains = System.currentTimeMillis()
-                try {
-                    val statGainResult = game.imageUtils.determineStatGainFromTraining(statName, sourceBitmap, skillPointsLocation!!)
-                    result.statGains = statGainResult.statGains
-                    result.statGainRowValues = statGainResult.rowValuesMap
-                } catch (e: Exception) {
-                    Log.e(TAG, "[ERROR] Error in determineStatGainFromTraining: ${e.stackTraceToString()}")
-                    result.statGains = StatName.values().associateWith { 0 }.toMap()
-                    result.statGainRowValues = emptyMap()
-                } finally {
-                    latch.countDown()
-                    val elapsedTime = System.currentTimeMillis() - startTimeStatGains
-                    Log.d(TAG, "Total time to determine stat gains for $statName: ${elapsedTime}ms")
-                    if (!singleTraining) {
-                        logMessages.offer("[TRAINING] [$statName] Stat gains analysis completed in ${elapsedTime}ms")
+                // Keep iterating until the current training is found.
+                if (singleTraining) {
+                    val iconTrainingHeader = iconTrainingHeaders[statName]!!
+                    if (!iconTrainingHeader.check(imageUtils = game.imageUtils)) {
+                        continue
                     }
+                    MessageLog.i(TAG, "[TRAINING] The $statName training is currently selected on the screen.")
                 }
-            }.start()
 
-            // Thread 2: Find failure chance.
-            Thread {
-                val startTimeFailureChance = System.currentTimeMillis()
-                try {
-                    result.failureChance = game.imageUtils.findTrainingFailureChance(sourceBitmap, failureChanceLocation!!)
-                } catch (e: Exception) {
-                    MessageLog.e(TAG, "Error in findTrainingFailureChance: ${e.stackTraceToString()}")
-                    result.failureChance = -1
-                } finally {
-                    latch.countDown()
-                    val elapsedTime = System.currentTimeMillis() - startTimeFailureChance
-                    Log.d(TAG, "Total time to determine failure chance for $statName: ${elapsedTime}ms")
-                    if (!singleTraining) {
-                        logMessages.offer("[TRAINING] [$statName] Failure chance analysis completed in ${elapsedTime}ms")
+                // Only click the button if we arent doing single training.
+                // Also speed should be selected at beginning so we don't want to click it again
+                // otherwise it will be trained.
+                if (!singleTraining && statName != StatName.SPEED) {
+                    if (!trainingButtons[statName]!!.click(imageUtils = game.imageUtils)) {
+                        MessageLog.e(TAG, "[TRAINING] Failed to click training button for $statName. Aborting training...")
+                        return
                     }
+                    // Slight delay for UI to update after clicking button.
+                    game.wait(0.2)
                 }
-            }.start()
 
-            // Thread 3: Analyze relationship bars.
-            Thread {
-                val startTimeRelationshipBars = System.currentTimeMillis()
-                try {
-                    result.relationshipBars = game.imageUtils.analyzeRelationshipBars(sourceBitmap, statName)
-                    result.numRainbow = result.relationshipBars.count { barFillResult ->
-                        barFillResult.isRainbow
-                    }
-                } catch (e: Exception) {
-                    Log.e(TAG, "[ERROR] Error in analyzeRelationshipBars: ${e.stackTraceToString()}")
-                    result.relationshipBars = arrayListOf()
-                } finally {
-                    latch.countDown()
-                    val elapsedTime = System.currentTimeMillis() - startTimeRelationshipBars
-                    Log.d(TAG, "Total time to analyze relationship bars for $statName: ${elapsedTime}ms")
-                    if (!singleTraining) {
-                        logMessages.offer("[TRAINING] [$statName] Relationship bars analysis completed in ${elapsedTime}ms")
-                    }
-                }
-            }.start()
+                // Get bitmaps and locations before starting threads to make them safe for parallel processing.
+                val sourceBitmap = game.imageUtils.getSourceBitmap()
+                val skillPointsLocation = LabelStatTableHeaderSkillPoints.find(imageUtils = game.imageUtils).first
+                val failureChanceLocation = LabelTrainingFailureChance.find(imageUtils = game.imageUtils).first
 
-            // Thread 4: Analyze Spirit Explosion Gauges (Unity Cup only, singleTraining mode only).
-            if (game.scenario == "Unity Cup" && singleTraining) {
-                Thread {
+                // Record start time for elapsed time measurement.
+                val startTime = System.currentTimeMillis()
+
+                // Unified approach: always use result object and start threads the same way.
+                // Use CountDownLatch to run the operations in parallel to cut down on processing time.
+                // Note: For parallel processing, Spirit Explosion Gauge is handled synchronously for Unity Cup, so latch count is 4.
+                // For singleTraining, Spirit Explosion Gauge runs in a thread for Unity Cup, so latch count is 5.
+                val latch = CountDownLatch(if (singleTraining && game.scenario == "Unity Cup") 4 else 3)
+
+                // Create log message buffer for this training.
+                val logMessages = ConcurrentLinkedQueue<String>()
+
+                // Create result object to store analysis state.
+                val result = TrainingAnalysisResult(
+                    name = statName,
+                    logMessages = logMessages,
+                    latch = latch,
+                    startTime = startTime,
+                )
+
+                // For Unity Cup in parallel mode, run Spirit Explosion Gauge analysis synchronously before moving to next training.
+                // This ensures if retry is needed, it can take a new screenshot while still on the correct training.
+                // For singleTraining mode, handle it in a thread like the other analyses.
+                if (game.scenario == "Unity Cup" && BotService.isRunning && !singleTraining) {
                     val startTimeSpiritGauge = System.currentTimeMillis()
-                    try {
-                        val gaugeResult = game.imageUtils.analyzeSpiritExplosionGauges(sourceBitmap)
-                        if (gaugeResult != null) {
-                            result.numSpiritGaugesCanFill = gaugeResult.numGaugesCanFill
-                            result.numSpiritGaugesReadyToBurst = gaugeResult.numGaugesReadyToBurst
-                        }
-                    } catch (e: Exception) {
-                        Log.e(TAG, "[ERROR] Error in Spirit Explosion Gauge analysis: ${e.stackTraceToString()}")
+                    val gaugeResult = game.imageUtils.analyzeSpiritExplosionGauges(sourceBitmap)
+                    if (gaugeResult != null) {
+                        result.numSpiritGaugesCanFill = gaugeResult.numGaugesCanFill
+                        result.numSpiritGaugesReadyToBurst = gaugeResult.numGaugesReadyToBurst
+                    } else {
                         result.numSpiritGaugesCanFill = 0
                         result.numSpiritGaugesReadyToBurst = 0
+                    }
+                    Log.d(TAG, "Total time to analyze Spirit Explosion Gauge for $statName: ${System.currentTimeMillis() - startTimeSpiritGauge}ms")
+                }
+
+                // Check if bot is still running before starting parallel threads.
+                if (!BotService.isRunning) {
+                    MessageLog.i(TAG, "Bot stopped before training analysis could complete.")
+                    return
+                }
+
+                // Thread 1: Determine stat gains.
+                Thread {
+                    val startTimeStatGains = System.currentTimeMillis()
+                    try {
+                        val statGainResult = game.imageUtils.determineStatGainFromTraining(statName, sourceBitmap, skillPointsLocation!!)
+                        result.statGains = statGainResult.statGains
+                        result.statGainRowValues = statGainResult.rowValuesMap
+                    } catch (e: Exception) {
+                        Log.e(TAG, "[ERROR] Error in determineStatGainFromTraining: ${e.stackTraceToString()}")
+                        result.statGains = StatName.values().associateWith { 0 }.toMap()
+                        result.statGainRowValues = emptyMap()
                     } finally {
                         latch.countDown()
-                        Log.d(TAG, "Total time to analyze Spirit Explosion Gauge for $statName: ${System.currentTimeMillis() - startTimeSpiritGauge}ms")
+                        val elapsedTime = System.currentTimeMillis() - startTimeStatGains
+                        Log.d(TAG, "Total time to determine stat gains for $statName: ${elapsedTime}ms")
+                        if (!singleTraining) {
+                            logMessages.offer("[TRAINING] [$statName] Stat gains analysis completed in ${elapsedTime}ms")
+                        }
                     }
                 }.start()
-            }
 
-            // Branch on singleTraining vs parallel processing.
-            if (singleTraining) {
-                // For singleTraining, wait here and process immediately.
-                try {
-                    latch.await(3, TimeUnit.SECONDS)
-                } catch (_: InterruptedException) {
-                    Log.e(TAG, "[ERROR] Parallel training analysis timed out")
-                } finally {
-                    val elapsedTime = System.currentTimeMillis() - startTime
-                    Log.d(TAG, "Total time for $statName training analysis: ${elapsedTime}ms")
-                    // Log stat gain results sequentially after threads complete to ensure correct order.
-					logStatGainResults(statName, result.statGains, result.statGainRowValues)
-                    MessageLog.i(TAG, "All 5 stat regions processed for $statName training. Results: ${result.statGains.toSortedMap(compareBy { it.ordinal }).toString()}")
-                }
-
-                // Check if risky training logic should apply based on main stat gain.
-                val mainStatGain = result.statGains[result.name] ?: 0
-                val effectiveFailureChance = if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
-                    riskyTrainingMaxFailureChance
-                } else {
-                    maximumFailureChance
-                }
-
-                // If we failed to detect a failure chance, fallback to detecting it
-                // synchronously a couple more times.
-                if (result.failureChance == -1) {
-                    result.failureChance = game.imageUtils.findTrainingFailureChance(tries = 3)
-                }
-
-                if (result.failureChance == -1) {
-                    MessageLog.w(TAG, "Failed to analyze failure chance for $statName.")
-                    continue
-                }
-
-                // Filter out trainings that exceed the effective failure chance threshold.
-                if (!test && result.failureChance > effectiveFailureChance) {
-                    if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
-                        MessageLog.i(TAG, "[TRAINING] Skipping $statName training due to failure chance (${result.failureChance}%) exceeding risky threshold (${riskyTrainingMaxFailureChance}%) despite high main stat gain of $mainStatGain.")
-                    } else {
-                        MessageLog.i(TAG, "[TRAINING] Skipping $statName training due to failure chance (${result.failureChance}%) exceeding threshold (${maximumFailureChance}%).")
-                    }
-                    continue
-                }
-
-                val newTraining = TrainingOption(
-                    name = result.name,
-                    statGains = result.statGains,
-                    failureChance = result.failureChance,
-                    relationshipBars = result.relationshipBars,
-                    numRainbow = result.numRainbow,
-                    numSpiritGaugesCanFill = result.numSpiritGaugesCanFill,
-                    numSpiritGaugesReadyToBurst = result.numSpiritGaugesReadyToBurst
-                )
-                trainingMap[result.name] = newTraining
-                break
-            } else {
-                // For parallel processing, store result for later processing.
-                analysisResults.add(result)
-            }
-        }
-
-        // For parallel processing, wait for all analyses and process results.
-        if (!singleTraining && analysisResults.isNotEmpty()) {
-            // Wait for all analysis threads to complete in parallel with 10s timeout.
-            val waitThreads = analysisResults.map { result ->
+                // Thread 2: Find failure chance.
                 Thread {
+                    val startTimeFailureChance = System.currentTimeMillis()
                     try {
-                        // Check if bot is still running before waiting.
-                        if (!BotService.isRunning) {
-                            return@Thread
-                        }
-                        result.latch.await(10, TimeUnit.SECONDS)
-                    } catch (e: InterruptedException) {
-                        Log.e(TAG, "[ERROR] Parallel training analysis timed out for ${result.name}")
-                        Thread.currentThread().interrupt()
+                        result.failureChance = game.imageUtils.findTrainingFailureChance(sourceBitmap, failureChanceLocation!!)
+                    } catch (e: Exception) {
+                        MessageLog.e(TAG, "Error in findTrainingFailureChance: ${e.stackTraceToString()}")
+                        result.failureChance = -1
                     } finally {
-                        // Only log and process if bot is still running.
-                        if (BotService.isRunning) {
-                            val elapsedTime = System.currentTimeMillis() - result.startTime
-                            Log.d(TAG, "Total time for ${result.name} training analysis: ${elapsedTime}ms")
-                            result.logMessages.offer("[TRAINING] [${result.name}] All analysis threads completed. Total time: ${elapsedTime}ms")
-                            result.logMessages.offer("[TRAINING] [${result.name}] All 5 stat regions processed. Results: ${result.statGains.toSortedMap(compareBy { it.ordinal }).toString()}")
+                        latch.countDown()
+                        val elapsedTime = System.currentTimeMillis() - startTimeFailureChance
+                        Log.d(TAG, "Total time to determine failure chance for $statName: ${elapsedTime}ms")
+                        if (!singleTraining) {
+                            logMessages.offer("[TRAINING] [$statName] Failure chance analysis completed in ${elapsedTime}ms")
+                        }
+                    }
+                }.start()
+
+                // Thread 3: Analyze relationship bars.
+                Thread {
+                    val startTimeRelationshipBars = System.currentTimeMillis()
+                    try {
+                        result.relationshipBars = game.imageUtils.analyzeRelationshipBars(sourceBitmap, statName)
+                        result.numRainbow = result.relationshipBars.count { barFillResult ->
+                            barFillResult.isRainbow
+                        }
+                    } catch (e: Exception) {
+                        Log.e(TAG, "[ERROR] Error in analyzeRelationshipBars: ${e.stackTraceToString()}")
+                        result.relationshipBars = arrayListOf()
+                    } finally {
+                        latch.countDown()
+                        val elapsedTime = System.currentTimeMillis() - startTimeRelationshipBars
+                        Log.d(TAG, "Total time to analyze relationship bars for $statName: ${elapsedTime}ms")
+                        if (!singleTraining) {
+                            logMessages.offer("[TRAINING] [$statName] Relationship bars analysis completed in ${elapsedTime}ms")
+                        }
+                    }
+                }.start()
+
+                // Thread 4: Analyze Spirit Explosion Gauges (Unity Cup only, singleTraining mode only).
+                if (game.scenario == "Unity Cup" && singleTraining) {
+                    Thread {
+                        val startTimeSpiritGauge = System.currentTimeMillis()
+                        try {
+                            val gaugeResult = game.imageUtils.analyzeSpiritExplosionGauges(sourceBitmap)
+                            if (gaugeResult != null) {
+                                result.numSpiritGaugesCanFill = gaugeResult.numGaugesCanFill
+                                result.numSpiritGaugesReadyToBurst = gaugeResult.numGaugesReadyToBurst
+                            }
+                        } catch (e: Exception) {
+                            Log.e(TAG, "[ERROR] Error in Spirit Explosion Gauge analysis: ${e.stackTraceToString()}")
+                            result.numSpiritGaugesCanFill = 0
+                            result.numSpiritGaugesReadyToBurst = 0
+                        } finally {
+                            latch.countDown()
+                            Log.d(TAG, "Total time to analyze Spirit Explosion Gauge for $statName: ${System.currentTimeMillis() - startTimeSpiritGauge}ms")
+                        }
+                    }.start()
+                }
+
+                // Branch on singleTraining vs parallel processing.
+                if (singleTraining) {
+                    // For singleTraining, wait here and process immediately.
+                    try {
+                        latch.await(3, TimeUnit.SECONDS)
+                    } catch (_: InterruptedException) {
+                        Log.e(TAG, "[ERROR] Parallel training analysis timed out")
+                    } finally {
+                        val elapsedTime = System.currentTimeMillis() - startTime
+                        Log.d(TAG, "Total time for $statName training analysis: ${elapsedTime}ms")
+                        // Log stat gain results sequentially after threads complete to ensure correct order.
+                        logStatGainResults(statName, result.statGains, result.statGainRowValues)
+                        MessageLog.i(TAG, "All 5 stat regions processed for $statName training. Results: ${result.statGains.toSortedMap(compareBy { it.ordinal }).toString()}")
+                    }
+
+                    // Check if risky training logic should apply based on main stat gain.
+                    val mainStatGain = result.statGains[result.name] ?: 0
+                    val effectiveFailureChance = if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
+                        riskyTrainingMaxFailureChance
+                    } else {
+                        maximumFailureChance
+                    }
+
+                    // If we failed to detect a failure chance, fallback to detecting it
+                    // synchronously a couple more times.
+                    if (result.failureChance == -1) {
+                        result.failureChance = game.imageUtils.findTrainingFailureChance(tries = 3)
+                    }
+
+                    if (result.failureChance == -1) {
+                        MessageLog.w(TAG, "Failed to analyze failure chance for $statName.")
+                        continue
+                    }
+
+                    // Filter out trainings that exceed the effective failure chance threshold.
+                    if (!test && result.failureChance > effectiveFailureChance) {
+                        if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
+                            MessageLog.i(TAG, "[TRAINING] Skipping $statName training due to failure chance (${result.failureChance}%) exceeding risky threshold (${riskyTrainingMaxFailureChance}%) despite high main stat gain of $mainStatGain.")
+                        } else {
+                            MessageLog.i(TAG, "[TRAINING] Skipping $statName training due to failure chance (${result.failureChance}%) exceeding threshold (${maximumFailureChance}%).")
+                        }
+                        continue
+                    }
+
+                    val newTraining = TrainingOption(
+                        name = result.name,
+                        statGains = result.statGains,
+                        failureChance = result.failureChance,
+                        relationshipBars = result.relationshipBars,
+                        numRainbow = result.numRainbow,
+                        numSpiritGaugesCanFill = result.numSpiritGaugesCanFill,
+                        numSpiritGaugesReadyToBurst = result.numSpiritGaugesReadyToBurst
+                    )
+                    trainingMap[result.name] = newTraining
+                    break
+                } else {
+                    // For parallel processing, store result for later processing.
+                    analysisResults.add(result)
+                }
+            }
+
+            // For parallel processing, wait for all analyses and process results.
+            if (!singleTraining && analysisResults.isNotEmpty()) {
+                // Wait for all analysis threads to complete in parallel with 10s timeout.
+                val waitThreads = analysisResults.map { result ->
+                    Thread {
+                        try {
+                            // Check if bot is still running before waiting.
+                            if (!BotService.isRunning) {
+                                return@Thread
+                            }
+                            result.latch.await(10, TimeUnit.SECONDS)
+                        } catch (e: InterruptedException) {
+                            Log.e(TAG, "[ERROR] Parallel training analysis timed out for ${result.name}")
+                            Thread.currentThread().interrupt()
+                        } finally {
+                            // Only log and process if bot is still running.
+                            if (BotService.isRunning) {
+                                val elapsedTime = System.currentTimeMillis() - result.startTime
+                                Log.d(TAG, "Total time for ${result.name} training analysis: ${elapsedTime}ms")
+                                result.logMessages.offer("[TRAINING] [${result.name}] All analysis threads completed. Total time: ${elapsedTime}ms")
+                                result.logMessages.offer("[TRAINING] [${result.name}] All 5 stat regions processed. Results: ${result.statGains.toSortedMap(compareBy { it.ordinal }).toString()}")
+                            }
                         }
                     }
                 }
-            }
 
-            // Start all wait threads concurrently.
-            waitThreads.forEach { it.start() }
-            // Join all wait threads to ensure completion.
-            if (BotService.isRunning) {
-                waitThreads.forEach { it.join() }
-            } else {
-                return
-            }
-
-            // Process results and output logs in training order.
-            for (result in analysisResults) {
-                // Output buffered log messages for this training.
-                while (result.logMessages.isNotEmpty()) {
-                    MessageLog.i(TAG, result.logMessages.poll())
-                }
-
-                // Log stat gain results sequentially after threads complete to ensure correct order.
-			    logStatGainResults(result.name, result.statGains, result.statGainRowValues)
-
-                // Check if risky training logic should apply based on main stat gain.
-                val mainStatGain: Int = result.statGains[result.name] ?: 0
-                val effectiveFailureChance = if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
-                    riskyTrainingMaxFailureChance
+                // Start all wait threads concurrently.
+                waitThreads.forEach { it.start() }
+                // Join all wait threads to ensure completion.
+                if (BotService.isRunning) {
+                    waitThreads.forEach { it.join() }
                 } else {
-                    maximumFailureChance
-                }
-                
-                // Filter out trainings that exceed the effective failure chance threshold.
-                if (!test && result.failureChance > effectiveFailureChance) {
-                    if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
-                        MessageLog.i(TAG, "[TRAINING] Skipping ${result.name} training due to failure chance (${result.failureChance}%) exceeding risky threshold (${riskyTrainingMaxFailureChance}%) despite high main stat gain of $mainStatGain.")
-                    } else {
-                        MessageLog.i(TAG, "[TRAINING] Skipping ${result.name} training due to failure chance (${result.failureChance}%) exceeding threshold (${maximumFailureChance}%).")
-                    }
-                    continue
+                    return
                 }
 
-                val newTraining = TrainingOption(
-                    name = result.name,
-                    statGains = result.statGains,
-                    failureChance = result.failureChance,
-                    relationshipBars = result.relationshipBars,
-                    numRainbow = result.numRainbow,
-                    numSpiritGaugesCanFill = result.numSpiritGaugesCanFill,
-                    numSpiritGaugesReadyToBurst = result.numSpiritGaugesReadyToBurst
-                )
-                trainingMap[result.name] = newTraining
+                // Process results and output logs in training order.
+                for (result in analysisResults) {
+                    // Output buffered log messages for this training.
+                    while (result.logMessages.isNotEmpty()) {
+                        MessageLog.i(TAG, result.logMessages.poll())
+                    }
+
+                    // Log stat gain results sequentially after threads complete to ensure correct order.
+                    logStatGainResults(result.name, result.statGains, result.statGainRowValues)
+
+                    // Check if risky training logic should apply based on main stat gain.
+                    val mainStatGain: Int = result.statGains[result.name] ?: 0
+                    val effectiveFailureChance = if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
+                        riskyTrainingMaxFailureChance
+                    } else {
+                        maximumFailureChance
+                    }
+                    
+                    // Filter out trainings that exceed the effective failure chance threshold.
+                    if (!test && result.failureChance > effectiveFailureChance) {
+                        if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
+                            MessageLog.i(TAG, "[TRAINING] Skipping ${result.name} training due to failure chance (${result.failureChance}%) exceeding risky threshold (${riskyTrainingMaxFailureChance}%) despite high main stat gain of $mainStatGain.")
+                        } else {
+                            MessageLog.i(TAG, "[TRAINING] Skipping ${result.name} training due to failure chance (${result.failureChance}%) exceeding threshold (${maximumFailureChance}%).")
+                        }
+                        continue
+                    }
+
+                    val newTraining = TrainingOption(
+                        name = result.name,
+                        statGains = result.statGains,
+                        failureChance = result.failureChance,
+                        relationshipBars = result.relationshipBars,
+                        numRainbow = result.numRainbow,
+                        numSpiritGaugesCanFill = result.numSpiritGaugesCanFill,
+                        numSpiritGaugesReadyToBurst = result.numSpiritGaugesReadyToBurst
+                    )
+                    trainingMap[result.name] = newTraining
+                }
             }
+        } else {
+            // Clear the Training map if the bot failed to have enough energy to conduct the training.
+            MessageLog.i(TAG, "[TRAINING] $failureChance% is not within acceptable range of ${maximumFailureChance}%. Proceeding to recover energy.")
+            trainingMap.clear()
         }
 
         if (singleTraining) {

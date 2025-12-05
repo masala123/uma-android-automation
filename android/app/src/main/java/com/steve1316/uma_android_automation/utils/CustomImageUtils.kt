@@ -542,7 +542,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			)
 
 			// Parse the result.
-			MessageLog.i(TAG, "Detected number of skill points before formatting: $detectedText")
+			Log.d(TAG, "Detected number of skill points before formatting: $detectedText")
 			try {
 				Log.d(TAG, "Converting $detectedText to integer for skill points")
 				val cleanedResult = detectedText.replace(Regex("[^0-9]"), "")
@@ -864,9 +864,9 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		)
 
 		// Parse the text.
-		MessageLog.i(TAG, "Detected number of stats for $statName from Tesseract before formatting: $text")
+		Log.d(TAG, "Detected number of stats for $statName from Tesseract before formatting: $text")
 		if (text.lowercase().contains("max") || text.lowercase().contains("ax")) {
-			MessageLog.i(TAG, "$statName seems to be maxed out. Setting it to ${MAX_STAT_VALUE}.")
+			Log.d(TAG, "$statName seems to be maxed out. Setting it to ${MAX_STAT_VALUE}.")
 			return MAX_STAT_VALUE
 		} else {
 			try {
@@ -916,9 +916,9 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 				)
 
 				// Parse the text.
-				MessageLog.i(TAG, "Detected number of stats for $statName from Tesseract before formatting: $text")
+				Log.d(TAG, "Detected number of stats for $statName from Tesseract before formatting: $text")
 				if (text.lowercase().contains("max") || text.lowercase().contains("ax")) {
-					MessageLog.i(TAG, "$statName seems to be maxed out. Setting it to ${MAX_STAT_VALUE}.")
+					Log.d(TAG, "$statName seems to be maxed out. Setting it to ${MAX_STAT_VALUE}.")
 					result[statName] = MAX_STAT_VALUE
 				} else {
 					try {
