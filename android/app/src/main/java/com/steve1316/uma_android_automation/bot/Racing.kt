@@ -130,18 +130,16 @@ class Racing (private val game: Game) {
     /**
      * Detects and handles any dialog popups.
      *
-     * To prevent the bot moving too fast, we add a 250ms delay to both the
-     * entry of this function, and to the exit whenever we close the dialog.
-     * This gives the dialog time to open and close since there is a very short
-     * animation that plays when a dialog opens or closes.
+     * To prevent the bot moving too fast, we add a 500ms delay to the
+     * exit of this function whenever we close the dialog.
+     * This gives the dialog time to close since there is a very short
+     * animation that plays when a dialog closes.
      *
      * @return A pair of a boolean and a nullable DialogInterface.
      * The boolean is true when a dialog has been handled by this function.
      * The DialogInterface is the detected dialog, or NULL if no dialogs were found.
      */
     fun handleDialogs(): Pair<Boolean, DialogInterface?> {
-        game.wait(0.25, skipWaitingForLoading = true)
-
         val dialog: DialogInterface? = DialogUtils.getDialog(imageUtils = game.imageUtils)
         if (dialog == null) {
             return Pair(false, null)
@@ -171,6 +169,7 @@ class Racing (private val game: Game) {
                         MessageLog.i(TAG, "[DIALOG] strategy:: Using the default running style.")
                         dialog.ok(imageUtils = game.imageUtils)
                         game.trainee.bHasSetRunningStyle = true
+                        game.wait(0.5, skipWaitingForLoading = true)
                         return Pair(true, dialog)
                     }
                     // Auto-select the optimal running style based on trainee aptitudes.
@@ -194,7 +193,7 @@ class Racing (private val game: Game) {
                         MessageLog.e(TAG, "[DIALOG] strategy:: Invalid running style: $runningStyle")
                         dialog.close(imageUtils = game.imageUtils)
                         game.trainee.bHasSetRunningStyle = false
-                        game.wait(0.25, skipWaitingForLoading = true)
+                        game.wait(0.5, skipWaitingForLoading = true)
                         return Pair(true, dialog)
                     }
                 }
@@ -220,7 +219,7 @@ class Racing (private val game: Game) {
             }
         }
 
-        game.wait(0.25, skipWaitingForLoading = true)
+        game.wait(0.5, skipWaitingForLoading = true)
         return Pair(true, dialog)
     }
 
@@ -386,12 +385,14 @@ class Racing (private val game: Game) {
         if (loc != null) {
             // Offset 100px down from the ribbon since the ribbon isn't clickable.
             game.tap(loc.x, loc.y + 100, IconRaceDayRibbon.template.path, ignoreWaiting = true)
+            game.wait(0.5, skipWaitingForLoading = true)
             // Make sure we handle any dialogs that may have popped up before continuing.
             if (!game.handleDialogs().first) {
                 game.campaign.handleDialogs()
             }
             return handleMandatoryRace()
         } else if (!game.currentDate.bIsPreDebut && ButtonRaceSelectExtra.click(imageUtils = game.imageUtils)) {
+            game.wait(0.5, skipWaitingForLoading = true)
             if (!game.handleDialogs().first) {
                 game.campaign.handleDialogs()
             }

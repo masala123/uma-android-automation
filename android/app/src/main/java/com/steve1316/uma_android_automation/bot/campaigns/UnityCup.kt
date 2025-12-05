@@ -9,7 +9,7 @@ import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.uma_android_automation.components.ButtonNext
 import com.steve1316.uma_android_automation.components.ButtonSkip
 import com.steve1316.uma_android_automation.components.ButtonRace
-import com.steve1316.uma_android_automation.components.ButtonRaceEnd
+import com.steve1316.uma_android_automation.components.ButtonNextRaceEnd
 import com.steve1316.uma_android_automation.components.ButtonSelectOpponent
 import com.steve1316.uma_android_automation.components.DialogUtils
 import com.steve1316.uma_android_automation.components.DialogInterface
@@ -26,8 +26,19 @@ class UnityCup(game: Game) : Campaign(game) {
     private var selectedOpponentIndex: Int = -1
     private var bOverrideOpponentSelection: Boolean = false
 
+    /**
+     * Detects and handles any dialog popups.
+     *
+     * To prevent the bot moving too fast, we add a 500ms delay to the
+     * exit of this function whenever we close the dialog.
+     * This gives the dialog time to close since there is a very short
+     * animation that plays when a dialog closes.
+     *
+     * @return A pair of a boolean and a nullable DialogInterface.
+     * The boolean is true when a dialog has been handled by this function.
+     * The DialogInterface is the detected dialog, or NULL if no dialogs were found.
+     */
     override fun handleDialogs(): Pair<Boolean, DialogInterface?> {
-        game.wait(0.1)
         val (bDialogHandled, dialog) = super.handleDialogs()
         if (bDialogHandled) {
             return Pair(bDialogHandled, dialog)
@@ -46,15 +57,14 @@ class UnityCup(game: Game) : Campaign(game) {
                 } else {
                     dialog.close(imageUtils = game.imageUtils)
                 }
-                game.wait(0.1)
+                game.wait(0.5, skipWaitingForLoading = true)
                 return Pair(true, dialog)
             }
             else -> {
-                game.wait(0.1)
                 return Pair(false, dialog)
             }
         }
-        game.wait(0.1)
+        game.wait(0.5, skipWaitingForLoading = true)
         return Pair(true, dialog)
     }
 
@@ -167,7 +177,7 @@ class UnityCup(game: Game) : Campaign(game) {
                 }
                 ButtonNext.click(imageUtils = game.imageUtils) -> {}
                 ButtonSkip.click(imageUtils = game.imageUtils) -> {}
-                ButtonRaceEnd.click(imageUtils = game.imageUtils) -> {}
+                ButtonNextRaceEnd.click(imageUtils = game.imageUtils) -> {}
                 // Exit from function if it runs too long.
                 System.currentTimeMillis() - startTime > executionTimeThresholdMs -> {
                     MessageLog.i(TAG, "[UNITY_CUP] Race event took too long to complete. Aborting...")
