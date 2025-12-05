@@ -583,6 +583,10 @@ open class Campaign(val game: Game) {
                 MessageLog.e(TAG, "Trainee update threads timed out.")
             }
         }
+
+        // If the required skill points has been reached, stop the bot.
+        if (game.enableSkillPointCheck && game.trainee.skillPoints >= game.skillPointsRequired) {
+            throw InterruptedException("Bot reached skill point check threshold. Stopping bot...")
         }
 
         // Perform scenario validation check.
@@ -619,11 +623,6 @@ open class Campaign(val game: Game) {
         } else if (!game.racing.encounteredRacingPopup) {
             // Check if there are fan or trophy requirements that need to be met with racing.
             game.racing.checkRacingRequirements()
-
-            // If the required skill points has been reached, stop the bot.
-            if (game.enableSkillPointCheck && game.imageUtils.determineSkillPoints() >= game.skillPointsRequired) {
-                throw InterruptedException("Bot reached skill point check threshold. Stopping bot...")
-            }
 
             if (game.racing.enableForceRacing) {
                 // If force racing is enabled, skip all other activities and go straight to racing
