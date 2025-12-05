@@ -4,6 +4,11 @@ import com.steve1316.uma_android_automation.components.ComponentInterface
 import com.steve1316.uma_android_automation.components.Template
 import com.steve1316.uma_android_automation.components.Region
 
+object ButtonAgenda : ComponentInterface {
+    override val TAG: String = "ButtonAgenda"
+    override val template = Template("components/button/agenda")
+}
+
 object ButtonAutoSelect : ComponentInterface {
     override val TAG: String = "ButtonAutoSelect"
     override val template = Template("components/button/auto_select")
@@ -181,6 +186,11 @@ object ButtonNextWithImage : ComponentInterface {
     override val template = Template("components/button/next_with_image", region = Region.bottomHalf)
 }
 
+object ButtonNextRaceEnd : ComponentInterface {
+    override val TAG: String = "ButtonNextRaceEnd"
+    override val template = Template("components/button/next_race_end", region = Region.bottomHalf)
+}
+
 object ButtonNo : ComponentInterface {
     override val TAG: String = "ButtonNo"
     override val template = Template("components/button/no", region = Region.bottomHalf)
@@ -219,11 +229,6 @@ object ButtonRaceAgain : ComponentInterface {
 object ButtonRaceDetails : ComponentInterface {
     override val TAG: String = "ButtonRaceDetails"
     override val template = Template("components/button/race_details", region = Region.bottomHalf)
-}
-
-object ButtonRaceEnd : ComponentInterface {
-    override val TAG: String = "ButtonRaceEnd"
-    override val template = Template("components/button/race_end", region = Region.bottomHalf)
 }
 
 object ButtonRaceEvents : ComponentInterface {
@@ -361,6 +366,11 @@ object ButtonViewResults : ComponentInterface {
     override val template = Template("components/button/view_results", region = Region.bottomHalf)
 }
 
+object ButtonWatchConcert : ComponentInterface {
+    override val TAG: String = "ButtonWatchConcert"
+    override val template = Template("components/button/watch_concert", region = Region.bottomHalf)
+}
+
 object ButtonRaceStrategyFront : ComponentInterface {
     override val TAG: String = "ButtonRaceStrategyFront"
     override val template = Template("components/button/strategy_front_select", region = Region.middle)
@@ -468,6 +478,16 @@ object ButtonInheritance : ComponentInterface {
     override val template = Template("components/button/inheritance", region = Region.bottomHalf)
 }
 
+object ButtonPredictions : ComponentInterface {
+    override val TAG: String = "ButtonPredictions"
+    override val template = Template("components/button/predictions", region = Region.bottomHalf)
+}
+
+object ButtonRunners : ComponentInterface {
+    override val TAG: String = "ButtonRunners"
+    override val template = Template("components/button/runners", region = Region.middle)
+}
+
 object ButtonRaceSelectExtra : ComponentInterface {
     override val TAG: String = "ButtonRaceSelectExtra"
     override val template = Template("components/button/race_select_extra", region = Region.bottomHalf)
@@ -486,6 +506,26 @@ object ButtonRaceSelectExtraLockedUraFinals : ComponentInterface {
 object ButtonUnityCupRace : ComponentInterface {
     override val TAG: String = "ButtonUnityCupRace"
     override val template = Template("components/button/unitycup_race", region = Region.bottomHalf)
+}
+
+object ButtonUnityCupRaceFinal : ComponentInterface {
+    override val TAG: String = "ButtonUnityCupRaceFinal"
+    override val template = Template("components/button/unitycup_race_final", region = Region.bottomHalf)
+}
+
+object ButtonUnityCupSeeAllRaceResults : ComponentInterface {
+    override val TAG: String = "ButtonUnityCupSeeAllRaceResults"
+    override val template = Template("components/button/unitycup_see_all_race_results", region = Region.bottomHalf)
+}
+
+object ButtonUnityCupTeam : ComponentInterface {
+    override val TAG: String = "ButtonUnityCupTeam"
+    override val template = Template("components/button/unitycup_team", region = Region.bottomHalf)
+}
+
+object ButtonUnityCupWatchMainRace : ComponentInterface {
+    override val TAG: String = "ButtonUnityCupWatchMainRace"
+    override val template = Template("components/button/unitycup_watch_main_race", region = Region.bottomHalf)
 }
 
 object ButtonRest : ComponentInterface {
