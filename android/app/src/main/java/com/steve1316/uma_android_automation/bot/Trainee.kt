@@ -1,11 +1,16 @@
 package com.steve1316.uma_android_automation.bot
 
 import android.graphics.Bitmap
+import android.util.Log
 import org.opencv.core.Point
 import kotlin.enums.enumEntries
 import kotlin.math.abs
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
 
 import com.steve1316.automation_library.utils.MessageLog
+import com.steve1316.automation_library.utils.BotService
 
 import com.steve1316.uma_android_automation.utils.SettingsHelper
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
@@ -325,8 +330,8 @@ class Trainee {
         bHasUpdatedAptitudes = true
     }
 
-    fun updateSkillPoints(imageUtils: CustomImageUtils) {
-        val res = imageUtils.determineSkillPoints()
+    fun updateSkillPoints(imageUtils: CustomImageUtils, sourceBitmap: Bitmap? = null, skillPointsLocation: Point? = null) {
+        val res = imageUtils.determineSkillPoints(sourceBitmap, skillPointsLocation)
         if (res != -1) {
             skillPoints = res
         }
@@ -334,38 +339,99 @@ class Trainee {
         bHasUpdatedSkillPoints = skillPoints != -1
     }
 
-    fun updateStats(imageUtils: CustomImageUtils) {
-        val statMapping: Map<StatName, Int> = imageUtils.determineStatValues()
+    fun updateStats(imageUtils: CustomImageUtils, sourceBitmap: Bitmap? = null, skillPointsLocation: Point? = null, externalLatch: CountDownLatch? = null) {
+        // If sourceBitmap and skillPointsLocation are provided, use threading for parallel processing.
+        if (sourceBitmap != null && skillPointsLocation != null) {
+            val statLatch = externalLatch ?: CountDownLatch(5)
+            val waitLatch = CountDownLatch(5) // Internal latch for waiting, regardless of external latch.
+            val threadSafeResults = ConcurrentHashMap<StatName, Int>()
 
-        // It is possible that we misread a stat value. We want to make sure we
-        // don't update our stats if they change too wildly from the previous values.
-        for ((statName, newValue) in statMapping) {
-            val oldValue = getStat(statName)
-            val diff = abs(newValue - oldValue)
-            // If our previous stat value is <= 0, that means we havent set it yet.
-            if (oldValue <= 0 || diff < 150) {
-                stats.setStat(statName, newValue)
-                bHasUpdatedStats = true
-            } else {
-                MessageLog.w(TAG, "New $statName stat value has changed too much since last update: old=$oldValue, new=$newValue")
+            // Create 5 threads, one for each stat.
+            for (statName in StatName.entries) {
+                Thread {
+                    try {
+                        if (!BotService.isRunning) {
+                            return@Thread
+                        }
+                        val statValue = imageUtils.determineSingleStatValue(statName, sourceBitmap, skillPointsLocation)
+                        threadSafeResults[statName] = statValue
+                    } catch (e: Exception) {
+                        Log.e(TAG, "[ERROR] Error processing stat $statName: ${e.stackTraceToString()}")
+                        threadSafeResults[statName] = -1
+                    } finally {
+                        statLatch.countDown()
+                        waitLatch.countDown()
+                    }
+                }.apply { isDaemon = true }.start()
+            }
+
+            // Wait for all threads to complete using the internal wait latch.
+            try {
+                waitLatch.await(10, java.util.concurrent.TimeUnit.SECONDS)
+            } catch (_: InterruptedException) {
+                MessageLog.e(TAG, "Stat processing timed out.")
+            }
+
+            // Update stats with thread-safe results.
+            val statMapping = threadSafeResults.toMap()
+            for ((statName, newValue) in statMapping) {
+                val oldValue = getStat(statName)
+                val diff = abs(newValue - oldValue)
+                // If our previous stat value is <= 0, that means we havent set it yet.
+                if (oldValue <= 0 || diff < 150) {
+                    stats.setStat(statName, newValue)
+                    bHasUpdatedStats = true
+                } else {
+                    MessageLog.w(TAG, "New $statName stat value has changed too much since last update: old=$oldValue, new=$newValue")
+                }
+            }
+        } else {
+            // Use the original sequential method.
+            val statMapping: Map<StatName, Int> = imageUtils.determineStatValues()
+
+            // It is possible that we misread a stat value. We want to make sure we
+            // don't update our stats if they change too wildly from the previous values.
+            for ((statName, newValue) in statMapping) {
+                val oldValue = getStat(statName)
+                val diff = abs(newValue - oldValue)
+                // If our previous stat value is <= 0, that means we havent set it yet.
+                if (oldValue <= 0 || diff < 150) {
+                    stats.setStat(statName, newValue)
+                    bHasUpdatedStats = true
+                } else {
+                    MessageLog.w(TAG, "New $statName stat value has changed too much since last update: old=$oldValue, new=$newValue")
+                }
             }
         }
     }
 
-    fun checkMood(imageUtils: CustomImageUtils): Mood? {
-        return when {
-            IconMoodAwful.check(imageUtils = imageUtils) -> Mood.AWFUL
-            IconMoodBad.check(imageUtils = imageUtils) -> Mood.BAD
-            IconMoodNormal.check(imageUtils = imageUtils) -> Mood.NORMAL
-            IconMoodGood.check(imageUtils = imageUtils) -> Mood.GOOD
-            IconMoodGreat.check(imageUtils = imageUtils) -> Mood.GREAT
-            else -> null
+    fun checkMood(imageUtils: CustomImageUtils, sourceBitmap: Bitmap? = null): Mood? {
+        return if (sourceBitmap != null) {
+            // Use findImageWithBitmap for thread-safe operations.
+            when {
+                imageUtils.findImageWithBitmap(IconMoodAwful.template.path, sourceBitmap, region = IconMoodAwful.template.region, suppressError = true) != null -> Mood.AWFUL
+                imageUtils.findImageWithBitmap(IconMoodBad.template.path, sourceBitmap, region = IconMoodBad.template.region, suppressError = true) != null -> Mood.BAD
+                imageUtils.findImageWithBitmap(IconMoodNormal.template.path, sourceBitmap, region = IconMoodNormal.template.region, suppressError = true) != null -> Mood.NORMAL
+                imageUtils.findImageWithBitmap(IconMoodGood.template.path, sourceBitmap, region = IconMoodGood.template.region, suppressError = true) != null -> Mood.GOOD
+                imageUtils.findImageWithBitmap(IconMoodGreat.template.path, sourceBitmap, region = IconMoodGreat.template.region, suppressError = true) != null -> Mood.GREAT
+                else -> null
+            }
+        } else {
+            // Use the original ComponentInterface.check() method.
+            when {
+                IconMoodAwful.check(imageUtils = imageUtils) -> Mood.AWFUL
+                IconMoodBad.check(imageUtils = imageUtils) -> Mood.BAD
+                IconMoodNormal.check(imageUtils = imageUtils) -> Mood.NORMAL
+                IconMoodGood.check(imageUtils = imageUtils) -> Mood.GOOD
+                IconMoodGreat.check(imageUtils = imageUtils) -> Mood.GREAT
+                else -> null
+            }
         }
     }
 
-    fun updateMood(imageUtils: CustomImageUtils) {
+    fun updateMood(imageUtils: CustomImageUtils, sourceBitmap: Bitmap? = null) {
         // If checkMood returns NULL, then make no change to the mood state.
-        mood = checkMood(imageUtils) ?: mood
+        mood = checkMood(imageUtils, sourceBitmap) ?: mood
     }
 
     /**

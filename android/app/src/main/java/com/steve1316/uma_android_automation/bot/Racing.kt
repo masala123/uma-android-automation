@@ -392,6 +392,9 @@ class Racing (private val game: Game) {
             }
             return handleMandatoryRace()
         } else if (!game.currentDate.bIsPreDebut && ButtonRaceSelectExtra.click(imageUtils = game.imageUtils)) {
+            if (!game.handleDialogs().first) {
+                game.campaign.handleDialogs()
+            }
             return handleExtraRace()
         }
 
