@@ -506,14 +506,20 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	}
 
 	/**
-	 * Determine the number of skill points.
+	 * Determine the number of skill points. Parameters are optional to allow for thread-safe operations.
 	 *
+	 * @param sourceBitmap Bitmap of the source image separately taken. Defaults to null.
+	 * @param skillPointsLocation Point location of the skill points template image separately taken. Defaults to null.
 	 * @return Number of skill points or -1 if not found.
 	 */
-	fun determineSkillPoints(): Int {
-		val (skillPointLocation, sourceBitmap) = findImage("skill_points", tries = 1)
+	fun determineSkillPoints(sourceBitmap: Bitmap? = null, skillPointsLocation: Point? = null): Int {
+		val (finalSkillPointLocation, finalSourceBitmap) = if (sourceBitmap == null && skillPointsLocation == null) {
+			findImage("skill_points", tries = 1)
+		} else {
+			Pair(skillPointsLocation, sourceBitmap)
+		}
 
-		return if (skillPointLocation != null) {
+		return if (finalSkillPointLocation != null && finalSourceBitmap != null) {
 			// Determine crop region based on device type.
 			val (offsetX, offsetY, width, height) = if (isTablet) {
 				listOf(-75, 45, relWidth(150), relHeight(70))
@@ -523,9 +529,9 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
 			// Perform OCR with thresholding.
 			val detectedText = performOCROnRegion(
-				sourceBitmap,
-				relX(skillPointLocation.x, offsetX),
-				relY(skillPointLocation.y, offsetY),
+				finalSourceBitmap,
+				relX(finalSkillPointLocation.x, offsetX),
+				relY(finalSkillPointLocation.y, offsetY),
 				width,
 				height,
 				useThreshold = true,
@@ -820,16 +826,76 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	}
 
 	/**
-	 * Reads the 5 stat values on the Main screen.
+	 * Reads a single stat value on the Main screen. Parameters are optional to allow for thread-safe operations.
 	 *
+	 * @param statName The stat to read.
+	 * @param sourceBitmap Bitmap of the source image separately taken. Defaults to null.
+	 * @param skillPointsLocation Point location of the skill points template image separately taken. Defaults to null.
+	 * @return The integer value of the stat, or -1 if not found.
+	 */
+	fun determineSingleStatValue(statName: StatName, sourceBitmap: Bitmap? = null, skillPointsLocation: Point? = null): Int {
+		val (finalSkillPointsLocation, finalSourceBitmap) = if (sourceBitmap == null && skillPointsLocation == null) {
+			findImage("skill_points")
+		} else {
+			Pair(skillPointsLocation, sourceBitmap)
+		}
+
+		if (finalSkillPointsLocation == null || finalSourceBitmap == null) {
+			MessageLog.e(TAG, "Could not start the process of detecting stat value for $statName.")
+			return -1
+		}
+
+		// Each stat is evenly spaced at 170 pixel intervals starting at offset -862.
+		val index = statName.ordinal
+		val offsetX = -862 + (index * 170)
+
+		// Perform OCR with no thresholding (stats are on solid background).
+		val text = performOCROnRegion(
+			finalSourceBitmap,
+			relX(finalSkillPointsLocation.x, offsetX),
+			relY(finalSkillPointsLocation.y, 25),
+			relWidth(98),
+			relHeight(42),
+			useThreshold = false,
+			useGrayscale = true,
+			scale = 1.0,
+			ocrEngine = "tesseract_digits",
+			debugName = "${statName}StatValue"
+		)
+
+		// Parse the text.
+		MessageLog.i(TAG, "Detected number of stats for $statName from Tesseract before formatting: $text")
+		if (text.lowercase().contains("max") || text.lowercase().contains("ax")) {
+			MessageLog.i(TAG, "$statName seems to be maxed out. Setting it to ${MAX_STAT_VALUE}.")
+			return MAX_STAT_VALUE
+		} else {
+			try {
+				Log.d(TAG, "Converting $text to integer for $statName stat value")
+				val cleanedText = text.replace(Regex("[^0-9]"), "")
+				return cleanedText.toInt().coerceIn(0, MAX_STAT_VALUE)
+			} catch (_: NumberFormatException) {
+				return -1
+			}
+		}
+	}
+
+	/**
+	 * Reads the 5 stat values on the Main screen. Parameters are optional to allow for thread-safe operations.
+	 *
+	 * @param sourceBitmap Bitmap of the source image separately taken. Defaults to null.
+	 * @param skillPointsLocation Point location of the skill points template image separately taken. Defaults to null.
 	 * @return The mapping of all 5 stats names to their respective integer values.
 	 */
-	fun determineStatValues(): Map<StatName, Int> {
-		val (skillPointsLocation, sourceBitmap) = findImage("skill_points")
+	fun determineStatValues(sourceBitmap: Bitmap? = null, skillPointsLocation: Point? = null): Map<StatName, Int> {
+		val (finalSkillPointsLocation, finalSourceBitmap) = if (sourceBitmap == null && skillPointsLocation == null) {
+			findImage("skill_points")
+		} else {
+			Pair(skillPointsLocation, sourceBitmap)
+		}
     
         val result: MutableMap<StatName, Int> = mutableMapOf()
 
-		if (skillPointsLocation != null) {
+		if (finalSkillPointsLocation != null && finalSourceBitmap != null) {
 			// Process all stats at once using the mapping.
 			StatName.values().forEachIndexed { index, statName ->
 				// Each stat is evenly spaced at 170 pixel intervals starting at offset -862.
@@ -837,9 +903,9 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
 				// Perform OCR with no thresholding (stats are on solid background).
 				val text = performOCROnRegion(
-					sourceBitmap,
-					relX(skillPointsLocation.x, offsetX),
-					relY(skillPointsLocation.y, 25),
+					finalSourceBitmap,
+					relX(finalSkillPointsLocation.x, offsetX),
+					relY(finalSkillPointsLocation.y, 25),
 					relWidth(98),
 					relHeight(42),
 					useThreshold = false,
@@ -978,6 +1044,10 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		}
 
 		val threadSafeResults = ConcurrentHashMap<StatName, Int>()
+		// Initialize all stat keys with default value 0 to ensure map completeness even if threads return early.
+		StatName.entries.forEach { statName ->
+			threadSafeResults[statName] = 0
+		}
 		// Store row values to log them sequentially after threads complete.
 		val rowValuesMap = Collections.synchronizedMap(mutableMapOf<StatName, List<Int>>())
 
@@ -1225,6 +1295,11 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 				MessageLog.e(TAG, "Stat processing timed out for $trainingName training.")
 			}
 
+			// Check if bot is still running before applying boost.
+			if (!BotService.isRunning) {
+				return StatGainResult(threadSafeResults.toMap(), rowValuesMap.toMap())
+			}
+
 			// Apply artificial boost to main stat gains if they appear lower than side-effect stats.
 			val boostedResults = applyStatGainBoost(trainingName, threadSafeResults, trainingStatMap)
 			// Return results with row values map for logging in Training.kt after threads complete.
@@ -1270,7 +1345,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		// If the side-effect stat gains were zeroes, boost them to half of the main stat gain.
 		val boostedMainStatGain = boostedResults[trainingName] ?: 0
         for (statName in sideEffectStats) {
-			if (boostedResults[statName]!! == 0 && boostedMainStatGain > 0) {
+			if ((boostedResults[statName] ?: 0) == 0 && boostedMainStatGain > 0) {
 				boostedResults[statName] = boostedMainStatGain / 2
 				Log.d(TAG, "[DEBUG] Artificially increased $statName side-effect stat gain to ${boostedResults[statName]} because it was 0 due to possible OCR failure. " +
 						"Based on half of boosted $trainingName = $boostedMainStatGain."

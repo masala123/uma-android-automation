@@ -3,6 +3,7 @@ package com.steve1316.uma_android_automation.bot
 import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.utils.SettingsHelper
 import com.steve1316.automation_library.utils.MessageLog
+import com.steve1316.automation_library.utils.BotService
 
 import com.steve1316.uma_android_automation.utils.types.DateYear
 import com.steve1316.uma_android_automation.utils.types.DateMonth
@@ -13,6 +14,8 @@ import com.steve1316.uma_android_automation.components.*
 
 import android.graphics.Bitmap
 import org.opencv.core.Point
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 /**
  * Base campaign class that contains all shared logic for campaign automation.
@@ -537,10 +540,49 @@ open class Campaign(val game: Game) {
             if (fanCountClass != null) {
                 game.trainee.fanCountClass = fanCountClass
             }
-            // Update trainee information.
-            game.trainee.updateStats(imageUtils = game.imageUtils)
-            game.trainee.updateSkillPoints(imageUtils = game.imageUtils)
-            game.trainee.updateMood(imageUtils = game.imageUtils)
+            // Update trainee information using parallel processing with shared screenshot.
+            val sourceBitmap = game.imageUtils.getSourceBitmap()
+            val skillPointsLocation = game.imageUtils.findImageWithBitmap("skill_points", sourceBitmap, suppressError = true)
+            if (!BotService.isRunning) {
+                return false
+            }
+            
+            // Use CountDownLatch to run the operations in parallel (5 stats + 1 skill points + 1 mood = 7 threads).
+            val latch = CountDownLatch(7)
+            
+            // Threads 1-5: Update stats (one thread per stat, created inside updateStats).
+            // Pass the external latch so updateStats can count down for each stat thread.
+            game.trainee.updateStats(game.imageUtils, sourceBitmap, skillPointsLocation, latch)
+            
+            // Thread 6: Update skill points.
+            Thread {
+                try {
+                    game.trainee.updateSkillPoints(game.imageUtils, sourceBitmap, skillPointsLocation)
+                } catch (e: Exception) {
+                    MessageLog.e(TAG, "Error in updateSkillPoints thread: ${e.stackTraceToString()}")
+                } finally {
+                    latch.countDown()
+                }
+            }.apply { isDaemon = true }.start()
+            
+            // Thread 7: Update mood.
+            Thread {
+                try {
+                    game.trainee.updateMood(game.imageUtils, sourceBitmap)
+                } catch (e: Exception) {
+                    MessageLog.e(TAG, "Error in updateMood thread: ${e.stackTraceToString()}")
+                } finally {
+                    latch.countDown()
+                }
+            }.apply { isDaemon = true }.start()
+            
+            // Wait for all threads to complete.
+            try {
+                latch.await(10, TimeUnit.SECONDS)
+            } catch (_: InterruptedException) {
+                MessageLog.e(TAG, "Trainee update threads timed out.")
+            }
+        }
         }
 
         // Perform scenario validation check.
