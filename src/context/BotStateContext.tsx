@@ -222,7 +222,7 @@ export const defaultSettings: Settings = {
         manualStatCap: 1200,
         focusOnSparkStatTarget: ["Speed", "Stamina", "Power"],
         enableRainbowTrainingBonus: false,
-        preferredDistanceOverride: "Auto",
+        preferredDistanceOverride: "Default",
         mustRestBeforeSummer: false,
         enableRiskyTraining: false,
         riskyTrainingMinStatGain: 30,
