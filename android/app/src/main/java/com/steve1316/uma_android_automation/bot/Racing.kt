@@ -163,6 +163,9 @@ class Racing (private val game: Game) {
                 if (bIgnoreConsecutiveRaceWarning || enableForceRacing) {
                     MessageLog.i(TAG, "[RACE] Consective race warning! Racing anyway...")
                     dialog.ok(imageUtils = game.imageUtils)
+                    // This dialog requires a little extra delay since it loads the
+                    // race list instead of just closing the dialog.
+                    game.wait(1.0, skipWaitingForLoading = true)
                 } else {
                     MessageLog.i(TAG, "[RACE] Consecutive race warning! Aborting racing...")
                     hasFanRequirement = false
@@ -625,7 +628,7 @@ class Racing (private val game: Game) {
     private fun handleMaidenRace(): Boolean {
         MessageLog.i(TAG, "[RACE] Starting process for handling a maiden race.")
 
-        if (!ButtonRaceListFullStats.check(imageUtils = game.imageUtils)) {
+        if (!ButtonRaceListFullStats.check(imageUtils = game.imageUtils, tries = 30)) {
             MessageLog.e(TAG, "[RACE] Not at race list screen. Aborting racing...")
             // Clear requirement flags since we cannot proceed with racing.
             hasFanRequirement = false
@@ -679,7 +682,7 @@ class Racing (private val game: Game) {
         MessageLog.i(TAG, "[RACE] Starting process for handling a extra race.")
 
         // There is a extra race.
-        val statusLocation = ButtonRaceListFullStats.find(imageUtils = game.imageUtils)
+        val statusLocation = ButtonRaceListFullStats.find(imageUtils = game.imageUtils, tries = 30)
         if (statusLocation == null) {
             MessageLog.e(TAG, "[ERROR] Unable to determine existence of list of extra races. Canceling the racing process and doing something else.")
             // Clear requirement flags since we cannot proceed with racing.
