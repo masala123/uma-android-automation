@@ -51,6 +51,7 @@ interface BaseComponentInterface {
 
     fun check(imageUtils: CustomImageUtils, tries: Int = 1): Boolean
     fun find(imageUtils: CustomImageUtils, tries: Int = 1): Pair<Point?, Bitmap>
+    fun findImageWithBitmap(imageUtils: CustomImageUtils, sourceBitmap: Bitmap, region: IntArray = intArrayOf(0, 0, 0, 0)): Point?
     fun click(imageUtils: CustomImageUtils, tries: Int = 1, taps: Int = 1): Boolean
 }
 
@@ -59,6 +60,10 @@ interface ComponentInterface: BaseComponentInterface {
     
     override fun find(imageUtils: CustomImageUtils, tries: Int): Pair<Point?, Bitmap> {
         return imageUtils.findImage(template.path, region = template.region, tries = tries, suppressError = true)
+    }
+
+    override fun findImageWithBitmap(imageUtils: CustomImageUtils, sourceBitmap: Bitmap, region: IntArray): Point? {
+        return imageUtils.findImageWithBitmap(template.path, sourceBitmap, region, suppressError = true)
     }
 
     fun findAll(imageUtils: CustomImageUtils, region: IntArray, confidence: Double = 0.0): ArrayList<Point> {
@@ -91,6 +96,16 @@ interface ComplexComponentInterface: BaseComponentInterface {
             }
         }
         return Pair(null, imageUtils.getSourceBitmap())
+    }
+
+    override fun findImageWithBitmap(imageUtils: CustomImageUtils, sourceBitmap: Bitmap, region: IntArray): Point? {
+        for (template in templates) {
+            val result: Point? = imageUtils.findImageWithBitmap(template.path, sourceBitmap, region, suppressError = true)
+            if (result != null) {
+                return result
+            }
+        }
+        return null
     }
 
     override fun check(imageUtils: CustomImageUtils, tries: Int): Boolean {
@@ -131,6 +146,16 @@ interface MultiStateButtonInterface : ComplexComponentInterface {
             }
         }
         return Pair(null, createBitmap(1, 1))
+    }
+
+    override fun findImageWithBitmap(imageUtils: CustomImageUtils, sourceBitmap: Bitmap, region: IntArray): Point? {
+        for (template in templates) {
+            val result: Point? = imageUtils.findImageWithBitmap(template.path, sourceBitmap, region, suppressError = true)
+            if (result != null) {
+                return result
+            }
+        }
+        return null
     }
 
     /** Finds image on screen and returns boolean whether it exists. */

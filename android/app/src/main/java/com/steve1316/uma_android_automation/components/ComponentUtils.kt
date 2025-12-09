@@ -15,7 +15,7 @@ object ComponentUtils {
     * @param imageName The template image name to use for tap location randomization.
     * @param taps The number of taps.
     */
-    fun tap(x: Double, y: Double, imageName: String, taps: Int = 1) {
+    fun tap(x: Double, y: Double, imageName: String? = null, taps: Int = 1) {
         // Perform the tap.
         MyAccessibilityService.getInstance().tap(x, y, imageName, taps=taps)
     }
