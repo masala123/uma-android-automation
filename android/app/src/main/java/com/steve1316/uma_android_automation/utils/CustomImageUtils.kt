@@ -1812,10 +1812,10 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         }
 
         // Get top right of energyText.
-        var x: Int = (energyTextLocation.x + (templateBitmap.width / 2)).toInt()
-        var y: Int = (energyTextLocation.y - (templateBitmap.height / 2)).toInt()
-        var w: Int = 700
-        var h: Int = 75
+        var x: Int = relX(energyTextLocation.x, templateBitmap.width / 2)
+        var y: Int = relY(energyTextLocation.y, -(templateBitmap.height / 2))
+        var w: Int = relWidth(700)
+        var h: Int = relHeight(75)
 
         // Crop just the energy bar in the image.
         // This crop extends to the right beyond the energy bar a bit
@@ -1865,11 +1865,11 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         // we can measure the length of the bar.
         // This crop is just a single pixel high line at the center of the
         // bounding region.
-        val left: Int = (leftPartLocation.x + (energyBarLeftPartTemplateBitmap.width / 2)).toInt()
-        val right: Int = (rightPartLocation.x - (energyBarRightPartTemplateBitmap.width / 2)).toInt()
+        val left: Int = relX(leftPartLocation.x, energyBarLeftPartTemplateBitmap.width / 2)
+        val right: Int = relX(rightPartLocation.x, -(energyBarRightPartTemplateBitmap.width / 2))
         x = left
-        y = (croppedBitmap.height / 2).toInt()
-        w = (right - left).toInt()
+        y = relHeight(croppedBitmap.height / 2)
+        w = relWidth(right - left)
         h = 1
 
         croppedBitmap = createSafeBitmap(croppedBitmap, x, y, w, h, "analyzeEnergyBar:: Refine cropped energy bar.")
@@ -1918,8 +1918,8 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
     fun getGoalText(): String {
         val bbox = BoundingBox(
-            x = 365,
-            y = 110,
+            x = relX(0.0, 365),
+            y = relY(0.0, 110),
             w = relWidth(550),
             h = relHeight(40), //relHeight(90),
         )
@@ -1946,5 +1946,13 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		}
 
 		return result
+    }
+
+    fun saveBitmap(bitmap: Bitmap, filename: String) {
+        val externalFilesPath = context.getExternalFilesDir(null)?.absolutePath
+        val mat = Mat()
+		Utils.bitmapToMat(bitmap, mat)
+		Imgcodecs.imwrite("$externalFilesPath/temp/${filename}.png", mat)
+        mat.release()
     }
 }

@@ -155,7 +155,7 @@ class UnityCup(game: Game) : Campaign(game) {
                     }
                     game.gestureUtils.tap(
                         SharedData.displayWidth.toDouble() / 2.0,
-                        400.0 * (selectedOpponentIndex + 1),
+                        game.imageUtils.relY(0.0, 400 * (selectedOpponentIndex + 1)).toDouble(),
                         LabelWinToBecomeRank.template.path,
                     )
                     ButtonSelectOpponent.click(imageUtils = game.imageUtils)

@@ -199,4 +199,3 @@ data class BoundingBox(val x: Int, val y: Int, val w: Int, val h: Int) {
         return intArrayOf(x, y, w, h)
     }
 }
-

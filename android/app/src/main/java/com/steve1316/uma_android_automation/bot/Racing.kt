@@ -35,6 +35,8 @@ import com.steve1316.uma_android_automation.components.ButtonRace
 import com.steve1316.uma_android_automation.components.ButtonBack
 import com.steve1316.uma_android_automation.components.IconRaceListPredictionDoubleStar
 import com.steve1316.uma_android_automation.components.IconRaceListMaidenPill
+import com.steve1316.uma_android_automation.components.IconRaceListTopLeft
+import com.steve1316.uma_android_automation.components.IconRaceListBottomRight
 
 class Racing (private val game: Game) {
     private val TAG: String = "[${MainActivity.loggerTag}]Racing"
@@ -508,20 +510,53 @@ class Racing (private val game: Game) {
     }
 
     private fun selectMaidenRace(): Boolean {
-        val bboxRaceList = BoundingBox(x = 13, y = 1027, w = 1055, h = 515)
+        // Get the bounding region of the race list.
+        val raceListTopLeftBitmap: Bitmap? = IconRaceListTopLeft.template.getBitmap(game.imageUtils)
+        if (raceListTopLeftBitmap == null) {
+            MessageLog.e(TAG, "[RACE] Failed to load IconRaceListTopLeft bitmap.")
+            return false
+        }
+
+        val raceListBottomRightBitmap: Bitmap? = IconRaceListBottomRight.template.getBitmap(game.imageUtils)
+        if (raceListBottomRightBitmap == null) {
+            MessageLog.e(TAG, "[RACE] Failed to load IconRaceListBottomRight bitmap.")
+            return false
+        }
+
+        val raceListTopLeft: Point? = IconRaceListTopLeft.find(game.imageUtils).first
+        if (raceListTopLeft == null) {
+            MessageLog.e(TAG, "[RACE] Failed to find top left corner of race list.")
+            return false
+        }
+        val raceListBottomRight: Point? = IconRaceListBottomRight.find(game.imageUtils).first
+        if (raceListBottomRight == null) {
+            MessageLog.e(TAG, "[RACE] Failed to find bottom right corner of race list.")
+            return false
+        }
+        val x0 = (raceListTopLeft.x - (raceListTopLeftBitmap.width / 2)).toInt()
+        val y0 = (raceListTopLeft.y - (raceListTopLeftBitmap.height / 2)).toInt()
+        val x1 = (raceListBottomRight.x + (raceListBottomRightBitmap.width / 2)).toInt()
+        val y1 = (raceListBottomRight.y + (raceListBottomRightBitmap.height / 2)).toInt()
+        val bboxRaceList = BoundingBox(
+            x = x0,
+            y = y0,
+            w = x1 - x0,
+            h = y1 - y0,
+        )
+
         // Smaller region used to detect double star icons in the race list.
         val bboxRaceListDoubleStars = BoundingBox(
-            x = bboxRaceList.x + 845,
+            x = game.imageUtils.relX(bboxRaceList.x.toDouble(), 845),
             y = bboxRaceList.y,
-            w = 45,
+            w = game.imageUtils.relWidth(45),
             h = bboxRaceList.h,
         )
 
         val bboxScrollBar = BoundingBox(
-            x = 1045,
-            y = 1042,
+            x = game.imageUtils.relX(bboxRaceList.x.toDouble(), 1034),
+            y = bboxRaceList.y,
             w = 10,
-            h = 475,
+            h = bboxRaceList.h,
         )
 
         // The selected race in the race list has green brackets that overlap the
@@ -541,13 +576,13 @@ class Racing (private val game: Game) {
             (bboxRaceList.y + (bboxRaceList.h / 2)).toFloat(),
             (bboxRaceList.x + (bboxRaceList.w / 2)).toFloat(),
             // high value here ensures we go all the way to top of list
-            (bboxRaceList.y + 10000).toFloat(),
+            (bboxRaceList.y + (bboxRaceList.h * 10)).toFloat(),
         )
         game.wait(0.1, skipWaitingForLoading = true)
         // Tap to prevent overscrolling. This location shouldn't select any races.
         game.tap(
-            (bboxRaceList.x + 15).toDouble(),
-            (bboxRaceList.y + 15).toDouble(),
+            game.imageUtils.relX(bboxRaceList.x.toDouble(), 15).toDouble(),
+            game.imageUtils.relY(bboxRaceList.y.toDouble(), 15).toDouble(),
             ignoreWaiting = true,
         )
         // Small delay for scrolling to stop.
@@ -615,8 +650,8 @@ class Racing (private val game: Game) {
             game.wait(0.1, skipWaitingForLoading = true)
             // Tap to prevent overscrolling. This location shouldn't select any races.
             game.tap(
-                (bboxRaceList.x + 15).toDouble(),
-                (bboxRaceList.y + 15).toDouble(),
+                game.imageUtils.relX(bboxRaceList.x.toDouble(), 15).toDouble(),
+                game.imageUtils.relY(bboxRaceList.y.toDouble(), 15).toDouble(),
                 ignoreWaiting = true,
             )
             game.wait(0.5, skipWaitingForLoading = true)
@@ -1043,7 +1078,12 @@ class Racing (private val game: Game) {
         // Selects the determined race on screen.
         MessageLog.i(TAG, "[RACE] Selecting extra race at option #${index + 1}.")
         val target = filteredLocations[index]
-        game.tap(target.x - game.imageUtils.relWidth((100 * 1.36).toInt()), target.y - game.imageUtils.relHeight(70), "race_extra_selection", ignoreWaiting = true)
+        game.tap(
+            target.x - game.imageUtils.relWidth((100 * 1.36).toInt()),
+            target.y - game.imageUtils.relHeight(70),
+            "race_extra_selection",
+            ignoreWaiting = true,
+        )
 
         return true
     }
@@ -1261,12 +1301,18 @@ class Racing (private val game: Game) {
 
     fun updateRaceScreenRunningStyleAptitudes(): Boolean {
         val bitmap = game.imageUtils.getSourceBitmap()
+        val bbox = BoundingBox(
+            x = game.imageUtils.relX(0.0, 125),
+            y = game.imageUtils.relY(0.0, 1140),
+            w = game.imageUtils.relWidth(825),
+            h = game.imageUtils.relHeight(45),
+        )
         var text: String = game.imageUtils.performOCROnRegion(
             bitmap,
-            125,
-            1140,
-            825,
-            45,
+            bbox.x,
+            bbox.y,
+            bbox.w,
+            bbox.h,
             useThreshold=false,
             useGrayscale=false,
             debugName="updateRaceScreenRunningStyleAptitudes",

@@ -9,6 +9,7 @@ import com.steve1316.uma_android_automation.utils.types.DateYear
 import com.steve1316.uma_android_automation.utils.types.DateMonth
 import com.steve1316.uma_android_automation.utils.types.DatePhase
 import com.steve1316.uma_android_automation.utils.types.FanCountClass
+import com.steve1316.uma_android_automation.utils.types.BoundingBox
 
 import com.steve1316.uma_android_automation.components.*
 
@@ -99,9 +100,15 @@ open class Campaign(val game: Game) {
                 throw InterruptedException("Ran out of alarm clocks. Stopping bot...")
             }
             "quick_mode_settings" -> {
+                val bbox = BoundingBox(
+                    x = game.imageUtils.relX(0.0, 160),
+                    y = game.imageUtils.relY(0.0, 770),
+                    w = game.imageUtils.relWidth(70),
+                    h = game.imageUtils.relHeight(460),
+                )
                 val optionLocations: ArrayList<Point> = IconHorseshoe.findAll(
                     imageUtils = game.imageUtils,
-                    region = intArrayOf(160, 770, 70, 460),
+                    region = bbox.toIntArray(),
                 )
                 if (optionLocations.size == 4) {
                     MessageLog.d(TAG, "[DIALOG] quick_mode_settings: Using findAll method.")
@@ -173,17 +180,19 @@ open class Campaign(val game: Game) {
                 }
 
                 // Add a small 8px buffer to vertical component.
-                val x = (point.x + (templateBitmap.width / 2)).toInt()
-                val y = (point.y - (templateBitmap.height / 2) - 4).toInt()
-                val w = 300
-                val h = templateBitmap.height + 4
+                val bbox = BoundingBox(
+                    x = game.imageUtils.relX(0.0, (point.x + (templateBitmap.width / 2)).toInt()),
+                    y = game.imageUtils.relY(0.0, (point.y - (templateBitmap.height / 2) - 4).toInt()),
+                    w = game.imageUtils.relWidth(300),
+                    h = game.imageUtils.relHeight(templateBitmap.height + 4),
+                )
 
                 val croppedBitmap = game.imageUtils.createSafeBitmap(
                     bitmap,
-                    x,
-                    y,
-                    w,
-                    h,
+                    bbox.x,
+                    bbox.y,
+                    bbox.w,
+                    bbox.h,
                     "dialog::umamusume_class: Cropped bitmap.",
                 )
                 if (croppedBitmap == null) {
@@ -246,9 +255,9 @@ open class Campaign(val game: Game) {
         // The Unity scenario has an info button just like the ButtonHomeFansInfo
         // button so they are easily mistaken by OCR, thus we just tap the location manually.
         if (game.scenario == "Unity Cup") {
-            game.tap(264.0, 1184.0, ButtonHomeFansInfo.template.path, ignoreWaiting = true)
+            ButtonHomeFansInfo.click(game.imageUtils, region = game.imageUtils.regionBottomHalf)
         } else {
-            game.tap(240.0, 330.0, ButtonHomeFansInfo.template.path, ignoreWaiting = true)
+            ButtonHomeFansInfo.click(game.imageUtils, region = game.imageUtils.regionTopHalf)
         }
     }
 
@@ -264,19 +273,21 @@ open class Campaign(val game: Game) {
             return null
         }
 
-        val x = (point.x - (templateBitmap.width / 2)).toInt() - 180
-        // Add a small buffer to vertical component.
-        val y = (point.y - 16).toInt()
-        val w = 180
-        // 32px minimum for google ML kit.
-        val h = 32
+        val bbox = BoundingBox(
+            x = game.imageUtils.relX(0.0, (point.x - (templateBitmap.width / 2)).toInt() - 180),
+            // Add a small buffer to vertical component.
+            y = game.imageUtils.relY(0.0, (point.y - 16).toInt()),
+            w = game.imageUtils.relWidth(180),
+            // 32px minimum for google ML kit.
+            h = game.imageUtils.relHeight(32),
+        )
 
         val text: String = game.imageUtils.performOCROnRegion(
             bitmap,
-            x,
-            y,
-            w,
-            h,
+            bbox.x,
+            bbox.y,
+            bbox.w,
+            bbox.h,
 			useThreshold = false,
             useGrayscale = true,
             scale = 1.0,

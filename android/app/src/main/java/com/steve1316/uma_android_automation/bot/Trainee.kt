@@ -257,8 +257,8 @@ class Trainee {
                 bitmap,
                 imageUtils.relX(point.x, 108 + (index * 190)),
                 imageUtils.relY(point.y, -25),
-                176,
-                52,
+                imageUtils.relWidth(176),
+                imageUtils.relHeight(52),
                 "Trainee::findAptitudesInBitmap<${T::class.simpleName}>:: crop bitmap.",
             )
             if (croppedBitmap == null) {
