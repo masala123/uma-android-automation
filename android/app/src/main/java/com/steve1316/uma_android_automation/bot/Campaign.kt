@@ -33,6 +33,8 @@ open class Campaign(val game: Game) {
     // Should always check fan count at bot start unless in pre-debut.
     protected var bNeedToCheckFans: Boolean = true
 
+    var bHasCheckedForMaidenRaceToday: Boolean = false
+
     /**
      * Detects and handles any dialog popups.
      *
@@ -61,9 +63,6 @@ open class Campaign(val game: Game) {
             "concert_skip_confirmation" -> {
                 // Click the checkbox to prevent this popup in the future.
                 Checkbox.click(imageUtils = game.imageUtils)
-                dialog.ok(imageUtils = game.imageUtils)
-            }
-            "consecutive_race_warning" -> {
                 dialog.ok(imageUtils = game.imageUtils)
             }
             "epithets" -> dialog.close(imageUtils = game.imageUtils)
@@ -235,7 +234,7 @@ open class Campaign(val game: Game) {
         // So in here we just open the dialog then the dialog handler
         // will take care of the rest.
         ButtonHomeFullStats.click(imageUtils = game.imageUtils)
-        game.wait(0.5, skipWaitingForLoading = true)
+        game.wait(1.0, skipWaitingForLoading = true)
     }
 
     fun checkFans() {
@@ -304,6 +303,7 @@ open class Campaign(val game: Game) {
 	open fun handleRaceEvents(): Boolean {
         val bDidRace: Boolean = game.racing.handleRaceEvents()
         bNeedToCheckFans = bDidRace
+
 		return bDidRace
 	}
 
@@ -536,6 +536,7 @@ open class Campaign(val game: Game) {
 
         // Operations to be done every time the date changes.
         if (game.updateDate()) {
+            bHasCheckedForMaidenRaceToday = false
             // Update the fan count class every time we're at the main screen.
             val fanCountClass: FanCountClass? = getFanCountClass()
             if (fanCountClass != null) {
@@ -548,8 +549,9 @@ open class Campaign(val game: Game) {
                 return false
             }
             
-            // Use CountDownLatch to run the operations in parallel (5 stats + 1 skill points + 1 mood = 7 threads).
-            val latch = CountDownLatch(7)
+            // Use CountDownLatch to run the operations in parallel
+            // 1 racingRequirements + 5 stats + 1 skill points + 1 mood = 8 threads
+            val latch = CountDownLatch(8)
             
             // Threads 1-5: Update stats (one thread per stat, created inside updateStats).
             // Pass the external latch so updateStats can count down for each stat thread.
@@ -576,16 +578,27 @@ open class Campaign(val game: Game) {
                     latch.countDown()
                 }
             }.apply { isDaemon = true }.start()
+
+            // Thread 8: Update racing requirements.
+            Thread {
+                try {
+                    game.racing.checkRacingRequirements(sourceBitmap)
+                } catch (e: Exception) {
+                    MessageLog.e(TAG, "Error in checkRacingRequirements thread: ${e.stackTraceToString()}")
+                } finally {
+                    latch.countDown()
+                }
+            }.apply { isDaemon = true }.start()
             
             // Wait for all threads to complete.
             try {
                 latch.await(10, TimeUnit.SECONDS)
             } catch (_: InterruptedException) {
-                MessageLog.e(TAG, "Trainee update threads timed out.")
+                MessageLog.e(TAG, "Datre change operations threads timed out.")
             }
 
-            MessageLog.i(TAG, "\n[TRAINEE] Current stats:\n${game.trainee.getStatsString()}")
-            MessageLog.i(TAG, "[TRAINEE] Current mood: ${game.trainee.mood}")
+            MessageLog.i(TAG, "[TRAINEE] Skills Updated: ${game.trainee.getStatsString()}")
+            MessageLog.i(TAG, "[TRAINEE] Mood Updated: ${game.trainee.mood}")
         }
 
         // If the required skill points has been reached, stop the bot.
@@ -626,12 +639,17 @@ open class Campaign(val game: Game) {
         if (bIsMandatoryRaceDay) {
             needToRace = true
         } else if (!game.racing.encounteredRacingPopup) {
-            // Check if there are fan or trophy requirements that need to be met with racing.
-            game.racing.checkRacingRequirements()
-
             if (game.racing.enableForceRacing) {
                 // If force racing is enabled, skip all other activities and go straight to racing
                 MessageLog.i(TAG, "Force racing enabled - skipping all other activities and going straight to racing.")
+                needToRace = true
+            } else if (
+                !bHasCheckedForMaidenRaceToday &&
+                !game.currentDate.bIsPreDebut &&
+                !game.trainee.bHasCompletedMaidenRace
+            ) {
+                // Need to check for maiden race.
+                MessageLog.i(TAG, "[INFO] Bot has not yet completed maiden race. Checking for valid maiden race...")
                 needToRace = true
             } else if (
                 mustRestBeforeSummer &&

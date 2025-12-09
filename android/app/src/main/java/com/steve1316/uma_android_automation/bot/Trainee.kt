@@ -107,6 +107,9 @@ class Trainee {
     val bIsInitialized: Boolean
         get() = bHasUpdatedAptitudes && bHasUpdatedStats && bHasUpdatedSkillPoints
 
+    val bHasCompletedMaidenRace: Boolean
+        get() = fanCountClass.ordinal > FanCountClass.MAIDEN.ordinal
+
     /** Calculates the highest weighted key based on aptitude for the passed Enum
     *
     *   See trackDistance getter for example.
@@ -328,6 +331,8 @@ class Trainee {
         updateRunningStyleAptitudes(imageUtils = imageUtils)
 
         bHasUpdatedAptitudes = true
+
+        MessageLog.i(TAG, "[TRAINEE] Aptitudes Updated:\n${this}")
     }
 
     fun updateSkillPoints(imageUtils: CustomImageUtils, sourceBitmap: Bitmap? = null, skillPointsLocation: Point? = null) {

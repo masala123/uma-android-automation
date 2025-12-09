@@ -11,6 +11,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.opencv.core.Point
 import android.util.Log
+import android.graphics.Bitmap
 
 import com.steve1316.uma_android_automation.utils.types.Aptitude
 import com.steve1316.uma_android_automation.utils.types.TrackSurface
@@ -18,6 +19,7 @@ import com.steve1316.uma_android_automation.utils.types.TrackDistance
 import com.steve1316.uma_android_automation.utils.types.RunningStyle
 import com.steve1316.uma_android_automation.utils.types.RaceGrade
 import com.steve1316.uma_android_automation.utils.types.DateYear
+import com.steve1316.uma_android_automation.utils.types.BoundingBox
 
 import com.steve1316.uma_android_automation.components.DialogUtils
 import com.steve1316.uma_android_automation.components.DialogInterface
@@ -28,6 +30,11 @@ import com.steve1316.uma_android_automation.components.ButtonRaceStrategyLate
 import com.steve1316.uma_android_automation.components.ButtonRaceStrategyEnd
 import com.steve1316.uma_android_automation.components.IconRaceDayRibbon
 import com.steve1316.uma_android_automation.components.ButtonRaceSelectExtra
+import com.steve1316.uma_android_automation.components.ButtonRaceListFullStats
+import com.steve1316.uma_android_automation.components.ButtonRace
+import com.steve1316.uma_android_automation.components.ButtonBack
+import com.steve1316.uma_android_automation.components.IconRaceListPredictionDoubleStar
+import com.steve1316.uma_android_automation.components.IconRaceListMaidenPill
 
 class Racing (private val game: Game) {
     private val TAG: String = "[${MainActivity.loggerTag}]Racing"
@@ -56,6 +63,11 @@ class Racing (private val game: Game) {
     var hasFanRequirement = false  // Indicates that a fan requirement has been detected on the main screen.
     var hasTrophyRequirement = false  // Indicates that a trophy requirement has been detected on the main screen.
     private var nextSmartRaceDay: Int? = null  // Tracks the specific day to race based on opportunity cost analysis.
+
+    // Used to tell the dialog handler to ignore the consecutive race warning.
+    // This is a single-use flag, so whenever the "consecutive_race_warning" dialog is
+    // handled, it will be reset back to False.
+    private var bIgnoreConsecutiveRaceWarning: Boolean = false
 
     private val enableStopOnMandatoryRace: Boolean = SettingsHelper.getBooleanSetting("racing", "enableStopOnMandatoryRaces")
     var detectedMandatoryRaceCheck = false
@@ -146,7 +158,21 @@ class Racing (private val game: Game) {
         }
 
         when (dialog.name) {
-            "race_details" -> dialog.close(imageUtils = game.imageUtils)
+            "consecutive_race_warning" -> {
+                raceRepeatWarningCheck = true
+                if (bIgnoreConsecutiveRaceWarning || enableForceRacing) {
+                    MessageLog.i(TAG, "[RACE] Consective race warning! Racing anyway...")
+                    dialog.ok(imageUtils = game.imageUtils)
+                } else {
+                    MessageLog.i(TAG, "[RACE] Consecutive race warning! Aborting racing...")
+                    hasFanRequirement = false
+                    hasTrophyRequirement = false
+                    dialog.close(imageUtils = game.imageUtils)
+                }
+                // Always reset this flag after handling this dialog.
+                bIgnoreConsecutiveRaceWarning = false
+            }
+            "race_details" -> dialog.ok(imageUtils = game.imageUtils)
             "runners" -> dialog.close(imageUtils = game.imageUtils)
             "strategy" -> {
                 if (!game.trainee.bHasUpdatedAptitudes) {
@@ -356,23 +382,14 @@ class Racing (private val game: Game) {
     fun handleRaceEvents(): Boolean {
         MessageLog.i(TAG, "\n********************")
         MessageLog.i(TAG, "[RACE] Starting Racing process on ${game.currentDate}.")
-        if (encounteredRacingPopup) {
-            // Dismiss the insufficient fans popup here and head to the Race Selection screen.
-            game.findAndTapImage("race_confirm", tries = 1, region = game.imageUtils.regionBottomHalf)
-            encounteredRacingPopup = false
-            game.wait(1.0)
-            
-            // Now check if there is a racing requirement.
-            checkRacingRequirements()
-        }
 
         // If there are no races available, cancel the racing process.
         if (game.imageUtils.findImage("race_none_available", tries = 1, region = game.imageUtils.regionMiddle, suppressError = true).first != null) {
             MessageLog.i(TAG, "[RACE] There are no races to compete in. Canceling the racing process and doing something else.")
+            MessageLog.i(TAG, "********************")
             // Clear requirement flags since we cannot proceed with racing.
             hasFanRequirement = false
             hasTrophyRequirement = false
-            MessageLog.i(TAG, "********************")
             return false
         }
 
@@ -383,18 +400,36 @@ class Racing (private val game: Game) {
         // Otherwise, it would have found itself at the Race Selection screen already (by way of the insufficient fans popup).
         val loc: Point? = IconRaceDayRibbon.find(imageUtils = game.imageUtils).first
         if (loc != null) {
+            // We are forced to race, so we need to ignore this warning dialog.
+            bIgnoreConsecutiveRaceWarning = true
+
             // Offset 100px down from the ribbon since the ribbon isn't clickable.
             game.tap(loc.x, loc.y + 100, IconRaceDayRibbon.template.path, ignoreWaiting = true)
             game.wait(0.5, skipWaitingForLoading = true)
-            // Make sure we handle any dialogs that may have popped up before continuing.
-            if (!game.handleDialogs().first) {
-                game.campaign.handleDialogs()
-            }
+            // Check for the consecutive race dialog before proceeding.
+            handleDialogs()
+            // In case we didn't get the we still want to reset this flag.
+            bIgnoreConsecutiveRaceWarning = false
             return handleMandatoryRace()
+        } else if (
+            !game.trainee.bHasCompletedMaidenRace &&
+            ButtonRaceSelectExtra.click(imageUtils = game.imageUtils)
+        ) {
+            // Winning a maiden race ASAP is extremely important. Ignore this warning.
+            bIgnoreConsecutiveRaceWarning = true
+
+            game.wait(1.0, skipWaitingForLoading = true)
+            // Check for the consecutive race dialog before proceeding.
+            handleDialogs()
+            // In case we didn't get the we still want to reset this flag.
+            bIgnoreConsecutiveRaceWarning = false
+            return handleMaidenRace()
         } else if (!game.currentDate.bIsPreDebut && ButtonRaceSelectExtra.click(imageUtils = game.imageUtils)) {
             game.wait(0.5, skipWaitingForLoading = true)
-            if (!game.handleDialogs().first) {
-                game.campaign.handleDialogs()
+            // Check for the consecutive race dialog before proceeding.
+            val (bWasDialogHandled, dialog) = handleDialogs()
+            if (dialog != null && dialog.name == "consecutive_race_warning") {
+                return false
             }
             return handleExtraRace()
         }
@@ -469,6 +504,172 @@ class Racing (private val game: Game) {
         return true
     }
 
+    private fun selectMaidenRace(): Boolean {
+        val bboxRaceList = BoundingBox(x = 13, y = 1027, w = 1055, h = 515)
+        // Smaller region used to detect double star icons in the race list.
+        val bboxRaceListDoubleStars = BoundingBox(
+            x = bboxRaceList.x + 845,
+            y = bboxRaceList.y,
+            w = 45,
+            h = bboxRaceList.h,
+        )
+
+        val bboxScrollBar = BoundingBox(
+            x = 1045,
+            y = 1042,
+            w = 10,
+            h = 475,
+        )
+
+        // The selected race in the race list has green brackets that overlap the
+        // scroll bar a bit. Thus we are really only interested in a single column
+        // of pixels on the right side of the scroll bar when checking for changes.
+        val bboxScrollBarSingleColumn = BoundingBox(
+            // give ourselves a few pixels of buffer
+            x = bboxScrollBar.x + bboxScrollBar.w - 3,
+            y = bboxScrollBar.y,
+            w = 1,
+            h = bboxScrollBar.h,
+        )
+
+        // Scroll to top of list.
+        game.gestureUtils.swipe(
+            (bboxRaceList.x + (bboxRaceList.w / 2)).toFloat(),
+            (bboxRaceList.y + (bboxRaceList.h / 2)).toFloat(),
+            (bboxRaceList.x + (bboxRaceList.w / 2)).toFloat(),
+            // high value here ensures we go all the way to top of list
+            (bboxRaceList.y + 10000).toFloat(),
+        )
+        game.wait(0.1, skipWaitingForLoading = true)
+        // Tap to prevent overscrolling. This location shouldn't select any races.
+        game.tap(
+            (bboxRaceList.x + 15).toDouble(),
+            (bboxRaceList.y + 15).toDouble(),
+            ignoreWaiting = true,
+        )
+        // Small delay for scrolling to stop.
+        game.wait(0.1, skipWaitingForLoading = true)
+
+        var bitmap = game.imageUtils.getSourceBitmap()
+        var prevScrollBarBitmap: Bitmap? = null
+
+        // Max time limit for the while loop to search for a valid race.
+        val startTime: Long = System.currentTimeMillis()
+        val maxTimeMs: Long = 10000
+
+        while (System.currentTimeMillis() - startTime < maxTimeMs) {
+            bitmap = game.imageUtils.getSourceBitmap()
+            val scrollBarBitmap: Bitmap? = game.imageUtils.createSafeBitmap(
+                bitmap,
+                bboxScrollBarSingleColumn.x,
+                bboxScrollBarSingleColumn.y,
+                bboxScrollBarSingleColumn.w,
+                bboxScrollBarSingleColumn.h,
+                "race list scrollbar right half bitmap",
+            )
+            if (scrollBarBitmap == null) {
+                MessageLog.e(TAG, "[RACE] Failed to createSafeBitmap for scrollbar.")
+                return false
+            }
+
+            // If after scrolling the scrollbar hasn't changed, that means
+            // we've reached the end of the list.
+            if (prevScrollBarBitmap != null && scrollBarBitmap.sameAs(prevScrollBarBitmap)) {
+                return false
+            }
+
+            prevScrollBarBitmap = scrollBarBitmap
+
+            val locs: ArrayList<Point> = IconRaceListPredictionDoubleStar.findAll(
+                imageUtils = game.imageUtils,
+                region = bboxRaceListDoubleStars.toIntArray(),
+            )
+
+            if (!locs.isEmpty()) {
+                game.tap(
+                    locs.first().x,
+                    locs.first().y,
+                    IconRaceListPredictionDoubleStar.template.path,
+                    ignoreWaiting = true,
+                )
+                return true
+            }
+
+            // Longer swipe duration prevents overscrolling.
+            // Swipe up approximately one entry in list.
+            // Each entry is roughly 200px tall and there is a 30px gap between entries.
+            // I find that a 500px swipe with 1500ms duration is a good balance.
+            // For some reason with shorter durations, it overscrolls too much. Also
+            // with longer durations, the amount scrolled is less than the pixel amount
+            // specified so we use 500px to counter this.
+            game.gestureUtils.swipe(
+                (bboxRaceList.x + (bboxRaceList.w / 2)).toFloat(),
+                (bboxRaceList.y + (bboxRaceList.h / 2)).toFloat(),
+                (bboxRaceList.x + (bboxRaceList.w / 2)).toFloat(),
+                ((bboxRaceList.y + (bboxRaceList.h / 2)) - 500).toFloat(),
+                duration=500,
+            )
+            game.wait(0.1, skipWaitingForLoading = true)
+            // Tap to prevent overscrolling. This location shouldn't select any races.
+            game.tap(
+                (bboxRaceList.x + 15).toDouble(),
+                (bboxRaceList.y + 15).toDouble(),
+                ignoreWaiting = true,
+            )
+            game.wait(0.5, skipWaitingForLoading = true)
+        }
+
+        return false
+    }
+
+    private fun handleMaidenRace(): Boolean {
+        MessageLog.i(TAG, "[RACE] Starting process for handling a maiden race.")
+
+        if (!ButtonRaceListFullStats.check(imageUtils = game.imageUtils)) {
+            MessageLog.e(TAG, "[RACE] Not at race list screen. Aborting racing...")
+            // Clear requirement flags since we cannot proceed with racing.
+            hasFanRequirement = false
+            hasTrophyRequirement = false
+            return false
+        }
+
+        game.campaign.bHasCheckedForMaidenRaceToday = true
+        if (IconRaceListMaidenPill.check(imageUtils = game.imageUtils)) {
+            MessageLog.d(TAG, "[RACE] Detected maiden races in race list.")
+            if (selectMaidenRace()) {
+                MessageLog.i(TAG, "[RACE] Found maiden race with good aptitudes. Racing...")
+            } else {
+                MessageLog.i(TAG, "[RACE] Could not find any maiden races with good aptitudes. Aborting racing...")
+                ButtonBack.click(imageUtils = game.imageUtils)
+                return false
+            }
+        }
+
+        // Confirm the selection and the resultant popup and then wait for the game to load.
+        ButtonRace.click(imageUtils = game.imageUtils)
+        game.wait(0.5, skipWaitingForLoading = true)
+        val (bWasDialogHandled, dialog) = handleDialogs()
+        if (!bWasDialogHandled || (dialog != null && dialog.name != "race_details")) {
+            return false
+        }
+        game.wait(2.0)
+
+        // Handle race strategy override if enabled.
+        selectRaceStrategy()
+        game.wait(1.0)
+
+        // Skip the race if possible, otherwise run it manually.
+        val resultCheck = runRaceWithRetries()
+        finalizeRaceResults(resultCheck, isExtra = true)
+
+        // Clear the next smart race day tracker since we just completed a race.
+        nextSmartRaceDay = null
+
+        MessageLog.i(TAG, "[RACE] Racing process for Maiden Race is completed.")
+        MessageLog.i(TAG, "********************")
+        return true
+    }
+
     /**
      * Handles extra race processing.
      * 
@@ -477,25 +678,8 @@ class Racing (private val game: Game) {
     private fun handleExtraRace(): Boolean {
         MessageLog.i(TAG, "[RACE] Starting process for handling a extra race.")
 
-        // If there is a popup warning about repeating races 3+ times, stop the process and do something else other than racing.
-        if (game.imageUtils.findImage("race_repeat_warning").first != null) {
-            if (!enableForceRacing) {
-                raceRepeatWarningCheck = true
-                MessageLog.i(TAG, "[RACE] Closing popup warning of doing more than 3+ races and setting flag to prevent racing for now. Canceling the racing process and doing something else.")
-                game.findAndTapImage("cancel", region = game.imageUtils.regionBottomHalf)
-                // Clear requirement flags since we cannot proceed with racing.
-                hasFanRequirement = false
-                hasTrophyRequirement = false
-                MessageLog.i(TAG, "********************")
-                return false
-            } else {
-                game.findAndTapImage("ok", tries = 1, region = game.imageUtils.regionMiddle)
-                game.wait(1.0)
-            }
-        }
-
         // There is a extra race.
-        val statusLocation = game.imageUtils.findImage("race_status").first
+        val statusLocation = ButtonRaceListFullStats.find(imageUtils = game.imageUtils)
         if (statusLocation == null) {
             MessageLog.e(TAG, "[ERROR] Unable to determine existence of list of extra races. Canceling the racing process and doing something else.")
             // Clear requirement flags since we cannot proceed with racing.
@@ -870,9 +1054,9 @@ class Racing (private val game: Game) {
     /**
      * Check if there are fan or trophy requirements that need to be satisfied.
      */
-    fun checkRacingRequirements() {
+    fun checkRacingRequirements(sourceBitmap: Bitmap? = null) {
         // Check for fan requirement on the main screen.
-        val sourceBitmap = game.imageUtils.getSourceBitmap()
+        val sourceBitmap = sourceBitmap ?: game.imageUtils.getSourceBitmap()
         val needsFanRequirement = game.imageUtils.findImageWithBitmap("race_fans_criteria", sourceBitmap, region = game.imageUtils.regionTopHalf, customConfidence = 0.90) != null
         if (needsFanRequirement) {
             hasFanRequirement = true

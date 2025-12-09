@@ -231,7 +231,7 @@ class Game(val myContext: Context) {
 	 * @param taps The number of taps.
 	 * @param ignoreWaiting Flag to ignore checking if the game is busy loading.
 	 */
-	fun tap(x: Double, y: Double, imageName: String, taps: Int = 1, ignoreWaiting: Boolean = false) {
+	fun tap(x: Double, y: Double, imageName: String? = null, taps: Int = 1, ignoreWaiting: Boolean = false) {
 		// Perform the tap.
 		gestureUtils.tap(x, y, imageName, taps = taps)
 
