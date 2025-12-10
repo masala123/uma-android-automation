@@ -550,7 +550,7 @@ object ButtonRecreation : ComponentInterface {
 
 object ButtonViewResultsLocked : ComponentInterface {
     override val TAG: String = "ButtonViewResultsLocked"
-    override val template = Template("components/button/view_results_locked", region = Region.bottomHalf)
+    override val template = Template("components/button/view_results_locked", region = Region.bottomHalf, confidence = 0.9)
 }
 
 object ButtonEndCareer : ComponentInterface {
