@@ -553,11 +553,6 @@ open class Campaign(val game: Game) {
             throw InterruptedException("Bot reached skill point check threshold. Stopping bot...")
         }
 
-        // Perform scenario validation check.
-        if (!game.validateScenario()) {
-            throw InterruptedException("Failed to validate scenario. Stopping bot...")
-        }
-
         // Since we're at the main screen, we don't need to worry about this
         // flag anymore since we will update our aptitudes here if needed.
         game.trainee.bTemporaryRunningStyleAptitudesUpdated = false
