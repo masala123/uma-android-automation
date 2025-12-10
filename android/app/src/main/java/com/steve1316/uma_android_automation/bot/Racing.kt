@@ -1162,7 +1162,7 @@ class Racing (private val game: Game) {
                     raceRetries--
                 } else {
                     // Check if a Trophy was acquired.
-                    if (game.findAndTapImage("close", tries = 5, region = game.imageUtils.regionBottomHalf)) {
+                    if (game.findAndTapImage("close", tries = 5, region = game.imageUtils.regionBottomHalf, suppressError = true)) {
                         MessageLog.i(TAG, "[RACE] Closing popup to claim trophy...")
                     }
 
