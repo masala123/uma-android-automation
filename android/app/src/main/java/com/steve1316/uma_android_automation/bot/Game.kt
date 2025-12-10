@@ -89,7 +89,6 @@ class Game(val myContext: Context) {
 	////////////////////////////////////////////////////////////////////
 	// Misc
     var currentDate: GameDate = GameDate(day = 1)
-	private var inheritancesDone = 0
 
     private var recreationDateCompleted: Boolean = false
     private var isFinals: Boolean = false
@@ -542,10 +541,10 @@ class Game(val myContext: Context) {
 	 * @return True if the Inheritance event happened and was accepted. Otherwise false.
 	 */
 	fun handleInheritanceEvent(): Boolean {
-		return if (inheritancesDone < 2) {
+        // Stop checking after Senior Year Early Apr.
+		return if (currentDate.day <= 56) {
 			if (findAndTapImage("inheritance", tries = 1, region = imageUtils.regionBottomHalf)) {
 				MessageLog.i(TAG, "\nClaimed an inheritance on ${currentDate}.")
-				inheritancesDone++
                 trainee.bHasUpdatedAptitudes = false
 				true
 			} else {
