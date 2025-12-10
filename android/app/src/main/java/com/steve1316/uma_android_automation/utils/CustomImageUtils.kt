@@ -1495,6 +1495,11 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 							if (!hasOverlap) {
 								Log.d(TAG, "[DEBUG] Found valid match for template \"$templateName\" at ($centerX, $centerY).")
 								matchResults[templateName]?.add(Point(centerX.toDouble(), centerY.toDouble()))
+
+                                // If it found the + symbol, then there is no need to look for additional pluses.
+                                if (templateName in listOf("+", "+_mini")) {
+                                    continueSearching = false
+                                }
 							}
 						}
 
