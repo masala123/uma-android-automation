@@ -71,7 +71,7 @@ class UnityCup(game: Game) : Campaign(game) {
     }
 
     private fun analyzeOpponentRacePrediction(): Boolean {
-        val doubleCircles = IconDoubleCircle.findAll(imageUtils = game.imageUtils, region = game.imageUtils.regionMiddle)
+        val doubleCircles = IconDoubleCircle.findAll(imageUtils = game.imageUtils, region = game.imageUtils.regionMiddle, confidence = 0.0)
         if (doubleCircles.size >= 3) {
             MessageLog.i(TAG, "[UNITY_CUP] Race #${selectedOpponentIndex + 1} has sufficient double circle predictions. Selecting it now...")
             return true

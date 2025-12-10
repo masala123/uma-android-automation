@@ -109,6 +109,7 @@ open class Campaign(val game: Game) {
                 val optionLocations: ArrayList<Point> = IconHorseshoe.findAll(
                     imageUtils = game.imageUtils,
                     region = bbox.toIntArray(),
+                    confidence = 0.0,
                 )
                 if (optionLocations.size == 4) {
                     MessageLog.d(TAG, "[DIALOG] quick_mode_settings: Using findAll method.")

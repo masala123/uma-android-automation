@@ -624,6 +624,7 @@ class Racing (private val game: Game) {
             val locs: ArrayList<Point> = IconRaceListPredictionDoubleStar.findAll(
                 imageUtils = game.imageUtils,
                 region = bboxRaceListDoubleStars.toIntArray(),
+                confidence = 0.0,
             )
 
             if (!locs.isEmpty()) {

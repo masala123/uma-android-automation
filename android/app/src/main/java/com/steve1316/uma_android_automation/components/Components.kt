@@ -20,7 +20,7 @@ object Region {
 }
 
 enum class TemplateComparisonMode {AND, OR}
-data class Template(val path: String, val region: IntArray = intArrayOf(0, 0, 0, 0)) {
+data class Template(val path: String, val region: IntArray = intArrayOf(0, 0, 0, 0), val confidence: Double = 0.0) {
     val dirname: String
         get() = path.substringBeforeLast('/')
 
@@ -35,13 +35,14 @@ data class Template(val path: String, val region: IntArray = intArrayOf(0, 0, 0,
 
         if (path != other.path) return false
         if (!region.contentEquals(other.region)) return false
-
+        if (confidence != other.confidence) return false
         return true
     }
 
     override fun hashCode(): Int {
         var result = path.hashCode()
         result = 31 * result + region.contentHashCode()
+        result = 31 * result + confidence.hashCode()
         return result
     }
 
@@ -53,33 +54,33 @@ data class Template(val path: String, val region: IntArray = intArrayOf(0, 0, 0,
 interface BaseComponentInterface {
     val TAG: String
 
-    fun check(imageUtils: CustomImageUtils, region: IntArray? = null, tries: Int = 1): Boolean
-    fun find(imageUtils: CustomImageUtils, region: IntArray? = null, tries: Int = 1): Pair<Point?, Bitmap>
-    fun findImageWithBitmap(imageUtils: CustomImageUtils, sourceBitmap: Bitmap, region: IntArray = intArrayOf(0, 0, 0, 0)): Point?
-    fun click(imageUtils: CustomImageUtils, region: IntArray? = null, tries: Int = 1, taps: Int = 1): Boolean
+    fun check(imageUtils: CustomImageUtils, region: IntArray? = null, tries: Int = 1, confidence: Double? = null): Boolean
+    fun find(imageUtils: CustomImageUtils, region: IntArray? = null, tries: Int = 1, confidence: Double? = null): Pair<Point?, Bitmap>
+    fun findImageWithBitmap(imageUtils: CustomImageUtils, sourceBitmap: Bitmap, region: IntArray = intArrayOf(0, 0, 0, 0), confidence: Double? = null): Point?
+    fun click(imageUtils: CustomImageUtils, region: IntArray? = null, tries: Int = 1, taps: Int = 1, confidence: Double? = null): Boolean
 }
 
 interface ComponentInterface: BaseComponentInterface {
     val template: Template
     
-    override fun find(imageUtils: CustomImageUtils, region: IntArray?, tries: Int): Pair<Point?, Bitmap> {
-        return imageUtils.findImage(template.path, region = region ?: template.region, tries = tries, suppressError = true)
+    override fun find(imageUtils: CustomImageUtils, region: IntArray?, tries: Int, confidence: Double?): Pair<Point?, Bitmap> {
+        return imageUtils.findImage(template.path, region = region ?: template.region, tries = tries, confidence = confidence ?: template.confidence, suppressError = true)
     }
 
-    override fun findImageWithBitmap(imageUtils: CustomImageUtils, sourceBitmap: Bitmap, region: IntArray): Point? {
-        return imageUtils.findImageWithBitmap(template.path, sourceBitmap, region, suppressError = true)
+    override fun findImageWithBitmap(imageUtils: CustomImageUtils, sourceBitmap: Bitmap, region: IntArray, confidence: Double?): Point? {
+        return imageUtils.findImageWithBitmap(template.path, sourceBitmap, region, customConfidence = confidence ?: template.confidence, suppressError = true)
     }
 
-    fun findAll(imageUtils: CustomImageUtils, region: IntArray, confidence: Double = 0.0): ArrayList<Point> {
-        return imageUtils.findAll(template.path, region = region, confidence = confidence)
+    fun findAll(imageUtils: CustomImageUtils, region: IntArray, confidence: Double?): ArrayList<Point> {
+        return imageUtils.findAll(template.path, region = region, confidence = (confidence ?: template.confidence) ?: 0.0)
     }
 
-    override fun check(imageUtils: CustomImageUtils, region: IntArray?, tries: Int): Boolean {
-        return find(imageUtils = imageUtils, region = region, tries = tries).first != null
+    override fun check(imageUtils: CustomImageUtils, region: IntArray?, tries: Int, confidence: Double?): Boolean {
+        return find(imageUtils = imageUtils, region = region, tries = tries, confidence = confidence ?: template.confidence).first != null
     }
 
-    override fun click(imageUtils: CustomImageUtils, region: IntArray?, tries: Int, taps: Int): Boolean {
-        val point = find(imageUtils = imageUtils, region = region, tries = tries).first
+    override fun click(imageUtils: CustomImageUtils, region: IntArray?, tries: Int, taps: Int, confidence: Double?): Boolean {
+        val point = find(imageUtils = imageUtils, region = region, tries = tries, confidence = confidence ?: template.confidence).first
         if (point == null) {
             return false
         }
@@ -92,9 +93,9 @@ interface ComponentInterface: BaseComponentInterface {
 interface ComplexComponentInterface: BaseComponentInterface {
     val templates: List<Template>
 
-    override fun find(imageUtils: CustomImageUtils, region: IntArray?, tries: Int): Pair<Point?, Bitmap> {
+    override fun find(imageUtils: CustomImageUtils, region: IntArray?, tries: Int, confidence: Double?): Pair<Point?, Bitmap> {
         for (template in templates) {
-            val result: Pair<Point?, Bitmap> = imageUtils.findImage(template.path, region = region ?: template.region, tries = tries, suppressError = true)
+            val result: Pair<Point?, Bitmap> = imageUtils.findImage(template.path, region = region ?: template.region, tries = tries, confidence = confidence ?: template.confidence, suppressError = true)
             if (result.first != null) {
                 return result
             }
@@ -102,9 +103,9 @@ interface ComplexComponentInterface: BaseComponentInterface {
         return Pair(null, imageUtils.getSourceBitmap())
     }
 
-    override fun findImageWithBitmap(imageUtils: CustomImageUtils, sourceBitmap: Bitmap, region: IntArray): Point? {
+    override fun findImageWithBitmap(imageUtils: CustomImageUtils, sourceBitmap: Bitmap, region: IntArray, confidence: Double?): Point? {
         for (template in templates) {
-            val result: Point? = imageUtils.findImageWithBitmap(template.path, sourceBitmap, region, suppressError = true)
+            val result: Point? = imageUtils.findImageWithBitmap(template.path, sourceBitmap, region, customConfidence = confidence ?: template.confidence, suppressError = true)
             if (result != null) {
                 return result
             }
@@ -112,15 +113,15 @@ interface ComplexComponentInterface: BaseComponentInterface {
         return null
     }
 
-    override fun check(imageUtils: CustomImageUtils, region: IntArray?, tries: Int): Boolean {
+    override fun check(imageUtils: CustomImageUtils, region: IntArray?, tries: Int, confidence: Double?): Boolean {
         return find(imageUtils = imageUtils, region = region, tries = tries).first != null
     }
 
-    override fun click(imageUtils: CustomImageUtils, region: IntArray?, tries: Int, taps: Int): Boolean {
+    override fun click(imageUtils: CustomImageUtils, region: IntArray?, tries: Int, taps: Int, confidence: Double?): Boolean {
         var resultTemplate: Template? = null
         var resultPoint: Point? = null
         for (template in templates) {
-            resultPoint = imageUtils.findImage(template.path, region = region ?: template.region, tries = tries, suppressError = true).first
+            resultPoint = imageUtils.findImage(template.path, region = region ?: template.region, tries = tries, confidence = confidence ?: template.confidence, suppressError = true).first
             if (resultPoint != null) {
                 resultTemplate = template
                 break
@@ -142,12 +143,13 @@ interface ComplexComponentInterface: BaseComponentInterface {
 // where one state is active at a time. Logical OR between templates, essentially.
 interface MultiStateButtonInterface : ComplexComponentInterface {
     /** Finds image on screen and returns its location if it exists. */
-    override fun find(imageUtils: CustomImageUtils, region: IntArray?, tries: Int): Pair<Point?, Bitmap> {
+    override fun find(imageUtils: CustomImageUtils, region: IntArray?, tries: Int, confidence: Double?): Pair<Point?, Bitmap> {
         for (template in templates) {
             val (point, bitmap) = imageUtils.findImage(
                 template.path,
                 region = region ?: template.region,
                 tries = tries,
+                confidence = confidence ?: template.confidence,
                 suppressError = true,
             )
             if (point != null) {
@@ -157,9 +159,9 @@ interface MultiStateButtonInterface : ComplexComponentInterface {
         return Pair(null, createBitmap(1, 1))
     }
 
-    override fun findImageWithBitmap(imageUtils: CustomImageUtils, sourceBitmap: Bitmap, region: IntArray): Point? {
+    override fun findImageWithBitmap(imageUtils: CustomImageUtils, sourceBitmap: Bitmap, region: IntArray, confidence: Double?): Point? {
         for (template in templates) {
-            val result: Point? = imageUtils.findImageWithBitmap(template.path, sourceBitmap, region, suppressError = true)
+            val result: Point? = imageUtils.findImageWithBitmap(template.path, sourceBitmap, region, customConfidence = confidence ?: template.confidence, suppressError = true)
             if (result != null) {
                 return result
             }
@@ -168,12 +170,12 @@ interface MultiStateButtonInterface : ComplexComponentInterface {
     }
 
     /** Finds image on screen and returns boolean whether it exists. */
-    override fun check(imageUtils: CustomImageUtils, region: IntArray?, tries: Int): Boolean {
-        return find(imageUtils = imageUtils, region = region, tries = tries).first != null
+    override fun check(imageUtils: CustomImageUtils, region: IntArray?, tries: Int, confidence: Double?): Boolean {
+        return find(imageUtils = imageUtils, region = region, tries = tries, confidence = confidence).first != null
     }
 
-    override fun click(imageUtils: CustomImageUtils, region: IntArray?, tries: Int, taps: Int): Boolean {
-        val point = find(imageUtils = imageUtils, region = region, tries = tries).first
+    override fun click(imageUtils: CustomImageUtils, region: IntArray?, tries: Int, taps: Int, confidence: Double?): Boolean {
+        val point = find(imageUtils = imageUtils, region = region, tries = tries, confidence = confidence).first
         if (point == null) {
             return false
         }
