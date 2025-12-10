@@ -722,7 +722,7 @@ class Racing (private val game: Game) {
 
         // There is a extra race.
         val statusLocation = ButtonRaceListFullStats.find(imageUtils = game.imageUtils, tries = 30)
-        if (statusLocation == null) {
+        if (statusLocation.first == null) {
             MessageLog.e(TAG, "[ERROR] Unable to determine existence of list of extra races. Canceling the racing process and doing something else.")
             // Clear requirement flags since we cannot proceed with racing.
             hasFanRequirement = false
