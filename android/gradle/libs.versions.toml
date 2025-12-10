@@ -13,7 +13,7 @@ app-jvm-toolchain = "17"
 
 androidGradleBuildTools = "8.13.0"
 kotlinGradlePlugin = "2.2.0"
-androidCvAutomationLibrary = "2.2.2"
+androidCvAutomationLibrary = "2.2.3"
 lottie = "6.6.9"
 
 [libraries]

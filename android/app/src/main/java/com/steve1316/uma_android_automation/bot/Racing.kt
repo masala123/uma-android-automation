@@ -624,6 +624,7 @@ class Racing (private val game: Game) {
             val locs: ArrayList<Point> = IconRaceListPredictionDoubleStar.findAll(
                 imageUtils = game.imageUtils,
                 region = bboxRaceListDoubleStars.toIntArray(),
+                confidence = 0.0,
             )
 
             if (!locs.isEmpty()) {
@@ -721,7 +722,7 @@ class Racing (private val game: Game) {
 
         // There is a extra race.
         val statusLocation = ButtonRaceListFullStats.find(imageUtils = game.imageUtils, tries = 30)
-        if (statusLocation == null) {
+        if (statusLocation.first == null) {
             MessageLog.e(TAG, "[ERROR] Unable to determine existence of list of extra races. Canceling the racing process and doing something else.")
             // Clear requirement flags since we cannot proceed with racing.
             hasFanRequirement = false
@@ -1395,10 +1396,11 @@ class Racing (private val game: Game) {
                 if (ButtonViewResults.click(game.imageUtils, tries = 30)) {
                     MessageLog.i(TAG, "[RACE] Race was able to be skipped.")
                 }
-                game.wait(2.0)
+                game.wait(1.0)
 
                 // Now tap on the screen to get past the Race Result screen.
                 game.tap(350.0, 450.0, "ok", taps = 3)
+                game.wait(1.0)
 
                 // Check if the race needed to be retried.
                 if (game.imageUtils.findImage("race_retry", tries = 5, region = game.imageUtils.regionBottomHalf, suppressError = true).first != null) {
@@ -1416,7 +1418,7 @@ class Racing (private val game: Game) {
                     return true
                 }
             } else {
-                MessageLog.i(TAG, "[RACE] Skipping manual race...")
+                MessageLog.i(TAG, "[RACE] Unable to skip the race. Proceeding to handle the race manually...")
 
                 // Press the manual button.
                 if (game.findAndTapImage("race_manual", tries = 30, region = game.imageUtils.regionBottomHalf)) {
@@ -1431,34 +1433,33 @@ class Racing (private val game: Game) {
                 }
 
                 game.waitForLoading()
+                game.wait(2.0)
 
                 // Now press the confirm button to get past the list of participants.
                 if (game.findAndTapImage("race_confirm", tries = 30, region = game.imageUtils.regionBottomHalf)) {
                     MessageLog.i(TAG, "[RACE] Dismissed the list of participants.")
                 }
-                game.waitForLoading()
                 game.wait(1.0)
-                game.waitForLoading()
-                game.wait(1.0)
-
                 // Skip the part where it reveals the name of the race.
                 if (ButtonSkip.click(game.imageUtils, tries = 30)) {
                     MessageLog.i(TAG, "[RACE] Skipped the name reveal of the race.")
                 }
+                game.wait(1.0)
                 // Skip the walkthrough of the starting gate.
                 if (ButtonSkip.click(game.imageUtils, tries = 30)) {
                     MessageLog.i(TAG, "[RACE] Skipped the walkthrough of the starting gate.")
                 }
-                game.wait(3.0)
+                game.wait(1.0)
                 // Skip the start of the race.
                 if (ButtonSkip.click(game.imageUtils, tries = 30)) {
                     MessageLog.i(TAG, "[RACE] Skipped the start of the race.")
                 }
+                game.wait(1.0)
                 // Skip the lead up to the finish line.
                 if (ButtonSkip.click(game.imageUtils, tries = 30)) {
                     MessageLog.i(TAG, "[RACE] Skipped the lead up to the finish line.")
                 }
-                game.wait(2.0)
+                game.wait(1.0)
                 // Skip crossing the finish line.
                 if (ButtonSkip.click(game.imageUtils, tries = 30)) {
                     MessageLog.i(TAG, "[RACE] Skipped crossing the finish line.")
@@ -1468,8 +1469,9 @@ class Racing (private val game: Game) {
                 if (ButtonSkip.click(game.imageUtils, tries = 30)) {
                     MessageLog.i(TAG, "[RACE] Skipped the results screen.")
                 }
-                game.wait(2.0)
 
+                // Now wait for the race result screen to appear which may come with the race retry popup if we failed the race.
+                game.wait(2.0)
                 game.waitForLoading()
                 game.wait(1.0)
 
@@ -1487,7 +1489,7 @@ class Racing (private val game: Game) {
                     raceRetries--
                 } else {
                     // Check if a Trophy was acquired.
-                    if (game.findAndTapImage("close", tries = 5, region = game.imageUtils.regionBottomHalf)) {
+                    if (game.findAndTapImage("close", tries = 5, region = game.imageUtils.regionBottomHalf, suppressError = true)) {
                         MessageLog.i(TAG, "[RACE] Closing popup to claim trophy...")
                     }
 

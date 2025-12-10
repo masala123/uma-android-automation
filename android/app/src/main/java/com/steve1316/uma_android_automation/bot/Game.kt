@@ -89,7 +89,6 @@ class Game(val myContext: Context) {
 	////////////////////////////////////////////////////////////////////
 	// Misc
     var currentDate: GameDate = GameDate(day = 1)
-	private var inheritancesDone = 0
 
     private var recreationDateCompleted: Boolean = false
     private var isFinals: Boolean = false
@@ -320,6 +319,8 @@ class Game(val myContext: Context) {
 			return true
 		}
 
+        MessageLog.i(TAG, "[INFO] Validating if current scenario is ${scenario}.")
+
 		if (imageUtils.findImage("unitycup_date_text", tries = 1, region = imageUtils.regionTopHalf, suppressError = true).first != null) {
 			// Unity Cup image was detected, so the game is on Unity Cup scenario.
 			if (scenario != "Unity Cup") {
@@ -331,8 +332,13 @@ class Game(val myContext: Context) {
 				MessageLog.i(TAG, "[INFO] Scenario validation confirmed for Unity Cup.")
 			}
 		} else {
-			// Unity Cup image was not detected, so the game is on URA Finale scenario.
-			MessageLog.i(TAG, "[INFO] Scenario validation confirmed for URA Finale.")
+			// All other scenario checks have failed.
+			MessageLog.i(TAG, "[INFO] Scenario validation failed for all other checks. Scenario must be on URA Finale by default.")
+            if (scenario != "URA Finale") {
+                notificationMessage = "Scenario mismatch detected: Game is not on the expected scenario. Please select the correct scenario in the app settings."
+                scenarioCheckPerformed = true
+                return false
+            }
 		}
         scenarioCheckPerformed = true
 		return true
@@ -542,10 +548,10 @@ class Game(val myContext: Context) {
 	 * @return True if the Inheritance event happened and was accepted. Otherwise false.
 	 */
 	fun handleInheritanceEvent(): Boolean {
-		return if (inheritancesDone < 2) {
+        // Stop checking after Senior Year Early Apr.
+		return if (currentDate.day <= 56) {
 			if (findAndTapImage("inheritance", tries = 1, region = imageUtils.regionBottomHalf)) {
 				MessageLog.i(TAG, "\nClaimed an inheritance on ${currentDate}.")
-				inheritancesDone++
                 trainee.bHasUpdatedAptitudes = false
 				true
 			} else {
@@ -803,6 +809,9 @@ class Game(val myContext: Context) {
 	 * @return True if all automation goals have been met. False otherwise.
 	 */
 	fun start(): Boolean {
+        MessageLog.i(TAG, "Started at ${MessageLog.getSystemTimeString()}.")
+		val startTime: Long = System.currentTimeMillis()
+
 		// Print current app settings at the start of the run.
 		try {
 			val formattedSettingsString = SettingsHelper.getStringSetting("misc", "formattedSettingsString")
@@ -831,8 +840,6 @@ class Game(val myContext: Context) {
 		val packageInfo = myContext.packageManager.getPackageInfo(myContext.packageName, 0)
 		MessageLog.i(TAG, "Bot version: ${packageInfo.versionName} (${packageInfo.versionCode})\n\n")
 
-		val startTime: Long = System.currentTimeMillis()
-
 		// Start debug tests here if enabled. Otherwise, proceed with regular bot operations.
 		if (SettingsHelper.getBooleanSetting("debug", "debugMode_startTemplateMatchingTest")) {
 			startTemplateMatchingTest()
@@ -855,8 +862,7 @@ class Game(val myContext: Context) {
             campaign.start()
 		}
 
-		val endTime: Long = System.currentTimeMillis()
-		Log.d(TAG, "Total Runtime: ${endTime - startTime}ms")
+		MessageLog.i(TAG, "Total runtime of ${MessageLog.formatElapsedTime(startTime, System.currentTimeMillis())} and stopped at ${MessageLog.getSystemTimeString()}.")
 
 		return true
 	}

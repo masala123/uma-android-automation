@@ -30,6 +30,7 @@ open class Campaign(val game: Game) {
     private val enableFarmingFans: Boolean = SettingsHelper.getBooleanSetting("racing", "enableFarmingFans")
 
     protected var bHasSetQuickMode: Boolean = false
+    protected var bHasSetSkipMode: Boolean = false
 
     // Should always check fan count at bot start unless in pre-debut.
     protected var bNeedToCheckFans: Boolean = true
@@ -113,6 +114,7 @@ open class Campaign(val game: Game) {
                 val optionLocations: ArrayList<Point> = IconHorseshoe.findAll(
                     imageUtils = game.imageUtils,
                     region = bbox.toIntArray(),
+                    confidence = 0.0,
                 )
                 if (optionLocations.size == 4) {
                     MessageLog.d(TAG, "[DIALOG] quick_mode_settings: Using findAll method.")
@@ -337,15 +339,18 @@ open class Campaign(val game: Game) {
      * @return Whether we clicked any buttons in this call.
      */
     fun handleCareerQuickMode(): Boolean {
-        if (!bHasSetQuickMode || ButtonCareerQuick.check(imageUtils = game.imageUtils)) {
+        // Stop doing any and all checks for the Quick Mode button once we've set it.
+        if (!bHasSetQuickMode) {
             // Click the Quick Mode button regardless of its state
             // so that we can verify the correct setting.
-            if (
-                ButtonCareerQuick.click(imageUtils = game.imageUtils) ||
-                ButtonCareerQuickEnabled.click(imageUtils = game.imageUtils)
-            ) {
+            if (!ButtonCareerQuick.check(imageUtils = game.imageUtils) && (
+                    ButtonCareerQuick.click(imageUtils = game.imageUtils) ||
+                    ButtonCareerQuickEnabled.click(imageUtils = game.imageUtils)
+                )) {
                 game.wait(0.5, skipWaitingForLoading = true)
                 handleDialogs()
+                MessageLog.i(TAG, "[INFO] Career Quick Mode enabled and set.")
+                bHasSetQuickMode = true
                 return true
             }
         }
@@ -358,12 +363,15 @@ open class Campaign(val game: Game) {
      * @return Whether we clicked any buttons in this call.
      */
     fun handleCareerSkipButton(): Boolean {
-        if (!ButtonCareerSkip2.check(imageUtils = game.imageUtils)) {
+        // Stop doing any and all checks for the Skip button once we've set it.
+        if (!bHasSetSkipMode) {
             // Set the `skip` button to 2x.
-            if (ButtonCareerSkipOff.click(imageUtils = game.imageUtils, taps = 2)) {
-                return true
-            }
-            if (ButtonCareerSkip1.click(imageUtils = game.imageUtils, taps = 1)) {
+            if (!ButtonCareerSkip2.check(imageUtils = game.imageUtils) && (
+                ButtonCareerSkipOff.click(imageUtils = game.imageUtils, taps = 2) ||
+                ButtonCareerSkip1.click(imageUtils = game.imageUtils, taps = 1)
+            )) {
+                MessageLog.i(TAG, "[INFO] Career Skip Mode enabled and set.")
+                bHasSetSkipMode = true
                 return true
             }
         }
@@ -570,6 +578,8 @@ open class Campaign(val game: Game) {
             // Use CountDownLatch to run the operations in parallel
             // 1 racingRequirements + 5 stats + 1 skill points + 1 mood = 8 threads
             val latch = CountDownLatch(8)
+
+            MessageLog.disableOutput = true
             
             // Threads 1-5: Update stats (one thread per stat, created inside updateStats).
             // Pass the external latch so updateStats can count down for each stat thread.
@@ -613,6 +623,8 @@ open class Campaign(val game: Game) {
                 latch.await(10, TimeUnit.SECONDS)
             } catch (_: InterruptedException) {
                 MessageLog.e(TAG, "Datre change operations threads timed out.")
+            } finally {
+                MessageLog.disableOutput = false
             }
 
             MessageLog.i(TAG, "[TRAINEE] Skills Updated: ${game.trainee.getStatsString()}")

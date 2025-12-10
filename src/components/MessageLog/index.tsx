@@ -348,7 +348,7 @@ ${longTargetsString}
 
             if (entry.message.includes("[ERROR]")) {
                 type = "error"
-            } else if (entry.message.includes("[WARNING]")) {
+            } else if (entry.message.includes("[WARNING]") || entry.message.includes("[WARN]")) {
                 type = "warning"
             }
 
