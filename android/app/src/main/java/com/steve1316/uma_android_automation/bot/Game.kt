@@ -925,6 +925,9 @@ class Game(val myContext: Context) {
 	 * @return True if all automation goals have been met. False otherwise.
 	 */
 	fun start(): Boolean {
+        MessageLog.i(TAG, "Started at ${MessageLog.getSystemTimeString()}.")
+		val startTime: Long = System.currentTimeMillis()
+
 		// Print current app settings at the start of the run.
 		try {
 			val formattedSettingsString = SettingsHelper.getStringSetting("misc", "formattedSettingsString")
@@ -952,8 +955,6 @@ class Game(val myContext: Context) {
 		MessageLog.w(TAG, "⚠️ Note that certain Android notification styles (like banners) are big enough that they cover the area that contains the Mood which will interfere with mood recovery logic in the beginning.")
 		val packageInfo = myContext.packageManager.getPackageInfo(myContext.packageName, 0)
 		MessageLog.i(TAG, "Bot version: ${packageInfo.versionName} (${packageInfo.versionCode})\n\n")
-
-		val startTime: Long = System.currentTimeMillis()
 
 		// Start debug tests here if enabled. Otherwise, proceed with regular bot operations.
 		if (SettingsHelper.getBooleanSetting("debug", "debugMode_startTemplateMatchingTest")) {
@@ -984,8 +985,7 @@ class Game(val myContext: Context) {
 			}
 		}
 
-		val endTime: Long = System.currentTimeMillis()
-		Log.d(TAG, "Total Runtime: ${endTime - startTime}ms")
+		MessageLog.i(TAG, "Total runtime of ${MessageLog.formatElapsedTime(startTime, System.currentTimeMillis())} and stopped at ${MessageLog.getSystemTimeString()}.")
 
 		return true
 	}
