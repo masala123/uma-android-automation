@@ -17,7 +17,7 @@ const RacingSettings = () => {
     const { settings, setSettings } = bsc
     // Merge current racing settings with defaults to handle missing properties.
     const racingSettings = { ...defaultSettings.racing, ...settings.racing }
-    const { enableFarmingFans, daysToRunExtraRaces, disableRaceRetries, enableStopOnMandatoryRaces, enableForceRacing, enableRaceStrategyOverride, juniorYearRaceStrategy, originalRaceStrategy } =
+    const { enableFarmingFans, daysToRunExtraRaces, disableRaceRetries, enableStopOnMandatoryRaces, enableForceRacing, juniorYearRaceStrategy, originalRaceStrategy } =
         racingSettings
 
     const updateRacingSetting = (key: keyof typeof settings.racing, value: any) => {
@@ -165,52 +165,39 @@ const RacingSettings = () => {
                         />
                     </View>
 
-                    <View style={styles.section}>
-                        <CustomCheckbox
-                            id="enable-race-strategy-override"
-                            checked={enableRaceStrategyOverride}
-                            onCheckedChange={(checked) => updateRacingSetting("enableRaceStrategyOverride", checked)}
-                            label="Override Race Strategy (Junior Year)"
-                            description="When enabled, forces the bot to use a specific race strategy during Junior Year races instead of the horse's original race strategy."
-                            className="my-2"
+                    <View style={styles.inputContainer}>
+                        <Text style={styles.inputLabel}>Junior Year Race Strategy</Text>
+                        <CustomSelect
+                            options={[
+                                { value: "Default", label: "Default" },
+                                { value: "Auto", label: "Auto" },
+                                { value: "Front", label: "Front" },
+                                { value: "Pace", label: "Pace" },
+                                { value: "Late", label: "Late" },
+                                { value: "End", label: "End" },
+                            ]}
+                            value={juniorYearRaceStrategy}
+                            onValueChange={(value) => updateRacingSetting("juniorYearRaceStrategy", value)}
+                            placeholder="Select strategy"
                         />
-                        {enableRaceStrategyOverride && (
-                            <>
-                                <View style={styles.inputContainer}>
-                                    <Text style={styles.inputLabel}>Junior Year Race Strategy</Text>
-                                    <CustomSelect
-                                        options={[
-                                            { value: "Auto", label: "Auto" },
-                                            { value: "Front", label: "Front" },
-                                            { value: "Pace", label: "Pace" },
-                                            { value: "Late", label: "Late" },
-                                            { value: "End", label: "End" },
-                                        ]}
-                                        value={juniorYearRaceStrategy}
-                                        onValueChange={(value) => updateRacingSetting("juniorYearRaceStrategy", value)}
-                                        placeholder="Select strategy"
-                                    />
-                                    <Text style={styles.inputDescription}>The race strategy to use for all races during Junior Year. If Auto is selected, the bot will auto-select the best strategy that puts them cloest to the front of the pack.</Text>
-                                </View>
-                                <View style={styles.inputContainer}>
-                                    <Text style={styles.inputLabel}>Original Race Strategy</Text>
-                                    <CustomSelect
-                                        options={[
-                                            { value: "Default", label: "Default" },
-                                            { value: "Auto", label: "Auto" },
-                                            { value: "Front", label: "Front" },
-                                            { value: "Pace", label: "Pace" },
-                                            { value: "Late", label: "Late" },
-                                            { value: "End", label: "End" },
-                                        ]}
-                                        value={originalRaceStrategy}
-                                        onValueChange={(value) => updateRacingSetting("originalRaceStrategy", value)}
-                                        placeholder="Select strategy"
-                                    />
-                                    <Text style={styles.inputDescription}>The race strategy to reset to after Junior Year. The bot will use this strategy for races in Year 2 and beyond. If Auto is selected, the bot will auto-select the best strategy that puts them cloest to the front of the pack. If Default is selected, the bot will not change whatever strategy is currently in effect.</Text>
-                                </View>
-                            </>
-                        )}
+                        <Text style={styles.inputDescription}>The race strategy to use for all races during Junior Year. If Auto is selected, the bot will auto-select the best strategy that puts them cloest to the front of the pack.</Text>
+                    </View>
+                    <View style={styles.inputContainer}>
+                        <Text style={styles.inputLabel}>Original Race Strategy</Text>
+                        <CustomSelect
+                            options={[
+                                { value: "Default", label: "Default" },
+                                { value: "Auto", label: "Auto" },
+                                { value: "Front", label: "Front" },
+                                { value: "Pace", label: "Pace" },
+                                { value: "Late", label: "Late" },
+                                { value: "End", label: "End" },
+                            ]}
+                            value={originalRaceStrategy}
+                            onValueChange={(value) => updateRacingSetting("originalRaceStrategy", value)}
+                            placeholder="Select strategy"
+                        />
+                        <Text style={styles.inputDescription}>The race strategy to reset to after Junior Year. The bot will use this strategy for races in Year 2 and beyond. If Auto is selected, the bot will auto-select the best strategy that puts them cloest to the front of the pack. If Default is selected, the bot will not change whatever strategy is currently in effect.</Text>
                     </View>
 
                     <View style={styles.section}>

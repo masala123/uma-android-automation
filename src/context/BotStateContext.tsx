@@ -28,7 +28,6 @@ export interface Settings {
         preferredGrades: string[]
         lookAheadDays: number
         smartRacingCheckInterval: number
-        enableRaceStrategyOverride: boolean
         juniorYearRaceStrategy: string
         originalRaceStrategy: string
         minimumQualityThreshold: number
@@ -154,8 +153,7 @@ export const defaultSettings: Settings = {
         preferredGrades: ["G1", "G2", "G3"],
         lookAheadDays: 10,
         smartRacingCheckInterval: 2,
-        enableRaceStrategyOverride: false,
-        juniorYearRaceStrategy: "Front",
+        juniorYearRaceStrategy: "Default",
         originalRaceStrategy: "Default",
         minimumQualityThreshold: 70.0,
         timeDecayFactor: 0.8,
