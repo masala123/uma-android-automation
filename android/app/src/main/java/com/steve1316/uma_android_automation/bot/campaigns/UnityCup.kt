@@ -15,7 +15,7 @@ import com.steve1316.uma_android_automation.components.ButtonViewResultsLocked
 import com.steve1316.uma_android_automation.components.ButtonUnityCupSeeAllRaceResults
 import com.steve1316.uma_android_automation.components.DialogUtils
 import com.steve1316.uma_android_automation.components.DialogInterface
-import com.steve1316.uma_android_automation.components.LabelWinToBecomeRank
+import com.steve1316.uma_android_automation.components.LabelUnityCupOpponentSelectionLaurel
 import com.steve1316.uma_android_automation.components.IconDoubleCircle
 import com.steve1316.uma_android_automation.components.IconUnityCupRaceEndLogo
 
@@ -148,6 +148,12 @@ class UnityCup(game: Game) : Campaign(game) {
                 }
                 // Handle opponent selection.
                 ButtonSelectOpponent.check(imageUtils = game.imageUtils) -> {
+                    val opponents = LabelUnityCupOpponentSelectionLaurel.findAll(game.imageUtils)
+                    if (opponents.size != 3) {
+                        MessageLog.e(TAG, "[UNITY_CUP] Failed to detect all three opponents on opponent selection screen.")
+                        return false
+                    }
+
                     if (selectedOpponentIndex >= 2) {
                         MessageLog.w(TAG, "[UNITY_CUP] Could not determine any opponent with sufficient double circle predictions. Selecting the 2nd opponent as a fallback.")
                         selectedOpponentIndex = 1
@@ -155,11 +161,8 @@ class UnityCup(game: Game) : Campaign(game) {
                     } else {
                         selectedOpponentIndex++
                     }
-                    game.gestureUtils.tap(
-                        SharedData.displayWidth.toDouble() / 2.0,
-                        game.imageUtils.relY(0.0, 400 * (selectedOpponentIndex + 1)).toDouble(),
-                        LabelWinToBecomeRank.template.path,
-                    )
+                    val opponent = opponents[selectedOpponentIndex]
+                    game.gestureUtils.tap(opponent.x, opponent.y, LabelUnityCupOpponentSelectionLaurel.template.path)
                     ButtonSelectOpponent.click(imageUtils = game.imageUtils)
                 }
                 // If the skip button is locked, need to manually run the race.

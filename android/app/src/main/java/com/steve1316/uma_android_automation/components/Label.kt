@@ -39,6 +39,11 @@ object LabelWinToBecomeRank : ComponentInterface {
     override val template = Template("components/label/win_to_become_rank")
 }
 
+object LabelUnityCupOpponentSelectionLaurel : ComponentInterface {
+    override val TAG: String = "LabelUnityCupOpponentSelectionLaurel"
+    override val template = Template("components/label/unitycup_opponent_selection_laurel", region = Region.leftHalf)
+}
+
 object LabelEnergy : ComponentInterface {
     override val TAG: String = "LabelEnergy"
     override val template = Template("components/label/energy")
