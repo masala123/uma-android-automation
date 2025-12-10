@@ -180,7 +180,6 @@ const RacingSettings = () => {
                                     <Text style={styles.inputLabel}>Junior Year Race Strategy</Text>
                                     <CustomSelect
                                         options={[
-                                            { value: "Default", label: "Default" },
                                             { value: "Auto", label: "Auto" },
                                             { value: "Front", label: "Front" },
                                             { value: "Pace", label: "Pace" },
