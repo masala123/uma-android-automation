@@ -33,7 +33,11 @@ open class Campaign(val game: Game) {
 
     // Should always check fan count at bot start unless in pre-debut.
     protected var bNeedToCheckFans: Boolean = true
+    // Flag used to prevent us from attempting to check fans multiple times in a day.
+    // This helps us avoid infinite loops.
+    protected var bHasTriedCheckingFansToday: Boolean = false
 
+    // Flag for only checking for maiden races once per day.
     var bHasCheckedForMaidenRaceToday: Boolean = false
 
     /**
@@ -255,10 +259,12 @@ open class Campaign(val game: Game) {
         // The Unity scenario has an info button just like the ButtonHomeFansInfo
         // button so they are easily mistaken by OCR, thus we just tap the location manually.
         if (game.scenario == "Unity Cup") {
-            ButtonHomeFansInfo.click(game.imageUtils, region = game.imageUtils.regionBottomHalf)
+            ButtonHomeFansInfo.click(game.imageUtils, region = game.imageUtils.regionBottomHalf, tries = 10)
         } else {
-            ButtonHomeFansInfo.click(game.imageUtils, region = game.imageUtils.regionTopHalf)
+            ButtonHomeFansInfo.click(game.imageUtils, region = game.imageUtils.regionTopHalf, tries = 10)
         }
+
+        bHasTriedCheckingFansToday = true
     }
 
     fun getFanCountClass(bitmap: Bitmap? = null): FanCountClass? {
@@ -547,6 +553,7 @@ open class Campaign(val game: Game) {
 
         // Operations to be done every time the date changes.
         if (game.updateDate()) {
+            bHasTriedCheckingFansToday = false
             bHasCheckedForMaidenRaceToday = false
             // Update the fan count class every time we're at the main screen.
             val fanCountClass: FanCountClass? = getFanCountClass()
@@ -634,10 +641,8 @@ open class Campaign(val game: Game) {
 
         val bIsMandatoryRaceDay = IconRaceDayRibbon.check(imageUtils = game.imageUtils)
         var needToRace = bIsMandatoryRaceDay
-        // On mandatory race days, the button to check fans is shifted down
-        // so we wouldn't be able to call checkFans(). This is fine, we'll just
-        // check fans next time we're at the home screen.
-        if (!bIsMandatoryRaceDay && bNeedToCheckFans) {
+        // We don't need to bother checking fans on a mandatory race day.
+        if (!bIsMandatoryRaceDay && bNeedToCheckFans && !bHasTriedCheckingFansToday) {
             checkFans()
             return true
         }
