@@ -29,9 +29,6 @@ open class Campaign(val game: Game) {
     private val mustRestBeforeSummer: Boolean = SettingsHelper.getBooleanSetting("training", "mustRestBeforeSummer")
     private val enableFarmingFans: Boolean = SettingsHelper.getBooleanSetting("racing", "enableFarmingFans")
 
-    protected var bHasSetQuickMode: Boolean = false
-    protected var bHasSetSkipMode: Boolean = false
-
     // Should always check fan count at bot start unless in pre-debut.
     protected var bNeedToCheckFans: Boolean = true
     // Flag used to prevent us from attempting to check fans multiple times in a day.
@@ -127,7 +124,6 @@ open class Campaign(val game: Game) {
                 }
                 
                 dialog.ok(imageUtils = game.imageUtils)
-                bHasSetQuickMode = true
             }
             "race_details" -> {
                 dialog.ok(imageUtils = game.imageUtils)
@@ -333,51 +329,6 @@ open class Campaign(val game: Game) {
 		return false
 	}
 
-    /**
-     * Clicks the career Quick Mode button and selects the fastest option.
-     *
-     * @return Whether we clicked any buttons in this call.
-     */
-    fun handleCareerQuickMode(): Boolean {
-        // Stop doing any and all checks for the Quick Mode button once we've set it.
-        if (!bHasSetQuickMode) {
-            // Click the Quick Mode button regardless of its state
-            // so that we can verify the correct setting.
-            if (!ButtonCareerQuick.check(imageUtils = game.imageUtils) && (
-                    ButtonCareerQuick.click(imageUtils = game.imageUtils) ||
-                    ButtonCareerQuickEnabled.click(imageUtils = game.imageUtils)
-                )) {
-                game.wait(0.5, skipWaitingForLoading = true)
-                handleDialogs()
-                MessageLog.i(TAG, "[INFO] Career Quick Mode enabled and set.")
-                bHasSetQuickMode = true
-                return true
-            }
-        }
-        return false
-    }
-
-    /**
-     * Clicks the career skip button so that it is at its fastest speed (2x).
-     *
-     * @return Whether we clicked any buttons in this call.
-     */
-    fun handleCareerSkipButton(): Boolean {
-        // Stop doing any and all checks for the Skip button once we've set it.
-        if (!bHasSetSkipMode) {
-            // Set the `skip` button to 2x.
-            if (!ButtonCareerSkip2.check(imageUtils = game.imageUtils) && (
-                ButtonCareerSkipOff.click(imageUtils = game.imageUtils, taps = 2) ||
-                ButtonCareerSkip1.click(imageUtils = game.imageUtils, taps = 1)
-            )) {
-                MessageLog.i(TAG, "[INFO] Career Skip Mode enabled and set.")
-                bHasSetSkipMode = true
-                return true
-            }
-        }
-        return false
-    }
-
 	fun startAptitudesDetectionTest() {
 		MessageLog.i(TAG, "\n[TEST] Now beginning the Aptitudes Detection test on the Main screen.")
 		MessageLog.i(TAG, "[TEST] Note that this test is dependent on having the correct scale.")
@@ -513,40 +464,6 @@ open class Campaign(val game: Game) {
             }
             else -> {
                 MessageLog.e(TAG, "[FAIL] Could not detect any mood icons.")
-                numFail++
-            }
-        }
-
-        MessageLog.i(TAG, "Testing multi-state buttons...")
-        when {
-            ButtonCareerSkip1.check(game.imageUtils) -> {
-                MessageLog.i(TAG, "[PASS] ${ButtonCareerSkip1.template.path}")
-                numPass++
-            }
-            ButtonCareerSkip2.check(game.imageUtils) -> {
-                MessageLog.i(TAG, "[PASS] ${ButtonCareerSkip2.template.path}")
-                numPass++
-            }
-            ButtonCareerSkipOff.check(game.imageUtils) -> {
-                MessageLog.i(TAG, "[PASS] ${ButtonCareerSkipOff.template.path}")
-                numPass++
-            }
-            else -> {
-                MessageLog.e(TAG, "[FAIL] Could not detect any Career Skip buttons.")
-                numFail++
-            }
-        }
-        when {
-            ButtonCareerQuick.check(game.imageUtils) -> {
-                MessageLog.i(TAG, "[PASS] ${ButtonCareerQuick.template.path}")
-                numPass++
-            }
-            ButtonCareerQuickEnabled.check(game.imageUtils) -> {
-                MessageLog.i(TAG, "[PASS] ${ButtonCareerQuickEnabled.template.path}")
-                numPass++
-            }
-            else -> {
-                MessageLog.e(TAG, "[FAIL] Could not detect any Career Quick Mode buttons.")
                 numFail++
             }
         }
@@ -755,10 +672,6 @@ open class Campaign(val game: Game) {
                 } else if (checkCampaignSpecificConditions()) {
                     MessageLog.i(TAG, "Campaign-specific checks complete.")
                     game.racing.skipRacing = false
-                } else if (handleCareerQuickMode()) {
-                    continue
-                } else if (handleCareerSkipButton()) {
-                    continue
                 } else if (game.handleInheritanceEvent()) {
                     // If the bot is at the Inheritance screen, then accept the inheritance.
                     game.racing.skipRacing = false

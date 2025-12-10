@@ -429,30 +429,6 @@ object ButtonMenuBarRace : MultiStateButtonInterface {
     )
 }
 
-object ButtonCareerQuick : ComponentInterface {
-    override val TAG: String = "ButtonCareerQuick"
-    override val template = Template("components/button/career_quick", region = Region.bottomHalf)
-}
-
-object ButtonCareerQuickEnabled : ComponentInterface {
-    override val TAG: String = "ButtonCareerQuickEnabled"
-    override val template = Template("components/button/career_quick_enabled", region = Region.bottomHalf)
-}
-
-object ButtonCareerSkip1 : ComponentInterface {
-    override val TAG: String = "ButtonCareerSkip1"
-    override val template = Template("components/button/career_skip_1", region = Region.bottomHalf)
-}
-object ButtonCareerSkip2 : ComponentInterface {
-    override val TAG: String = "ButtonCareerSkip2"
-    override val template = Template("components/button/career_skip_2", region = Region.bottomHalf)
-}
-
-object ButtonCareerSkipOff : ComponentInterface {
-    override val TAG: String = "ButtonCareerSkipOff"
-    override val template = Template("components/button/career_skip_off", region = Region.bottomHalf)
-}
-
 object ButtonCompleteCareer : ComponentInterface {
     override val TAG: String = "ButtonCompleteCareer"
     override val template = Template("components/button/complete_career", region = Region.bottomHalf)
