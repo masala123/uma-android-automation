@@ -326,6 +326,8 @@ class Game(val myContext: Context) {
 			return true
 		}
 
+        MessageLog.i(TAG, "[INFO] Validating if current scenario is ${scenario}.")
+
 		if (imageUtils.findImage("unitycup_date_text", tries = 1, region = imageUtils.regionTopHalf, suppressError = true).first != null) {
 			// Unity Cup image was detected, so the game is on Unity Cup scenario.
 			if (scenario != "Unity Cup") {
@@ -337,8 +339,13 @@ class Game(val myContext: Context) {
 				MessageLog.i(TAG, "[INFO] Scenario validation confirmed for Unity Cup.")
 			}
 		} else {
-			// Unity Cup image was not detected, so the game is on URA Finale scenario.
-			MessageLog.i(TAG, "[INFO] Scenario validation confirmed for URA Finale.")
+			// All other scenario checks have failed.
+			MessageLog.i(TAG, "[INFO] Scenario validation failed for all other checks. Scenario must be on URA Finale by default.")
+            if (scenario != "URA Finale") {
+                notificationMessage = "Scenario mismatch detected: Game is not on the expected scenario. Please select the correct scenario in the app settings."
+                scenarioCheckPerformed = true
+                return false
+            }
 		}
         scenarioCheckPerformed = true
 		return true
