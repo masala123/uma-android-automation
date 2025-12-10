@@ -28,7 +28,9 @@ import com.steve1316.uma_android_automation.components.ButtonRaceStrategyFront
 import com.steve1316.uma_android_automation.components.ButtonRaceStrategyPace
 import com.steve1316.uma_android_automation.components.ButtonRaceStrategyLate
 import com.steve1316.uma_android_automation.components.ButtonRaceStrategyEnd
-import com.steve1316.uma_android_automation.components.IconRaceDayRibbon
+import com.steve1316.uma_android_automation.components.ButtonSkip
+import com.steve1316.uma_android_automation.components.ButtonViewResults
+import com.steve1316.uma_android_automation.components.ButtonViewResultsLocked
 import com.steve1316.uma_android_automation.components.ButtonRaceSelectExtra
 import com.steve1316.uma_android_automation.components.ButtonRaceListFullStats
 import com.steve1316.uma_android_automation.components.ButtonRace
@@ -37,6 +39,7 @@ import com.steve1316.uma_android_automation.components.IconRaceListPredictionDou
 import com.steve1316.uma_android_automation.components.IconRaceListMaidenPill
 import com.steve1316.uma_android_automation.components.IconRaceListTopLeft
 import com.steve1316.uma_android_automation.components.IconRaceListBottomRight
+import com.steve1316.uma_android_automation.components.IconRaceDayRibbon
 
 class Racing (private val game: Game) {
     private val TAG: String = "[${MainActivity.loggerTag}]Racing"
@@ -1382,14 +1385,14 @@ class Racing (private val game: Game) {
      * @return True if the bot completed the race with retry attempts remaining. Otherwise false.
      */
     fun runRaceWithRetries(): Boolean {
-        val canSkip = game.imageUtils.findImage("race_skip_locked", tries = 5, region = game.imageUtils.regionBottomHalf).first == null
+        val canSkip = !ButtonViewResultsLocked.check(game.imageUtils, tries = 5)
         
         while (raceRetries >= 0) {
             if (canSkip) {
                 MessageLog.i(TAG, "[RACE] Skipping race...")
 
                 // Press the skip button and then wait for your result of the race to show.
-                if (game.findAndTapImage("race_skip", tries = 30, region = game.imageUtils.regionBottomHalf)) {
+                if (ButtonViewResults.click(game.imageUtils, tries = 30)) {
                     MessageLog.i(TAG, "[RACE] Race was able to be skipped.")
                 }
                 game.wait(2.0)
@@ -1439,30 +1442,30 @@ class Racing (private val game: Game) {
                 game.wait(1.0)
 
                 // Skip the part where it reveals the name of the race.
-                if (game.findAndTapImage("race_skip_manual", tries = 30, region = game.imageUtils.regionBottomHalf)) {
+                if (ButtonSkip.click(game.imageUtils, tries = 30)) {
                     MessageLog.i(TAG, "[RACE] Skipped the name reveal of the race.")
                 }
                 // Skip the walkthrough of the starting gate.
-                if (game.findAndTapImage("race_skip_manual", tries = 30, region = game.imageUtils.regionBottomHalf)) {
+                if (ButtonSkip.click(game.imageUtils, tries = 30)) {
                     MessageLog.i(TAG, "[RACE] Skipped the walkthrough of the starting gate.")
                 }
                 game.wait(3.0)
                 // Skip the start of the race.
-                if (game.findAndTapImage("race_skip_manual", tries = 30, region = game.imageUtils.regionBottomHalf)) {
+                if (ButtonSkip.click(game.imageUtils, tries = 30)) {
                     MessageLog.i(TAG, "[RACE] Skipped the start of the race.")
                 }
                 // Skip the lead up to the finish line.
-                if (game.findAndTapImage("race_skip_manual", tries = 30, region = game.imageUtils.regionBottomHalf)) {
+                if (ButtonSkip.click(game.imageUtils, tries = 30)) {
                     MessageLog.i(TAG, "[RACE] Skipped the lead up to the finish line.")
                 }
                 game.wait(2.0)
                 // Skip crossing the finish line.
-                if (game.findAndTapImage("race_skip_manual", tries = 30, region = game.imageUtils.regionBottomHalf)) {
+                if (ButtonSkip.click(game.imageUtils, tries = 30)) {
                     MessageLog.i(TAG, "[RACE] Skipped crossing the finish line.")
                 }
                 game.wait(2.0)
                 // Skip the result screen.
-                if (game.findAndTapImage("race_skip_manual", tries = 30, region = game.imageUtils.regionBottomHalf)) {
+                if (ButtonSkip.click(game.imageUtils, tries = 30)) {
                     MessageLog.i(TAG, "[RACE] Skipped the results screen.")
                 }
                 game.wait(2.0)

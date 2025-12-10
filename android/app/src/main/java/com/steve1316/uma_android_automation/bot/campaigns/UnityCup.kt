@@ -11,6 +11,8 @@ import com.steve1316.uma_android_automation.components.ButtonSkip
 import com.steve1316.uma_android_automation.components.ButtonRace
 import com.steve1316.uma_android_automation.components.ButtonNextRaceEnd
 import com.steve1316.uma_android_automation.components.ButtonSelectOpponent
+import com.steve1316.uma_android_automation.components.ButtonViewResultsLocked
+import com.steve1316.uma_android_automation.components.ButtonUnityCupSeeAllRaceResults
 import com.steve1316.uma_android_automation.components.DialogUtils
 import com.steve1316.uma_android_automation.components.DialogInterface
 import com.steve1316.uma_android_automation.components.LabelWinToBecomeRank
@@ -161,13 +163,13 @@ class UnityCup(game: Game) : Campaign(game) {
                     ButtonSelectOpponent.click(imageUtils = game.imageUtils)
                 }
                 // If the skip button is locked, need to manually run the race.
-                game.imageUtils.findImage("race_skip_locked", region = game.imageUtils.regionBottomHalf).first != null -> {
+                ButtonViewResultsLocked.check(game.imageUtils) -> {
                     MessageLog.d(TAG, "[UNITY_CUP] Race skip is locked. Manually running race...")
                     game.findAndTapImage("unitycup_race_manual", region = game.imageUtils.regionBottomHalf)
                     game.racing.runRaceWithRetries()
                 }
                 // Skip the race if possible.
-                game.findAndTapImage("unitycup_race_skip_results", region = game.imageUtils.regionBottomHalf) -> {
+                ButtonUnityCupSeeAllRaceResults.click(game.imageUtils) -> {
                     MessageLog.d(TAG, "[UNITY_CUP] Skipping to race results.")
                 }
                 // This is our only natural exit point from this function.
