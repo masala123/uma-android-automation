@@ -195,7 +195,6 @@ class Training(private val game: Game) {
 				firstTrainingCheck = false
 			}
 
-			game.racing.raceRepeatWarningCheck = false
 			MessageLog.i(TAG, "[TRAINING] Training process completed. Total time: ${System.currentTimeMillis() - startTime}ms")
 		} else {
 			MessageLog.e(TAG, "Cannot start the Training process. Moving on...")

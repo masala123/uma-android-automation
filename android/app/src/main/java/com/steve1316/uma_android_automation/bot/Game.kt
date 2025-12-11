@@ -540,7 +540,6 @@ class Game(val myContext: Context) {
 		// Skip recreation date if it's already completed (will only be used for mood recovery).
 		if (!recreationDateCompleted && imageUtils.findImage("recreation_date", tries = 1, region = imageUtils.regionBottomHalf).first != null && handleRecreationDate(recoverMoodIfCompleted = false)) {
 			MessageLog.i(TAG, "[ENERGY] Successfully recovered energy via recreation date.")
-			racing.raceRepeatWarningCheck = false
 			return true
 		}
 		
@@ -549,13 +548,11 @@ class Game(val myContext: Context) {
 			findAndTapImage("recover_energy", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf) -> {
 				findAndTapImage("ok")
 				MessageLog.i(TAG, "[ENERGY] Successfully recovered energy.")
-				racing.raceRepeatWarningCheck = false
 				true
 			}
 			findAndTapImage("recover_energy_summer", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf) -> {
 				findAndTapImage("ok")
 				MessageLog.i(TAG, "[ENERGY] Successfully recovered energy for the Summer.")
-				racing.raceRepeatWarningCheck = false
 				true
 			}
 			else -> {
@@ -605,8 +602,6 @@ class Game(val myContext: Context) {
                     findAndTapImage("ok", region = imageUtils.regionMiddle, suppressError = true)
                 }
             }
-
-            racing.raceRepeatWarningCheck = false
 			true
 		} else {
 			MessageLog.i(TAG, "[MOOD] Current mood is good enough or its the Summer event. Moving on...")

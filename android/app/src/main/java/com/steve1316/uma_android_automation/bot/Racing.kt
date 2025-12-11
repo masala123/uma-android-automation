@@ -63,7 +63,6 @@ class Racing (private val game: Game) {
     private var raceRetries = 3
     var raceRepeatWarningCheck = false
     var encounteredRacingPopup = false
-    var skipRacing = false
     var firstTimeRacing = true
     var hasFanRequirement = false  // Indicates that a fan requirement has been detected on the main screen.
     var hasTrophyRequirement = false  // Indicates that a trophy requirement has been detected on the main screen.
@@ -397,8 +396,6 @@ class Racing (private val game: Game) {
             hasTrophyRequirement = false
             return false
         }
-
-        skipRacing = false
 
         // First, check if there is a mandatory or a extra race available. If so, head into the Race Selection screen.
         // Note: If there is a mandatory race, the bot would be on the Home screen.

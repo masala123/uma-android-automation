@@ -76,7 +76,6 @@ open class Campaign(val game: Game) {
                 // We are handling the logic for when to race on our own.
                 // Thus we just close this warning.
                 game.racing.encounteredRacingPopup = true
-                game.racing.skipRacing = false
                 dialog.close(imageUtils = game.imageUtils)
             }
             "goals" -> dialog.close(imageUtils = game.imageUtils)
@@ -88,7 +87,6 @@ open class Campaign(val game: Game) {
                 // We are handling the logic for when to race on our own.
                 // Thus we just close this warning.
                 game.racing.encounteredRacingPopup = true
-                game.racing.skipRacing = false
                 dialog.close(imageUtils = game.imageUtils)
             }
             "log" -> dialog.close(imageUtils = game.imageUtils)
@@ -478,8 +476,12 @@ open class Campaign(val game: Game) {
 
         // Operations to be done every time the date changes.
         if (game.updateDate()) {
+            // Reset flags on date change.
+            game.racing.encounteredRacingPopup = false
+            game.racing.raceRepeatWarningCheck = false
             bHasTriedCheckingFansToday = false
             bHasCheckedForMaidenRaceToday = false
+
             // Update the fan count class every time we're at the main screen.
             val fanCountClass: FanCountClass? = getFanCountClass()
             if (fanCountClass != null) {
@@ -602,20 +604,16 @@ open class Campaign(val game: Game) {
                 // Check if we need to rest before Summer Training (June Early/Late in Classic/Senior Year).
                 MessageLog.i(TAG, "Forcing rest during ${game.currentDate} in preparation for Summer Training.")
                 game.recoverEnergy()
-                game.racing.skipRacing = false
             } else if (game.checkInjury() && !game.checkFinals()) {
                 game.findAndTapImage("ok", region = game.imageUtils.regionMiddle)
                 game.wait(3.0)
-                game.racing.skipRacing = false
             } else if (game.recoverMood() && !game.checkFinals()) {
-                game.racing.skipRacing = false
             } else if (game.currentDate.day >= 16 && game.racing.checkEligibilityToStartExtraRacingProcess()) {
                 MessageLog.i(TAG, "[INFO] Bot has no injuries, mood is sufficient and extra races can be run today. Setting the needToRace flag to true.")
                 needToRace = true
             } else {
                 MessageLog.i(TAG, "[INFO] Training due to it not being an extra race day.")
                 game.training.handleTraining()
-                game.racing.skipRacing = false
             }
         }
 
@@ -626,7 +624,6 @@ open class Campaign(val game: Game) {
                     throw InterruptedException("Mandatory race detected. Stopping bot...")
                 }
                 ButtonBack.click(imageUtils = game.imageUtils)
-                game.racing.skipRacing = !game.racing.enableForceRacing
                 game.wait(1.0)
                 game.training.handleTraining()
             }
@@ -650,7 +647,6 @@ open class Campaign(val game: Game) {
                 } else if (game.checkTrainingEventScreen()) {
                     // If the bot is at the Training Event screen, that means there are selectable options for rewards.
                     handleTrainingEvent()
-                    game.racing.skipRacing = false
                 } else if (game.checkMandatoryRacePrepScreen()) {
                     // If the bot is at the Main screen with the button to select a race visible,
                     // that means the bot needs to handle a mandatory race.
@@ -660,16 +656,13 @@ open class Campaign(val game: Game) {
                 } else if (game.checkRacingScreen()) {
                     // If the bot is already at the Racing screen, then complete this standalone race.
                     game.racing.handleStandaloneRace()
-                    game.racing.skipRacing = false
                 } else if (game.checkEndScreen()) {
                     // Stop when the bot has reached the screen where it details the overall result of the run.
                     throw InterruptedException("Bot had reached end of run. Stopping bot...")
                 } else if (checkCampaignSpecificConditions()) {
                     MessageLog.i(TAG, "Campaign-specific checks complete.")
-                    game.racing.skipRacing = false
                 } else if (game.handleInheritanceEvent()) {
                     // If the bot is at the Inheritance screen, then accept the inheritance.
-                    game.racing.skipRacing = false
                 } else if (game.performMiscChecks()) {
                     MessageLog.d(TAG, "Misc checks complete.")
                 } else {
