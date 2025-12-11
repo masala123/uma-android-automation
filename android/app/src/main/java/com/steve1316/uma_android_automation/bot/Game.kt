@@ -181,13 +181,12 @@ class Game(val myContext: Context) {
 	}
 
 	/**
-	 * Wait for the game to finish loading. Note that this function single-handedly decides how fast the bot will run and as such, 
-     * any adjustments to this must be done with extreme caution.
+	 * Wait for the game to finish loading.
 	 */
 	fun waitForLoading() {
 		while (checkLoading()) {
 			// Avoid an infinite loop by setting the flag to true.
-			wait(0.25, skipWaitingForLoading = true)
+			wait(0.5, skipWaitingForLoading = true)
 		}
 	}
 
