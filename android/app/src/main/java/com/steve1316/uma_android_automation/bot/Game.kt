@@ -301,6 +301,7 @@ class Game(val myContext: Context) {
 	fun startDateOCRTest() {
 		MessageLog.i(TAG, "\n[TEST] Now beginning the Date OCR test on the Main screen.")
 		MessageLog.i(TAG, "[TEST] Note that this test is dependent on having the correct scale.")
+        wait(5.0)
         updateDate()
 	}
 
