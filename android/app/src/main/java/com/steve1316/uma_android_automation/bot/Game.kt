@@ -785,10 +785,11 @@ class Game(val myContext: Context) {
                     findAndTapImage("cancel", region = imageUtils.regionBottomHalf)
                     true
                 }
-            } else {
+            } else if (findAndTapImage("recreation_dating_progress", region = imageUtils.regionMiddle)) {
                 MessageLog.i(TAG, "[RECREATION_DATE] Recreation date can be done.")
-                findAndTapImage("recreation_dating_progress", region = imageUtils.regionMiddle)
                 true
+            } else {
+                false
             }
         } else {
             false
