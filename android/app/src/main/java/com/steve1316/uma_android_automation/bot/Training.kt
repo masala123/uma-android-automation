@@ -659,7 +659,7 @@ class Training(private val game: Game) {
 				}
 			} else {
 				// Clear the Training map if the bot failed to have enough energy to conduct the training.
-				MessageLog.i(TAG, "[TRAINING] $failureChance% is not within acceptable range of ${maximumFailureChance}%. Proceeding to recover energy.")
+				MessageLog.i(TAG, "[TRAINING] $failureChance% is not within acceptable range of ${maximumFailureChance}%${if (enableRiskyTraining) " or the risky threshold of ${riskyTrainingMaxFailureChance}%" else ""}. Proceeding to recover energy.")
 				trainingMap.clear()
 			}
 		}
