@@ -140,9 +140,14 @@ class Game(val myContext: Context) {
 	 * Wait for the game to finish loading. Note that this function is responsible for dictating how fast the bot will run so adjusting this should be done with caution.
 	 */
 	fun waitForLoading() {
-		while (checkLoading()) {
+        var loadingCounter = 0
+		while (checkLoading(suppressLogging = loadingCounter % 10 != 0)) {
 			// Avoid an infinite loop by setting the flag to true.
 			wait(waitDelay, skipWaitingForLoading = true)
+            loadingCounter++
+            if (loadingCounter >= 20) {
+                loadingCounter = 0
+            }
 		}
 	}
 
@@ -551,10 +556,11 @@ class Game(val myContext: Context) {
 	/**
 	 * Checks if the bot is at a "Now Loading..." screen or if the game is awaiting for a server response. This may cause significant delays in normal bot processes.
 	 *
+	 * @param suppressLogging Whether or not to suppress logging for this function. Defaults to false.
 	 * @return True if the game is still loading or is awaiting for a server response. Otherwise, false.
 	 */
-	fun checkLoading(): Boolean {
-		MessageLog.i(TAG, "[LOADING] Now checking if the game is still loading...")
+	fun checkLoading(suppressLogging: Boolean = false): Boolean {
+		if (!suppressLogging) MessageLog.i(TAG, "[LOADING] Now checking if the game is still loading...")
         val sourceBitmap = imageUtils.getSourceBitmap()
 		return if (imageUtils.findImageWithBitmap("connecting", sourceBitmap, region = imageUtils.regionTopHalf, suppressError = true) != null) {
 			MessageLog.i(TAG, "[LOADING] Detected that the game is awaiting a response from the server from the \"Connecting\" text at the top of the screen. Waiting...")
