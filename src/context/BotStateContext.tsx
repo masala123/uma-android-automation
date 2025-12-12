@@ -11,6 +11,7 @@ export interface Settings {
         enablePopupCheck: boolean
         enableCraneGameAttempt: boolean
         enableStopBeforeFinals: boolean
+        waitDelay: number
     }
 
     // Racing settings
@@ -21,11 +22,13 @@ export interface Settings {
         enableStopOnMandatoryRaces: boolean
         enableForceRacing: boolean
         enableRacingPlan: boolean
+        enableMandatoryRacingPlan: boolean
         racingPlan: string
         racingPlanData: string
         minFansThreshold: number
         preferredTerrain: string
         preferredGrades: string[]
+        preferredDistances: string[]
         lookAheadDays: number
         smartRacingCheckInterval: number
         juniorYearRaceStrategy: string
@@ -132,6 +135,7 @@ export const defaultSettings: Settings = {
         enablePopupCheck: false,
         enableCraneGameAttempt: false,
         enableStopBeforeFinals: false,
+        waitDelay: 0.5,
     },
     racing: {
         enableFarmingFans: false,
@@ -140,6 +144,7 @@ export const defaultSettings: Settings = {
         enableStopOnMandatoryRaces: false,
         enableForceRacing: false,
         enableRacingPlan: false,
+        enableMandatoryRacingPlan: false,
         racingPlan: JSON.stringify(
             Object.values(racesData).map((race, index) => ({
                 raceName: race.name,
@@ -151,6 +156,7 @@ export const defaultSettings: Settings = {
         minFansThreshold: 0,
         preferredTerrain: "Any",
         preferredGrades: ["G1", "G2", "G3"],
+        preferredDistances: ["Short", "Mile", "Medium", "Long"],
         lookAheadDays: 10,
         smartRacingCheckInterval: 2,
         juniorYearRaceStrategy: "Default",
@@ -223,7 +229,7 @@ export const defaultSettings: Settings = {
         preferredDistanceOverride: "Auto",
         mustRestBeforeSummer: false,
         enableRiskyTraining: false,
-        riskyTrainingMinStatGain: 30,
+        riskyTrainingMinStatGain: 20,
         riskyTrainingMaxFailureChance: 30,
         trainWitDuringFinale: false,
     },

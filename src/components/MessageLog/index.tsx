@@ -246,7 +246,7 @@ const MessageLog = () => {
 🔍 Maximum Failure Chance Allowed: ${settings.training.maximumFailureChance}%
 ⚠️ Enable Riskier Training: ${settings.training.enableRiskyTraining ? "✅" : "❌"}${
             settings.training.enableRiskyTraining
-                ? `\n   📊 Minimum Stat Gain Threshold: ${settings.training.riskyTrainingMinStatGain}\n   🎯 Risky Training Maximum Failure Chance: ${settings.training.riskyTrainingMaxFailureChance}%`
+                ? `\n   📊 Minimum Main Stat Gain Threshold: ${settings.training.riskyTrainingMinStatGain}\n   🎯 Risky Training Maximum Failure Chance: ${settings.training.riskyTrainingMaxFailureChance}%`
                 : ""
         }
 🔄 Disable Training on Maxed Stat: ${settings.training.disableTrainingOnMaxedStat ? "✅" : "❌"}
@@ -276,10 +276,12 @@ ${longTargetsString}
 🏁 Stop on Mandatory Race: ${settings.racing.enableStopOnMandatoryRaces ? "✅" : "❌"}
 🏃 Force Racing Every Day: ${settings.racing.enableForceRacing ? "✅" : "❌"}
 🏁 Enable Racing Plan: ${settings.racing.enableRacingPlan ? "✅" : "❌"}
+🏁 Racing Plan is Mandatory: ${settings.racing.enableMandatoryRacingPlan ? "✅" : "❌"}
 🏁 Racing Plan: ${racingPlanString}
 👥 Minimum Fans Threshold: ${settings.racing.minFansThreshold}
 🏃 Preferred Terrain: ${settings.racing.preferredTerrain}
 🏆 Preferred Grades: ${settings.racing.preferredGrades.join(", ")}
+🏃 Preferred Distances: ${settings.racing.preferredDistances.join(", ")}
 📅 Look Ahead Days: ${settings.racing.lookAheadDays} days
 ⏰ Smart Racing Check Interval: ${settings.racing.smartRacingCheckInterval} days
 🎯 Junior Year Race Strategy: ${settings.racing.juniorYearRaceStrategy}
@@ -293,6 +295,7 @@ ${longTargetsString}
 🔍 Popup Check: ${settings.general.enablePopupCheck ? "✅" : "❌"}
 🔍 Enable Crane Game Attempt: ${settings.general.enableCraneGameAttempt ? "✅" : "❌"}
 🛑 Stop Before Finals: ${settings.general.enableStopBeforeFinals ? "✅" : "❌"}
+⏰ Wait Delay: ${settings.general.waitDelay}s
 
 ---------- Debug Options ----------
 🐛 Debug Mode: ${settings.debug.enableDebugMode ? "✅" : "❌"}

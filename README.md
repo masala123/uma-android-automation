@@ -15,21 +15,18 @@ This project is purely for educational purposes to learn about Android automatio
 # Requirements
 
 -   Android Device or Emulator (Nougat 7.0+)
-    -   For the best performance and stability on phones, the device needs to be at 1080p display resolution. The speed is also best at 1080p and for other resolutions, it becomes dependent on the manual scale that you can set in the settings. Right now it defaults to 1.0 which uses 1080p as the baseline. You can determine what scales may be good for you with the template match test that you can enable in the settings as well.
+    -   Hard requirement for Android phones is 1080p and 240 DPI or 450 DPI (for Samsung phones). If your device do not meet these, you can try the `Basic Template Matching Test` in the Settings under the `Debug Tests` section to determine the best scale to use in the `Custom Scale for Template Matching` setting. If not, then you can also try the [To set the phone's resolution to 1080p (faster and more accurate)](#to-set-the-phones-resolution-to-1080p-faster-and-more-accurate) section to forcibly set the display resolution and DPI of your Android phone. Note that may come with the side-effect of your device UI being scrunched in or zoomed out.
         -   If you change the display resolution while the overlay button is still active, you will need to restart the app in order for the display changes to persist to the `MediaProjection` service.
-    -   Tested emulator was on Bluestacks 5 (Pie 64-bit). Later versions of Bluestacks also should work. The following setup is required:
+    -   Tested emulators are Bluestacks 5 (Pie 64-bit, but other versions should work) and MuMu. The following setup is required:
         -   Portrait Mode needs to be forced on always.
         -   Bluestacks itself needs to be updated to the latest version to avoid Uma Musume crashing.
         -   In the Bluestacks Settings > Phone, the predefined profile needs to be set to a modern high-end phone like the Samsung Galaxy S22.
-        -   Device setup:
+        -   Setup for both BlueStacks and MuMu:
             -   4 CPU Cores
             -   4GB Memory
-            -   Display resolution set to Portrait 1080 x 1920
-            -   Pixel density 240 DPI (Medium)
-    -   Note that other emulators like MuMu may have their 1080p at a different DPI other than 240. MuMu by default uses 480 DPI which will throw template matching and OCR off. It is highly recommended to force it to 240 DPI in the emulator settings for the best performance. The following are tested resolutions + DPIs:
-        -   1080x1920 240 DPI (from Bluestacks emulator default settings)
-        -   1080x2340 450 DPI (from native Samsung phone)
--   The in-game graphics need to be set to `Standard` instead of `Basic` for best performance.
+            -   1080 x 1920 (width x height)
+            -   240 DPI (This is important)
+-   The in-game graphics need to be set to `Standard` instead of `Basic`.
 
 # Features
 
@@ -41,18 +38,19 @@ This project is purely for educational purposes to learn about Android automatio
 
 # Instructions
 
-1. Download the .apk file from the `Releases` section on the right and install it on your Android device.
-2. Once you have it running, fill out the required section marked with \* in the Settings page of the application. That would be the selection of the Character under the Training Event section.
+1. Download the .apk file from the `Releases` section on the right of this page and install it on your Android device.
+2. Once you have it running, select the scenario for the required section (URA Finale, Unity Cup, etc.) marked with \* in the Settings page of the application.
 3. Now go back to the Home page after you have finished customizing the settings. The settings you have selected will be shown to you in the text box below the `Start` button.
 4. Now tap on the `Start` button. If this is the first time, it will ask you to give the application `Overlay` permission and starting up the `Accessibility` service.
-    1. You are also required to enable `Allow restricted settings` in the `App Info` page of the app in the Android Settings.
+    1. You are also required to enable `Allow restricted settings` in the `App Info` page of the app in the Android Settings for later Android versions.
 5. Once it is enabled, tapping on the `Start` button again will create a popup asking if you want `MediaProjection` to work on `A single app` or `Entire screen`. Select the `Entire screen` option. A floating overlay button will now appear that you can move around the screen.
-6. Navigate yourself to the screen below that shows available options like Rest, Train, Buy Skills, Races, etc.
+6. **IMPORTANT:** Move the overlay button to the far left edge of the screen and centered in the middle of the screen's height. Otherwise, you run the risk of the overlay button covering crucial elements on the screen.
+7. Navigate yourself to the screen below that shows available options like Rest, Train, Buy Skills, Races, etc.
 
-> ![main screen](https://user-images.githubusercontent.com/18709555/125517626-d276cda0-bffa-441d-a511-a222237837a1.jpg)
+> <img width="270" height="585" alt="main screen" src="https://github.com/user-attachments/assets/05239856-878e-4e49-a325-db60013d7c75" />
 
-7. Press the overlay button to start the automation process. For enabling app notifications, it is recommended to have a notification style that is small enough that it does not fully cover the top part of the screen where it contains the date, energy, turn number, etc. Or disable notifications if you do not want to worry about it.
-    1. The bot will not start on any other screen than what is shown above.
+
+8. Press the overlay button to start the automation process. For enabling app notifications, it is recommended to have a notification style that is small enough that it does not fully cover the top part of the screen where it contains the date, energy, turn number, etc. Or disable notifications if you do not want to worry about it.
 
 ## To view Logs in Real-time
 

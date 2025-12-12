@@ -503,7 +503,7 @@ const TrainingSettings = () => {
                                     min={20}
                                     max={100}
                                     step={5}
-                                    label="Minimum Stat Gain Threshold"
+                                    label="Minimum Main Stat Gain Threshold"
                                     labelUnit=""
                                     showValue={true}
                                     showLabels={true}

@@ -139,7 +139,7 @@ const RacingSettings = () => {
                         />
                         <Text style={styles.inputDescription}>
                             Controls when extra races can be run using modulo arithmetic. For example, if set to 5, extra races will only be available on days 5, 10, 15, etc. (when current day % 5 =
-                            0).
+                            0). Note: This setting has no effect when Racing Plan is enabled, as Racing Plan controls when races occur based on opportunity cost analysis or mandatory race detection.
                         </Text>
                     </View>
 

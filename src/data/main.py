@@ -6,8 +6,13 @@ import json
 import re
 import time
 import logging
+import os
 from typing import List, Dict
 from difflib import SequenceMatcher
+
+
+IS_DELTA = True
+DELTA_BACKLOG_COUNT = 10
 
 
 def create_chromedriver():
@@ -136,7 +141,8 @@ class BaseScraper:
     def __init__(self, url: str, output_filename: str):
         self.url = url
         self.output_filename = output_filename
-        self.data = {}
+        self.data = self.load_existing_data()
+        self.initial_data_count = len(self.data) if IS_DELTA else 0
         self.cookie_accepted = False
 
     def safe_click(self, driver: uc.Chrome, element: WebElement, retries: int = 3, delay: float = 0.5):
@@ -163,11 +169,46 @@ class BaseScraper:
                     time.sleep(delay)
         return False
 
+    def load_existing_data(self):
+        """Loads existing JSON data from the output file if delta scraping is enabled.
+
+        Returns:
+            The loaded data dictionary, or an empty dictionary if the file doesn't exist or delta scraping is disabled.
+        """
+        if not IS_DELTA:
+            return {}
+
+        if not os.path.exists(self.output_filename):
+            logging.info(f"Output file {self.output_filename} does not exist. Starting with empty data.")
+            return {}
+
+        try:
+            with open(self.output_filename, "r", encoding="utf-8") as f:
+                existing_data = json.load(f)
+                logging.info(f"Loaded {len(existing_data)} existing items from {self.output_filename} for delta merge.")
+                return existing_data
+        except json.JSONDecodeError as e:
+            logging.warning(f"Failed to parse existing JSON file {self.output_filename}: {e}. Starting with empty data.")
+            return {}
+        except Exception as e:
+            logging.warning(f"Failed to load existing data from {self.output_filename}: {e}. Starting with empty data.")
+            return {}
+
     def save_data(self):
         """Saves the scraped data to a file."""
+        # Sort keys alphabetically to maintain consistent ordering.
+        sorted_data = {key: self.data[key] for key in sorted(self.data.keys())}
+
         with open(self.output_filename, "w", encoding="utf-8") as f:
-            json.dump(self.data, f, ensure_ascii=False, indent=4)
-        logging.info(f"Saved {len(self.data)} items to {self.output_filename}")
+            json.dump(sorted_data, f, ensure_ascii=False, indent=4)
+
+        if IS_DELTA and self.initial_data_count > 0:
+            new_or_updated = len(self.data) - self.initial_data_count
+            logging.info(
+                f"Saved {len(self.data)} items to {self.output_filename} (delta merge: {self.initial_data_count} existing + {new_or_updated} new/updated)."
+            )
+        else:
+            logging.info(f"Saved {len(self.data)} items to {self.output_filename}.")
 
     def handle_cookie_consent(self, driver: uc.Chrome):
         """Handles the cookie consent.
@@ -262,8 +303,7 @@ class BaseScraper:
             try:
                 tooltip_title = tooltip.find_element(By.XPATH, ".//div[contains(@class, 'sc-') and contains(@class, '-2 ')]").text
                 if tooltip_title in data_dict:
-                    logging.info(f"Training event {tooltip_title} ({j + 1}/{len(all_training_events)}) was already scraped. Skipping this...")
-                    continue
+                    logging.info(f"Training event {tooltip_title} ({j + 1}/{len(all_training_events)}) already exists. Overwriting with new data...")
             except NoSuchElementException:
                 logging.warning(f"No tooltip title found for training event ({j + 1}/{len(all_training_events)}).")
                 continue
@@ -277,6 +317,22 @@ class BaseScraper:
             data_dict[tooltip_title] = self.extract_training_event_options(tooltip_rows)
 
             ad_banner_closed = self.handle_ad_banner(driver, ad_banner_closed)
+
+    def _sort_by_value(self, driver: uc.Chrome, value_key: str):
+        """Sorts the list elements by the given value key.
+
+        Args:
+            driver (uc.Chrome): The Chrome driver.
+            value_key (str): The key to sort by.
+        """
+        # Click on the "Sort by" dropdown and select the value key.
+        sort_by_dropdown = driver.find_element(By.XPATH, "//div[contains(@class, 'filters_sort_row')]")
+        first_select = sort_by_dropdown.find_element(By.XPATH, ".//select[1]")
+        first_select.click()
+        time.sleep(0.5)
+        value_option = first_select.find_element(By.XPATH, f".//option[@value='{value_key}']")
+        value_option.click()
+        time.sleep(0.5)
 
 
 class SkillScraper(BaseScraper):
@@ -319,8 +375,11 @@ class SkillScraper(BaseScraper):
             skill_id = skill_id_match.group(1) if skill_id_match else None
             clean_description = re.sub(r"\s*\(\d+\)$", "", skill_description) if skill_id else skill_description
 
-            if skill_name and skill_name not in self.data:
-                logging.info(f"Scraped skill ({i + 1}/{len(all_skill_rows)}): {skill_name}")
+            if skill_name:
+                if skill_name in self.data:
+                    logging.info(f"Skill {skill_name} ({i + 1}/{len(all_skill_rows)}) already exists. Overwriting with new data...")
+                else:
+                    logging.info(f"Scraped skill ({i + 1}/{len(all_skill_rows)}): {skill_name}")
                 self.data[skill_name] = {"id": int(skill_id), "englishName": skill_name, "englishDescription": clean_description}
 
         self.save_data()
@@ -342,7 +401,7 @@ class CharacterScraper(BaseScraper):
         self.handle_cookie_consent(driver)
 
         # Sort the characters by ascending order.
-        self._sort_by_name(driver)
+        self._sort_by_value(driver, "implemented")
 
         # Get all character links.
         character_grid = driver.find_element(By.XPATH, "//div[contains(@class, 'sc-70f2d7f-0')]")
@@ -352,6 +411,13 @@ class CharacterScraper(BaseScraper):
 
         logging.info(f"Found {len(character_items)} characters.")
         character_links = [item.get_attribute("href") for item in character_items]
+
+        # If this is a delta scrape, scrape the first 10 characters as the list is now sorted by descending release date.
+        if IS_DELTA:
+            character_links = character_links[:DELTA_BACKLOG_COUNT]
+            logging.info(
+                f"Scraping the first {DELTA_BACKLOG_COUNT} characters for the delta scrape as the list is now sorted by descending release date."
+            )
 
         # Iterate through each character.
         for i, link in enumerate(character_links):
@@ -374,29 +440,6 @@ class CharacterScraper(BaseScraper):
         self.save_data()
         driver.quit()
 
-    def _sort_by_name(self, driver: uc.Chrome):
-        """Sorts the characters by name in ascending order.
-
-        Args:
-            driver (uc.Chrome): The Chrome driver.
-        """
-        # Click on the "Sort by" dropdown and select "Name".
-        sort_by_dropdown = driver.find_element(By.XPATH, "//div[contains(@class, 'filters_sort_row')]")
-        first_select = sort_by_dropdown.find_element(By.XPATH, ".//select[1]")
-        first_select.click()
-        time.sleep(0.5)
-        name_option = first_select.find_element(By.XPATH, ".//option[@value='name']")
-        name_option.click()
-        time.sleep(0.5)
-
-        # Then sort by ascending order.
-        second_select = sort_by_dropdown.find_element(By.XPATH, ".//select[2]")
-        second_select.click()
-        time.sleep(0.5)
-        ascending_option = second_select.find_element(By.XPATH, ".//option[@value='asc']")
-        ascending_option.click()
-        time.sleep(0.5)
-
 
 class SupportCardScraper(BaseScraper):
     """Scrapes the support cards from the website."""
@@ -418,8 +461,17 @@ class SupportCardScraper(BaseScraper):
         # Filter out hidden elements using Selenium's is_displayed() method.
         filtered_support_card_items = [item for item in support_card_items if item.is_displayed()]
 
+        self._sort_by_value(driver, "implemented")
+
         logging.info(f"Found {len(filtered_support_card_items)} support cards.")
         support_card_links = [item.find_element(By.XPATH, "./..").get_attribute("href") for item in filtered_support_card_items]
+
+        # If this is a delta scrape, scrape the first 10 support cards as the list is now sorted by descending release date.
+        if IS_DELTA:
+            support_card_links = support_card_links[:DELTA_BACKLOG_COUNT]
+            logging.info(
+                f"Scraping the first {DELTA_BACKLOG_COUNT} support cards for the delta scrape as the list is now sorted by descending release date."
+            )
 
         # Iterate through each support card.
         for i, link in enumerate(support_card_links):
