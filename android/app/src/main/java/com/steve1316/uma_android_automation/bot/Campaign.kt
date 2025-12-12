@@ -568,7 +568,12 @@ open class Campaign(val game: Game) {
         val bIsMandatoryRaceDay = IconRaceDayRibbon.check(imageUtils = game.imageUtils)
         var needToRace = bIsMandatoryRaceDay
         // We don't need to bother checking fans on a mandatory race day.
-        if (!bIsMandatoryRaceDay && bNeedToCheckFans && !bHasTriedCheckingFansToday) {
+        if (
+            !game.currentDate.bIsFinaleSeason &&
+            !bIsMandatoryRaceDay &&
+            bNeedToCheckFans &&
+            !bHasTriedCheckingFansToday
+        ) {
             checkFans()
             return true
         }
