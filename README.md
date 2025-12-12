@@ -15,21 +15,18 @@ This project is purely for educational purposes to learn about Android automatio
 # Requirements
 
 -   Android Device or Emulator (Nougat 7.0+)
-    -   For the best performance and stability on phones, the device needs to be at 1080p display resolution. The speed is also best at 1080p and for other resolutions, it becomes dependent on the manual scale that you can set in the settings. Right now it defaults to 1.0 which uses 1080p as the baseline. You can determine what scales may be good for you with the template match test that you can enable in the settings as well.
+    -   Hard requirement for Android phones is 1080p and 240 DPI or 450 DPI (for Samsung phones). If your device do not meet these, you can try the `Basic Template Matching Test` in the Settings under the `Debug Tests` section to determine the best scale to use in the `Custom Scale for Template Matching` setting. If not, then you can also try the [To set the phone's resolution to 1080p (faster and more accurate)](#to-set-the-phones-resolution-to-1080p-faster-and-more-accurate) section to forcibly set the display resolution and DPI of your Android phone. Note that may come with the side-effect of your device UI being scrunched in or zoomed out.
         -   If you change the display resolution while the overlay button is still active, you will need to restart the app in order for the display changes to persist to the `MediaProjection` service.
-    -   Tested emulator was on Bluestacks 5 (Pie 64-bit). Later versions of Bluestacks also should work. The following setup is required:
+    -   Tested emulators are Bluestacks 5 (Pie 64-bit, but other versions should work) and MuMu. The following setup is required:
         -   Portrait Mode needs to be forced on always.
         -   Bluestacks itself needs to be updated to the latest version to avoid Uma Musume crashing.
         -   In the Bluestacks Settings > Phone, the predefined profile needs to be set to a modern high-end phone like the Samsung Galaxy S22.
-        -   Device setup:
+        -   Setup for both BlueStacks and MuMu:
             -   4 CPU Cores
             -   4GB Memory
-            -   Display resolution set to Portrait 1080 x 1920
-            -   Pixel density 240 DPI (Medium)
-    -   Note that other emulators like MuMu may have their 1080p at a different DPI other than 240. MuMu by default uses 480 DPI which will throw template matching and OCR off. It is highly recommended to force it to 240 DPI in the emulator settings for the best performance. The following are tested resolutions + DPIs:
-        -   1080x1920 240 DPI (from Bluestacks emulator default settings)
-        -   1080x2340 450 DPI (from native Samsung phone)
--   The in-game graphics need to be set to `Standard` instead of `Basic` for best performance.
+            -   1080 x 1920 (width x height)
+            -   240 DPI (This is important)
+-   The in-game graphics need to be set to `Standard` instead of `Basic`.
 
 # Features
 
