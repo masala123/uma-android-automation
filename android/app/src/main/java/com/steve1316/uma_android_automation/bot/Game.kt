@@ -40,21 +40,18 @@ class Game(val myContext: Context) {
 	// SQLite Settings
 	val scenario: String = SettingsHelper.getStringSetting("general", "scenario")
 	val debugMode: Boolean = SettingsHelper.getBooleanSetting("debug", "enableDebugMode")
+    val enableSkillPointCheck: Boolean = SettingsHelper.getBooleanSetting("general", "enableSkillPointCheck")
+	val skillPointsRequired: Int = SettingsHelper.getIntSetting("general", "skillPointCheck")
+	private val enablePopupCheck: Boolean = SettingsHelper.getBooleanSetting("general", "enablePopupCheck")
+    private val enableCraneGameAttempt: Boolean = SettingsHelper.getBooleanSetting("general", "enableCraneGameAttempt")
+    private val enableStopBeforeFinals: Boolean = SettingsHelper.getBooleanSetting("general", "enableStopBeforeFinals")
+    private val waitDelay: Double = SettingsHelper.getDoubleSetting("general", "waitDelay")
 
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
 	val training: Training = Training(this)
 	val racing: Racing = Racing(this)
 	val trainingEvent: TrainingEvent = TrainingEvent(this)
-
-	////////////////////////////////////////////////////////////////////
-	////////////////////////////////////////////////////////////////////
-	// Stops
-	val enableSkillPointCheck: Boolean = SettingsHelper.getBooleanSetting("general", "enableSkillPointCheck")
-	val skillPointsRequired: Int = SettingsHelper.getIntSetting("general", "skillPointCheck")
-	private val enablePopupCheck: Boolean = SettingsHelper.getBooleanSetting("general", "enablePopupCheck")
-    private val enableCraneGameAttempt: Boolean = SettingsHelper.getBooleanSetting("general", "enableCraneGameAttempt")
-    private val enableStopBeforeFinals: Boolean = SettingsHelper.getBooleanSetting("general", "enableStopBeforeFinals")
 
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
@@ -140,12 +137,12 @@ class Game(val myContext: Context) {
 	}
 
 	/**
-	 * Wait for the game to finish loading.
+	 * Wait for the game to finish loading. Note that this function is responsible for dictating how fast the bot will run so adjusting this should be done with caution.
 	 */
 	fun waitForLoading() {
 		while (checkLoading()) {
 			// Avoid an infinite loop by setting the flag to true.
-			wait(0.5, skipWaitingForLoading = true)
+			wait(waitDelay, skipWaitingForLoading = true)
 		}
 	}
 

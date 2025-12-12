@@ -274,6 +274,25 @@ const Settings = () => {
                     className="mt-4"
                 />
 
+                <CustomSlider
+                    value={bsc.settings.general.waitDelay}
+                    placeholder={bsc.defaultSettings.general.waitDelay}
+                    onValueChange={(value) => {
+                        bsc.setSettings({ ...bsc.settings, general: { ...bsc.settings.general, waitDelay: value } })
+                    }}
+                    onSlidingComplete={(value) => {
+                        bsc.setSettings({ ...bsc.settings, general: { ...bsc.settings.general, waitDelay: value } })
+                    }}
+                    min={0.0}
+                    max={1.0}
+                    step={0.1}
+                    label="Wait Delay"
+                    labelUnit="s"
+                    showValue={true}
+                    showLabels={true}
+                    description="Sets the delay between actions and imaging operations. Lowering this will make the bot run much faster."
+                />
+
                 <Separator style={{ marginVertical: 16 }} />
 
                 <CustomTitle title="Settings Management" description="Import and export settings from JSON file or access the app's data directory." />
