@@ -346,7 +346,7 @@ class Racing (private val game: Game) {
                     else -> "X"
                 }
                 val distanceAptitude = when (mandatoryExtraRaceData.distanceType) {
-                    "Sprint" -> game.aptitudes.distance.sprint
+                    "Short" -> game.aptitudes.distance.sprint
                     "Mile" -> game.aptitudes.distance.mile
                     "Medium" -> game.aptitudes.distance.medium
                     "Long" -> game.aptitudes.distance.long
@@ -797,7 +797,7 @@ class Racing (private val game: Game) {
 
         // Get distance aptitude.
         val distanceAptitude = when (raceData.distanceType) {
-            "Sprint" -> game.aptitudes.distance.sprint
+            "Short" -> game.aptitudes.distance.sprint
             "Mile" -> game.aptitudes.distance.mile
             "Medium" -> game.aptitudes.distance.medium
             "Long" -> game.aptitudes.distance.long
@@ -1521,7 +1521,7 @@ class Racing (private val game: Game) {
             else -> "X"
         }
         val distanceAptitude = when (race.distanceType) {
-            "Sprint" -> game.aptitudes.distance.sprint
+            "Short" -> game.aptitudes.distance.sprint
             "Mile" -> game.aptitudes.distance.mile
             "Medium" -> game.aptitudes.distance.medium
             "Long" -> game.aptitudes.distance.long
