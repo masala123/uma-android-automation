@@ -26,6 +26,7 @@ class Racing (private val game: Game) {
     private val minFansThreshold = SettingsHelper.getIntSetting("racing", "minFansThreshold")
     private val preferredTerrain = SettingsHelper.getStringSetting("racing", "preferredTerrain")
     private val preferredGradesString = SettingsHelper.getStringSetting("racing", "preferredGrades")
+    private val preferredDistancesString = SettingsHelper.getStringSetting("racing", "preferredDistances")
     private val racingPlanJson = SettingsHelper.getStringSetting("racing", "racingPlan")
     private val minimumQualityThreshold = SettingsHelper.getDoubleSetting("racing", "minimumQualityThreshold")
     private val timeDecayFactor = SettingsHelper.getDoubleSetting("racing", "timeDecayFactor")
@@ -1672,13 +1673,12 @@ class Racing (private val game: Game) {
      * @return A list of [RaceData] objects that satisfy all Racing Plan filter criteria.
      */
     private fun filterRacesByCriteria(races: List<RaceData>, bypassMinFans: Boolean = false): List<RaceData> {
-        // Parse preferred grades from JSON array string.
-        MessageLog.i(TAG, "[RACE] Raw preferred grades string: \"$preferredGradesString\".")
+        // Parse preferred grades.
         val preferredGrades = try {
             // Parse as JSON array.
             val jsonArray = JSONArray(preferredGradesString)
             val parsed = (0 until jsonArray.length()).map { jsonArray.getString(it) }
-            MessageLog.i(TAG, "[RACE] Parsed as JSON array: $parsed.")
+            MessageLog.i(TAG, "[RACE] Parsed preferred grades as JSON array: $parsed.")
             parsed
         } catch (e: Exception) {
             MessageLog.i(TAG, "[RACE] Error parsing preferred grades: ${e.message}, using fallback.")
@@ -1687,15 +1687,30 @@ class Racing (private val game: Game) {
             parsed
         }
 
-        if (game.debugMode) MessageLog.d(TAG, "[DEBUG] Filter criteria: Min fans: $minFansThreshold, terrain: $preferredTerrain, grades: $preferredGrades")
-        else Log.d(TAG, "[DEBUG] Filter criteria: Min fans: $minFansThreshold, terrain: $preferredTerrain, grades: $preferredGrades")
+        // Parse preferred distances.
+        val preferredDistances = try {
+            // Parse as JSON array.
+            val jsonArray = JSONArray(preferredDistancesString)
+            val parsed = (0 until jsonArray.length()).map { jsonArray.getString(it) }
+            MessageLog.i(TAG, "[RACE] Parsed preferred distances as JSON array: $parsed.")
+            parsed
+        } catch (e: Exception) {
+            MessageLog.i(TAG, "[RACE] Error parsing preferred distances: ${e.message}, using fallback.")
+            val parsed = preferredDistancesString.split(",").map { it.trim() }
+            MessageLog.i(TAG, "[RACE] Fallback parsing result: $parsed")
+            parsed
+        }
+
+        if (game.debugMode) MessageLog.d(TAG, "[DEBUG] Filter criteria: Min fans: $minFansThreshold, terrain: $preferredTerrain, grades: $preferredGrades, distances: $preferredDistances")
+        else Log.d(TAG, "[DEBUG] Filter criteria: Min fans: $minFansThreshold, terrain: $preferredTerrain, grades: $preferredGrades, distances: $preferredDistances")
         
         val filteredRaces = races.filter { race ->
             val meetsFansThreshold = bypassMinFans || race.fans >= minFansThreshold
             val meetsTerrainPreference = preferredTerrain == "Any" || race.terrain == preferredTerrain
             val meetsGradePreference = preferredGrades.isEmpty() || preferredGrades.contains(race.grade)
+            val meetsDistancePreference = preferredDistances.isEmpty() || preferredDistances.contains(race.distanceType)
             
-            val passes = meetsFansThreshold && meetsTerrainPreference && meetsGradePreference
+            val passes = meetsFansThreshold && meetsTerrainPreference && meetsGradePreference && meetsDistancePreference
 
             // If the race did not pass any of the filters, print the reason why.
             if (!passes) {
@@ -1703,11 +1718,12 @@ class Racing (private val game: Game) {
                 if (!meetsFansThreshold) reasons.add("fans ${race.fans} < $minFansThreshold")
                 if (!meetsTerrainPreference) reasons.add("terrain ${race.terrain} != $preferredTerrain")
                 if (!meetsGradePreference) reasons.add("grade ${race.grade} not in $preferredGrades")
+                if (!meetsDistancePreference) reasons.add("distance ${race.distanceType} not in $preferredDistances")
                 if (game.debugMode) MessageLog.d(TAG, "[DEBUG] ✗ Filtered out ${race.name}: ${reasons.joinToString(", ")}")
                 else Log.d(TAG, "[DEBUG] ✗ Filtered out ${race.name}: ${reasons.joinToString(", ")}")
             } else {
-                if (game.debugMode) MessageLog.d(TAG, "[DEBUG] ✓ Passed filter: ${race.name} (fans: ${race.fans}, terrain: ${race.terrain}, grade: ${race.grade})")
-                else Log.d(TAG, "[DEBUG] ✓ Passed filter: ${race.name} (fans: ${race.fans}, terrain: ${race.terrain}, grade: ${race.grade})")
+                if (game.debugMode) MessageLog.d(TAG, "[DEBUG] ✓ Passed filter: ${race.name} (fans: ${race.fans}, terrain: ${race.terrain}, grade: ${race.grade}, distance: ${race.distanceType})")
+                else Log.d(TAG, "[DEBUG] ✓ Passed filter: ${race.name} (fans: ${race.fans}, terrain: ${race.terrain}, grade: ${race.grade}, distance: ${race.distanceType})")
             }
             
             passes
