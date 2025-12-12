@@ -911,10 +911,8 @@ class Racing (private val game: Game) {
             } else {
                 MessageLog.i(TAG, "[RACE] No planned race matches current turn $currentTurnNumber and mandatory mode for extra races is enabled. Continuing with normal eligibility checks.")
             }
-        }
-
-        // For Classic and Senior Year, check if planned races are coming up in the look-ahead window and are eligible for racing.
-        if (enableFarmingFans && enableRacingPlan && game.currentDate.year != 1) {
+        } else if (enableFarmingFans && enableRacingPlan && game.currentDate.year != 1) {
+            // For Classic and Senior Year, check if planned races are coming up in the look-ahead window and are eligible for racing.
             // Handle the user-selected planned races here.
             if (userPlannedRaces.isNotEmpty()) {
                 val currentTurnNumber = game.currentDate.turnNumber
@@ -987,7 +985,7 @@ class Racing (private val game: Game) {
             }
 
             return !raceRepeatWarningCheck
-        } else if (enableRacingPlan && enableFarmingFans) {
+        } else if (enableRacingPlan && !enableMandatoryRacingPlan && enableFarmingFans) {
             // Smart racing: Check turn-based eligibility before screen checks.
             // Only run opportunity cost analysis with smartRacingCheckInterval.
             val isCheckInterval = game.currentDate.turnNumber % smartRacingCheckInterval == 0
