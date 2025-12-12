@@ -11,6 +11,7 @@ export interface Settings {
         enablePopupCheck: boolean
         enableCraneGameAttempt: boolean
         enableStopBeforeFinals: boolean
+        waitDelay: number
     }
 
     // Racing settings
@@ -133,6 +134,7 @@ export const defaultSettings: Settings = {
         enablePopupCheck: false,
         enableCraneGameAttempt: false,
         enableStopBeforeFinals: false,
+        waitDelay: 0.5,
     },
     racing: {
         enableFarmingFans: false,
