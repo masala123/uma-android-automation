@@ -47,7 +47,8 @@ This project is purely for educational purposes to learn about Android automatio
 6. **IMPORTANT:** Move the overlay button to the far left edge of the screen and centered in the middle of the screen's height. Otherwise, you run the risk of the overlay button covering crucial elements on the screen.
 7. Navigate yourself to the screen below that shows available options like Rest, Train, Buy Skills, Races, etc.
 
-> ![main screen](https://user-images.githubusercontent.com/18709555/125517626-d276cda0-bffa-441d-a511-a222237837a1.jpg)
+> <img width="270" height="585" alt="main screen" src="https://github.com/user-attachments/assets/05239856-878e-4e49-a325-db60013d7c75" />
+
 
 8. Press the overlay button to start the automation process. For enabling app notifications, it is recommended to have a notification style that is small enough that it does not fully cover the top part of the screen where it contains the date, energy, turn number, etc. Or disable notifications if you do not want to worry about it.
 
