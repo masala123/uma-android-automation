@@ -26,10 +26,12 @@ class Racing (private val game: Game) {
     private val minFansThreshold = SettingsHelper.getIntSetting("racing", "minFansThreshold")
     private val preferredTerrain = SettingsHelper.getStringSetting("racing", "preferredTerrain")
     private val preferredGradesString = SettingsHelper.getStringSetting("racing", "preferredGrades")
+    private val preferredDistancesString = SettingsHelper.getStringSetting("racing", "preferredDistances")
     private val racingPlanJson = SettingsHelper.getStringSetting("racing", "racingPlan")
     private val minimumQualityThreshold = SettingsHelper.getDoubleSetting("racing", "minimumQualityThreshold")
     private val timeDecayFactor = SettingsHelper.getDoubleSetting("racing", "timeDecayFactor")
     private val improvementThreshold = SettingsHelper.getDoubleSetting("racing", "improvementThreshold")
+    private val enableMandatoryRacingPlan = SettingsHelper.getBooleanSetting("racing", "enableMandatoryRacingPlan")
 
     private var raceRetries = 3
     var raceRepeatWarningCheck = false
@@ -87,7 +89,8 @@ class Racing (private val game: Game) {
     data class PlannedRace(
         val raceName: String,
         val date: String,
-        val priority: Int
+        val priority: Int,
+        val turnNumber: Int
     )
 
     /**
@@ -115,7 +118,8 @@ class Racing (private val game: Game) {
                 val plannedRace = PlannedRace(
                     raceName = raceObj.getString("raceName"),
                     date = raceObj.getString("date"),
-                    priority = raceObj.optInt("priority", 0)
+                    priority = raceObj.optInt("priority", 0),
+                    turnNumber = raceObj.getInt("turnNumber")
                 )
                 plannedRaces.add(plannedRace)
             }
@@ -331,6 +335,31 @@ class Racing (private val game: Game) {
     private fun handleExtraRace(): Boolean {
         MessageLog.i(TAG, "[RACE] Starting process for handling a extra race.")
 
+        // Check for mandatory racing plan mode before any screen detection.
+        val (_, mandatoryExtraRaceData) = findMandatoryExtraRaceForCurrentTurn()
+        if (mandatoryExtraRaceData != null) {
+            // Check if aptitudes match (both terrain and distance must be B or greater) for double predictions.
+            val aptitudesMatch = checkRaceAptitudeMatch(mandatoryExtraRaceData)
+            if (!aptitudesMatch) {
+                val terrainAptitude = when (mandatoryExtraRaceData.terrain) {
+                    "Turf" -> game.aptitudes.track.turf
+                    "Dirt" -> game.aptitudes.track.dirt
+                    else -> "X"
+                }
+                val distanceAptitude = when (mandatoryExtraRaceData.distanceType) {
+                    "Short" -> game.aptitudes.distance.sprint
+                    "Mile" -> game.aptitudes.distance.mile
+                    "Medium" -> game.aptitudes.distance.medium
+                    "Long" -> game.aptitudes.distance.long
+                    else -> "X"
+                }
+                MessageLog.i(TAG, "[RACE] Mandatory extra race \"${mandatoryExtraRaceData.name}\" aptitudes don't match requirements (Terrain: $terrainAptitude, Distance: $distanceAptitude). Both must be B or greater.")
+                return false
+            } else {
+                MessageLog.i(TAG, "[RACE] Mandatory extra race \"${mandatoryExtraRaceData.name}\" aptitudes match requirements. Proceeding to navigate to the Extra Races screen.")
+            }
+        }
+
         // If there is a popup warning about repeating races 3+ times, stop the process and do something else other than racing.
         if (game.imageUtils.findImage("race_repeat_warning").first != null) {
             if (!enableForceRacing) {
@@ -397,7 +426,7 @@ class Racing (private val game: Game) {
         val success = if (useSmartRacing && game.currentDate.year != 1) {
             // Use the smart racing logic.
             MessageLog.i(TAG, "[RACE] Using smart racing for Year ${game.currentDate.year}.")
-            processSmartRacing()
+            processSmartRacing(mandatoryExtraRaceData)
         } else {
             // Use the standard racing logic.
             // If needed, print the reason(s) to why the smart racing logic was not started.
@@ -445,9 +474,10 @@ class Racing (private val game: Game) {
     /**
      * Handles extra races using Smart Racing logic.
      *
+     * @param mandatoryExtraRaceData Race data for for the extra race that is mandatory to run. If provided, this race will be selected immediately if found on the screen.
      * @return True if a race was successfully selected and ready to run; false if the process was canceled.
      */
-    private fun processSmartRacing(): Boolean {
+    private fun processSmartRacing(mandatoryExtraRaceData: RaceData? = null): Boolean {
         MessageLog.i(TAG, "[RACE] Using Smart Racing Plan logic...")
 
         // Updates the current date and aptitudes for accurate scoring.
@@ -463,6 +493,27 @@ class Racing (private val game: Game) {
         if (doublePredictionLocations.isEmpty()) {
             MessageLog.i(TAG, "[RACE] No double-star predictions found. Canceling racing process.")
             return false
+        }
+
+        // If mandatory extra race data is provided, immediately find and select it on screen.
+        if (mandatoryExtraRaceData != null) {
+            MessageLog.i(TAG, "[RACE] Mandatory mode for extra races enabled. Looking for planned race \"${mandatoryExtraRaceData.name}\" on screen for turn ${game.currentDate.turnNumber}.")
+
+            // Find the mandatory race on screen by matching race name with detected races.
+            val mandatoryExtraRaceLocation = doublePredictionLocations.find { location ->
+                val raceName = game.imageUtils.extractRaceName(location)
+                val detectedExtraRaceData = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
+                detectedExtraRaceData?.name == mandatoryExtraRaceData.name
+            }
+
+            if (mandatoryExtraRaceLocation != null) {
+                MessageLog.i(TAG, "[RACE] Mandatory extra race \"${mandatoryExtraRaceData.name}\" found on screen with double predictions. Selecting it immediately (skipping opportunity cost analysis).")
+                game.tap(mandatoryExtraRaceLocation.x, mandatoryExtraRaceLocation.y, "race_extra_double_prediction", ignoreWaiting = true)
+                return true
+            } else {
+                MessageLog.i(TAG, "[RACE] Mandatory extra race \"${mandatoryExtraRaceData.name}\" not found on screen. Canceling racing process.")
+                return false
+            }
         }
 
         // Extracts race names from the screen and matches them with the in-game database.
@@ -722,6 +773,74 @@ class Racing (private val game: Game) {
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
+     * Checks if an aptitude value meets the minimum requirement (B or greater).
+     *
+     * @param aptitude The aptitude value to check (S, A, B, etc.).
+     * @return True if the aptitude is S, A or B; false otherwise.
+     */
+    private fun hasMinimumAptitude(aptitude: String): Boolean {
+        return aptitude == "S" || aptitude == "A" || aptitude == "B"
+    }
+
+    /**
+     * Checks if the racer's aptitudes match the race requirements (both terrain and distance must be B or greater).
+     *
+     * @param raceData The race data to check aptitudes against.
+     * @return True if both terrain and distance aptitudes are B or greater; false otherwise.
+     */
+    private fun checkRaceAptitudeMatch(raceData: RaceData): Boolean {
+        // Get terrain aptitude.
+        val terrainAptitude = when (raceData.terrain) {
+            "Turf" -> game.aptitudes.track.turf
+            "Dirt" -> game.aptitudes.track.dirt
+            else -> "X"
+        }
+
+        // Get distance aptitude.
+        val distanceAptitude = when (raceData.distanceType) {
+            "Short" -> game.aptitudes.distance.sprint
+            "Mile" -> game.aptitudes.distance.mile
+            "Medium" -> game.aptitudes.distance.medium
+            "Long" -> game.aptitudes.distance.long
+            else -> "X"
+        }
+
+        // Both aptitudes must be B or greater for double predictions.
+        val terrainMatch = hasMinimumAptitude(terrainAptitude)
+        val distanceMatch = hasMinimumAptitude(distanceAptitude)
+
+        return terrainMatch && distanceMatch
+    }
+
+    /**
+     * Finds the mandatory planned race for the current turn number if mandatory mode is enabled.
+     *
+     * @return A Pair containing the PlannedRace and RaceData for the mandatory extra race if found, null otherwise.
+     */
+    private fun findMandatoryExtraRaceForCurrentTurn(): Pair<PlannedRace?, RaceData?> {
+        if (!enableRacingPlan || !enableMandatoryRacingPlan) {
+            return Pair(null, null)
+        }
+
+        val currentTurnNumber = game.currentDate.turnNumber
+
+        // Find planned race matching current turn number.
+        val matchingPlannedRace = userPlannedRaces.find { it.turnNumber == currentTurnNumber }
+        if (matchingPlannedRace == null) {
+            return Pair(null, null)
+        }
+
+        // Look up race data from raceData map.
+        val raceData = this.raceData[matchingPlannedRace.raceName]
+        if (raceData == null) {
+            MessageLog.e(TAG, "[ERROR] Planned race \"${matchingPlannedRace.raceName}\" not found in race data.")
+            return Pair(null, null)
+        }
+
+        return Pair(matchingPlannedRace, raceData)
+    }
+
+    /**
      * Check if there are fan or trophy requirements that need to be satisfied.
      */
     fun checkRacingRequirements() {
@@ -779,6 +898,21 @@ class Racing (private val game: Game) {
             return false
         }
 
+        // Check for mandatory racing plan mode (before opportunity cost analysis and while still on the main screen).
+        if (enableRacingPlan && enableMandatoryRacingPlan) {
+            val currentTurnNumber = game.currentDate.turnNumber
+
+            // Find planned race matching current turn number.
+            val matchingPlannedRace = userPlannedRaces.find { it.turnNumber == currentTurnNumber }
+
+            if (matchingPlannedRace != null) {
+                MessageLog.i(TAG, "[RACE] Found planned race \"${matchingPlannedRace.raceName}\" for turn $currentTurnNumber and mandatory mode for extra races is enabled.")
+                return !raceRepeatWarningCheck
+            } else {
+                MessageLog.i(TAG, "[RACE] No planned race matches current turn $currentTurnNumber and mandatory mode for extra races is enabled. Continuing with normal eligibility checks.")
+            }
+        }
+
         // For Classic and Senior Year, check if planned races are coming up in the look-ahead window and are eligible for racing.
         if (enableFarmingFans && enableRacingPlan && game.currentDate.year != 1) {
             // Handle the user-selected planned races here.
@@ -806,7 +940,7 @@ class Racing (private val game: Game) {
                             false
                         } else {
                             // For Classic Year, check if it's an eligible racing day.
-                            if (game.currentDate.year == 2) {
+                            if (game.currentDate.year == 2 && !enableRacingPlan) {
                                 val isEligible = turnsRemaining % daysToRunExtraRaces == 0
                                 if (!isEligible) {
                                     MessageLog.i(TAG, "[RACE] Planned race \"${plannedRace.raceName}\" is not on an eligible racing day (day $turnsRemaining, interval $daysToRunExtraRaces).")
@@ -838,7 +972,8 @@ class Racing (private val game: Game) {
             // Check if G1 races exist at current turn before proceeding.
             // If no G1 races are available, it will still allow regular racing if it's a regular race day or smart racing day.
             if (!hasG1RacesAtTurn(game.currentDate.turnNumber)) {
-                val isRegularRacingDay = enableFarmingFans && (turnsRemaining % daysToRunExtraRaces == 0)
+                // Skip interval check if Racing Plan is enabled.
+                val isRegularRacingDay = enableFarmingFans && !enableRacingPlan && (turnsRemaining % daysToRunExtraRaces == 0)
                 val isSmartRacingDay = enableRacingPlan && enableFarmingFans && nextSmartRaceDay == turnsRemaining
 
                 if (isRegularRacingDay || isSmartRacingDay) {
@@ -908,7 +1043,7 @@ class Racing (private val game: Game) {
 
             // Check if current day matches the optimal race day or falls on the interval.
             val isOptimalDay = nextSmartRaceDay == turnsRemaining
-            val isIntervalDay = turnsRemaining % daysToRunExtraRaces == 0
+            val isIntervalDay = !enableRacingPlan && (turnsRemaining % daysToRunExtraRaces == 0)
 
             if (isOptimalDay) {
                 MessageLog.i(TAG, "[RACE] Current day ($turnsRemaining) matches optimal race day.")
@@ -917,13 +1052,18 @@ class Racing (private val game: Game) {
                 MessageLog.i(TAG, "[RACE] Current day ($turnsRemaining) falls on racing interval ($daysToRunExtraRaces).")
                 return !raceRepeatWarningCheck
             } else {
-                MessageLog.i(TAG, "[RACE] Current day ($turnsRemaining) is not optimal (next: $nextSmartRaceDay, interval: $daysToRunExtraRaces).")
+                if (enableRacingPlan) {
+                    MessageLog.i(TAG, "[RACE] Current day ($turnsRemaining) is not optimal (next: $nextSmartRaceDay).")
+                } else {
+                    MessageLog.i(TAG, "[RACE] Current day ($turnsRemaining) is not optimal (next: $nextSmartRaceDay, interval: $daysToRunExtraRaces).")
+                }
                 return false
             }
         }
 
         // Conditionally start the standard racing process.
-        return enableFarmingFans && (turnsRemaining % daysToRunExtraRaces == 0) && !raceRepeatWarningCheck
+        // This fallback only applies when Racing Plan is disabled, so use interval-based logic.
+        return enableFarmingFans && !enableRacingPlan && (turnsRemaining % daysToRunExtraRaces == 0) && !raceRepeatWarningCheck
     }
 
     /**
@@ -1382,7 +1522,7 @@ class Racing (private val game: Game) {
             else -> "X"
         }
         val distanceAptitude = when (race.distanceType) {
-            "Sprint" -> game.aptitudes.distance.sprint
+            "Short" -> game.aptitudes.distance.sprint
             "Mile" -> game.aptitudes.distance.mile
             "Medium" -> game.aptitudes.distance.medium
             "Long" -> game.aptitudes.distance.long
@@ -1533,13 +1673,12 @@ class Racing (private val game: Game) {
      * @return A list of [RaceData] objects that satisfy all Racing Plan filter criteria.
      */
     private fun filterRacesByCriteria(races: List<RaceData>, bypassMinFans: Boolean = false): List<RaceData> {
-        // Parse preferred grades from JSON array string.
-        MessageLog.i(TAG, "[RACE] Raw preferred grades string: \"$preferredGradesString\".")
+        // Parse preferred grades.
         val preferredGrades = try {
             // Parse as JSON array.
             val jsonArray = JSONArray(preferredGradesString)
             val parsed = (0 until jsonArray.length()).map { jsonArray.getString(it) }
-            MessageLog.i(TAG, "[RACE] Parsed as JSON array: $parsed.")
+            MessageLog.i(TAG, "[RACE] Parsed preferred grades as JSON array: $parsed.")
             parsed
         } catch (e: Exception) {
             MessageLog.i(TAG, "[RACE] Error parsing preferred grades: ${e.message}, using fallback.")
@@ -1548,15 +1687,30 @@ class Racing (private val game: Game) {
             parsed
         }
 
-        if (game.debugMode) MessageLog.d(TAG, "[DEBUG] Filter criteria: Min fans: $minFansThreshold, terrain: $preferredTerrain, grades: $preferredGrades")
-        else Log.d(TAG, "[DEBUG] Filter criteria: Min fans: $minFansThreshold, terrain: $preferredTerrain, grades: $preferredGrades")
+        // Parse preferred distances.
+        val preferredDistances = try {
+            // Parse as JSON array.
+            val jsonArray = JSONArray(preferredDistancesString)
+            val parsed = (0 until jsonArray.length()).map { jsonArray.getString(it) }
+            MessageLog.i(TAG, "[RACE] Parsed preferred distances as JSON array: $parsed.")
+            parsed
+        } catch (e: Exception) {
+            MessageLog.i(TAG, "[RACE] Error parsing preferred distances: ${e.message}, using fallback.")
+            val parsed = preferredDistancesString.split(",").map { it.trim() }
+            MessageLog.i(TAG, "[RACE] Fallback parsing result: $parsed")
+            parsed
+        }
+
+        if (game.debugMode) MessageLog.d(TAG, "[DEBUG] Filter criteria: Min fans: $minFansThreshold, terrain: $preferredTerrain, grades: $preferredGrades, distances: $preferredDistances")
+        else Log.d(TAG, "[DEBUG] Filter criteria: Min fans: $minFansThreshold, terrain: $preferredTerrain, grades: $preferredGrades, distances: $preferredDistances")
         
         val filteredRaces = races.filter { race ->
             val meetsFansThreshold = bypassMinFans || race.fans >= minFansThreshold
             val meetsTerrainPreference = preferredTerrain == "Any" || race.terrain == preferredTerrain
             val meetsGradePreference = preferredGrades.isEmpty() || preferredGrades.contains(race.grade)
+            val meetsDistancePreference = preferredDistances.isEmpty() || preferredDistances.contains(race.distanceType)
             
-            val passes = meetsFansThreshold && meetsTerrainPreference && meetsGradePreference
+            val passes = meetsFansThreshold && meetsTerrainPreference && meetsGradePreference && meetsDistancePreference
 
             // If the race did not pass any of the filters, print the reason why.
             if (!passes) {
@@ -1564,11 +1718,12 @@ class Racing (private val game: Game) {
                 if (!meetsFansThreshold) reasons.add("fans ${race.fans} < $minFansThreshold")
                 if (!meetsTerrainPreference) reasons.add("terrain ${race.terrain} != $preferredTerrain")
                 if (!meetsGradePreference) reasons.add("grade ${race.grade} not in $preferredGrades")
+                if (!meetsDistancePreference) reasons.add("distance ${race.distanceType} not in $preferredDistances")
                 if (game.debugMode) MessageLog.d(TAG, "[DEBUG] ✗ Filtered out ${race.name}: ${reasons.joinToString(", ")}")
                 else Log.d(TAG, "[DEBUG] ✗ Filtered out ${race.name}: ${reasons.joinToString(", ")}")
             } else {
-                if (game.debugMode) MessageLog.d(TAG, "[DEBUG] ✓ Passed filter: ${race.name} (fans: ${race.fans}, terrain: ${race.terrain}, grade: ${race.grade})")
-                else Log.d(TAG, "[DEBUG] ✓ Passed filter: ${race.name} (fans: ${race.fans}, terrain: ${race.terrain}, grade: ${race.grade})")
+                if (game.debugMode) MessageLog.d(TAG, "[DEBUG] ✓ Passed filter: ${race.name} (fans: ${race.fans}, terrain: ${race.terrain}, grade: ${race.grade}, distance: ${race.distanceType})")
+                else Log.d(TAG, "[DEBUG] ✓ Passed filter: ${race.name} (fans: ${race.fans}, terrain: ${race.terrain}, grade: ${race.grade}, distance: ${race.distanceType})")
             }
             
             passes

@@ -40,6 +40,7 @@ const RacingPlanSettings = () => {
     const racingSettings = { ...defaultSettings.racing, ...settings.racing }
     const {
         enableRacingPlan,
+        enableMandatoryRacingPlan,
         racingPlan,
         minFansThreshold,
         preferredTerrain,
@@ -49,6 +50,7 @@ const RacingPlanSettings = () => {
         timeDecayFactor,
         improvementThreshold,
         preferredGrades,
+        preferredDistances,
     } = racingSettings
 
     const [searchQuery, setSearchQuery] = useState("")
@@ -83,8 +85,9 @@ const RacingPlanSettings = () => {
         const matchesFans = race.fans >= minFansThreshold
         const matchesTerrain = preferredTerrain === "Any" || race.terrain === preferredTerrain
         const matchesGrade = preferredGrades.includes(race.grade) && race.grade !== "OP" && race.grade !== "Pre-OP"
+        const matchesDistance = preferredDistances.includes(race.distanceType)
 
-        return matchesSearch && matchesFans && matchesTerrain && matchesGrade
+        return matchesSearch && matchesFans && matchesTerrain && matchesGrade && matchesDistance
     })
 
     const updateRacingSetting = (key: string, value: any) => {
@@ -144,6 +147,17 @@ const RacingPlanSettings = () => {
             )
         } else {
             updateRacingSetting("preferredGrades", [...preferredGrades, grade])
+        }
+    }
+
+    const toggleDistance = (distance: string) => {
+        if (preferredDistances.includes(distance)) {
+            updateRacingSetting(
+                "preferredDistances",
+                preferredDistances.filter((d: string) => d !== distance)
+            )
+        } else {
+            updateRacingSetting("preferredDistances", [...preferredDistances, distance])
         }
     }
 
@@ -421,6 +435,36 @@ const RacingPlanSettings = () => {
                         ))}
                     </View>
                 </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Preferred Race Distances</Text>
+                    <Text style={styles.inputDescription}>Select which race distances the bot should prioritize.</Text>
+                    <View style={{ flexDirection: "row", flexWrap: "wrap", marginTop: 8 }}>
+                        {["Short", "Mile", "Medium", "Long"].map((distance) => (
+                            <TouchableOpacity
+                                key={distance}
+                                onPress={() => toggleDistance(distance)}
+                                style={[
+                                    styles.terrainButton,
+                                    {
+                                        backgroundColor: preferredDistances.includes(distance) ? colors.primary : colors.card,
+                                    },
+                                ]}
+                            >
+                                <Text
+                                    style={[
+                                        styles.terrainButtonText,
+                                        {
+                                            color: preferredDistances.includes(distance) ? colors.background : colors.foreground,
+                                        },
+                                    ]}
+                                >
+                                    {distance}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
             </>
         )
     }
@@ -507,7 +551,7 @@ const RacingPlanSettings = () => {
                         <CustomTitle
                             title="Racing Plan"
                             description={
-                                "Uses opportunity cost analysis to optimize race selection by looking ahead N days for races matching your character's aptitudes (A/S terrain/distance). Scores races by fans, grade, and aptitude matches.\n\nUses standard settings until Classic Year, then combines both this and standard racing settings during Classic Year. Only fully activates in Senior Year. Races when current opportunities are good enough and waiting doesn't offer significantly better value, ensuring steady fan accumulation without endless waiting."
+                                "Uses opportunity cost analysis to optimize race selection by looking ahead N days for races matching your character's aptitudes (A/S terrain/distance). Scores races by fans, grade, and aptitude matches.\n\nUses standard settings until Classic Year, then combines both this and standard racing settings during Classic Year. Only fully activates in Senior Year. Races when current opportunities are good enough and waiting doesn't offer significantly better value, ensuring steady fan accumulation without endless waiting.\n\nNote: When Racing Plan is enabled, the \"Days to Run Extra Races\" setting in Racing Settings is ignored, as Racing Plan controls when races occur based on opportunity cost analysis or mandatory race detection."
                             }
                         />
 
@@ -520,6 +564,19 @@ const RacingPlanSettings = () => {
                             label="Enable Racing Plan (Beta)"
                             description={"When enabled, the bot will use smart race planning to optimize race selection."}
                         />
+
+                        {enableRacingPlan && (
+                            <CustomCheckbox
+                                id="enable-mandatory-racing-plan"
+                                checked={enableMandatoryRacingPlan}
+                                onCheckedChange={(checked) => updateRacingSetting("enableMandatoryRacingPlan", checked)}
+                                label="Treat Planned Races as Mandatory"
+                                description={
+                                    "When enabled, the bot will prioritize the specific planned race that matches the current turn number, bypassing opportunity cost analysis. Note that it will only run the races if the racer's aptitudes are double predictions (both terrain and distance must be B or greater)."
+                                }
+                                style={{ marginTop: 16 }}
+                            />
+                        )}
                     </View>
 
                     {enableRacingPlan && (

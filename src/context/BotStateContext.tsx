@@ -21,11 +21,13 @@ export interface Settings {
         enableStopOnMandatoryRaces: boolean
         enableForceRacing: boolean
         enableRacingPlan: boolean
+        enableMandatoryRacingPlan: boolean
         racingPlan: string
         racingPlanData: string
         minFansThreshold: number
         preferredTerrain: string
         preferredGrades: string[]
+        preferredDistances: string[]
         lookAheadDays: number
         smartRacingCheckInterval: number
         enableRaceStrategyOverride: boolean
@@ -139,6 +141,7 @@ export const defaultSettings: Settings = {
         enableStopOnMandatoryRaces: false,
         enableForceRacing: false,
         enableRacingPlan: false,
+        enableMandatoryRacingPlan: false,
         racingPlan: JSON.stringify(
             Object.values(racesData).map((race, index) => ({
                 raceName: race.name,
@@ -150,6 +153,7 @@ export const defaultSettings: Settings = {
         minFansThreshold: 0,
         preferredTerrain: "Any",
         preferredGrades: ["G1", "G2", "G3"],
+        preferredDistances: ["Short", "Mile", "Medium", "Long"],
         lookAheadDays: 10,
         smartRacingCheckInterval: 2,
         enableRaceStrategyOverride: false,

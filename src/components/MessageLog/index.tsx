@@ -276,10 +276,12 @@ ${longTargetsString}
 🏁 Stop on Mandatory Race: ${settings.racing.enableStopOnMandatoryRaces ? "✅" : "❌"}
 🏃 Force Racing Every Day: ${settings.racing.enableForceRacing ? "✅" : "❌"}
 🏁 Enable Racing Plan: ${settings.racing.enableRacingPlan ? "✅" : "❌"}
+🏁 Racing Plan is Mandatory: ${settings.racing.enableMandatoryRacingPlan ? "✅" : "❌"}
 🏁 Racing Plan: ${racingPlanString}
 👥 Minimum Fans Threshold: ${settings.racing.minFansThreshold}
 🏃 Preferred Terrain: ${settings.racing.preferredTerrain}
 🏆 Preferred Grades: ${settings.racing.preferredGrades.join(", ")}
+🏃 Preferred Distances: ${settings.racing.preferredDistances.join(", ")}
 📅 Look Ahead Days: ${settings.racing.lookAheadDays} days
 ⏰ Smart Racing Check Interval: ${settings.racing.smartRacingCheckInterval} days
 🎯 Race Strategy Override: ${settings.racing.enableRaceStrategyOverride ? `✅ (From ${settings.racing.originalRaceStrategy} to ${settings.racing.juniorYearRaceStrategy})` : "❌"}
