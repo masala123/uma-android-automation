@@ -50,6 +50,7 @@ const RacingPlanSettings = () => {
         timeDecayFactor,
         improvementThreshold,
         preferredGrades,
+        preferredDistances,
     } = racingSettings
 
     const [searchQuery, setSearchQuery] = useState("")
@@ -84,8 +85,9 @@ const RacingPlanSettings = () => {
         const matchesFans = race.fans >= minFansThreshold
         const matchesTerrain = preferredTerrain === "Any" || race.terrain === preferredTerrain
         const matchesGrade = preferredGrades.includes(race.grade) && race.grade !== "OP" && race.grade !== "Pre-OP"
+        const matchesDistance = preferredDistances.includes(race.distanceType)
 
-        return matchesSearch && matchesFans && matchesTerrain && matchesGrade
+        return matchesSearch && matchesFans && matchesTerrain && matchesGrade && matchesDistance
     })
 
     const updateRacingSetting = (key: string, value: any) => {
@@ -145,6 +147,17 @@ const RacingPlanSettings = () => {
             )
         } else {
             updateRacingSetting("preferredGrades", [...preferredGrades, grade])
+        }
+    }
+
+    const toggleDistance = (distance: string) => {
+        if (preferredDistances.includes(distance)) {
+            updateRacingSetting(
+                "preferredDistances",
+                preferredDistances.filter((d: string) => d !== distance)
+            )
+        } else {
+            updateRacingSetting("preferredDistances", [...preferredDistances, distance])
         }
     }
 
@@ -417,6 +430,36 @@ const RacingPlanSettings = () => {
                                     ]}
                                 >
                                     {grade}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Preferred Race Distances</Text>
+                    <Text style={styles.inputDescription}>Select which race distances the bot should prioritize.</Text>
+                    <View style={{ flexDirection: "row", flexWrap: "wrap", marginTop: 8 }}>
+                        {["Short", "Mile", "Medium", "Long"].map((distance) => (
+                            <TouchableOpacity
+                                key={distance}
+                                onPress={() => toggleDistance(distance)}
+                                style={[
+                                    styles.terrainButton,
+                                    {
+                                        backgroundColor: preferredDistances.includes(distance) ? colors.primary : colors.card,
+                                    },
+                                ]}
+                            >
+                                <Text
+                                    style={[
+                                        styles.terrainButtonText,
+                                        {
+                                            color: preferredDistances.includes(distance) ? colors.background : colors.foreground,
+                                        },
+                                    ]}
+                                >
+                                    {distance}
                                 </Text>
                             </TouchableOpacity>
                         ))}
