@@ -38,18 +38,18 @@ This project is purely for educational purposes to learn about Android automatio
 
 # Instructions
 
-1. Download the .apk file from the `Releases` section on the right and install it on your Android device.
-2. Once you have it running, fill out the required section marked with \* in the Settings page of the application. That would be the selection of the Character under the Training Event section.
+1. Download the .apk file from the `Releases` section on the right of this page and install it on your Android device.
+2. Once you have it running, select the scenario for the required section (URA Finale, Unity Cup, etc.) marked with \* in the Settings page of the application.
 3. Now go back to the Home page after you have finished customizing the settings. The settings you have selected will be shown to you in the text box below the `Start` button.
 4. Now tap on the `Start` button. If this is the first time, it will ask you to give the application `Overlay` permission and starting up the `Accessibility` service.
-    1. You are also required to enable `Allow restricted settings` in the `App Info` page of the app in the Android Settings.
+    1. You are also required to enable `Allow restricted settings` in the `App Info` page of the app in the Android Settings for later Android versions.
 5. Once it is enabled, tapping on the `Start` button again will create a popup asking if you want `MediaProjection` to work on `A single app` or `Entire screen`. Select the `Entire screen` option. A floating overlay button will now appear that you can move around the screen.
-6. Navigate yourself to the screen below that shows available options like Rest, Train, Buy Skills, Races, etc.
+6. **IMPORTANT:** Move the overlay button to the far left edge of the screen and centered in the middle of the screen's height. Otherwise, you run the risk of the overlay button covering crucial elements on the screen.
+7. Navigate yourself to the screen below that shows available options like Rest, Train, Buy Skills, Races, etc.
 
 > ![main screen](https://user-images.githubusercontent.com/18709555/125517626-d276cda0-bffa-441d-a511-a222237837a1.jpg)
 
-7. Press the overlay button to start the automation process. For enabling app notifications, it is recommended to have a notification style that is small enough that it does not fully cover the top part of the screen where it contains the date, energy, turn number, etc. Or disable notifications if you do not want to worry about it.
-    1. The bot will not start on any other screen than what is shown above.
+8. Press the overlay button to start the automation process. For enabling app notifications, it is recommended to have a notification style that is small enough that it does not fully cover the top part of the screen where it contains the date, energy, turn number, etc. Or disable notifications if you do not want to worry about it.
 
 ## To view Logs in Real-time
 
