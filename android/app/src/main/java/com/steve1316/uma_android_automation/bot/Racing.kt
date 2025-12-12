@@ -1512,11 +1512,14 @@ class Racing (private val game: Game) {
                 if (ButtonViewResults.click(game.imageUtils, tries = 30)) {
                     MessageLog.i(TAG, "[RACE] Race was able to be skipped.")
                 }
-                game.wait(2.0)
+
+                game.waitForLoading()
+                game.wait(1.0)
 
                 // Now tap on the screen to get past the Race Result screen.
                 game.tap(350.0, 450.0, "ok", taps = 5)
-                game.wait(2.0)
+                game.waitForLoading()
+                game.wait(1.0)
 
                 // Check if the race needed to be retried.
                 if (game.imageUtils.findImage("race_retry", tries = 5, region = game.imageUtils.regionBottomHalf, suppressError = true).first != null) {
