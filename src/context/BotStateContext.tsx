@@ -229,7 +229,7 @@ export const defaultSettings: Settings = {
         preferredDistanceOverride: "Auto",
         mustRestBeforeSummer: false,
         enableRiskyTraining: false,
-        riskyTrainingMinStatGain: 30,
+        riskyTrainingMinStatGain: 20,
         riskyTrainingMaxFailureChance: 30,
         trainWitDuringFinale: false,
     },
