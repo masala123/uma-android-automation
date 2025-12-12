@@ -508,7 +508,7 @@ const RacingPlanSettings = () => {
                         <CustomTitle
                             title="Racing Plan"
                             description={
-                                "Uses opportunity cost analysis to optimize race selection by looking ahead N days for races matching your character's aptitudes (A/S terrain/distance). Scores races by fans, grade, and aptitude matches.\n\nUses standard settings until Classic Year, then combines both this and standard racing settings during Classic Year. Only fully activates in Senior Year. Races when current opportunities are good enough and waiting doesn't offer significantly better value, ensuring steady fan accumulation without endless waiting."
+                                "Uses opportunity cost analysis to optimize race selection by looking ahead N days for races matching your character's aptitudes (A/S terrain/distance). Scores races by fans, grade, and aptitude matches.\n\nUses standard settings until Classic Year, then combines both this and standard racing settings during Classic Year. Only fully activates in Senior Year. Races when current opportunities are good enough and waiting doesn't offer significantly better value, ensuring steady fan accumulation without endless waiting.\n\nNote: When Racing Plan is enabled, the \"Days to Run Extra Races\" setting in Racing Settings is ignored, as Racing Plan controls when races occur based on opportunity cost analysis or mandatory race detection."
                             }
                         />
 
@@ -528,7 +528,9 @@ const RacingPlanSettings = () => {
                                 checked={enableMandatoryRacingPlan}
                                 onCheckedChange={(checked) => updateRacingSetting("enableMandatoryRacingPlan", checked)}
                                 label="Treat Planned Races as Mandatory"
-                                description={"When enabled, the bot will prioritize the specific planned race that matches the current turn number, bypassing opportunity cost analysis. Note that it will only run the races if the racer's aptitudes are double predictions (both terrain and distance must be B or greater)."}
+                                description={
+                                    "When enabled, the bot will prioritize the specific planned race that matches the current turn number, bypassing opportunity cost analysis. Note that it will only run the races if the racer's aptitudes are double predictions (both terrain and distance must be B or greater)."
+                                }
                                 style={{ marginTop: 16 }}
                             />
                         )}

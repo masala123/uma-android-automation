@@ -939,7 +939,7 @@ class Racing (private val game: Game) {
                             false
                         } else {
                             // For Classic Year, check if it's an eligible racing day.
-                            if (game.currentDate.year == 2) {
+                            if (game.currentDate.year == 2 && !enableRacingPlan) {
                                 val isEligible = turnsRemaining % daysToRunExtraRaces == 0
                                 if (!isEligible) {
                                     MessageLog.i(TAG, "[RACE] Planned race \"${plannedRace.raceName}\" is not on an eligible racing day (day $turnsRemaining, interval $daysToRunExtraRaces).")
@@ -971,7 +971,8 @@ class Racing (private val game: Game) {
             // Check if G1 races exist at current turn before proceeding.
             // If no G1 races are available, it will still allow regular racing if it's a regular race day or smart racing day.
             if (!hasG1RacesAtTurn(game.currentDate.turnNumber)) {
-                val isRegularRacingDay = enableFarmingFans && (turnsRemaining % daysToRunExtraRaces == 0)
+                // Skip interval check if Racing Plan is enabled.
+                val isRegularRacingDay = enableFarmingFans && !enableRacingPlan && (turnsRemaining % daysToRunExtraRaces == 0)
                 val isSmartRacingDay = enableRacingPlan && enableFarmingFans && nextSmartRaceDay == turnsRemaining
 
                 if (isRegularRacingDay || isSmartRacingDay) {
@@ -1041,7 +1042,7 @@ class Racing (private val game: Game) {
 
             // Check if current day matches the optimal race day or falls on the interval.
             val isOptimalDay = nextSmartRaceDay == turnsRemaining
-            val isIntervalDay = turnsRemaining % daysToRunExtraRaces == 0
+            val isIntervalDay = !enableRacingPlan && (turnsRemaining % daysToRunExtraRaces == 0)
 
             if (isOptimalDay) {
                 MessageLog.i(TAG, "[RACE] Current day ($turnsRemaining) matches optimal race day.")
@@ -1050,13 +1051,18 @@ class Racing (private val game: Game) {
                 MessageLog.i(TAG, "[RACE] Current day ($turnsRemaining) falls on racing interval ($daysToRunExtraRaces).")
                 return !raceRepeatWarningCheck
             } else {
-                MessageLog.i(TAG, "[RACE] Current day ($turnsRemaining) is not optimal (next: $nextSmartRaceDay, interval: $daysToRunExtraRaces).")
+                if (enableRacingPlan) {
+                    MessageLog.i(TAG, "[RACE] Current day ($turnsRemaining) is not optimal (next: $nextSmartRaceDay).")
+                } else {
+                    MessageLog.i(TAG, "[RACE] Current day ($turnsRemaining) is not optimal (next: $nextSmartRaceDay, interval: $daysToRunExtraRaces).")
+                }
                 return false
             }
         }
 
         // Conditionally start the standard racing process.
-        return enableFarmingFans && (turnsRemaining % daysToRunExtraRaces == 0) && !raceRepeatWarningCheck
+        // This fallback only applies when Racing Plan is disabled, so use interval-based logic.
+        return enableFarmingFans && !enableRacingPlan && (turnsRemaining % daysToRunExtraRaces == 0) && !raceRepeatWarningCheck
     }
 
     /**
