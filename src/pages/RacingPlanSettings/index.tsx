@@ -40,6 +40,7 @@ const RacingPlanSettings = () => {
     const racingSettings = { ...defaultSettings.racing, ...settings.racing }
     const {
         enableRacingPlan,
+        enableMandatoryRacingPlan,
         racingPlan,
         minFansThreshold,
         preferredTerrain,
@@ -520,6 +521,17 @@ const RacingPlanSettings = () => {
                             label="Enable Racing Plan (Beta)"
                             description={"When enabled, the bot will use smart race planning to optimize race selection."}
                         />
+
+                        {enableRacingPlan && (
+                            <CustomCheckbox
+                                id="enable-mandatory-racing-plan"
+                                checked={enableMandatoryRacingPlan}
+                                onCheckedChange={(checked) => updateRacingSetting("enableMandatoryRacingPlan", checked)}
+                                label="Treat Planned Races as Mandatory"
+                                description={"When enabled, the bot will prioritize the specific planned race that matches the current turn number, bypassing opportunity cost analysis. Note that it will only run the races if the racer's aptitudes are double predictions (both terrain and distance must be B or greater)."}
+                                style={{ marginTop: 16 }}
+                            />
+                        )}
                     </View>
 
                     {enableRacingPlan && (

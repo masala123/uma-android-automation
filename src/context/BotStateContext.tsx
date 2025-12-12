@@ -21,6 +21,7 @@ export interface Settings {
         enableStopOnMandatoryRaces: boolean
         enableForceRacing: boolean
         enableRacingPlan: boolean
+        enableMandatoryRacingPlan: boolean
         racingPlan: string
         racingPlanData: string
         minFansThreshold: number
@@ -139,6 +140,7 @@ export const defaultSettings: Settings = {
         enableStopOnMandatoryRaces: false,
         enableForceRacing: false,
         enableRacingPlan: false,
+        enableMandatoryRacingPlan: false,
         racingPlan: JSON.stringify(
             Object.values(racesData).map((race, index) => ({
                 raceName: race.name,
