@@ -1,5 +1,4 @@
 import { NavigationContainer } from "@react-navigation/native"
-import { createNativeStackNavigator } from "@react-navigation/native-stack"
 import { createDrawerNavigator } from "@react-navigation/drawer"
 import { PortalHost } from "@rn-primitives/portal"
 import { StatusBar } from "expo-status-bar"
@@ -23,7 +22,6 @@ import { NAV_THEME } from "./lib/theme"
 
 export const Tag = "UAA"
 
-const Stack = createNativeStackNavigator()
 const Drawer = createDrawerNavigator()
 
 function MainDrawer() {
@@ -54,21 +52,6 @@ function MainDrawer() {
             <Drawer.Screen name="EventLogVisualizer" component={EventLogVisualizer} />
             <Drawer.Screen name="ImportSettingsPreview" component={ImportSettingsPreview} />
         </Drawer.Navigator>
-    )
-}
-
-function SettingsStack() {
-    return (
-        <Stack.Navigator>
-            <Stack.Screen name="SettingsMain" component={Settings} options={{ headerShown: false }} />
-            <Stack.Screen name="TrainingSettings" component={TrainingSettings} options={{ headerShown: false }} />
-            <Stack.Screen name="TrainingEventSettings" component={TrainingEventSettings} options={{ headerShown: false }} />
-            <Stack.Screen name="OCRSettings" component={OCRSettings} options={{ headerShown: false }} />
-            <Stack.Screen name="RacingSettings" component={RacingSettings} options={{ headerShown: false }} />
-            <Stack.Screen name="RacingPlanSettings" component={RacingPlanSettings} options={{ headerShown: false }} />
-            <Stack.Screen name="EventLogVisualizer" component={EventLogVisualizer} options={{ headerShown: false }} />
-            <Stack.Screen name="ImportSettingsPreview" component={ImportSettingsPreview} options={{ headerShown: false }} />
-        </Stack.Navigator>
     )
 }
 
