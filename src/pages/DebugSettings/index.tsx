@@ -74,8 +74,6 @@ const DebugSettings = () => {
             <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
                 <View className="m-1">
                     <View style={{ marginTop: 16 }}>
-                        <CustomTitle title="Debug Settings" description="Debug mode, template matching settings, and diagnostic tests for bot troubleshooting." />
-
                         <CustomCheckbox
                             checked={bsc.settings.debug.enableDebugMode}
                             onCheckedChange={(checked) => {

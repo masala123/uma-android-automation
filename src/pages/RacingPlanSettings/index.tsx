@@ -189,6 +189,13 @@ const RacingPlanSettings = () => {
             padding: 8,
             borderRadius: 8,
         },
+        description: {
+            fontSize: 14,
+            color: colors.foreground,
+            opacity: 0.7,
+            marginBottom: 16,
+            lineHeight: 20,
+        },
         title: {
             fontSize: 24,
             fontWeight: "bold",
@@ -562,12 +569,9 @@ const RacingPlanSettings = () => {
             <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
                 <View className="m-1">
                     <View style={styles.section}>
-                        <CustomTitle
-                            title="Racing Plan"
-                            description={
-                                "Uses opportunity cost analysis to optimize race selection by looking ahead N days for races matching your character's aptitudes (A/S terrain/distance). Scores races by fans, grade, and aptitude matches.\n\nUses standard settings until Classic Year, then combines both this and standard racing settings during Classic Year. Only fully activates in Senior Year. Races when current opportunities are good enough and waiting doesn't offer significantly better value, ensuring steady fan accumulation without endless waiting.\n\nNote: When Racing Plan is enabled, the \"Days to Run Extra Races\" setting in Racing Settings is ignored, as Racing Plan controls when races occur based on opportunity cost analysis or mandatory race detection."
-                            }
-                        />
+                        <Text style={styles.description}>
+                            {"Uses opportunity cost analysis to optimize race selection by looking ahead N days for races matching your character's aptitudes (A/S terrain/distance). Scores races by fans, grade, and aptitude matches.\n\nUses standard settings until Classic Year, then combines both this and standard racing settings during Classic Year. Only fully activates in Senior Year. Races when current opportunities are good enough and waiting doesn't offer significantly better value, ensuring steady fan accumulation without endless waiting.\n\nNote: When Racing Plan is enabled, the \"Days to Run Extra Races\" setting in Racing Settings is ignored, as Racing Plan controls when races occur based on opportunity cost analysis or mandatory race detection."}
+                        </Text>
 
                         <Divider style={{ marginBottom: 16 }} />
 
