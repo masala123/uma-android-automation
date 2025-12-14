@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useContext } from "react"
+import React, { useState, useEffect, useContext, useRef } from "react"
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native"
-import { DrawerContentScrollView, DrawerContentComponentProps } from "@react-navigation/drawer"
+import { DrawerContentScrollView, DrawerContentComponentProps, useDrawerStatus } from "@react-navigation/drawer"
 import { Ionicons } from "@expo/vector-icons"
 import { useTheme } from "../../context/ThemeContext"
 import { BotStateContext } from "../../context/BotStateContext"
@@ -16,7 +16,10 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
     const { colors } = useTheme()
     const { state, navigation } = props
     const bsc = useContext(BotStateContext)
-    const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set())
+    const drawerStatus = useDrawerStatus()
+    // Initialize with Settings expanded by default.
+    const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["Settings"]))
+    const previousDrawerStatus = useRef<string | undefined>(undefined)
 
     const settingsNestedRoutes = ["TrainingSettings", "TrainingEventSettings", "OCRSettings", "RacingSettings", "RacingPlanSettings"]
 
@@ -187,8 +190,22 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
         },
     ]
 
-    // Auto-expand sections if nested routes are active.
+    // Ensure Settings is expanded when drawer opens, and auto-expand sections if nested routes are active.
     useEffect(() => {
+        // Check if drawer just opened (transitioned from closed to open).
+        const drawerJustOpened = previousDrawerStatus.current !== "open" && drawerStatus === "open"
+
+        if (drawerJustOpened) {
+            // Reset Settings to expanded when drawer opens.
+            setExpandedSections((prev) => {
+                const newSet = new Set(prev)
+                newSet.add("Settings")
+                return newSet
+            })
+        }
+
+        previousDrawerStatus.current = drawerStatus
+
         const currentRoute = state.routes[state.index]?.name
         const newExpanded = new Set<string>()
 
@@ -202,10 +219,15 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
             newExpanded.add("RacingSettings")
         }
 
+        // Merge with existing expanded sections to preserve user's manual expansions.
         if (newExpanded.size > 0) {
-            setExpandedSections(newExpanded)
+            setExpandedSections((prev) => {
+                const merged = new Set(prev)
+                newExpanded.forEach((section) => merged.add(section))
+                return merged
+            })
         }
-    }, [state.index, state.routes])
+    }, [state.index, state.routes, drawerStatus])
 
     // Toggle the expanded state of a section in the drawer.
     const toggleSection = (sectionName: string) => {
