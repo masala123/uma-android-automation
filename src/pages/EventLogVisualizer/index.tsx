@@ -1,8 +1,8 @@
 import React, { useMemo, useState, useCallback } from "react"
 import { StyleSheet, Text, View, TouchableOpacity } from "react-native"
 import { FlashList } from "@shopify/flash-list"
-import { useNavigation } from "@react-navigation/native"
-import { ArrowLeft } from "lucide-react-native"
+import { useNavigation, DrawerActions } from "@react-navigation/native"
+import { Ionicons } from "@expo/vector-icons"
 import * as DocumentPicker from "expo-document-picker"
 import * as FileSystem from "expo-file-system"
 import DayRow from "../../components/EventLog/DayRow"
@@ -24,6 +24,10 @@ const EventLogVisualizer: React.FC = () => {
     const { colors, isDark } = useTheme()
     const navigation = useNavigation()
     const { openDataDirectory } = useSettings()
+
+    const openDrawer = () => {
+        navigation.dispatch(DrawerActions.openDrawer())
+    }
     const [records, setRecords] = useState<MixedRecord[]>([])
     const [errors, setErrors] = useState<string[]>([])
     const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false)
@@ -44,13 +48,19 @@ const EventLogVisualizer: React.FC = () => {
             justifyContent: "space-between",
             marginBottom: 12,
         },
+        headerLeft: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 12,
+        },
+        menuButton: {
+            padding: 8,
+            borderRadius: 8,
+        },
         title: {
             fontSize: 20,
             fontWeight: "bold",
             color: colors.foreground,
-        },
-        backButton: {
-            padding: 8,
         },
         empty: {
             marginTop: 12,
@@ -174,10 +184,12 @@ const EventLogVisualizer: React.FC = () => {
         <View style={styles.root}>
             <View style={styles.content}>
                 <View style={styles.header}>
-                    <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                        <ArrowLeft size={24} color={colors.primary} />
-                    </TouchableOpacity>
-                    <Text style={styles.title}>Event Log Visualizer</Text>
+                    <View style={styles.headerLeft}>
+                        <TouchableOpacity onPress={openDrawer} style={styles.menuButton} activeOpacity={0.7}>
+                            <Ionicons name="menu" size={28} color={colors.foreground} />
+                        </TouchableOpacity>
+                        <Text style={styles.title}>Event Log Visualizer</Text>
+                    </View>
                 </View>
 
                 <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12, gap: 8 }}>

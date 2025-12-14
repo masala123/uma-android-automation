@@ -1,10 +1,9 @@
-import React from "react"
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native"
-import { useNavigation, useRoute, RouteProp } from "@react-navigation/native"
+import { useNavigation, useRoute, RouteProp, DrawerActions } from "@react-navigation/native"
 import { useTheme } from "../../context/ThemeContext"
 import CustomButton from "../../components/CustomButton"
-import { ArrowLeft } from "lucide-react-native"
 import { SettingsChange } from "../../hooks/useSettingsFileManager"
+import { Ionicons } from "@expo/vector-icons"
 
 type ImportSettingsPreviewRouteParams = {
     ImportSettingsPreview: {
@@ -22,6 +21,10 @@ const ImportSettingsPreview = () => {
     const navigation = useNavigation()
     const route = useRoute<ImportSettingsPreviewRoute>()
     const { changes, onConfirm, onCancel } = route.params
+
+    const openDrawer = () => {
+        navigation.dispatch(DrawerActions.openDrawer())
+    }
 
     // Group changes by category.
     const groupedChanges = changes.reduce((acc, change) => {
@@ -46,13 +49,19 @@ const ImportSettingsPreview = () => {
             alignItems: "center",
             marginBottom: 20,
         },
+        headerLeft: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 12,
+        },
+        menuButton: {
+            padding: 8,
+            borderRadius: 8,
+        },
         title: {
             fontSize: 24,
             fontWeight: "bold",
             color: colors.foreground,
-        },
-        backButton: {
-            padding: 8,
         },
         content: {
             flex: 1,
@@ -154,21 +163,21 @@ const ImportSettingsPreview = () => {
 
     const handleConfirm = async () => {
         await onConfirm()
-        navigation.goBack()
     }
 
     const handleCancel = () => {
         onCancel()
-        navigation.goBack()
     }
 
     return (
         <View style={styles.root}>
             <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                    <ArrowLeft size={24} color={colors.primary} />
-                </TouchableOpacity>
-                <Text style={styles.title}>Import Settings Preview</Text>
+                <View style={styles.headerLeft}>
+                    <TouchableOpacity onPress={openDrawer} style={styles.menuButton} activeOpacity={0.7}>
+                        <Ionicons name="menu" size={28} color={colors.foreground} />
+                    </TouchableOpacity>
+                    <Text style={styles.title}>Import Settings Preview</Text>
+                </View>
             </View>
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={true}>

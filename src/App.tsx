@@ -1,7 +1,6 @@
 import { NavigationContainer } from "@react-navigation/native"
-import { createBottomTabNavigator } from "@react-navigation/bottom-tabs"
 import { createNativeStackNavigator } from "@react-navigation/native-stack"
-import { Ionicons } from "@expo/vector-icons"
+import { createDrawerNavigator } from "@react-navigation/drawer"
 import { PortalHost } from "@rn-primitives/portal"
 import { StatusBar } from "expo-status-bar"
 import { SafeAreaView } from "react-native-safe-area-context"
@@ -19,12 +18,44 @@ import RacingSettings from "./pages/RacingSettings"
 import RacingPlanSettings from "./pages/RacingPlanSettings"
 import EventLogVisualizer from "./pages/EventLogVisualizer"
 import ImportSettingsPreview from "./pages/ImportSettingsPreview"
+import DrawerContent from "./components/DrawerContent"
 import { NAV_THEME } from "./lib/theme"
 
 export const Tag = "UAA"
 
-const Tab = createBottomTabNavigator()
 const Stack = createNativeStackNavigator()
+const Drawer = createDrawerNavigator()
+
+function MainDrawer() {
+    const { colors } = useTheme()
+
+    return (
+        <Drawer.Navigator
+            drawerContent={(props) => <DrawerContent {...props} />}
+            screenOptions={{
+                headerShown: false,
+                drawerType: "front",
+                drawerStyle: {
+                    width: 280,
+                    backgroundColor: colors.card,
+                },
+                drawerActiveTintColor: colors.primary,
+                drawerInactiveTintColor: colors.foreground,
+                overlayColor: "rgba(0, 0, 0, 0.5)",
+            }}
+        >
+            <Drawer.Screen name="Home" component={Home} />
+            <Drawer.Screen name="Settings" component={Settings} />
+            <Drawer.Screen name="TrainingSettings" component={TrainingSettings} />
+            <Drawer.Screen name="TrainingEventSettings" component={TrainingEventSettings} />
+            <Drawer.Screen name="OCRSettings" component={OCRSettings} />
+            <Drawer.Screen name="RacingSettings" component={RacingSettings} />
+            <Drawer.Screen name="RacingPlanSettings" component={RacingPlanSettings} />
+            <Drawer.Screen name="EventLogVisualizer" component={EventLogVisualizer} />
+            <Drawer.Screen name="ImportSettingsPreview" component={ImportSettingsPreview} />
+        </Drawer.Navigator>
+    )
+}
 
 function SettingsStack() {
     return (
@@ -49,22 +80,7 @@ function AppWithBootstrap({ theme, colors }: { theme: string; colors: any }) {
         <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: colors.background }}>
             <NavigationContainer theme={NAV_THEME[theme as "light" | "dark"]}>
                 <StatusBar style={theme === "light" ? "dark" : "light"} />
-                <Tab.Navigator
-                    screenOptions={({ route }) => ({
-                        tabBarIcon: ({ focused, size }: { focused: boolean; size: number }) => {
-                            if (route.name === "Home") {
-                                return <Ionicons name={focused ? "home" : "home-outline"} size={size} color={colors.primary} />
-                            } else if (route.name === "Settings") {
-                                return <Ionicons name={focused ? "settings" : "settings-outline"} size={size} color={colors.primary} />
-                            }
-                        },
-                        headerShown: false,
-                        animation: "fade",
-                    })}
-                >
-                    <Tab.Screen name="Home" component={Home} />
-                    <Tab.Screen name="Settings" component={SettingsStack} />
-                </Tab.Navigator>
+                <MainDrawer />
                 <PortalHost />
             </NavigationContainer>
         </SafeAreaView>

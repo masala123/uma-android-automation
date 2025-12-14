@@ -1,10 +1,11 @@
 import scenarios from "../../data/scenarios.json"
 import { useContext, useEffect, useState } from "react"
 import { BotStateContext } from "../../context/BotStateContext"
-import { ScrollView, StyleSheet, Text, View } from "react-native"
+import { ScrollView, StyleSheet, Text, View, TouchableOpacity } from "react-native"
 import { Snackbar } from "react-native-paper"
-import { useNavigation } from "@react-navigation/native"
+import { useNavigation, DrawerActions } from "@react-navigation/native"
 import ThemeToggle from "../../components/ThemeToggle"
+import { Ionicons } from "@expo/vector-icons"
 import { useTheme } from "../../context/ThemeContext"
 import CustomSelect from "../../components/CustomSelect"
 import NavigationLink from "../../components/NavigationLink"
@@ -27,6 +28,10 @@ const Settings = () => {
     const { openDataDirectory, resetSettings } = useSettings()
     const { handleImportSettings, handleExportSettings, showImportDialog, setShowImportDialog, showResetDialog, setShowResetDialog } = useSettingsFileManager()
 
+    const openDrawer = () => {
+        navigation.dispatch(DrawerActions.openDrawer())
+    }
+
     const styles = StyleSheet.create({
         root: {
             flex: 1,
@@ -40,6 +45,15 @@ const Settings = () => {
             justifyContent: "space-between",
             alignItems: "center",
             marginBottom: 20,
+        },
+        headerLeft: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 12,
+        },
+        menuButton: {
+            padding: 8,
+            borderRadius: 8,
         },
         title: {
             fontSize: 24,
@@ -597,7 +611,12 @@ const Settings = () => {
     return (
         <View style={styles.root}>
             <View style={styles.header}>
-                <Text style={styles.title}>Settings</Text>
+                <View style={styles.headerLeft}>
+                    <TouchableOpacity onPress={openDrawer} style={styles.menuButton} activeOpacity={0.7}>
+                        <Ionicons name="menu" size={28} color={colors.foreground} />
+                    </TouchableOpacity>
+                    <Text style={styles.title}>Settings</Text>
+                </View>
                 <ThemeToggle />
             </View>
             <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
