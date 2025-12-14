@@ -1,6 +1,7 @@
 import { useContext, useState, useEffect } from "react"
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native"
-import { useNavigation } from "@react-navigation/native"
+import { useNavigation, DrawerActions } from "@react-navigation/native"
+import { Ionicons } from "@expo/vector-icons"
 import { Divider } from "react-native-paper"
 import { useTheme } from "../../context/ThemeContext"
 import { BotStateContext, defaultSettings } from "../../context/BotStateContext"
@@ -9,7 +10,7 @@ import CustomButton from "../../components/CustomButton"
 import CustomScrollView from "../../components/CustomScrollView"
 import CustomTitle from "../../components/CustomTitle"
 import { Input } from "../../components/ui/input"
-import { ArrowLeft, CircleCheckBig, Plus, Trash2 } from "lucide-react-native"
+import { CircleCheckBig, Plus, Trash2 } from "lucide-react-native"
 import racesData from "../../data/races.json"
 
 interface Race {
@@ -34,6 +35,11 @@ const RacingPlanSettings = () => {
     const { colors } = useTheme()
     const navigation = useNavigation()
     const bsc = useContext(BotStateContext)
+
+    const openDrawer = () => {
+        navigation.dispatch(DrawerActions.openDrawer())
+    }
+
     const { settings, setSettings } = bsc
 
     // Merge current racing settings with defaults to handle missing properties.
@@ -168,14 +174,27 @@ const RacingPlanSettings = () => {
             margin: 10,
             backgroundColor: colors.background,
         },
-        backButton: {
-            padding: 8,
-        },
         header: {
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
             marginBottom: 20,
+        },
+        headerLeft: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 12,
+        },
+        menuButton: {
+            padding: 8,
+            borderRadius: 8,
+        },
+        description: {
+            fontSize: 14,
+            color: colors.foreground,
+            opacity: 0.7,
+            marginBottom: 16,
+            lineHeight: 20,
         },
         title: {
             fontSize: 24,
@@ -540,20 +559,19 @@ const RacingPlanSettings = () => {
     return (
         <View style={styles.root}>
             <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                    <ArrowLeft size={24} color={colors.primary} />
-                </TouchableOpacity>
-                <Text style={styles.title}>Racing Plan</Text>
+                <View style={styles.headerLeft}>
+                    <TouchableOpacity onPress={openDrawer} style={styles.menuButton} activeOpacity={0.7}>
+                        <Ionicons name="menu" size={28} color={colors.foreground} />
+                    </TouchableOpacity>
+                    <Text style={styles.title}>Racing Plan</Text>
+                </View>
             </View>
             <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
                 <View className="m-1">
                     <View style={styles.section}>
-                        <CustomTitle
-                            title="Racing Plan"
-                            description={
-                                "Uses opportunity cost analysis to optimize race selection by looking ahead N days for races matching your character's aptitudes (A/S terrain/distance). Scores races by fans, grade, and aptitude matches.\n\nUses standard settings until Classic Year, then combines both this and standard racing settings during Classic Year. Only fully activates in Senior Year. Races when current opportunities are good enough and waiting doesn't offer significantly better value, ensuring steady fan accumulation without endless waiting.\n\nNote: When Racing Plan is enabled, the \"Days to Run Extra Races\" setting in Racing Settings is ignored, as Racing Plan controls when races occur based on opportunity cost analysis or mandatory race detection."
-                            }
-                        />
+                        <Text style={styles.description}>
+                            {"Uses opportunity cost analysis to optimize race selection by looking ahead N days for races matching your character's aptitudes (A/S terrain/distance). Scores races by fans, grade, and aptitude matches.\n\nUses standard settings until Classic Year, then combines both this and standard racing settings during Classic Year. Only fully activates in Senior Year. Races when current opportunities are good enough and waiting doesn't offer significantly better value, ensuring steady fan accumulation without endless waiting.\n\nNote: When Racing Plan is enabled, the \"Days to Run Extra Races\" setting in Racing Settings is ignored, as Racing Plan controls when races occur based on opportunity cost analysis or mandatory race detection."}
+                        </Text>
 
                         <Divider style={{ marginBottom: 16 }} />
 
