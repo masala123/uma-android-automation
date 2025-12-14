@@ -1,7 +1,8 @@
 import React, { useContext, useEffect, useState } from "react"
 import { View, Text, ScrollView, StyleSheet, Modal, TouchableOpacity, Dimensions } from "react-native"
 import { Snackbar } from "react-native-paper"
-import { useNavigation } from "@react-navigation/native"
+import { useNavigation, DrawerActions } from "@react-navigation/native"
+import { Ionicons } from "@expo/vector-icons"
 import { useTheme } from "../../context/ThemeContext"
 import { BotStateContext, defaultSettings, Settings } from "../../context/BotStateContext"
 import CustomButton from "../../components/CustomButton"
@@ -12,7 +13,6 @@ import DraggablePriorityList from "../../components/DraggablePriorityList"
 import CustomAccordion from "../../components/CustomAccordion"
 import CustomSelect from "../../components/CustomSelect"
 import ProfileSelector from "../../components/ProfileSelector"
-import { ArrowLeft } from "lucide-react-native"
 import { useSettings } from "../../context/SettingsContext"
 import { useProfileManager } from "../../hooks/useProfileManager"
 import { applyMigrations } from "../../hooks/useSettingsManager"
@@ -29,6 +29,10 @@ const TrainingSettings = () => {
     const [sparkStatTargetModalVisible, setSparkStatTargetModalVisible] = useState(false)
     const [snackbarVisible, setSnackbarVisible] = useState(false)
     const [snackbarMessage, setSnackbarMessage] = useState("")
+
+    const openDrawer = () => {
+        navigation.dispatch(DrawerActions.openDrawer())
+    }
 
     const { settings, setSettings } = bsc
 
@@ -199,18 +203,19 @@ const TrainingSettings = () => {
             alignItems: "center",
             marginBottom: 20,
         },
+        headerLeft: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 12,
+        },
+        menuButton: {
+            padding: 8,
+            borderRadius: 8,
+        },
         title: {
             fontSize: 24,
             fontWeight: "bold",
             color: colors.foreground,
-        },
-        backButton: {
-            padding: 8,
-        },
-        backText: {
-            fontSize: 18,
-            color: colors.primary,
-            fontWeight: "600",
         },
         section: {
             marginBottom: 24,
@@ -397,10 +402,12 @@ const TrainingSettings = () => {
     return (
         <View style={styles.root}>
             <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-                    <ArrowLeft size={24} color={colors.primary} />
-                </TouchableOpacity>
-                <Text style={styles.title}>Training Settings</Text>
+                <View style={styles.headerLeft}>
+                    <TouchableOpacity onPress={openDrawer} style={styles.menuButton} activeOpacity={0.7}>
+                        <Ionicons name="menu" size={28} color={colors.foreground} />
+                    </TouchableOpacity>
+                    <Text style={styles.title}>Training Settings</Text>
+                </View>
             </View>
             <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
                 <View className="m-1">
