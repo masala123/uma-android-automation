@@ -205,13 +205,8 @@ export const useSettingsFileManager = () => {
             setPendingImportUri(fileUri)
             setImportPreviewChanges(formattedChanges)
 
-            // Navigate to the preview screen with a wrapper function that passes the fileUri.
-            ;(navigation as any).navigate("ImportSettingsPreview", {
-                changes: formattedChanges,
-                pendingImportUri: fileUri,
-                onConfirm: () => confirmImportSettings(fileUri),
-                onCancel: clearPreviewState,
-            })
+            // Navigate to the preview screen. The screen will read changes from hook state.
+            ;(navigation as any).navigate("ImportSettingsPreview")
         } catch (error) {
             logErrorWithTimestamp("Error comparing settings:", error)
         }
@@ -261,6 +256,16 @@ export const useSettingsFileManager = () => {
         }
     }
 
+    /**
+     * Confirms import using the pending import URI from state.
+     * This is a wrapper that uses the pendingImportUri state.
+     */
+    const confirmPendingImport = async () => {
+        if (pendingImportUri) {
+            await confirmImportSettings(pendingImportUri)
+        }
+    }
+
     return {
         handleImportSettings,
         handleExportSettings,
@@ -269,6 +274,10 @@ export const useSettingsFileManager = () => {
         showResetDialog,
         setShowResetDialog,
         confirmImportSettings,
+        confirmPendingImport,
         cancelImportPreview,
+        importPreviewChanges,
+        pendingImportUri,
+        clearPreviewState,
     }
 }

@@ -2,25 +2,14 @@ import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-nati
 import { useNavigation, useRoute, RouteProp, DrawerActions } from "@react-navigation/native"
 import { useTheme } from "../../context/ThemeContext"
 import CustomButton from "../../components/CustomButton"
-import { SettingsChange } from "../../hooks/useSettingsFileManager"
+import { useSettingsFileManager, SettingsChange } from "../../hooks/useSettingsFileManager"
 import { Ionicons } from "@expo/vector-icons"
-
-type ImportSettingsPreviewRouteParams = {
-    ImportSettingsPreview: {
-        changes: SettingsChange[]
-        pendingImportUri: string | null
-        onConfirm: () => Promise<void>
-        onCancel: () => void
-    }
-}
-
-type ImportSettingsPreviewRoute = RouteProp<ImportSettingsPreviewRouteParams, "ImportSettingsPreview">
 
 const ImportSettingsPreview = () => {
     const { colors, isDark } = useTheme()
     const navigation = useNavigation()
-    const route = useRoute<ImportSettingsPreviewRoute>()
-    const { changes, onConfirm, onCancel } = route.params
+    const { importPreviewChanges, confirmPendingImport, clearPreviewState } = useSettingsFileManager()
+    const changes = importPreviewChanges
 
     const openDrawer = () => {
         navigation.dispatch(DrawerActions.openDrawer())
@@ -162,11 +151,15 @@ const ImportSettingsPreview = () => {
     })
 
     const handleConfirm = async () => {
-        await onConfirm()
+        await confirmPendingImport()
+        // Navigate back to Settings page after import
+        navigation.navigate("Settings" as never)
     }
 
     const handleCancel = () => {
-        onCancel()
+        clearPreviewState()
+        // Navigate back to Settings page
+        navigation.navigate("Settings" as never)
     }
 
     return (
