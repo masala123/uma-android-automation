@@ -1,0 +1,329 @@
+import React, { useState, useEffect, useContext } from "react"
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native"
+import { DrawerContentScrollView, DrawerContentComponentProps } from "@react-navigation/drawer"
+import { Ionicons } from "@expo/vector-icons"
+import { useTheme } from "../../context/ThemeContext"
+import { BotStateContext } from "../../context/BotStateContext"
+
+interface MenuItem {
+    name: string
+    label: string
+    icon: (focused: boolean) => string
+    nested?: MenuItem[]
+}
+
+const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
+    const { colors } = useTheme()
+    const { state, navigation } = props
+    const bsc = useContext(BotStateContext)
+    const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set())
+
+    const settingsNestedRoutes = ["TrainingSettings", "TrainingEventSettings", "OCRSettings", "RacingSettings", "RacingPlanSettings"]
+
+    const styles = StyleSheet.create({
+        container: {
+            flex: 1,
+            backgroundColor: colors.card,
+        },
+        header: {
+            paddingTop: 40,
+            paddingBottom: 24,
+            paddingHorizontal: 20,
+            borderBottomWidth: 1,
+            borderBottomColor: colors.border,
+        },
+        headerTitle: {
+            fontSize: 24,
+            fontWeight: "bold",
+            color: colors.foreground,
+            marginBottom: 4,
+        },
+        headerSubtitle: {
+            fontSize: 14,
+            color: colors.mutedForeground,
+        },
+        menuContainer: {
+            paddingTop: 8,
+        },
+        menuItem: {
+            flexDirection: "row",
+            alignItems: "center",
+            paddingVertical: 16,
+            paddingHorizontal: 20,
+            marginHorizontal: 4,
+            marginVertical: 2,
+            borderRadius: 0,
+        },
+        menuItemActive: {
+            backgroundColor: colors.muted,
+        },
+        menuItemIcon: {
+            marginRight: 16,
+            width: 24,
+            alignItems: "center",
+        },
+        menuItemText: {
+            fontSize: 16,
+            fontWeight: "500",
+            color: colors.foreground,
+            flex: 1,
+        },
+        menuItemTextActive: {
+            color: colors.primary,
+            fontWeight: "600",
+        },
+        chevronButton: {
+            padding: 4,
+            marginLeft: 8,
+            borderRadius: 4,
+        },
+        chevronIcon: {
+            marginLeft: 8,
+        },
+        nestedContainer: {
+            overflow: "hidden",
+        },
+        nestedItem: {
+            flexDirection: "row",
+            alignItems: "center",
+            paddingVertical: 12,
+            paddingHorizontal: 20,
+            paddingLeft: 40,
+            marginHorizontal: 4,
+            marginVertical: 2,
+            borderRadius: 0,
+        },
+        nestedItemActive: {
+            backgroundColor: colors.muted,
+        },
+        nestedItemIcon: {
+            marginRight: 16,
+            width: 24,
+            alignItems: "center",
+        },
+        nestedItemText: {
+            fontSize: 15,
+            fontWeight: "400",
+            color: colors.foreground,
+        },
+        nestedItemTextActive: {
+            color: colors.primary,
+            fontWeight: "500",
+        },
+        doubleNestedItem: {
+            flexDirection: "row",
+            alignItems: "center",
+            paddingVertical: 12,
+            paddingHorizontal: 20,
+            paddingLeft: 64,
+            marginHorizontal: 4,
+            marginVertical: 2,
+            borderRadius: 0,
+        },
+        doubleNestedItemActive: {
+            backgroundColor: colors.muted,
+        },
+        doubleNestedItemIcon: {
+            marginRight: 16,
+            width: 24,
+            alignItems: "center",
+        },
+        doubleNestedItemText: {
+            fontSize: 14,
+            fontWeight: "400",
+            color: colors.foreground,
+        },
+        doubleNestedItemTextActive: {
+            color: colors.primary,
+            fontWeight: "500",
+        },
+    })
+
+    // Define the menu item configurations for the drawer.
+    const menuItems: MenuItem[] = [
+        {
+            name: "Home",
+            label: "Home",
+            icon: (focused: boolean) => (focused ? "home" : "home-outline"),
+        },
+        {
+            name: "Settings",
+            label: "Settings",
+            icon: (focused: boolean) => (focused ? "settings" : "settings-outline"),
+            nested: [
+                {
+                    name: "TrainingSettings",
+                    label: "Training Settings",
+                    icon: () => "barbell-outline",
+                },
+                {
+                    name: "TrainingEventSettings",
+                    label: "Training Event Settings",
+                    icon: () => "calendar-outline",
+                },
+                {
+                    name: "OCRSettings",
+                    label: "OCR Settings",
+                    icon: () => "eye-outline",
+                },
+                {
+                    name: "RacingSettings",
+                    label: "Racing Settings",
+                    icon: () => "flag-outline",
+                    nested: [
+                        {
+                            name: "RacingPlanSettings",
+                            label: "Racing Plan Settings",
+                            icon: () => "map-outline",
+                        },
+                    ],
+                },
+                {
+                    name: "EventLogVisualizer",
+                    label: "Event Log Visualizer",
+                    icon: () => "eye-outline",
+                },
+            ],
+        },
+    ]
+
+    // Auto-expand sections if nested routes are active.
+    useEffect(() => {
+        const currentRoute = state.routes[state.index]?.name
+        const newExpanded = new Set<string>()
+
+        // Auto-expand Settings if any nested route is active.
+        if (settingsNestedRoutes.includes(currentRoute)) {
+            newExpanded.add("Settings")
+        }
+
+        // Auto-expand Racing Settings if Racing Plan Settings is active.
+        if (currentRoute === "RacingPlanSettings") {
+            newExpanded.add("RacingSettings")
+        }
+
+        if (newExpanded.size > 0) {
+            setExpandedSections(newExpanded)
+        }
+    }, [state.index, state.routes])
+
+    // Toggle the expanded state of a section in the drawer.
+    const toggleSection = (sectionName: string) => {
+        setExpandedSections((prev) => {
+            const newSet = new Set(prev)
+            if (newSet.has(sectionName)) {
+                newSet.delete(sectionName)
+            } else {
+                newSet.add(sectionName)
+            }
+            return newSet
+        })
+    }
+
+    // Navigate to a route and close the drawer.
+    const handleNavigation = (routeName: string) => {
+        navigation.navigate(routeName as never)
+        navigation.closeDrawer()
+    }
+
+    // Navigate to a parent route and close the drawer.
+    const handleParentNavigation = (item: MenuItem) => {
+        handleNavigation(item.name)
+    }
+
+    // Stop event propagation to prevent the navigation from happening when the chevron is pressed.
+    const handleChevronPress = (e: any, item: MenuItem) => {
+        e.stopPropagation()
+        toggleSection(item.name)
+    }
+
+    // Check if a section is expanded.
+    const isSectionExpanded = (sectionName: string) => {
+        return expandedSections.has(sectionName)
+    }
+
+    // Check if a route is active.
+    const isRouteActive = (routeName: string) => {
+        return state.routes[state.index]?.name === routeName
+    }
+
+    // Recursive component to render menu items at any nesting level.
+    const renderMenuItem = (item: MenuItem, level: number = 0) => {
+        const isActive = isRouteActive(item.name)
+        const isExpanded = item.nested ? isSectionExpanded(item.name) : false
+
+        const stylesByLevel = {
+            0: {
+                item: styles.menuItem,
+                active: styles.menuItemActive,
+                icon: styles.menuItemIcon,
+                text: styles.menuItemText,
+                textActive: styles.menuItemTextActive,
+                iconSize: 24,
+                chevronSize: 20,
+            },
+            1: {
+                item: styles.nestedItem,
+                active: styles.nestedItemActive,
+                icon: styles.nestedItemIcon,
+                text: styles.nestedItemText,
+                textActive: styles.nestedItemTextActive,
+                iconSize: 20,
+                chevronSize: 18,
+            },
+            2: {
+                item: styles.doubleNestedItem,
+                active: styles.doubleNestedItemActive,
+                icon: styles.doubleNestedItemIcon,
+                text: styles.doubleNestedItemText,
+                textActive: styles.doubleNestedItemTextActive,
+                iconSize: 18,
+                chevronSize: 16,
+            },
+        }
+
+        // Determine styles based on nesting level.
+        const itemStyle = stylesByLevel[level as keyof typeof stylesByLevel].item
+        const activeStyle = stylesByLevel[level as keyof typeof stylesByLevel].active
+        const iconStyle = stylesByLevel[level as keyof typeof stylesByLevel].icon
+        const textStyle = stylesByLevel[level as keyof typeof stylesByLevel].text
+        const textActiveStyle = stylesByLevel[level as keyof typeof stylesByLevel].textActive
+        const iconSize = stylesByLevel[level as keyof typeof stylesByLevel].iconSize
+        const chevronSize = stylesByLevel[level as keyof typeof stylesByLevel].chevronSize
+
+        return (
+            <View key={item.name}>
+                <View style={[itemStyle, isActive && activeStyle]}>
+                    <TouchableOpacity
+                        style={{ flex: 1, flexDirection: "row", alignItems: "center" }}
+                        onPress={() => (level === 0 ? handleParentNavigation(item) : handleNavigation(item.name))}
+                        activeOpacity={0.7}
+                    >
+                        <View style={iconStyle}>
+                            <Ionicons name={item.icon(isActive) as any} size={iconSize} color={isActive ? colors.primary : colors.foreground} />
+                        </View>
+                        <Text style={[textStyle, isActive && textActiveStyle]}>{item.label}</Text>
+                    </TouchableOpacity>
+                    {item.nested && (
+                        <TouchableOpacity onPress={(e) => handleChevronPress(e, item)} style={styles.chevronButton} activeOpacity={0.7}>
+                            <Ionicons name={isExpanded ? "chevron-up" : "chevron-down"} size={chevronSize} color={colors.mutedForeground} />
+                        </TouchableOpacity>
+                    )}
+                </View>
+                {item.nested && isExpanded && <View style={styles.nestedContainer}>{item.nested.map((nestedItem) => renderMenuItem(nestedItem, level + 1))}</View>}
+            </View>
+        )
+    }
+
+    return (
+        <DrawerContentScrollView {...props} style={styles.container} contentContainerStyle={{ flexGrow: 1 }}>
+            <View style={styles.header}>
+                <Text style={styles.headerTitle}>Uma Android Automation</Text>
+                <Text style={styles.headerSubtitle}>{bsc.appVersion}</Text>
+            </View>
+            <View style={styles.menuContainer}>{menuItems.map((item) => renderMenuItem(item, 0))}</View>
+        </DrawerContentScrollView>
+    )
+}
+
+export default DrawerContent
