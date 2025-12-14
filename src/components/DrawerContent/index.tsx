@@ -21,7 +21,7 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
     const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["Settings"]))
     const previousDrawerStatus = useRef<string | undefined>(undefined)
 
-    const settingsNestedRoutes = ["TrainingSettings", "TrainingEventSettings", "OCRSettings", "RacingSettings", "RacingPlanSettings"]
+    const settingsNestedRoutes = ["TrainingSettings", "TrainingEventSettings", "OCRSettings", "RacingSettings", "RacingPlanSettings", "DebugSettings"]
 
     const styles = StyleSheet.create({
         container: {
@@ -185,6 +185,11 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
                     name: "EventLogVisualizer",
                     label: "Event Log Visualizer",
                     icon: () => "eye-outline",
+                },
+                {
+                    name: "DebugSettings",
+                    label: "Debug Settings",
+                    icon: () => "bug-outline",
                 },
             ],
         },

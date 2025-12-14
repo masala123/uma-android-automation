@@ -17,6 +17,7 @@ import RacingSettings from "./pages/RacingSettings"
 import RacingPlanSettings from "./pages/RacingPlanSettings"
 import EventLogVisualizer from "./pages/EventLogVisualizer"
 import ImportSettingsPreview from "./pages/ImportSettingsPreview"
+import DebugSettings from "./pages/DebugSettings"
 import DrawerContent from "./components/DrawerContent"
 import { NAV_THEME } from "./lib/theme"
 
@@ -51,6 +52,7 @@ function MainDrawer() {
             <Drawer.Screen name="RacingPlanSettings" component={RacingPlanSettings} />
             <Drawer.Screen name="EventLogVisualizer" component={EventLogVisualizer} />
             <Drawer.Screen name="ImportSettingsPreview" component={ImportSettingsPreview} />
+            <Drawer.Screen name="DebugSettings" component={DebugSettings} />
         </Drawer.Navigator>
     )
 }
