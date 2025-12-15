@@ -1485,14 +1485,18 @@ class Racing (private val game: Game) {
             ButtonChangeRunningStyle.click(imageUtils = game.imageUtils, tries = 10)
             game.wait(0.5, skipWaitingForLoading = true)
             var tries = 10
-            while (tries > 0 && !handleDialogs().first) {}
+            while (tries > 0 && !handleDialogs().first) {
+                tries--
+            }
         } else if (!game.trainee.bHasSetRunningStyle) {
             // If we haven't set the trainee's running style yet, open the dialog.
             MessageLog.i(TAG, "Setting running style for the first time.")
             ButtonChangeRunningStyle.click(imageUtils = game.imageUtils, tries = 10)
             game.wait(0.5, skipWaitingForLoading = true)
             var tries = 10
-            while (tries > 0 && !handleDialogs().first) {}
+            while (tries > 0 && !handleDialogs().first) {
+                tries--
+            }
         }
     }
 
