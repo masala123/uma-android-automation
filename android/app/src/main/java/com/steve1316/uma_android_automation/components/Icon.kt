@@ -103,3 +103,18 @@ object IconRaceListBottomRight : ComponentInterface {
     override val TAG: String = "IconRaceListBottomRight"
     override val template = Template("components/icon/race_list_bottom_right", region = Region.rightHalf)
 }
+
+object IconSkillListTopLeft : ComponentInterface {
+    override val TAG: String = "IconSkillListTopLeft"
+    override val template = Template("components/icon/skill_list_top_left", region = Region.leftHalf)
+}
+
+object IconSkillListBottomRight : ComponentInterface {
+    override val TAG: String = "IconSkillListBottomRight"
+    override val template = Template("components/icon/skill_list_bottom_right", region = Region.rightHalf)
+}
+
+object IconObtainedPill : ComponentInterface {
+    override val TAG: String = "IconObtainedPill"
+    override val template = Template("components/icon/obtained_pill", region = Region.rightHalf)
+}

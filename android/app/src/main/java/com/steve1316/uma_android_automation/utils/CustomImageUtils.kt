@@ -31,6 +31,7 @@ import kotlin.math.sqrt
 import kotlin.text.replace
 import java.util.concurrent.ConcurrentHashMap
 
+import android.graphics.Color
 
 /**
  * Utility functions for image processing via CV like OpenCV.
@@ -1953,11 +1954,121 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		return result
     }
 
-    fun saveBitmap(bitmap: Bitmap, filename: String) {
+    fun saveBitmap(bitmap: Bitmap, filename: String, bbox: BoundingBox? = null) {
+        val bitmap = if (bbox == null) {
+            bitmap
+        } else {
+            val cropped = createSafeBitmap(bitmap, bbox.x, bbox.y, bbox.w, bbox.h, "saveBitmap crop")
+            if (cropped == null) {
+                MessageLog.e(TAG, "Failed to crop bitmap.")
+                bitmap
+            }
+            cropped
+        }
         val externalFilesPath = context.getExternalFilesDir(null)?.absolutePath
         val mat = Mat()
 		Utils.bitmapToMat(bitmap, mat)
 		Imgcodecs.imwrite("$externalFilesPath/temp/${filename}.png", mat)
         mat.release()
+    }
+
+    fun getSkillBoxBounds(pointInSkillBox: Point, sourceBitmap: Bitmap? = null): BoundingBox? {
+        val sourceBitmap = sourceBitmap ?: getSourceBitmap()
+
+        val x: Int = pointInSkillBox.x.toInt().coerceIn(0, sourceBitmap.width - 1)
+        val y: Int = pointInSkillBox.y.toInt().coerceIn(0, sourceBitmap.height - 1)
+
+        fun getColorAtCoordinate(bitmap: Bitmap, x: Int, y: Int): Int {
+            return bitmap.getPixel(x, y)
+        }
+
+        var top: Int = -1
+        var right: Int = -1
+        var bottom: Int = -1
+        var left: Int = -1
+
+        // TOP
+        for (i in (0..x).reversed()) {
+            if (getColorAtCoordinate(sourceBitmap, i, y) == Color.WHITE) {
+                top = i
+                break
+            }
+        }
+        if (top == -1) {
+            MessageLog.w(TAG, "Failed to detect any white pixels for TOP component.")
+            return null
+        }
+        // BOTTOM
+        for (i in x..sourceBitmap.width) {
+            if (getColorAtCoordinate(sourceBitmap, i, y) == Color.WHITE) {
+                bottom = i
+                break
+            }
+        }
+        if (bottom == -1) {
+            MessageLog.w(TAG, "Failed to detect any white pixels for BOTTOM component.")
+            return null
+        }
+        // LEFT
+        for (i in (0..y).reversed()) {
+            if (getColorAtCoordinate(sourceBitmap, x, i) == Color.WHITE) {
+                left = i
+                break
+            }
+        }
+        if (left == -1) {
+            MessageLog.w(TAG, "Failed to detect any white pixels for LEFT component.")
+            return null
+        }
+        // RIGHT
+        for (i in y..sourceBitmap.height) {
+            if (getColorAtCoordinate(sourceBitmap, x, i) == Color.WHITE) {
+                right = i
+                break
+            }
+        }
+        if (right == -1) {
+            MessageLog.w(TAG, "Failed to detect any white pixels for RIGHT component.")
+            return null
+        }
+
+        return BoundingBox(
+            x = left,
+            y = top,
+            w = right - left,
+            h = bottom - top,
+        )
+    }
+
+    fun extractSkillBox(pointInSkillBox: Point, sourceBitmap: Bitmap? = null): Pair<Bitmap?, BoundingBox?> {
+        val sourceBitmap = sourceBitmap ?: getSourceBitmap()
+
+        val bbox: BoundingBox? = getSkillBoxBounds(pointInSkillBox, sourceBitmap)
+        if (bbox == null) {
+            MessageLog.w(TAG, "extractSkillBox: getSkillBoxBounds returned NULL.")
+            return Pair(null, null)
+        }
+
+        val croppedBitmap: Bitmap? = createSafeBitmap(
+            sourceBitmap,
+            bbox.x,
+            bbox.y,
+            bbox.w,
+            bbox.h,
+            "getColorAtCoordinate debugMode cropped bitmap",
+        )
+        if (croppedBitmap == null) {
+            MessageLog.e(TAG, "getColorAtCoordinate: croppedBitmap is NULL.")
+            return Pair(null, null)
+        }
+
+        if (debugMode) {
+            val tempImage = Mat()
+            Utils.bitmapToMat(croppedBitmap, tempImage)
+            Imgcodecs.imwrite("$matchFilePath/debugExtractSkillBox.png", tempImage)
+            tempImage.release()
+        }
+
+        return Pair(croppedBitmap, bbox)
     }
 }

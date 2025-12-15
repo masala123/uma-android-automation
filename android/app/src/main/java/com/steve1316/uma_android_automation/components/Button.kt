@@ -583,3 +583,13 @@ object ButtonHomeFansInfo : ComponentInterface {
     override val TAG: String = "ButtonHomeFansInfo"
     override val template = Template("components/button/home_fans_info", region = Region.leftHalf)
 }
+
+object ButtonSkillUp : ComponentInterface {
+    override val TAG: String = "ButtonSkillUp"
+    override val template = Template("components/button/skill_up", region = Region.rightHalf)
+}
+
+object ButtonSkillDown : ComponentInterface {
+    override val TAG: String = "ButtonSkillDown"
+    override val template = Template("components/button/skill_down", region = Region.rightHalf)
+}

@@ -805,6 +805,10 @@ class Game(val myContext: Context) {
 		val packageInfo = myContext.packageManager.getPackageInfo(myContext.packageName, 0)
 		MessageLog.i(TAG, "Bot version: ${packageInfo.versionName} (${packageInfo.versionCode})\n\n")
 
+
+        campaign.handleSkillListScreen()
+        return true
+
 		// Start debug tests here if enabled. Otherwise, proceed with regular bot operations.
 		if (SettingsHelper.getBooleanSetting("debug", "debugMode_startTemplateMatchingTest")) {
 			startTemplateMatchingTest()
