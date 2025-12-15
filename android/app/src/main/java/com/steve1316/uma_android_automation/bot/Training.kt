@@ -430,9 +430,8 @@ class Training(private val game: Game) {
                         MessageLog.i(TAG, "All 5 stat regions processed for $statName training. Results: ${result.statGains.toSortedMap(compareBy { it.ordinal }).toString()}")
                     }
 
-                    // Check if risky training logic should apply based on main stat gain.
-                    val mainStatGain = result.statGains[result.name] ?: 0
-                    val effectiveFailureChance = if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
+                    // Determine which failure chance threshold to use.
+                    val effectiveFailureChance = if (enableRiskyTraining) {
                         riskyTrainingMaxFailureChance
                     } else {
                         maximumFailureChance
@@ -449,13 +448,14 @@ class Training(private val game: Game) {
                         continue
                     }
 
-                    // Filter out trainings that exceed the effective failure chance threshold.
+                    // For Risky Training, filter out trainings that exceed the effective failure chance threshold or do not meet the minimum main stat gain threshold.
+                    val mainStatGain = result.statGains[result.name] ?: 0
                     if (!test && result.failureChance > effectiveFailureChance) {
-                        if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
-                            MessageLog.i(TAG, "[TRAINING] Skipping $statName training due to failure chance (${result.failureChance}%) exceeding risky threshold (${riskyTrainingMaxFailureChance}%) despite high main stat gain of $mainStatGain.")
-                        } else {
-                            MessageLog.i(TAG, "[TRAINING] Skipping $statName training due to failure chance (${result.failureChance}%) exceeding threshold (${maximumFailureChance}%).")
-                        }
+                        MessageLog.i(TAG, "[TRAINING] Skipping $statName training due to failure chance (${result.failureChance}%) exceeding the effective failure chance threshold (${effectiveFailureChance}%).")
+                        continue
+                    }
+                    if (enableRiskyTraining && mainStatGain < riskyTrainingMinStatGain) {
+                        MessageLog.i(TAG, "[TRAINING] Skipping $statName training due to main stat gain (${mainStatGain}) not meeting minimum threshold (${riskyTrainingMinStatGain}).")
                         continue
                     }
 
