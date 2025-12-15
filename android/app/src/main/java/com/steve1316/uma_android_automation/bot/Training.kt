@@ -660,7 +660,7 @@ class Training(private val game: Game) {
 				// Facility preference bonuses for bursting.
 				when (training.name) {
 					StatName.SPEED -> score += 500.0 // Best for increased speed stat gains.
-					StatName.WIT -> score += 500.0 // Best for energy recovery and slightly increased speed stat gain.
+					StatName.WIT -> score += 0.0
 					StatName.STAMINA, StatName.POWER -> {
 						// Can be bursted if lacking stats.
 						if (currentStat < targetStat * 0.8) {
@@ -715,7 +715,7 @@ class Training(private val game: Game) {
 					}
 					relationshipScore += contribution
 				}
-				score += 100.0 + (relationshipScore * 20.0)
+				score += 100.0 + (relationshipScore * 200.0)
 				MessageLog.i(TAG, "[TRAINING] ${training.name} Training fills relationship bars. Score: ${game.decimalFormat.format(relationshipScore)}.")
 			}
 
