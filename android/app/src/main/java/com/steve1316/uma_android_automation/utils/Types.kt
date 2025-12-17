@@ -199,3 +199,14 @@ data class BoundingBox(val x: Int, val y: Int, val w: Int, val h: Int) {
         return intArrayOf(x, y, w, h)
     }
 }
+
+data class SkillListEntry(
+    var name: String = "",
+    var price: Int = -1,
+    var hintLevel: Int = -1,
+    var bIsObtained: Boolean = false,
+) {
+    override fun toString(): String {
+        return "name=$name, price=$price, hintLevel=$hintLevel"
+    }
+}

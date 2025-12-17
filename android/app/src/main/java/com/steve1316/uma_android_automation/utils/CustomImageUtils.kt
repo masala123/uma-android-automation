@@ -3,6 +3,7 @@ package com.steve1316.uma_android_automation.utils
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.util.Log
 import com.google.mlkit.vision.common.InputImage
 import com.steve1316.automation_library.utils.BotService
@@ -14,6 +15,11 @@ import com.steve1316.uma_android_automation.bot.MAX_STAT_VALUE
 import com.steve1316.uma_android_automation.utils.types.StatName
 import com.steve1316.uma_android_automation.utils.types.Aptitude
 import com.steve1316.uma_android_automation.utils.types.BoundingBox
+import com.steve1316.uma_android_automation.utils.types.SkillListEntry
+import com.steve1316.uma_android_automation.components.ButtonSkillUp
+import com.steve1316.uma_android_automation.components.IconObtainedPill
+import com.steve1316.uma_android_automation.components.IconScrollListTopLeft
+import com.steve1316.uma_android_automation.components.IconScrollListBottomRight
 import org.opencv.android.Utils
 import org.opencv.core.*
 import org.opencv.imgcodecs.Imgcodecs
@@ -30,8 +36,8 @@ import kotlin.collections.component2
 import kotlin.math.sqrt
 import kotlin.text.replace
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.ConcurrentLinkedQueue
 
-import android.graphics.Color
 
 /**
  * Utility functions for image processing via CV like OpenCV.
@@ -1954,121 +1960,372 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		return result
     }
 
-    fun saveBitmap(bitmap: Bitmap, filename: String, bbox: BoundingBox? = null) {
-        val bitmap = if (bbox == null) {
-            bitmap
-        } else {
-            val cropped = createSafeBitmap(bitmap, bbox.x, bbox.y, bbox.w, bbox.h, "saveBitmap crop")
-            if (cropped == null) {
-                MessageLog.e(TAG, "Failed to crop bitmap.")
-                bitmap
-            }
-            cropped
-        }
-        val externalFilesPath = context.getExternalFilesDir(null)?.absolutePath
-        val mat = Mat()
-		Utils.bitmapToMat(bitmap, mat)
-		Imgcodecs.imwrite("$externalFilesPath/temp/${filename}.png", mat)
-        mat.release()
+    fun saveBitmap(bitmap: Bitmap? = null, filename: String) {
+        val bitmap = bitmap ?: getSourceBitmap()
+        val tempImage = Mat()
+        Utils.bitmapToMat(bitmap, tempImage)
+        Imgcodecs.imwrite("$matchFilePath/$filename.png", tempImage)
+        tempImage.release()
     }
 
-    fun getSkillBoxBounds(pointInSkillBox: Point, sourceBitmap: Bitmap? = null): BoundingBox? {
-        val sourceBitmap = sourceBitmap ?: getSourceBitmap()
-
-        val x: Int = pointInSkillBox.x.toInt().coerceIn(0, sourceBitmap.width - 1)
-        val y: Int = pointInSkillBox.y.toInt().coerceIn(0, sourceBitmap.height - 1)
-
-        fun getColorAtCoordinate(bitmap: Bitmap, x: Int, y: Int): Int {
-            return bitmap.getPixel(x, y)
-        }
-
-        var top: Int = -1
-        var right: Int = -1
-        var bottom: Int = -1
-        var left: Int = -1
-
-        // TOP
-        for (i in (0..x).reversed()) {
-            if (getColorAtCoordinate(sourceBitmap, i, y) == Color.WHITE) {
-                top = i
-                break
-            }
-        }
-        if (top == -1) {
-            MessageLog.w(TAG, "Failed to detect any white pixels for TOP component.")
-            return null
-        }
-        // BOTTOM
-        for (i in x..sourceBitmap.width) {
-            if (getColorAtCoordinate(sourceBitmap, i, y) == Color.WHITE) {
-                bottom = i
-                break
-            }
-        }
-        if (bottom == -1) {
-            MessageLog.w(TAG, "Failed to detect any white pixels for BOTTOM component.")
-            return null
-        }
-        // LEFT
-        for (i in (0..y).reversed()) {
-            if (getColorAtCoordinate(sourceBitmap, x, i) == Color.WHITE) {
-                left = i
-                break
-            }
-        }
-        if (left == -1) {
-            MessageLog.w(TAG, "Failed to detect any white pixels for LEFT component.")
-            return null
-        }
-        // RIGHT
-        for (i in y..sourceBitmap.height) {
-            if (getColorAtCoordinate(sourceBitmap, x, i) == Color.WHITE) {
-                right = i
-                break
-            }
-        }
-        if (right == -1) {
-            MessageLog.w(TAG, "Failed to detect any white pixels for RIGHT component.")
-            return null
-        }
-
-        return BoundingBox(
-            x = left,
-            y = top,
-            w = right - left,
-            h = bottom - top,
+    fun saveBitmap(bitmap: Bitmap? = null, filename: String, bbox: BoundingBox) {
+        val bitmap = bitmap ?: getSourceBitmap()
+        val croppedBitmap = createSafeBitmap(
+            bitmap,
+            bbox.x,
+            bbox.y,
+            bbox.w,
+            bbox.h,
+            "saveBitmap(filename=$filename, bbox=$bbox)",
         )
+        saveBitmap(bitmap = croppedBitmap, filename = filename)
     }
 
-    fun extractSkillBox(pointInSkillBox: Point, sourceBitmap: Bitmap? = null): Pair<Bitmap?, BoundingBox?> {
-        val sourceBitmap = sourceBitmap ?: getSourceBitmap()
-
-        val bbox: BoundingBox? = getSkillBoxBounds(pointInSkillBox, sourceBitmap)
-        if (bbox == null) {
-            MessageLog.w(TAG, "extractSkillBox: getSkillBoxBounds returned NULL.")
-            return Pair(null, null)
-        }
-
-        val croppedBitmap: Bitmap? = createSafeBitmap(
+    fun createSafeBitmap(sourceBitmap: Bitmap, bbox: BoundingBox, context: String): Bitmap? {
+        return createSafeBitmap(
             sourceBitmap,
             bbox.x,
             bbox.y,
             bbox.w,
             bbox.h,
-            "getColorAtCoordinate debugMode cropped bitmap",
+            context,
         )
-        if (croppedBitmap == null) {
-            MessageLog.e(TAG, "getColorAtCoordinate: croppedBitmap is NULL.")
-            return Pair(null, null)
+    }
+
+    fun getSkillListBoundingRegion(bitmap: Bitmap? = null): BoundingBox? {
+        val bitmap = bitmap ?: getSourceBitmap()
+
+        val listTopLeftBitmap: Bitmap? = IconScrollListTopLeft.template.getBitmap(game.imageUtils)
+        if (listTopLeftBitmap == null) {
+            MessageLog.e(TAG, "[SKILLS] Failed to load IconScrollListTopLeft bitmap.")
+            return null
         }
+
+        val listBottomRightBitmap: Bitmap? = IconScrollListBottomRight.template.getBitmap(game.imageUtils)
+        if (listBottomRightBitmap == null) {
+            MessageLog.e(TAG, "[SKILLS] Failed to load IconScrollListBottomRight bitmap.")
+            return null
+        }
+
+        val listTopLeft: Point? = IconScrollListTopLeft.find(game.imageUtils).first
+        if (listTopLeft == null) {
+            MessageLog.e(TAG, "[SKILLS] Failed to find top left corner of race list.")
+            return null
+        }
+        val listBottomRight: Point? = IconScrollListBottomRight.find(game.imageUtils).first
+        if (listBottomRight == null) {
+            MessageLog.e(TAG, "[SKILLS] Failed to find bottom right corner of race list.")
+            return null
+        }
+        val x0 = (listTopLeft.x - (listTopLeftBitmap.width / 2)).toInt()
+        val y0 = (listTopLeft.y - (listTopLeftBitmap.height / 2)).toInt()
+        val x1 = (listBottomRight.x + (listBottomRightBitmap.width / 2)).toInt()
+        val y1 = (listBottomRight.y + (listBottomRightBitmap.height / 2)).toInt()
+        val bbox = BoundingBox(
+            x = x0,
+            y = y0,
+            w = x1 - x0,
+            h = y1 - y0,
+        )
 
         if (debugMode) {
-            val tempImage = Mat()
-            Utils.bitmapToMat(croppedBitmap, tempImage)
-            Imgcodecs.imwrite("$matchFilePath/debugExtractSkillBox.png", tempImage)
-            tempImage.release()
+            saveBitmap(bitmap, "getSkillListBoundingRegion", bbox)
         }
 
-        return Pair(croppedBitmap, bbox)
+        return bbox
+    }
+    
+    fun analyzeSkillListEntry(bitmap: Bitmap, bIsObtained: Boolean, debugString: String = ""): SkillListEntry? {
+        fun extractText(bitmap: Bitmap): String {
+            try {
+                val detectedText = performOCROnRegion(
+                    bitmap,
+                    0,
+                    0,
+                    bitmap.width - 1,
+                    bitmap.height - 1,
+                    useThreshold = false,
+                    useGrayscale = true,
+                    scale = 2.0,
+                    ocrEngine = "mlKit",
+                    debugName = "analyzeSkillListEntry::extractText"
+                )
+                MessageLog.i(TAG, "Extracted text: \"$detectedText\"")
+                return detectedText
+            } catch (e: Exception) {
+                MessageLog.e(TAG, "Exception during text extraction: ${e.message}")
+                return ""
+            }
+        }
+
+        val latch = CountDownLatch(3)
+        val result = SkillListEntry()
+        val logMessages = ConcurrentLinkedQueue<String>()
+
+        Thread {
+            try {
+                val bboxTitle = BoundingBox(
+                    x = (bitmap.width * 0.142).toInt(),
+                    y = 0,
+                    w = (bitmap.width * 0.57).toInt(),
+                    h = (bitmap.height * 0.338).toInt(),
+                )
+                val croppedTitle = createSafeBitmap(
+                    bitmap,
+                    bboxTitle.x,
+                    bboxTitle.y,
+                    bboxTitle.w,
+                    bboxTitle.h,
+                    "bboxTitle_$debugString",
+                )
+
+                if (croppedTitle == null) {
+                    Log.e(TAG, "[SKILLS] analyzeSkillListEntry: createSafeBitmap for croppedTitle returned NULL.")
+                    return@Thread
+                }
+
+                if (debugMode) {
+                    saveBitmap(croppedTitle, filename = "bboxTitle_$debugString")
+                }
+
+                val skillName: String = extractText(croppedTitle)
+                if (skillName == "") {
+                    Log.e(TAG, "[SKILLS] Failed to extract skill name.")
+                    return@Thread
+                }
+
+                val skillData = game.skills.getSkill(skillName)
+                result.name = skillData?.name ?: skillName
+                if (skillData == null) {
+                    Log.e(TAG, "[SKILLS] lookupSkillInDatabase returned NULL.")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "[ERROR] Error processing skill name: ${e.stackTraceToString()}")
+            } finally {
+                latch.countDown()
+            }
+        }.start()
+
+        Thread {
+            try {
+                val bboxPrice = BoundingBox(
+                    x = (bitmap.width * 0.7935).toInt(),
+                    y = (bitmap.height * 0.372).toInt(),
+                    w = (bitmap.width * 0.1068).toInt(),
+                    h = (bitmap.height * 0.251).toInt(),
+                )
+                val croppedPrice = createSafeBitmap(
+                    bitmap,
+                    bboxPrice.x,
+                    bboxPrice.y,
+                    bboxPrice.w,
+                    bboxPrice.h,
+                    "bboxPrice_$debugString",
+                )
+
+                if (croppedPrice == null) {
+                    Log.e(TAG, "[SKILLS] analyzeSkillListEntry: createSafeBitmap for croppedPrice returned NULL.")
+                    return@Thread
+                }
+
+                if (debugMode) {
+                    saveBitmap(croppedPrice, filename = "bboxPrice_$debugString")
+                }
+
+                val price: Int? = extractText(croppedPrice).replace("[^0-9]".toRegex(), "").toIntOrNull()
+                result.price = price ?: -1
+                if (price == null) {
+                    Log.e(TAG, "[SKILLS] Failed to extract skill price.")
+                    return@Thread
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "[ERROR] Error processing skill price: ${e.stackTraceToString()}")
+            } finally {
+                latch.countDown()
+            }
+        }.start()
+
+        Thread {
+            try {
+                val bboxHint = BoundingBox(
+                    x = (bitmap.width * 0.748).toInt(),
+                    y = 0,
+                    w = (bitmap.width * 0.195).toInt(),
+                    h = (bitmap.height * 0.303).toInt(),
+                )
+                val croppedHint = createSafeBitmap(
+                    bitmap,
+                    bboxHint.x,
+                    bboxHint.y,
+                    bboxHint.w,
+                    bboxHint.h,
+                    "bboxHint_$debugString",
+                )
+
+                if (croppedHint == null) {
+                    Log.e(TAG, "[SKILLS] analyzeSkillListEntry: createSafeBitmap for croppedHint returned NULL.")
+                    return@Thread
+                }
+
+                if (debugMode) {
+                    saveBitmap(croppedHint, filename = "bboxHint_$debugString")
+                }
+                /*
+                val discountString: String = extractText(croppedHint).lines().last()
+                val discountValue: Int? = discountString.replace("[^0-9]".toRegex(), "").toIntOrNull()
+                if ("% OFF!" in discountString) {
+                    if (
+                        !bIsObtained &&
+                        discountValue != null &&
+                        (discountValue % 10 != 0 || discountValue < 10 || discountValue > 60)
+                    ) {
+                        MessageLog.w(TAG, "[SKILLS] Discount value is invalid $discountString ($discountValue)")
+                        return null
+                    }
+                }
+                */
+            } catch (e: Exception) {
+                Log.e(TAG, "[ERROR] Error processing skill price: ${e.stackTraceToString()}")
+            } finally {
+                latch.countDown()
+            }
+        }.start()
+
+        try {
+            latch.await(3, TimeUnit.SECONDS)
+        } catch (_: InterruptedException) {
+            Log.e(TAG, "[ERROR] Parallel skill analysis timed out.")
+        }
+
+        result.bIsObtained = bIsObtained
+
+        return result
+    }
+
+    fun analyzeSkillList(bitmap: Bitmap? = null, bboxSkillList: BoundingBox? = null, debugString: String = ""): Map<String, SkillListEntry>? {
+        val bitmap = bitmap ?: getSourceBitmap()
+        val bboxSkillList: BoundingBox? = if (bboxSkillList != null) {
+            bboxSkillList
+        } else {
+            getSkillListBoundingRegion(bitmap)
+        }
+
+        if (bboxSkillList == null) {
+            MessageLog.e(TAG, "[SKILLS] analyzeSkillList: getSkillListBoundingRegion() returned NULL.")
+            return null
+        }
+
+        // Further crop the skill list region. This creates a window where we
+        // will search for skill list entries. This prevents us from detecting
+        // entries which are scrolled partially outside of the list and are cut off.
+        val bboxSkillEntryRegion = BoundingBox(
+            x = bboxSkillList.x,
+            y = bboxSkillList.y + ((SharedData.displayHeight * 0.12) / 2).toInt(),
+            w = bboxSkillList.w,
+            h = bboxSkillList.h - (SharedData.displayHeight * 0.12).toInt(),
+        )
+        if (debugMode) {
+            saveBitmap(
+                bitmap = bitmap,
+                filename = "skillEntryRegion_$debugString",
+                bbox = bboxSkillEntryRegion,
+            )
+        }
+
+        // Smaller region used to detect SkillUp buttons in the list.
+        val bboxSkillUpRegion = BoundingBox(
+            x = game.imageUtils.relX((bboxSkillEntryRegion.x + bboxSkillEntryRegion.w).toDouble(), -125),
+            y = bboxSkillEntryRegion.y,
+            w = game.imageUtils.relWidth(70),
+            h = bboxSkillEntryRegion.h,
+        )
+        if (debugMode) {
+            saveBitmap(
+                bitmap = bitmap,
+                filename = "skillUpRegion_$debugString",
+                bbox = bboxSkillUpRegion,
+            )
+        }
+
+        val bboxObtainedPillRegion = BoundingBox(
+            x = game.imageUtils.relX((bboxSkillEntryRegion.x + bboxSkillEntryRegion.w).toDouble(), -260),
+            y = bboxSkillEntryRegion.y,
+            w = game.imageUtils.relWidth(140),
+            h = bboxSkillEntryRegion.h,
+        )
+        if (debugMode) {
+            saveBitmap(
+                bitmap = bitmap,
+                filename = "obtainedPillRegion_$debugString",
+                bbox = bboxObtainedPillRegion,
+            )
+        }
+
+        val skillUpLocs: List<Pair<String, Point>> = ButtonSkillUp.findAll(
+            imageUtils = this,
+            region = bboxSkillUpRegion.toIntArray(),
+        ).map { point -> Pair("skillUp", point) }
+
+        val obtainedPillLocs: List<Pair<String, Point>> = IconObtainedPill.findAll(
+            imageUtils = this,
+            region = bboxObtainedPillRegion.toIntArray(),
+        ).map { point -> Pair("obtained", point) }
+
+        val points = skillUpLocs.plus(obtainedPillLocs).sortedBy { it.second.y }
+
+        val skills: MutableMap<String, SkillListEntry> = mutableMapOf()
+
+        var i: Int = 0
+        for ((pointType, point) in points) {
+            if (pointType == "obtained") {
+                continue
+            }
+            // Calculate the bounding box for the skill info.
+            // x/y positions differ for the SkillUp and ObtainedPill images.
+            val bboxSkillBox = if (pointType == "obtained") {
+                BoundingBox(
+                    x = (point.x - (SharedData.displayWidth * 0.77)).toInt(),
+                    y = (point.y - (SharedData.displayHeight * 0.0599)).toInt(),
+                    w = (SharedData.displayWidth * 0.91).toInt(),
+                    h = (SharedData.displayHeight * 0.12).toInt(),
+                )
+            } else {
+                BoundingBox(
+                    x = (point.x - (SharedData.displayWidth * 0.86)).toInt(),
+                    y = (point.y - (SharedData.displayHeight * 0.0583)).toInt(),
+                    w = (SharedData.displayWidth * 0.91).toInt(),
+                    h = (SharedData.displayHeight * 0.12).toInt(),
+                )
+            }
+
+            val croppedSkillBox = createSafeBitmap(
+                bitmap,
+                bboxSkillBox.x,
+                bboxSkillBox.y,
+                bboxSkillBox.w,
+                bboxSkillBox.h,
+                "bboxSkillBox_$i",
+            )
+
+            if (croppedSkillBox == null) {
+                MessageLog.e(TAG, "[SKILLS] analyzeSkillList: createSafeBitmap for skillBoxBitmap returned NULL.")
+                return null
+            }
+
+            if (debugMode) {
+                saveBitmap(croppedSkillBox, filename = "bboxSkillBox_$i")
+            }
+
+            val skillListEntry = analyzeSkillListEntry(croppedSkillBox, pointType == "obtained", "$i")
+            if (skillListEntry == null) {
+                continue
+            }
+            skills[skillListEntry.name] = skillListEntry
+            i++
+        }
+
+        MessageLog.e("REMOVEME", "HERE: $skills")
+        return skills.toMap()
     }
 }
+

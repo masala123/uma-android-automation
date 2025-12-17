@@ -14,6 +14,7 @@ import com.steve1316.automation_library.utils.MyAccessibilityService
 import com.steve1316.uma_android_automation.utils.SettingsHelper
 import com.steve1316.uma_android_automation.utils.GameDate
 import com.steve1316.uma_android_automation.bot.Trainee
+import com.steve1316.uma_android_automation.bot.Skills
 
 import com.steve1316.uma_android_automation.utils.types.BoundingBox
 import com.steve1316.uma_android_automation.utils.types.Aptitude
@@ -69,6 +70,7 @@ class Game(val myContext: Context) {
     val trainee: Trainee = Trainee()
 	val training: Training = Training(this)
 	val racing: Racing = Racing(this)
+    val skills: Skills = Skills(this)
 	val trainingEvent: TrainingEvent = TrainingEvent(this)
     val campaign: Campaign = if (scenario == "Unity Cup") {
         UnityCup(this)
@@ -807,6 +809,7 @@ class Game(val myContext: Context) {
 
 
         campaign.handleSkillListScreen()
+        //skills.getSkill("Wet Conditions O")
         return true
 
 		// Start debug tests here if enabled. Otherwise, proceed with regular bot operations.

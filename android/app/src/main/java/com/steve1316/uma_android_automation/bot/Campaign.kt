@@ -4,12 +4,14 @@ import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.utils.SettingsHelper
 import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.automation_library.utils.BotService
+import com.steve1316.automation_library.data.SharedData
 
 import com.steve1316.uma_android_automation.utils.types.DateYear
 import com.steve1316.uma_android_automation.utils.types.DateMonth
 import com.steve1316.uma_android_automation.utils.types.DatePhase
 import com.steve1316.uma_android_automation.utils.types.FanCountClass
 import com.steve1316.uma_android_automation.utils.types.BoundingBox
+import com.steve1316.uma_android_automation.utils.types.SkillListEntry
 
 import com.steve1316.uma_android_automation.components.*
 
@@ -241,12 +243,12 @@ open class Campaign(val game: Game) {
         MessageLog.i(TAG, "Beginning process to purchase skills...")
 
         fun scrollDown(bbox: BoundingBox) {
-            // Swipe up approximately one entry in list.
+            // Scroll down approx. 2 entries in list.
             game.gestureUtils.swipe(
                 (bbox.x + (bbox.w / 2)).toFloat(),
                 (bbox.y + (bbox.h / 2)).toFloat(),
                 (bbox.x + (bbox.w / 2)).toFloat(),
-                ((bbox.y + (bbox.h / 2)) - 500).toFloat(),
+                ((bbox.y + (bbox.h / 2)) - bbox.h).toFloat(),
                 duration=500,
             )
             game.wait(0.1, skipWaitingForLoading = true)
@@ -259,68 +261,36 @@ open class Campaign(val game: Game) {
             game.wait(0.5, skipWaitingForLoading = true)
         }
 
+        fun scrollToTop(bbox: BoundingBox) {
+            // Scroll to top of list.
+            game.gestureUtils.swipe(
+                (bbox.x + (bbox.w / 2)).toFloat(),
+                (bbox.y + (bbox.h / 2)).toFloat(),
+                (bbox.x + (bbox.w / 2)).toFloat(),
+                // high value here ensures we go all the way to top of list
+                (bbox.y + (bbox.h * 10)).toFloat(),
+            )
+            // Small delay for list to stabilize.
+            game.wait(0.5, skipWaitingForLoading = true)
+        }
+
         //val skillBoxes = mutableMapOf<String, SkillBox>()
         // List of skills in the order that they are shown in the game.
         // We use this later to purchase items from top to bottom.
         var skillList = mutableListOf<String>()
-
-        // Get the bounding region of the race list.
-        val listTopLeftBitmap: Bitmap? = IconRaceListTopLeft.template.getBitmap(game.imageUtils)
-        if (listTopLeftBitmap == null) {
-            MessageLog.e(TAG, "[RACE] Failed to load IconRaceListTopLeft bitmap.")
+        
+        var bitmap = game.imageUtils.getSourceBitmap()
+        val bboxSkillList: BoundingBox? = game.imageUtils.getSkillListBoundingRegion(bitmap)
+        if (bboxSkillList == null) {
+            MessageLog.e(TAG, "[SKILLS] handleSkillList: getSkillListBoundingRegion() returned NULL.")
             return false
         }
-
-        val listBottomRightBitmap: Bitmap? = IconRaceListBottomRight.template.getBitmap(game.imageUtils)
-        if (listBottomRightBitmap == null) {
-            MessageLog.e(TAG, "[RACE] Failed to load IconRaceListBottomRight bitmap.")
-            return false
-        }
-
-        val listTopLeft: Point? = IconRaceListTopLeft.find(game.imageUtils).first
-        if (listTopLeft == null) {
-            MessageLog.e(TAG, "[RACE] Failed to find top left corner of race list.")
-            return false
-        }
-        val listBottomRight: Point? = IconRaceListBottomRight.find(game.imageUtils).first
-        if (listBottomRight == null) {
-            MessageLog.e(TAG, "[RACE] Failed to find bottom right corner of race list.")
-            return false
-        }
-        val x0 = (listTopLeft.x - (listTopLeftBitmap.width / 2)).toInt()
-        val y0 = (listTopLeft.y - (listTopLeftBitmap.height / 2)).toInt()
-        val x1 = (listBottomRight.x + (listBottomRightBitmap.width / 2)).toInt()
-        val y1 = (listBottomRight.y + (listBottomRightBitmap.height / 2)).toInt()
-        val bbox = BoundingBox(
-            x = x0,
-            y = y0,
-            w = x1 - x0,
-            h = y1 - y0,
-        )
-
-        // REMOVEME
-        game.imageUtils.saveBitmap(game.imageUtils.getSourceBitmap(), "bboxSkillList", bbox = bbox)
-
-        // Smaller region used to detect SkillUp buttons in the list.
-        val bboxSkillUp = BoundingBox(
-            x = game.imageUtils.relX((bbox.x + bbox.w).toDouble(), -125),
-            y = bbox.y,
-            w = game.imageUtils.relWidth(70),
-            h = bbox.h,
-        )
-
-        val bboxObtainedPill = BoundingBox(
-            x = game.imageUtils.relX((bbox.x + bbox.w).toDouble(), -260),
-            y = bbox.y,
-            w = game.imageUtils.relWidth(140),
-            h = bbox.h,
-        )
 
         val bboxScrollBar = BoundingBox(
-            x = game.imageUtils.relX((bbox.x + bbox.w).toDouble(), -22),
-            y = bbox.y,
+            x = game.imageUtils.relX((bboxSkillList.x + bboxSkillList.w).toDouble(), -22),
+            y = bboxSkillList.y,
             w = 10,
-            h = bbox.h,
+            h = bboxSkillList.h,
         )
 
         // The center column of pixels in the scrollbar.
@@ -331,47 +301,27 @@ open class Campaign(val game: Game) {
             h = bboxScrollBar.h,
         )
 
+        // Scroll to top before we do anything else.
+        scrollToTop(bboxSkillList)
         
-        // Scroll to top of list.
-        game.gestureUtils.swipe(
-            (bbox.x + (bbox.w / 2)).toFloat(),
-            (bbox.y + (bbox.h / 2)).toFloat(),
-            (bbox.x + (bbox.w / 2)).toFloat(),
-            // high value here ensures we go all the way to top of list
-            (bbox.y + (bbox.h * 10)).toFloat(),
-        )
-
-        game.wait(0.1, skipWaitingForLoading = true)
-        // Tap to prevent overscrolling.
-        game.tap(
-            game.imageUtils.relX(bbox.x.toDouble(), 15).toDouble(),
-            game.imageUtils.relY(bbox.y.toDouble(), 15).toDouble(),
-            ignoreWaiting = true,
-        )
-        // Small delay for scrolling to stop.
-        game.wait(0.1, skipWaitingForLoading = true)
-
         // Used as a break flag for the loop.
         // When the last item we add is the same as this variable,
         // we know that we are at the last element in the list.
         var lastTitle: String? = null
-
         // Max time limit for the while loop to search for skills.
         val startTime: Long = System.currentTimeMillis()
-        val maxTimeMs: Long = 10000
-
-        var bitmap = game.imageUtils.getSourceBitmap()
+        val maxTimeMs: Long = 30000
         var prevScrollBarBitmap: Bitmap? = null
+
+        val skills: MutableMap<String, SkillListEntry> = mutableMapOf()
+
         while (System.currentTimeMillis() - startTime < maxTimeMs) {
             bitmap = game.imageUtils.getSourceBitmap()
 
             // SCROLLBAR CHANGE DETECTION LOGIC
             val scrollBarBitmap: Bitmap? = game.imageUtils.createSafeBitmap(
                 bitmap,
-                bboxScrollBarSingleColumn.x,
-                bboxScrollBarSingleColumn.y,
-                bboxScrollBarSingleColumn.w,
-                bboxScrollBarSingleColumn.h,
+                bboxScrollBarSingleColumn,
                 "race list scrollbar right half bitmap",
             )
             if (scrollBarBitmap == null) {
@@ -382,40 +332,24 @@ open class Campaign(val game: Game) {
             // If after scrolling the scrollbar hasn't changed, that means
             // we've reached the end of the list.
             if (prevScrollBarBitmap != null && scrollBarBitmap.sameAs(prevScrollBarBitmap)) {
-                return false
+                break
             }
 
             prevScrollBarBitmap = scrollBarBitmap
 
-            // SKILL ENTRY DETECTION LOGIC
-            // REMOVEME
-            game.imageUtils.saveBitmap(bitmap, "bboxSkillUp", bbox = bboxSkillUp)
-
-            val skillUpLocs: List<Pair<String, Point>> = ButtonSkillUp.findAll(
-                imageUtils = game.imageUtils,
-                region = bboxSkillUp.toIntArray(),
-            ).map { point -> Pair("skillUp", point) }
-            MessageLog.e("REMOVEME", "skillUpLocs: $skillUpLocs")
-
-            val obtainedPillLocs: List<Pair<String, Point>> = IconObtainedPill.findAll(
-                imageUtils = game.imageUtils,
-                region = bboxObtainedPill.toIntArray(),
-            ).map { point -> Pair("obtained", point) }
-            MessageLog.e("REMOVEME", "obtainedPillLocs: $obtainedPillLocs")
-
-            val locs = skillUpLocs.plus(obtainedPillLocs).sortedBy { it.second.y }
-            MessageLog.e("REMOVEME", "LOCS=$locs")
-
-            var thisLastTitle: String? = null
-            for ((type, point) in locs) {
-                val bIsObtained: Boolean = type == "obtained"
-
-                val (skillBoxBitmap, bboxSkillBox) = game.imageUtils.extractSkillBox(point, bitmap)
-                MessageLog.e("REMOVEME", "bboxSkillBox: $bboxSkillBox")
+            val tmpSkills: Map<String, SkillListEntry>? = game.imageUtils.analyzeSkillList(bitmap, bboxSkillList)
+            if (tmpSkills != null) {
+                skills.putAll(tmpSkills)
             }
 
-            scrollDown(bbox)
+            scrollDown(bboxSkillList)
         }
+
+        MessageLog.e("REMOVEME", "vvvv SKILLS vvvv")
+        for ((_, skill) in skills) {
+            MessageLog.e("REMOVEME", "$skill")
+        }
+
         return true
     }
 

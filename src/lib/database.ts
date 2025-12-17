@@ -28,6 +28,14 @@ export interface DatabaseRace {
     nameFormatted: string
 }
 
+export interface DatabaseSkill {
+    id: number
+    key: string
+    skillId: number
+    englishName: string
+    englishDescription: string
+}
+
 export interface DatabaseProfile {
     id: number
     name: string
@@ -45,6 +53,7 @@ export class DatabaseManager {
     private STRING_ONLY_SETTINGS = ["racingPlan", "racingPlanData"]
     private TABLE_SETTINGS = "settings"
     private TABLE_RACES = "races"
+    private TABLE_SKILLS = "skills"
     private TABLE_PROFILES = "profiles"
 
     private db: SQLite.SQLiteDatabase | null = null
@@ -183,6 +192,19 @@ export class DatabaseManager {
             `)
             logWithTimestamp("Races table created successfully.")
 
+            // Create skills table.
+            logWithTimestamp("Creating skills table...")
+            await this.db.execAsync(`
+                CREATE TABLE IF NOT EXISTS ${this.TABLE_SKILLS} (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    key TEXT UNIQUE NOT NULL,
+                    skillId INTEGER NOT NULL,
+                    englishName TEXT NOT NULL,
+                    englishDescription TEXT NOT NULL
+                )
+            `)
+            logWithTimestamp("Skills table created successfully.")
+
             // Create profiles table.
             logWithTimestamp("Creating profiles table...")
             await this.db.execAsync(`
@@ -212,6 +234,10 @@ export class DatabaseManager {
             await this.db.execAsync(`
                 CREATE INDEX IF NOT EXISTS idx_races_name_formatted 
                 ON ${this.TABLE_RACES}(nameFormatted)
+            `)
+            await this.db.execAsync(`
+                CREATE INDEX IF NOT EXISTS idx_skills_english_name 
+                ON ${this.TABLE_SKILLS}(englishName)
             `)
             await this.db.execAsync(`
                 CREATE INDEX IF NOT EXISTS idx_profiles_name 
@@ -625,6 +651,93 @@ export class DatabaseManager {
             endTiming({ status: "success" })
         } catch (error) {
             logErrorWithTimestamp("[DB] Failed to clear races:", error)
+            endTiming({ status: "error", error: error instanceof Error ? error.message : String(error) })
+            throw error
+        }
+    }
+
+    // ============================================================================
+    // Skills Methods
+    // ============================================================================
+
+    /**
+     * Save multiple skills using prepared statements for better performance and security.
+     *
+     * @param skills - The skills to save.
+     * @returns A promise that resolves when the skills are saved.
+     */
+    async saveSkillsBatch(skills: Array<Omit<DatabaseSkill, "id">>): Promise<void> {
+        const endTiming = startTiming("database_save_skills_batch", "database")
+
+        this.ensureInitialized()
+
+        if (skills.length === 0) {
+            endTiming({ status: "skipped", reason: "no_skills" })
+            return
+        }
+
+        try {
+            await this.executeWithQueue(async () => {
+                logWithTimestamp(`[DB] Saving ${skills.length} skills using prepared statement.`)
+
+                await this.db!.runAsync("BEGIN TRANSACTION")
+                const stmt = await this.db!.prepareAsync(
+                    `INSERT OR REPLACE INTO ${this.TABLE_SKILLS} (key, skillId, englishName, englishDescription) 
+                     VALUES (?, ?, ?, ?)`
+                )
+
+                // Execute all skills in batch using prepared statement.
+                for (const skill of skills) {
+                    await stmt.executeAsync([
+                        skill.key,
+                        skill.skillId,
+                        skill.englishName,
+                        skill.englishDescription,
+                    ])
+                }
+
+                // Finalize statement and commit transaction.
+                await stmt.finalizeAsync()
+                await this.db!.runAsync("COMMIT")
+
+                logWithTimestamp(`[DB] Successfully saved ${skills.length} skills in batch.`)
+            })
+
+            endTiming({ status: "success", racesCount: skills.length })
+        } catch (error) {
+            const skillsInfo = skills.length > 0 ? ` (${skills.length} skills: ${skills.map((s) => `${s.englishName} (turn ${s.skillId})`).join(", ")})` : " (no skills)"
+            logErrorWithTimestamp(`[DB] Failed to save skills batch${skillsInfo}:`, error)
+
+            // Rollback transaction on error.
+            try {
+                if (this.db && this.isTransactionActive) {
+                    await this.db.runAsync("ROLLBACK")
+                }
+            } catch (rollbackError) {
+                logErrorWithTimestamp(`[DB] Failed to rollback transaction${skillsInfo}:`, rollbackError)
+            }
+
+            endTiming({ status: "error", skillsCount: skills.length, error: error instanceof Error ? error.message : String(error) })
+            throw error
+        }
+    }
+
+    /**
+     * Clear all skills from the database.
+     *
+     * @returns A promise that resolves when the skills are cleared.
+     */
+    async clearSkills(): Promise<void> {
+        const endTiming = startTiming("database_clear_skills", "database")
+
+        this.ensureInitialized()
+
+        try {
+            await this.db!.runAsync(`DELETE FROM ${this.TABLE_SKILLS}`)
+            logWithTimestamp("[DB] Successfully cleared all skills.")
+            endTiming({ status: "success" })
+        } catch (error) {
+            logErrorWithTimestamp("[DB] Failed to clear skills:", error)
             endTiming({ status: "error", error: error instanceof Error ? error.message : String(error) })
             throw error
         }
