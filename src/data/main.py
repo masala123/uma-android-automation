@@ -14,6 +14,7 @@ import bisect
 IS_DELTA = True
 DELTA_BACKLOG_COUNT = 10
 
+
 def create_chromedriver():
     """Creates the Chrome driver for scraping.
 
