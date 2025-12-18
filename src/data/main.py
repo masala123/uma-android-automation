@@ -14,8 +14,6 @@ import bisect
 IS_DELTA = True
 DELTA_BACKLOG_COUNT = 10
 
-SKILL_LEVELS = ["×", "○", "◎"]
-
 def create_chromedriver():
     """Creates the Chrome driver for scraping.
 
@@ -30,7 +28,7 @@ def calculate_turn_number(date_string: str) -> int:
     """Calculates the turn number for a race based on its date string.
 
     This function parses race date strings in the format "Senior Class January, Second Half"
-    and converts them to turn numbers using the same logic as the Kotlin GameDate.
+    and converts them to turn numbers using the same logic as the Kotlin GameDateParser.
 
     Args:
         date_string: The date string to parse (e.g., "Senior Class January, Second Half").
