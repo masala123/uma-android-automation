@@ -9,7 +9,7 @@ import logging
 import os
 from typing import List, Dict
 from difflib import SequenceMatcher
-
+import bisect
 
 IS_DELTA = True
 DELTA_BACKLOG_COUNT = 10
@@ -380,7 +380,108 @@ class SkillScraper(BaseScraper):
                     logging.info(f"Skill {skill_name} ({i + 1}/{len(all_skill_rows)}) already exists. Overwriting with new data...")
                 else:
                     logging.info(f"Scraped skill ({i + 1}/{len(all_skill_rows)}): {skill_name}")
-                self.data[skill_name] = {"id": int(skill_id), "englishName": skill_name, "englishDescription": clean_description}
+
+                # Show the tooltip.
+                more_button = skill_row.find_element(By.XPATH, "//span[contains(@class, 'skills_more_text')]")
+                more_button.click()
+                time.sleep(0.5)
+
+                # Read the tooltip and extract the price and other versions of the skill.
+                tooltip = driver.find_element(By.XPATH, "//div[@data-tippy-root]")
+                tooltip_lines = tooltip.find_elements(By.XPATH, ".//div[contains(@class, 'tooltips_tooltip_line')]")
+                price = tooltip_lines[7].text.strip()
+                other_versions_div = tooltip.find_element(By.XPATH, ".//div[contains(@style, 'text-align: left;')]")
+                other_versions = []
+                for other_version_div in other_versions_div.find_elements(By.XPATH, ".//div"):
+                    other_versions.append(other_version_div.find_element(By.XPATH, ".//span").text.strip())
+
+                self.data[skill_name] = {
+                    "id": int(skill_id),
+                    "englishName": skill_name,
+                    "englishDescription": clean_description,
+                    "price": int(price.replace("Base cost: ", "").strip()),
+                    "other_versions": other_versions,
+                }
+                
+                # Dismiss the tooltip.
+                more_button.click()
+                time.sleep(0.5)
+
+        self.save_data()
+        driver.quit()
+
+    def start_webpack_method(self):
+        """Starts the scraping process using the JS webpack method."""
+        driver = create_chromedriver()
+        driver.get(self.url)
+        time.sleep(5)
+
+        self.handle_cookie_consent(driver)
+        
+        self.data = {}
+        
+        # Webpack for Next.js loads chunks into a global variable called webpackChunk_N_E.
+        # Each chunk contains these module functions that populates "module.exports".
+        # This JS script creates a fake object "tmp" with a null "exports" property.
+        # Then it grabs the chunk with ID 4318 and calls the module ID 60930 with the tmp fake object. It then assigns the skill data to tmp.exports.
+        # Then we return it as a dictionary.
+        skill_data = driver.execute_script("let tmp = { exports: null }; window.webpackChunk_N_E.find(arr => arr[0][0] == 4318)[1][60930](tmp); return tmp.exports")
+        
+        skill_id_to_name = {}
+        for skill in skill_data:
+            try:
+                # If name_en doesnt exist, then the skill isn't in global yet.
+                if "name_en" not in skill:
+                    continue
+
+                tmp = {
+                    "id": skill["id"],
+                    "name_en": skill["name_en"],
+                    "desc_en": skill["desc_en"],
+                    "icon_id": skill["iconid"],
+                    "cost": skill.get("cost", None),
+                    "rarity": skill["rarity"],
+                    "versions": sorted(skill.get("versions", [])),
+                    "upgrade": None,
+                    "downgrade": None,
+                }
+                skill_id_to_name[skill["id"]] = skill["name_en"]
+
+                self.data[tmp["name_en"]] = tmp
+            except KeyError as exc:
+                if "name_en" in skill:
+                    logging.error(f"KeyError when parsing skill ({skill['name_en']}): {exc}")
+                else:
+                    logging.error(f"KeyError when parsing skill: {exc}")
+                continue
+        
+        # Populate the upgrade/downgrade versions for every skill.
+        for skill_name, skill in self.data.items():
+            # If skill has no other versions, skip.
+            if skill["versions"] == []:
+                continue
+
+            # Now determine the upgrades/downgrades of this skill.
+            index = bisect.bisect_left(skill["versions"], skill["id"])
+            if index == 0:
+                # This is the highest level of this skill.
+                downgrade_version = skill["versions"][0]
+                if downgrade_version in skill_id_to_name:
+                    self.data[skill_name]["downgrade"] = downgrade_version
+            elif index == len(skill["versions"]):
+                # This is the lowest level of this skill.
+                upgrade_version = skill["versions"][-1]
+                if upgrade_version in skill_id_to_name:
+                    self.data[skill_name]["upgrade"] = upgrade_version
+            else:
+                # Skill has both an upgraded and downgraded variant.
+                upgrade_version = skill["versions"][index - 1]
+                if upgrade_version in skill_id_to_name:
+                    self.data[skill_name]["upgrade"] = upgrade_version
+                
+                downgrade_version = skill["versions"][index]
+                if downgrade_version in skill_id_to_name:
+                    self.data[skill_name]["downgrade"] = downgrade_version
 
         self.save_data()
         driver.quit()
