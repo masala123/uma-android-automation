@@ -27,7 +27,7 @@ const getDefaultSelectedProfile = (profiles: Array<{ name: string }>): string =>
 
 const ProfileSelector: React.FC<ProfileSelectorProps> = ({ currentTrainingSettings, currentTrainingStatTargetSettings, onOverwriteSettings, onProfileDeleted, onNoChangesDetected, onError }) => {
     const { colors } = useTheme()
-    const { profiles, loadProfiles, switchProfile } = useProfileManager(onError)
+    const { profiles, loadProfiles, switchProfile, currentProfileName } = useProfileManager(onError)
     const [showManageModal, setShowManageModal] = useState(false)
     const [showCreateModal, setShowCreateModal] = useState(false)
     const [selectedProfileName, setSelectedProfileName] = useState<string>(DEFAULT_PROFILE_NAME)
@@ -64,21 +64,40 @@ const ProfileSelector: React.FC<ProfileSelectorProps> = ({ currentTrainingSettin
         },
     })
 
-    // Initialize and sync selected profile with available profiles.
-    // If the currently selected profile no longer exists, reset appropriately.
+    // Initialize and sync selected profile with current active profile and available profiles.
     useEffect(() => {
+        // If there's an active profile and it exists in the profiles list, select it.
+        if (currentProfileName && profiles.some((p) => p.name === currentProfileName)) {
+            if (selectedProfileName !== currentProfileName) {
+                setSelectedProfileName(currentProfileName)
+            }
+            return
+        }
+
+        // If no active profile is set, check if current selection is valid.
+        if (currentProfileName === null) {
+            // If no profiles exist, use default.
+            if (profiles.length === 0) {
+                if (selectedProfileName !== DEFAULT_PROFILE_NAME) {
+                    setSelectedProfileName(DEFAULT_PROFILE_NAME)
+                }
+                return
+            }
+
+            // If currently selected profile doesn't exist, or we're on default but profiles exist, switch to first profile.
+            const currentProfileExists = profiles.some((p) => p.name === selectedProfileName)
+            if (!currentProfileExists || selectedProfileName === DEFAULT_PROFILE_NAME) {
+                setSelectedProfileName(getDefaultSelectedProfile(profiles))
+            }
+            return
+        }
+
+        // If active profile doesn't exist in profiles list, fall back to default logic.
         const currentProfileExists = profiles.some((p) => p.name === selectedProfileName)
-        // If no profiles exist but something else is selected, switch to "Default Profile".
-        const shouldUseDefault = profiles.length === 0 && selectedProfileName !== DEFAULT_PROFILE_NAME
-
-        // If "Default Profile" is selected but profiles now exist, switch to first profile.
-        const shouldSwitchToFirst = profiles.length > 0 && selectedProfileName === DEFAULT_PROFILE_NAME
-
-        if (!currentProfileExists || shouldUseDefault || shouldSwitchToFirst) {
-            // If the selected profile no longer exists, reset to "Default Profile" if no profiles exist, otherwise switch to the first profile.
+        if (!currentProfileExists) {
             setSelectedProfileName(getDefaultSelectedProfile(profiles))
         }
-    }, [profiles, selectedProfileName])
+    }, [profiles, currentProfileName, selectedProfileName])
 
     // Build the profile dropdown options: Display the default profile if no profiles exist, otherwise show the available profiles.
     const profileOptions = useMemo(() => {
