@@ -395,6 +395,11 @@ class SkillScraper(BaseScraper):
         
         self.data = {}
         
+        # Webpack for Next.js loads chunks into a global variable called webpackChunk_N_E.
+        # Each chunk contains these module functions that populates "module.exports".
+        # This JS script creates a fake object "tmp" with a null "exports" property.
+        # Then it grabs the chunk with ID 4318 and calls the module ID 60930 with the tmp fake object. It then assigns the skill data to tmp.exports.
+        # Then we return it as a dictionary.
         skill_data = driver.execute_script("let tmp = { exports: null }; window.webpackChunk_N_E.find(arr => arr[0][0] == 4318)[1][60930](tmp); return tmp.exports")
         
         skill_id_to_name = {}
