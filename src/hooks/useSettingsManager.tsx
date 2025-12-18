@@ -156,6 +156,30 @@ export const useSettingsManager = () => {
                 }
             }
 
+            // Apply current profile's settings if a profile is active.
+            // This ensures all components receive the correct profile settings from the start.
+            try {
+                const currentProfileName = await databaseManager.getCurrentProfileName()
+                if (currentProfileName) {
+                    const profiles = await databaseManager.getAllProfiles()
+                    const activeProfile = profiles.find((p) => p.name === currentProfileName)
+                    if (activeProfile) {
+                        const profileSettings = JSON.parse(activeProfile.settings) as Partial<Settings>
+                        // Merge profile settings with loaded settings.
+                        newSettings = deepMerge(newSettings, profileSettings) as Settings
+                        // Ensure currentProfileName is set correctly.
+                        newSettings.misc.currentProfileName = currentProfileName
+                        // Apply migrations to the merged settings in case profile has old format.
+                        const { settings: migratedMergedSettings } = applyMigrations(newSettings)
+                        newSettings = migratedMergedSettings
+                        logWithTimestamp(`[SettingsManager] Applied active profile "${currentProfileName}" settings.`)
+                    }
+                }
+            } catch (profileError) {
+                // Log but don't fail settings loading if profile application fails.
+                logErrorWithTimestamp("[SettingsManager] Error applying active profile settings (continuing with base settings):", profileError)
+            }
+
             bsc.setSettings(newSettings)
             logWithTimestamp(`[SettingsManager] Settings loaded and applied to context${context}.`)
             logWithTimestamp(`[SettingsManager] Scenario value after load: "${newSettings.general.scenario}"`)
