@@ -380,7 +380,32 @@ class SkillScraper(BaseScraper):
                     logging.info(f"Skill {skill_name} ({i + 1}/{len(all_skill_rows)}) already exists. Overwriting with new data...")
                 else:
                     logging.info(f"Scraped skill ({i + 1}/{len(all_skill_rows)}): {skill_name}")
-                self.data[skill_name] = {"id": int(skill_id), "englishName": skill_name, "englishDescription": clean_description}
+
+                # Show the tooltip.
+                more_button = skill_row.find_element(By.XPATH, "//span[contains(@class, 'skills_more_text')]")
+                more_button.click()
+                time.sleep(0.5)
+
+                # Read the tooltip and extract the price and other versions of the skill.
+                tooltip = driver.find_element(By.XPATH, "//div[@data-tippy-root]")
+                tooltip_lines = tooltip.find_elements(By.XPATH, ".//div[contains(@class, 'tooltips_tooltip_line')]")
+                price = tooltip_lines[7].text.strip()
+                other_versions_div = tooltip.find_element(By.XPATH, ".//div[contains(@style, 'text-align: left;')]")
+                other_versions = []
+                for other_version_div in other_versions_div.find_elements(By.XPATH, ".//div"):
+                    other_versions.append(other_version_div.find_element(By.XPATH, ".//span").text.strip())
+
+                self.data[skill_name] = {
+                    "id": int(skill_id),
+                    "englishName": skill_name,
+                    "englishDescription": clean_description,
+                    "price": int(price.replace("Base cost: ", "").strip()),
+                    "other_versions": other_versions,
+                }
+                
+                # Dismiss the tooltip.
+                more_button.click()
+                time.sleep(0.5)
 
         self.save_data()
         driver.quit()
