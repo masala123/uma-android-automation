@@ -9,11 +9,12 @@ import logging
 import os
 from typing import List, Dict
 from difflib import SequenceMatcher
-
+import bisect
 
 IS_DELTA = True
 DELTA_BACKLOG_COUNT = 10
 
+SKILL_LEVELS = ["×", "○", "◎"]
 
 def create_chromedriver():
     """Creates the Chrome driver for scraping.
@@ -29,7 +30,7 @@ def calculate_turn_number(date_string: str) -> int:
     """Calculates the turn number for a race based on its date string.
 
     This function parses race date strings in the format "Senior Class January, Second Half"
-    and converts them to turn numbers using the same logic as the Kotlin GameDateParser.
+    and converts them to turn numbers using the same logic as the Kotlin GameDate.
 
     Args:
         date_string: The date string to parse (e.g., "Senior Class January, Second Half").
@@ -348,39 +349,66 @@ class SkillScraper(BaseScraper):
         time.sleep(5)
 
         self.handle_cookie_consent(driver)
+        
+        self.data = {}
+        
+        skill_data = driver.execute_script("let tmp = { exports: null }; window.webpackChunk_N_E.find(arr => arr[0][0] == 4318)[1][60930](tmp); return tmp.exports")
+        
+        skill_id_to_name = {}
+        for skill in skill_data:
+            try:
+                # If name_en doesnt exist, then the skill isn't in global yet.
+                if "name_en" not in skill:
+                    continue
 
-        # Show the Settings dropdown and toggle "Show skill IDs" and "For character-specific skills..."
-        show_settings_button = driver.find_element(
-            By.XPATH, "//div[contains(@class, 'utils_padbottom_half')]//button[contains(@class, 'filters_button_moreless')]"
-        )
-        show_settings_button.click()
-        time.sleep(0.5)
-        show_skill_ids_checkbox = driver.find_element(By.XPATH, "//input[contains(@id, 'showIdCheckbox')]")
-        show_skill_ids_checkbox.click()
-        time.sleep(0.5)
-        show_character_specific_checkbox = driver.find_element(By.XPATH, "//input[contains(@id, 'showUniqueCharCheckbox')]")
-        show_character_specific_checkbox.click()
-        time.sleep(0.5)
+                tmp = {
+                    "id": skill["id"],
+                    "name_en": skill["name_en"],
+                    "desc_en": skill["desc_en"],
+                    "icon_id": skill["iconid"],
+                    "cost": skill.get("cost", None),
+                    "rarity": skill["rarity"],
+                    "versions": sorted(skill.get("versions", [])),
+                    "upgrade": None,
+                    "downgrade": None,
+                }
+                skill_id_to_name[skill["id"]] = skill["name_en"]
 
-        all_skill_rows = driver.find_elements(By.XPATH, "//div[contains(@class, 'skills_table_row_ja')]")
-        logging.info(f"Found {len(all_skill_rows)} non-hidden and hidden skill rows.")
-
-        # Scrape all skill rows.
-        for i, skill_row in enumerate(all_skill_rows):
-            skill_name = skill_row.find_element(By.XPATH, ".//div[contains(@class, 'skills_table_jpname')]").text
-            skill_description = skill_row.find_element(By.XPATH, ".//div[contains(@class, 'skills_table_desc')]").text
-
-            # Strip the skill ID from the description.
-            skill_id_match = re.search(r"\((\d+)\)$", skill_description)
-            skill_id = skill_id_match.group(1) if skill_id_match else None
-            clean_description = re.sub(r"\s*\(\d+\)$", "", skill_description) if skill_id else skill_description
-
-            if skill_name:
-                if skill_name in self.data:
-                    logging.info(f"Skill {skill_name} ({i + 1}/{len(all_skill_rows)}) already exists. Overwriting with new data...")
+                self.data[tmp["name_en"]] = tmp
+            except KeyError as exc:
+                if "name_en" in skill:
+                    logging.error(f"KeyError when parsing skill ({skill['name_en']}): {exc}")
                 else:
-                    logging.info(f"Scraped skill ({i + 1}/{len(all_skill_rows)}): {skill_name}")
-                self.data[skill_name] = {"id": int(skill_id), "englishName": skill_name, "englishDescription": clean_description}
+                    logging.error(f"KeyError when parsing skill: {exc}")
+                continue
+        
+        # Populate the upgrade/downgrade versions for every skill.
+        for skill_name, skill in self.data.items():
+            # If skill has no other versions, skip.
+            if skill["versions"] == []:
+                continue
+
+            # Now determine the upgrades/downgrades of this skill.
+            index = bisect.bisect_left(skill["versions"], skill["id"])
+            if index == 0:
+                # This is the highest level of this skill.
+                downgrade_version = skill["versions"][0]
+                if downgrade_version in skill_id_to_name:
+                    self.data[skill_name]["downgrade"] = downgrade_version
+            elif index == len(skill["versions"]):
+                # This is the lowest level of this skill.
+                upgrade_version = skill["versions"][-1]
+                if upgrade_version in skill_id_to_name:
+                    self.data[skill_name]["upgrade"] = upgrade_version
+            else:
+                # Skill has both an upgraded and downgraded variant.
+                upgrade_version = skill["versions"][index - 1]
+                if upgrade_version in skill_id_to_name:
+                    self.data[skill_name]["upgrade"] = upgrade_version
+                
+                downgrade_version = skill["versions"][index]
+                if downgrade_version in skill_id_to_name:
+                    self.data[skill_name]["downgrade"] = downgrade_version
 
         self.save_data()
         driver.quit()
