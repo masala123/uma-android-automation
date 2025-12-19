@@ -118,3 +118,18 @@ object IconObtainedPill : ComponentInterface {
     override val TAG: String = "IconObtainedPill"
     override val template = Template("components/icon/obtained_pill", region = Region.rightHalf)
 }
+
+object IconSkillTitleDoubleCircle : ComponentInterface {
+    override val TAG: String = "IconSkillTitleDoubleCircle"
+    override val template = Template("components/icon/skill_title_double_circle")
+}
+
+object IconSkillTitleCircle : ComponentInterface {
+    override val TAG: String = "IconSkillTitleCircle"
+    override val template = Template("components/icon/skill_title_circle")
+}
+
+object IconSkillTitleX : ComponentInterface {
+    override val TAG: String = "IconSkillTitleX"
+    override val template = Template("components/icon/skill_title_x")
+}

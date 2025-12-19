@@ -37,7 +37,7 @@ export const useBootstrap = () => {
     useEffect(() => {
         const initializeApp = async () => {
             try {
-                logWithTimestamp("[Bootstrap] Initializing database and populating races data...")
+                logWithTimestamp("[Bootstrap] Initializing database and populating table data...")
                 await databaseManager.initialize()
                 await populateRacesData()
                 await populateSkillsData()
@@ -107,15 +107,20 @@ export const useBootstrap = () => {
             // Convert races.json data to database format
             const skills: Array<Omit<DatabaseSkill, "id">> = Object.entries(skillsData).map(([key, skill]) => ({
                 key,
-                skillId: skill.id,
-                englishName: skill.englishName,
-                englishDescription: skill.englishDescription,
-
+                skill_id: skill.id,
+                name_en: skill.name_en,
+                desc_en: skill.desc_en,
+                icon_id: skill.icon_id,
+                cost: skill.cost,
+                rarity: skill.rarity,
+                versions: skill.versions,
+                upgrade: skill.upgrade,
+                downgrade: skill.downgrade,
             }))
 
             logWithTimestamp(`[Bootstrap] Converted ${skills.length} skills from JSON to database format`)
 
-            // Clear existing races and populate with new data
+            // Clear existing skills and populate with new data
             await databaseManager.clearSkills()
             await databaseManager.saveSkillsBatch(skills)
 

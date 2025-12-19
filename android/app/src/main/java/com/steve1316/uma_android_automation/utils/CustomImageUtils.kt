@@ -16,10 +16,7 @@ import com.steve1316.uma_android_automation.utils.types.StatName
 import com.steve1316.uma_android_automation.utils.types.Aptitude
 import com.steve1316.uma_android_automation.utils.types.BoundingBox
 import com.steve1316.uma_android_automation.utils.types.SkillListEntry
-import com.steve1316.uma_android_automation.components.ButtonSkillUp
-import com.steve1316.uma_android_automation.components.IconObtainedPill
-import com.steve1316.uma_android_automation.components.IconScrollListTopLeft
-import com.steve1316.uma_android_automation.components.IconScrollListBottomRight
+import com.steve1316.uma_android_automation.components.*
 import org.opencv.android.Utils
 import org.opencv.core.*
 import org.opencv.imgcodecs.Imgcodecs
@@ -2058,7 +2055,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
             }
         }
 
-        val latch = CountDownLatch(3)
+        val latch = CountDownLatch(2)
         val result = SkillListEntry()
         val logMessages = ConcurrentLinkedQueue<String>()
 
@@ -2088,17 +2085,55 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
                     saveBitmap(croppedTitle, filename = "bboxTitle_$debugString")
                 }
 
-                val skillName: String = extractText(croppedTitle)
+                var skillName: String = extractText(croppedTitle).lowercase()
                 if (skillName == "") {
                     Log.e(TAG, "[SKILLS] Failed to extract skill name.")
                     return@Thread
                 }
 
-                val skillData = game.skills.getSkill(skillName)
-                result.name = skillData?.name ?: skillName
-                if (skillData == null) {
-                    Log.e(TAG, "[SKILLS] lookupSkillInDatabase returned NULL.")
+                // Check if the skill has a special char (◎, ○, ×) at the end.
+                val componentsToCheck: List<ComponentInterface> = listOf(
+                    IconSkillTitleDoubleCircle,
+                    IconSkillTitleCircle,
+                    IconSkillTitleX,
+                )
+                var match: ComponentInterface? = null
+                for (component in componentsToCheck) {
+                    val loc: Point? = findImageWithBitmap(
+                        component.template.path,
+                        croppedTitle,
+                        suppressError = true,
+                    )
+                    if (loc != null) {
+                        match = component
+                        break
+                    }
                 }
+
+                // Get the appropriate char to append to the search string.
+                // Typically the extracted title will end with "O" or "x"
+                // but we can't just replace that character since some titles
+                // actually end in those letters. So we just append this to the title
+                // since it shouldn't cause fuzzy matching to fail.
+                val iconChar: String = when (match) {
+                    IconSkillTitleDoubleCircle -> "◎"
+                    IconSkillTitleCircle -> "○"
+                    IconSkillTitleX -> "×"
+                    else -> ""
+                }
+
+                // Negative skills have "Remove" in front of their skill name in the title.
+                // The actual skill itself in the database does not have this prefix.
+                // Get rid of this prefix as it causes fuzzy matching to fail.
+                skillName = skillName.removePrefix("remove")
+
+                // Now lookup the name in the database and update it.
+                val skillData = game.skills.getSkill(result.name)
+                if (skillData == null) {
+                    Log.e(TAG, "[SKILLS] lookupSkillInDatabase(${result.name}) returned NULL.")
+                    return@Thread
+                }
+                result.name = skillData.name
             } catch (e: Exception) {
                 Log.e(TAG, "[ERROR] Error processing skill name: ${e.stackTraceToString()}")
             } finally {
@@ -2145,60 +2180,14 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
             }
         }.start()
 
-        Thread {
-            try {
-                val bboxHint = BoundingBox(
-                    x = (bitmap.width * 0.748).toInt(),
-                    y = 0,
-                    w = (bitmap.width * 0.195).toInt(),
-                    h = (bitmap.height * 0.303).toInt(),
-                )
-                val croppedHint = createSafeBitmap(
-                    bitmap,
-                    bboxHint.x,
-                    bboxHint.y,
-                    bboxHint.w,
-                    bboxHint.h,
-                    "bboxHint_$debugString",
-                )
-
-                if (croppedHint == null) {
-                    Log.e(TAG, "[SKILLS] analyzeSkillListEntry: createSafeBitmap for croppedHint returned NULL.")
-                    return@Thread
-                }
-
-                if (debugMode) {
-                    saveBitmap(croppedHint, filename = "bboxHint_$debugString")
-                }
-                /*
-                val discountString: String = extractText(croppedHint).lines().last()
-                val discountValue: Int? = discountString.replace("[^0-9]".toRegex(), "").toIntOrNull()
-                if ("% OFF!" in discountString) {
-                    if (
-                        !bIsObtained &&
-                        discountValue != null &&
-                        (discountValue % 10 != 0 || discountValue < 10 || discountValue > 60)
-                    ) {
-                        MessageLog.w(TAG, "[SKILLS] Discount value is invalid $discountString ($discountValue)")
-                        return null
-                    }
-                }
-                */
-            } catch (e: Exception) {
-                Log.e(TAG, "[ERROR] Error processing skill price: ${e.stackTraceToString()}")
-            } finally {
-                latch.countDown()
-            }
-        }.start()
-
         try {
-            latch.await(3, TimeUnit.SECONDS)
+            latch.await(2, TimeUnit.SECONDS)
         } catch (_: InterruptedException) {
             Log.e(TAG, "[ERROR] Parallel skill analysis timed out.")
         }
 
         result.bIsObtained = bIsObtained
-
+        
         return result
     }
 
@@ -2320,6 +2309,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
             if (skillListEntry == null) {
                 continue
             }
+            MessageLog.e("REMOVEME", "skillListEntry: $skillListEntry")
             skills[skillListEntry.name] = skillListEntry
             i++
         }

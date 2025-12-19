@@ -31,9 +31,15 @@ export interface DatabaseRace {
 export interface DatabaseSkill {
     id: number
     key: string
-    skillId: number
-    englishName: string
-    englishDescription: string
+    skill_id: number
+    name_en: string
+    desc_en: string
+    icon_id: number
+    cost: number | null
+    rarity: number
+    versions: number[] | null
+    upgrade: number | null
+    downgrade: number | null
 }
 
 export interface DatabaseProfile {
@@ -194,13 +200,20 @@ export class DatabaseManager {
 
             // Create skills table.
             logWithTimestamp("Creating skills table...")
+            await this.db.execAsync(`DROP TABLE ${this.TABLE_SKILLS}`)
             await this.db.execAsync(`
                 CREATE TABLE IF NOT EXISTS ${this.TABLE_SKILLS} (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     key TEXT UNIQUE NOT NULL,
-                    skillId INTEGER NOT NULL,
-                    englishName TEXT NOT NULL,
-                    englishDescription TEXT NOT NULL
+                    skill_id INTEGER NOT NULL,
+                    name_en TEXT NOT NULL,
+                    desc_en TEXT NOT NULL,
+                    icon_id INTEGER NOT NULL,
+                    cost INTEGER NULL,
+                    rarity INTEGER NOT NULL,
+                    versions TEXT NOT NULL,
+                    upgrade INTEGER NULL,
+                    downgrade INTEGER NULL
                 )
             `)
             logWithTimestamp("Skills table created successfully.")
@@ -236,8 +249,8 @@ export class DatabaseManager {
                 ON ${this.TABLE_RACES}(nameFormatted)
             `)
             await this.db.execAsync(`
-                CREATE INDEX IF NOT EXISTS idx_skills_english_name 
-                ON ${this.TABLE_SKILLS}(englishName)
+                CREATE INDEX IF NOT EXISTS idx_skills_name_en 
+                ON ${this.TABLE_SKILLS}(name_en)
             `)
             await this.db.execAsync(`
                 CREATE INDEX IF NOT EXISTS idx_profiles_name 
@@ -682,17 +695,27 @@ export class DatabaseManager {
 
                 await this.db!.runAsync("BEGIN TRANSACTION")
                 const stmt = await this.db!.prepareAsync(
-                    `INSERT OR REPLACE INTO ${this.TABLE_SKILLS} (key, skillId, englishName, englishDescription) 
-                     VALUES (?, ?, ?, ?)`
+                    `INSERT OR REPLACE INTO ${this.TABLE_SKILLS} (key, skill_id, name_en, desc_en, icon_id, cost, rarity, versions, upgrade, downgrade) 
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
                 )
 
                 // Execute all skills in batch using prepared statement.
                 for (const skill of skills) {
+                    let versions: string = "";
+                    if (skill.versions !== null) {
+                        versions = skill.versions.join(",")
+                    }
                     await stmt.executeAsync([
                         skill.key,
-                        skill.skillId,
-                        skill.englishName,
-                        skill.englishDescription,
+                        skill.skill_id,
+                        skill.name_en,
+                        skill.desc_en,
+                        skill.icon_id,
+                        skill.cost,
+                        skill.rarity,
+                        versions,
+                        skill.upgrade,
+                        skill.downgrade,
                     ])
                 }
 
@@ -705,7 +728,7 @@ export class DatabaseManager {
 
             endTiming({ status: "success", racesCount: skills.length })
         } catch (error) {
-            const skillsInfo = skills.length > 0 ? ` (${skills.length} skills: ${skills.map((s) => `${s.englishName} (turn ${s.skillId})`).join(", ")})` : " (no skills)"
+            const skillsInfo = skills.length > 0 ? ` (${skills.length} skills: ${skills.map((s) => `${s.name_en} (turn ${s.skill_id})`).join(", ")})` : " (no skills)"
             logErrorWithTimestamp(`[DB] Failed to save skills batch${skillsInfo}:`, error)
 
             // Rollback transaction on error.
