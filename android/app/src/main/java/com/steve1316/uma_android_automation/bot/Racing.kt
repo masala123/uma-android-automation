@@ -361,8 +361,9 @@ class Racing (private val game: Game) {
         }
 
         // If there is a popup warning about repeating races 3+ times, stop the process and do something else other than racing.
+        // Note that if the Racing Plan is set to be mandatory, then this popup is dismissed.
         if (game.imageUtils.findImage("race_repeat_warning").first != null) {
-            if (!enableForceRacing) {
+            if (!enableForceRacing && !enableMandatoryRacingPlan) {
                 raceRepeatWarningCheck = true
                 MessageLog.i(TAG, "[RACE] Closing popup warning of doing more than 3+ races and setting flag to prevent racing for now. Canceling the racing process and doing something else.")
                 game.findAndTapImage("cancel", region = game.imageUtils.regionBottomHalf)
