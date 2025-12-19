@@ -319,42 +319,6 @@ class Game(val myContext: Context) {
 	// Helper functions to check what screen the bot is at.
 
 	/**
-	 * Validates that the game's current scenario matches the selected scenario in the app.
-	 * This check only runs once per bot session.
-	 *
-	 * @return True if validation passes and bot should continue. False if scenario mismatch detected and bot should stop.
-	 */
-	fun validateScenario(): Boolean {
-		if (scenarioCheckPerformed) {
-			return true
-		}
-
-        MessageLog.i(TAG, "[INFO] Validating if current scenario is ${scenario}.")
-
-		if (imageUtils.findImage("unitycup_date_text", tries = 1, region = imageUtils.regionTopHalf, suppressError = true).first != null) {
-			// Unity Cup image was detected, so the game is on Unity Cup scenario.
-			if (scenario != "Unity Cup") {
-				MessageLog.e(TAG, "\n[ERROR] Scenario mismatch detected: Game is on Unity Cup but app is configured for $scenario. Stopping bot to prevent confusion.")
-				notificationMessage = "Scenario mismatch detected: Game is on Unity Cup but app is configured for $scenario. Please select the correct scenario in the app settings."
-				scenarioCheckPerformed = true
-				return false
-			} else {
-				MessageLog.i(TAG, "[INFO] Scenario validation confirmed for Unity Cup.")
-			}
-		} else {
-			// All other scenario checks have failed.
-			MessageLog.i(TAG, "[INFO] Scenario validation failed for all other checks. Scenario must be on URA Finale by default.")
-            if (scenario != "URA Finale") {
-                notificationMessage = "Scenario mismatch detected: Game is not on the expected scenario. Please select the correct scenario in the app settings."
-                scenarioCheckPerformed = true
-                return false
-            }
-		}
-        scenarioCheckPerformed = true
-		return true
-	}
-
-	/**
 	 * Checks if the bot is at the Main screen or the screen with available options to undertake.
 	 * This will also make sure that the Main screen does not contain the option to select a race.
 	 *
