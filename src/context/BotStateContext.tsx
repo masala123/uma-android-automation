@@ -1,6 +1,7 @@
 import { createContext, useState } from "react"
 import { startTiming } from "../lib/performanceLogger"
 import racesData from "../data/races.json"
+import skillsData from "../data/skills.json"
 
 export interface Settings {
     // General settings
@@ -36,6 +37,19 @@ export interface Settings {
         minimumQualityThreshold: number
         timeDecayFactor: number
         improvementThreshold: number
+    }
+
+    // Skill Settings
+    skills: {
+        enablePreFinalsSkillPlan: boolean
+        enablePreFinalsSpendAll: boolean
+        enablePreFinalsMaximizeRank: boolean
+        preFinalsSkillPlan: string
+        enableCareerCompleteSkillPlan: boolean
+        enableCareerCompleteSpendAll: boolean
+        enableCareerCompleteMaximizeRank: boolean
+        careerCompleteSkillPlan: string
+        skillPlanData: string
     }
 
     // Training Event settings
@@ -164,6 +178,17 @@ export const defaultSettings: Settings = {
         minimumQualityThreshold: 70.0,
         timeDecayFactor: 0.8,
         improvementThreshold: 25.0,
+    },
+    skills: {
+        enablePreFinalsSkillPlan: false,
+        enablePreFinalsSpendAll: false,
+        enablePreFinalsMaximizeRank: false,
+        preFinalsSkillPlan: "",
+        enableCareerCompleteSkillPlan: false,
+        enableCareerCompleteSpendAll: false,
+        enableCareerCompleteMaximizeRank: false,
+        careerCompleteSkillPlan: "",
+        skillPlanData: JSON.stringify(skillsData),
     },
     trainingEvent: {
         enablePrioritizeEnergyOptions: false,

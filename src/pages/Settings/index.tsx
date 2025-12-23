@@ -167,6 +167,16 @@ const Settings = () => {
         )
     }
 
+    const renderSkillsLink = () => {
+        return (
+            <NavigationLink
+                title="Go to Skills Settings"
+                description="Configure skill purchasing behavior."
+                onPress={() => navigation.navigate("SkillSettings" as never)}
+            />
+        )
+    }
+
     const renderEventLogVisualizerLink = () => {
         return (
             <NavigationLink
@@ -375,6 +385,7 @@ const Settings = () => {
                     {renderTrainingEventLink()}
                     {renderOCRLink()}
                     {renderRacingLink()}
+                    {renderSkillsLink()}
                     {renderEventLogVisualizerLink()}
                     {renderDebugLink()}
                     {renderMiscSettings()}

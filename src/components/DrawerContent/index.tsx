@@ -21,7 +21,17 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
     const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["Settings"]))
     const previousDrawerStatus = useRef<string | undefined>(undefined)
 
-    const settingsNestedRoutes = ["TrainingSettings", "TrainingEventSettings", "OCRSettings", "RacingSettings", "RacingPlanSettings", "DebugSettings"]
+    const settingsNestedRoutes = [
+        "TrainingSettings",
+        "TrainingEventSettings",
+        "OCRSettings",
+        "RacingSettings",
+        "RacingPlanSettings",
+        "SkillSettings",
+        "SkillPlanPreFinalsSettings",
+        "SkillPlanCareerCompleteSettings",
+        "DebugSettings",
+    ]
 
     const styles = StyleSheet.create({
         container: {
@@ -182,6 +192,23 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
                     ],
                 },
                 {
+                    name: "SkillSettings",
+                    label: "Skill Settings",
+                    icon: () => "american-football-outline",
+                    nested: [
+                        {
+                            name: "SkillPlanPreFinalsSettings",
+                            label: "Pre-Finals Skill Plan Settings",
+                            icon: () => "cube-outline",
+                        },
+                        {
+                            name: "SkillPlanCareerCompleteSettings",
+                            label: "Career Complete Skill Plan Settings",
+                            icon: () => "cube-outline",
+                        },
+                    ],
+                },
+                {
                     name: "EventLogVisualizer",
                     label: "Event Log Visualizer",
                     icon: () => "eye-outline",
@@ -222,6 +249,11 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
         // Auto-expand Racing Settings if Racing Plan Settings is active.
         if (currentRoute === "RacingPlanSettings") {
             newExpanded.add("RacingSettings")
+        }
+
+        // Auto-expact Skill Settings if Skill Plan Settings is active.
+        if (currentRoute === "SkillPlanPreFinalsSettings" || currentRoute === "SkillPlanCareerCompleteSettings") {
+            newExpanded.add("SkillSettings")
         }
 
         // Merge with existing expanded sections to preserve user's manual expansions.

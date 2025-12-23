@@ -15,6 +15,9 @@ import TrainingEventSettings from "./pages/TrainingEventSettings"
 import OCRSettings from "./pages/OCRSettings"
 import RacingSettings from "./pages/RacingSettings"
 import RacingPlanSettings from "./pages/RacingPlanSettings"
+import SkillSettings from "./pages/SkillSettings"
+import SkillPlanPreFinalsSettings from "./pages/SkillPlanPreFinalsSettings"
+import SkillPlanCareerCompleteSettings from "./pages/SkillPlanCareerCompleteSettings"
 import EventLogVisualizer from "./pages/EventLogVisualizer"
 import ImportSettingsPreview from "./pages/ImportSettingsPreview"
 import DebugSettings from "./pages/DebugSettings"
@@ -50,6 +53,9 @@ function MainDrawer() {
             <Drawer.Screen name="OCRSettings" component={OCRSettings} />
             <Drawer.Screen name="RacingSettings" component={RacingSettings} />
             <Drawer.Screen name="RacingPlanSettings" component={RacingPlanSettings} />
+            <Drawer.Screen name="SkillSettings" component={SkillSettings} />
+            <Drawer.Screen name="SkillPlanPreFinalsSettings" component={SkillPlanPreFinalsSettings} />
+            <Drawer.Screen name="SkillPlanCareerCompleteSettings" component={SkillPlanCareerCompleteSettings} />
             <Drawer.Screen name="EventLogVisualizer" component={EventLogVisualizer} />
             <Drawer.Screen name="ImportSettingsPreview" component={ImportSettingsPreview} />
             <Drawer.Screen name="DebugSettings" component={DebugSettings} />
