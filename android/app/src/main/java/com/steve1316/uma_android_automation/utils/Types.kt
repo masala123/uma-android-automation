@@ -200,11 +200,48 @@ data class BoundingBox(val x: Int, val y: Int, val w: Int, val h: Int) {
     }
 }
 
-data class SkillListEntry(
-    var name: String = "",
-    var price: Int = -1,
-    var bIsObtained: Boolean = false,
+data class SkillData(
+    val id: Int,
+    val name: String,
+    val description: String,
+    val iconId: Int,
+    val cost: Int?,
+    val rarity: Int,
+    val versions: List<Int>,
+    val upgrade: Int?,
+    val downgrade: Int?,
 ) {
+    constructor(
+        id: Int,
+        name: String,
+        description: String,
+        iconId: Int,
+        cost: Int?,
+        rarity: Int,
+        versions: String,
+        upgrade: Int?,
+        downgrade: Int?,
+    ) : this(
+        id,
+        name,
+        description,
+        iconId,
+        cost,
+        rarity,
+        versions.split(",").filter { it.isNotEmpty() }.map { it.trim().toInt() }.filterNotNull(),
+        upgrade,
+        downgrade,
+    )
+}
+
+data class SkillListEntry(
+    val skillData: SkillData,
+    val price: Int,
+    val bIsObtained: Boolean,
+) {
+    val name: String
+        get() = skillData.name
+
     override fun toString(): String {
         return "name=$name, price=$price, bIsObtained=$bIsObtained"
     }

@@ -63,3 +63,8 @@ object LabelEnergyBarExtendedRightPart : ComponentInterface {
     override val TAG: String = "LabelEnergyBarExtendedRightPart"
     override val template = Template("components/label/energy_bar_right_part_1")
 }
+
+object LabelSkillListScreenSkillPoints : ComponentInterface {
+    override val TAG: String = "LabelSkillListScreenSkillPoints"
+    override val template = Template("components/label/skill_list_screen_skill_points", region = Region.topHalf)
+}

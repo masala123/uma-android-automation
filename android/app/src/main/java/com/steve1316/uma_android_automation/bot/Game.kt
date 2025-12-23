@@ -807,24 +807,6 @@ class Game(val myContext: Context) {
 		val packageInfo = myContext.packageManager.getPackageInfo(myContext.packageName, 0)
 		MessageLog.i(TAG, "Bot version: ${packageInfo.versionName} (${packageInfo.versionCode})\n\n")
 
-        val skillsMap = skills.getAllSkillsMap()
-        if (skillsMap != null) {
-            for ((skillName, skillId) in skillsMap.entries) {
-                MessageLog.e("REMOVEME", "$skillName: $skillId")
-            }
-        }
-
-        var skillData = skills.getSkill("Corner Recovery ○")
-        MessageLog.e("REMOVEME", "SKILL: $skillData")
-        skillData = skills.getSkill("Triumphant Pulse")
-        MessageLog.e("REMOVEME", "SKILL: $skillData")
-        skillData = skills.getSkill("Swinging Maestro")
-        MessageLog.e("REMOVEME", "SKILL: $skillData")
-
-        campaign.handleSkillListScreen()
-        
-        return true
-
 		// Start debug tests here if enabled. Otherwise, proceed with regular bot operations.
 		if (SettingsHelper.getBooleanSetting("debug", "debugMode_startTemplateMatchingTest")) {
 			startTemplateMatchingTest()
