@@ -161,6 +161,12 @@ open class Campaign(val game: Game) {
             "team_info" -> dialog.close(imageUtils = game.imageUtils)
             "trophy_won" -> dialog.close(imageUtils = game.imageUtils)
             "try_again" -> {
+                if (game.racing.disableRaceRetries) {
+                    MessageLog.i(TAG, "\n[END] Stopping the bot due to failing a mandatory race.")
+                    MessageLog.i(TAG, "********************")
+                    game.notificationMessage = "Stopping the bot due to failing a mandatory race."
+                    throw IllegalStateException()
+                }
                 dialog.ok(imageUtils = game.imageUtils)
             }
             "umamusume_class" -> {

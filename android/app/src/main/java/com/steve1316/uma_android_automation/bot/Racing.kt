@@ -46,7 +46,7 @@ class Racing (private val game: Game) {
 
     private val enableFarmingFans = SettingsHelper.getBooleanSetting("racing", "enableFarmingFans")
     private val daysToRunExtraRaces: Int = SettingsHelper.getIntSetting("racing", "daysToRunExtraRaces")
-    private val disableRaceRetries: Boolean = SettingsHelper.getBooleanSetting("racing", "disableRaceRetries")
+    val disableRaceRetries: Boolean = SettingsHelper.getBooleanSetting("racing", "disableRaceRetries")
     val enableForceRacing = SettingsHelper.getBooleanSetting("racing", "enableForceRacing")
 
     private val enableRacingPlan = SettingsHelper.getBooleanSetting("racing", "enableRacingPlan")
