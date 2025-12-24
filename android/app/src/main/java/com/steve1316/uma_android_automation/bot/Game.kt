@@ -663,8 +663,8 @@ class Game(val myContext: Context) {
 			return false
 		}
 
-		val imageName = ButtonCraneGame.template.path
-		val pressDurations = listOf(1.95, 1.00, 0.60)
+		val imageName = ButtonCraneGame.templates.first().name
+		val pressDurations = listOf(1.90, 1.00, 0.65)
 
 		// Perform three attempts with different press durations.
 		for (attempt in 1..3) {
@@ -678,8 +678,8 @@ class Game(val myContext: Context) {
 				// After attempts 1 and 2, wait for the button to reappear.
 				MessageLog.i(TAG, "[CRANE_GAME] Waiting for the crane game button to reappear after attempt $attempt...")
 				var buttonReappeared = false
-				val maxWaitTime = 10.0
-				val checkInterval = 0.5
+				val maxWaitTime = 30.0
+				val checkInterval = 1.0
 				var elapsedTime = 0.0
 
 				while (elapsedTime < maxWaitTime) {

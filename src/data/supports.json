@@ -163,6 +163,26 @@
             "Energy +10\nStamina +10\nBiwa Hayahide bond +5"
         ]
     },
+    "Curren Chan": {
+        "(❯) #CurrenPotential": [
+            "Randomly either\n----------\nSpeed +10\nWit +10\nStop Right There! hint +1\nCurren Chan bond +5\n----------\n\n----------\nSpeed +5\nWit +5\nCurren Chan bond +5",
+            "Energy +30\nPlaytime's Over! hint +1\nEvent chain ended"
+        ],
+        "(❯❯) #CurrenQuandary": [
+            "Wit +10"
+        ],
+        "(❯❯❯) #KeepItCurren": [
+            "Randomly either\n----------\nWit +10\nSkill points +20\nPerfect Prep! hint +3\nCurren Chan bond +5\n----------\n\n----------\nWit +5\nSkill points +10\nMeticulous Measures hint +3\nCurren Chan bond +5"
+        ],
+        "#UrUniqueCuteness": [
+            "Speed +5\nWit +10\nCurren Chan bond +5",
+            "Speed +10\nPower +5\nCurren Chan bond +5"
+        ],
+        "#Cuteness4U ☆": [
+            "Skill points +15\nCurren Chan bond +5",
+            "Intimidate hint +1\nCurren Chan bond +5"
+        ]
+    },
     "Daitaku Helios": {
         "(❯) #BFF #Party!": [
             "Power +10\nDaitaku Helios bond +5",
@@ -810,6 +830,16 @@
         "Lone Wolf": [
             "Speed +3\nStamina +3\nPower +3\nNarita Brian bond +5",
             "Lone Wolf hint +1\nNarita Brian bond +5"
+        ],
+        "(❯) Target Across Time": [
+            "Stamina +10"
+        ],
+        "(❯❯) Lord of the Ducks": [
+            "Randomly either\n----------\nMaximum Energy +4\nStamina +10\nUp-Tempo hint +1\nNarita Brian bond +5\n----------\n\n----------\nGuts +10\nNarita Brian bond -5",
+            "Wit +10\nNarita Brian bond +5"
+        ],
+        "(❯❯❯) Battlefield Experience": [
+            "Energy -5\nStamina +5\nBeeline Burst hint +2\nNarita Brian bond +5"
         ]
     },
     "Narita Taishin": {
@@ -1499,6 +1529,16 @@
         ],
         "(❯❯) A Natural City Girl": [
             "Mood +1\nWit +25"
+        ],
+        "(❯) A Help'n Hand!": [
+            "Energy -10\nGuts +10\nWit +10\nYukino Bijin bond +5"
+        ],
+        "(❯❯) Plain Ol' Charm": [
+            "Energy -10\nStamina +5\nGuts +10\nSnowy Days ○ hint +1\nYukino Bijin bond +5",
+            "Skill points +20\nPlaytime's Over! hint +1\nYukino Bijin bond -5\nEvent chain ended"
+        ],
+        "(❯❯❯) Star of the Show": [
+            "Energy -10\nGuts +10\nWit +5\nCorner Connoisseur hint +1\nYukino Bijin bond +5"
         ]
     },
     "Zenno Rob Roy": {
