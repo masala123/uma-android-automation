@@ -1369,27 +1369,30 @@ class Racing (private val game: Game) {
 
     /**
      * Race database lookup using exact and/or fuzzy matching.
-     * 
+     * Returns multiple matches when races share the same name and date but have different fan counts.
+     *
      * @param turnNumber The current turn number to match against.
      * @param detectedName The race name detected by OCR.
-     * @return A [RaceData] object if a match is found, null otherwise.
+     * @return A list of [RaceData] objects matching the criteria, or an empty list if no matches found.
      */
-    private fun lookupRaceInDatabase(turnNumber: Int, detectedName: String): RaceData? {
+    private fun lookupRaceInDatabase(turnNumber: Int, detectedName: String): ArrayList<RaceData> {
         val settingsManager = SQLiteSettingsManager(game.myContext)
         if (!settingsManager.initialize()) {
             MessageLog.e(TAG, "[ERROR] Database not available for race lookup.")
-            return null
+            return arrayListOf()
         }
 
         return try {
             MessageLog.i(TAG, "[RACE] Looking up race for turn $turnNumber with detected name: \"$detectedName\".")
-            
+
             val database = settingsManager.getDatabase()
             if (database == null) {
                 settingsManager.close()
-                return null
+                return arrayListOf()
             }
-            
+
+            val matches = arrayListOf<RaceData>()
+
             // Do exact matching based on the info gathered.
             val exactCursor = database.query(
                 TABLE_RACES,
@@ -1407,24 +1410,37 @@ class Racing (private val game: Game) {
                 null, null, null
             )
 
+            // Collect all exact matches (may have different fan counts).
             if (exactCursor.moveToFirst()) {
-                val race = RaceData(
-                    name = exactCursor.getString(0),
-                    grade = exactCursor.getString(1),
-                    fans = exactCursor.getInt(2),
-                    nameFormatted = exactCursor.getString(3),
-                    terrain = exactCursor.getString(4),
-                    distanceType = exactCursor.getString(5),
-                    turnNumber = exactCursor.getInt(6)
-                )
+                do {
+                    val race = RaceData(
+                        name = exactCursor.getString(0),
+                        grade = exactCursor.getString(1),
+                        fans = exactCursor.getInt(2),
+                        nameFormatted = exactCursor.getString(3),
+                        terrain = exactCursor.getString(4),
+                        distanceType = exactCursor.getString(5),
+                        turnNumber = exactCursor.getInt(6)
+                    )
+                    matches.add(race)
+                } while (exactCursor.moveToNext())
+
                 exactCursor.close()
                 settingsManager.close()
-                MessageLog.i(TAG, "[RACE] Found exact match: \"${race.name}\" AKA \"${race.nameFormatted}\".")
-                return race
+
+                if (matches.size == 1) {
+                    MessageLog.i(TAG, "[RACE] Found exact match: \"${matches[0].name}\" AKA \"${matches[0].nameFormatted}\" (Fans: ${matches[0].fans}).")
+                } else {
+                    MessageLog.i(TAG, "[RACE] Found ${matches.size} exact matches with same name but different fan counts:")
+                    matches.forEach { race ->
+                        MessageLog.i(TAG, "[RACE]     - \"${race.name}\" (Fans: ${race.fans})")
+                    }
+                }
+                return matches
             }
             exactCursor.close()
-            
-            // Otherwise, do fuzzy matching to find the most similar match using Jaro-Winkler.
+
+            // Otherwise, do fuzzy matching to find matches using Jaro-Winkler.
             val fuzzyCursor = database.query(
                 TABLE_RACES,
                 arrayOf(
@@ -1445,20 +1461,19 @@ class Racing (private val game: Game) {
                 fuzzyCursor.close()
                 settingsManager.close()
                 MessageLog.i(TAG, "[RACE] No match found for turn $turnNumber with name \"$detectedName\".")
-                return null
+                return arrayListOf()
             }
 
             val similarityService = StringSimilarityServiceImpl(JaroWinklerStrategy())
-            var bestMatch: RaceData? = null
             var bestScore = 0.0
+            val fuzzyMatches = mutableListOf<Pair<RaceData, Double>>()
 
             do {
                 val nameFormatted = fuzzyCursor.getString(3)
                 val similarity = similarityService.score(detectedName, nameFormatted)
-                
-                if (similarity > bestScore && similarity >= SIMILARITY_THRESHOLD) {
-                    bestScore = similarity
-                    bestMatch = RaceData(
+
+                if (similarity >= SIMILARITY_THRESHOLD) {
+                    val race = RaceData(
                         name = fuzzyCursor.getString(0),
                         grade = fuzzyCursor.getString(1),
                         fans = fuzzyCursor.getInt(2),
@@ -1467,25 +1482,37 @@ class Racing (private val game: Game) {
                         distanceType = fuzzyCursor.getString(5),
                         turnNumber = fuzzyCursor.getInt(6)
                     )
-                    if (game.debugMode) MessageLog.d(TAG, "[DEBUG] Fuzzy match candidate: \"${bestMatch.name}\" AKA \"$nameFormatted\" with similarity ${game.decimalFormat.format(similarity)}.")
-                    else Log.d(TAG, "[DEBUG] Fuzzy match candidate: \"${bestMatch.name}\" AKA \"$nameFormatted\" with similarity ${game.decimalFormat.format(similarity)}.")
+                    fuzzyMatches.add(Pair(race, similarity))
+                    if (similarity > bestScore) bestScore = similarity
+                    if (game.debugMode) MessageLog.d(TAG, "[DEBUG] Fuzzy match candidate: \"${race.name}\" AKA \"$nameFormatted\" with similarity ${game.decimalFormat.format(similarity)} (Fans: ${race.fans}).")
+                    else Log.d(TAG, "[DEBUG] Fuzzy match candidate: \"${race.name}\" AKA \"$nameFormatted\" with similarity ${game.decimalFormat.format(similarity)} (Fans: ${race.fans}).")
                 }
             } while (fuzzyCursor.moveToNext())
 
             fuzzyCursor.close()
             settingsManager.close()
-            
-            if (bestMatch != null) {
-                MessageLog.i(TAG, "[RACE] Found fuzzy match: \"${bestMatch.name}\" AKA \"${bestMatch.nameFormatted}\" with similarity ${game.decimalFormat.format(bestScore)}.")
-                return bestMatch
+
+            // Return all matches with the best similarity score.
+            val bestMatches = ArrayList(fuzzyMatches.filter { it.second == bestScore }.map { it.first })
+
+            if (bestMatches.isNotEmpty()) {
+                if (bestMatches.size == 1) {
+                    MessageLog.i(TAG, "[RACE] Found fuzzy match: \"${bestMatches[0].name}\" AKA \"${bestMatches[0].nameFormatted}\" with similarity ${game.decimalFormat.format(bestScore)} (Fans: ${bestMatches[0].fans}).")
+                } else {
+                    MessageLog.i(TAG, "[RACE] Found ${bestMatches.size} fuzzy matches with similarity ${game.decimalFormat.format(bestScore)} but different fan counts:")
+                    bestMatches.forEach { race ->
+                        MessageLog.i(TAG, "[RACE]     - \"${race.name}\" (Fans: ${race.fans})")
+                    }
+                }
+                return bestMatches
             }
-            
+
             MessageLog.i(TAG, "[RACE] No match found for turn $turnNumber with name \"$detectedName\".")
-            null
+            arrayListOf()
         } catch (e: Exception) {
             MessageLog.e(TAG, "[ERROR] Error looking up race: ${e.message}.")
             settingsManager.close()
-            null
+            arrayListOf()
         }
     }
 
