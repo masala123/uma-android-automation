@@ -362,8 +362,34 @@ ${longTargetsString}
             }
         })
 
-        // Sort log messages by messageId (timestamp) based on sort order.
+        // Parse timestamp from message text (format: HH:MM:SS.mmm).
+        const parseTimestamp = (text: string): number => {
+            // Match timestamps like "00:00:00.462", allowing optional leading whitespace/newlines.
+            const match = text.match(/^\s*(\d{2}):(\d{2}):(\d{2})\.(\d{3})/)
+            if (match) {
+                const [, hours, minutes, seconds, milliseconds] = match
+                return (
+                    parseInt(hours) * 3600000 +
+                    parseInt(minutes) * 60000 +
+                    parseInt(seconds) * 1000 +
+                    parseInt(milliseconds)
+                )
+            }
+            // Return -1 for messages without valid timestamps (e.g., "--:--:--.---").
+            return -1
+        }
+
+        // Sort log messages by timestamp (primary) and messageId (secondary/tiebreaker).
         const sortedLogMessages = [...logMessages].sort((a, b) => {
+            const timestampA = parseTimestamp(a.text)
+            const timestampB = parseTimestamp(b.text)
+
+            // Primary sort by timestamp for chronological order.
+            if (timestampA !== timestampB) {
+                return sortOrder === "desc" ? timestampB - timestampA : timestampA - timestampB
+            }
+
+            // Secondary sort by messageId when timestamps are equal.
             const idA = a.messageId ?? 0
             const idB = b.messageId ?? 0
             return sortOrder === "desc" ? idB - idA : idA - idB
