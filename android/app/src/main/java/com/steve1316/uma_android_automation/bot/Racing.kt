@@ -198,15 +198,17 @@ class Racing (private val game: Game) {
             val raceName = game.imageUtils.extractRaceName(location)
             MessageLog.i(TAG, "[TEST] Race #${index + 1} - Detected name: \"$raceName\".")
             
-            // Query database for race details.
-            val raceData = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
+            // Query database for race details (may return multiple matches with different fan counts).
+            val raceDataList = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
             
-            if (raceData != null) {
-                MessageLog.i(TAG, "[TEST] Race #${index + 1} - Match found:")
-                MessageLog.i(TAG, "[TEST]     Name: ${raceData.name}")
-                MessageLog.i(TAG, "[TEST]     Grade: ${raceData.grade}")
-                MessageLog.i(TAG, "[TEST]     Fans: ${raceData.fans}")
-                MessageLog.i(TAG, "[TEST]     Formatted: ${raceData.nameFormatted}")
+            if (raceDataList.isNotEmpty()) {
+                MessageLog.i(TAG, "[TEST] Race #${index + 1} - Found ${raceDataList.size} match(es):")
+                raceDataList.forEach { raceData ->
+                    MessageLog.i(TAG, "[TEST]     Name: ${raceData.name}")
+                    MessageLog.i(TAG, "[TEST]     Grade: ${raceData.grade}")
+                    MessageLog.i(TAG, "[TEST]     Fans: ${raceData.fans}")
+                    MessageLog.i(TAG, "[TEST]     Formatted: ${raceData.nameFormatted}")
+                }
             } else {
                 MessageLog.i(TAG, "[TEST] Race #${index + 1} - No match found for turn ${game.currentDate.turnNumber}")
             }
@@ -668,8 +670,9 @@ class Racing (private val game: Game) {
             if (hasTrophyRequirement) {
                 game.updateDate()
                 val raceName = game.imageUtils.extractRaceName(doublePredictionLocations[0])
-                val raceData = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
-                if (raceData?.grade == "G1") {
+                val raceDataList = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
+                // Check if any matched race is G1.
+                if (raceDataList.any { it.grade == "G1" }) {
                     MessageLog.i(TAG, "[RACE] Only one race with double predictions and it's G1. Selecting it.")
                     game.tap(doublePredictionLocations[0].x, doublePredictionLocations[0].y, "race_extra_double_prediction", ignoreWaiting = true)
                     return true
@@ -727,8 +730,9 @@ class Racing (private val game: Game) {
         val (filteredRaces, filteredLocations, _) = if (hasTrophyRequirement) {
             game.updateDate()
             val g1Indices = raceNamesList.mapIndexedNotNull { index, raceName ->
-                val raceData = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
-                if (raceData?.grade == "G1") index else null
+                val raceDataList = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
+                // Check if any matched race is G1.
+                if (raceDataList.any { it.grade == "G1" }) index else null
             }
 
             if (g1Indices.isEmpty()) {
