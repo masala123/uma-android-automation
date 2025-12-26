@@ -253,6 +253,7 @@ const MessageLog = () => {
 ✨ Focus on Sparks for Stat Targets: ${settings.training.focusOnSparkStatTarget.length === 0 ? "None" : settings.training.focusOnSparkStatTarget.join(", ")}
 📏 Preferred Distance Override: ${settings.training.preferredDistanceOverride === "Auto" ? "Auto" : settings.training.preferredDistanceOverride}
 🌈 Enable Rainbow Training Bonus: ${settings.training.enableRainbowTrainingBonus ? "✅" : "❌"}
+💡 Prioritize Skill Hints: ${settings.training.enablePrioritizeSkillHints ? "✅" : "❌"}
 ☀️ Must Rest Before Summer: ${settings.training.mustRestBeforeSummer ? "✅" : "❌"}
 📏 Manual Stat Cap: ${settings.training.manualStatCap}
 🎯 Train Wit During Finale: ${settings.training.trainWitDuringFinale ? "✅" : "❌"}

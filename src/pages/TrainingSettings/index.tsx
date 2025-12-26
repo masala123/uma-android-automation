@@ -73,7 +73,9 @@ const TrainingSettings = () => {
         riskyTrainingMinStatGain,
         riskyTrainingMaxFailureChance,
         trainWitDuringFinale,
+        enablePrioritizeSkillHints,
     } = trainingSettings
+
 
     useEffect(() => {
         updateTrainingSetting("statPrioritization", statPrioritizationItems)
@@ -542,6 +544,17 @@ const TrainingSettings = () => {
                         "Select which stats should receive priority to get to at least 600 to get the best chance to receive 3* sparks.",
                         "checkbox"
                     )}
+
+                    <View style={styles.section}>
+                        <CustomCheckbox
+                            id="enable-prioritize-skill-hints"
+                            checked={enablePrioritizeSkillHints}
+                            onCheckedChange={(checked) => updateTrainingSetting("enablePrioritizeSkillHints", checked)}
+                            label="Prioritize Skill Hints"
+                            description="When enabled, the bot will prioritize acquiring skill hints, bypassing stat prioritization and blacklist, while still being constrained by the failure chance thresholds."
+                            className="my-2"
+                        />
+                    </View>
 
                     <View style={styles.section}>
                         <CustomCheckbox

@@ -98,6 +98,7 @@ class Training(private val game: Game) {
 	private val riskyTrainingMinStatGain: Int = SettingsHelper.getIntSetting("training", "riskyTrainingMinStatGain")
 	private val riskyTrainingMaxFailureChance: Int = SettingsHelper.getIntSetting("training", "riskyTrainingMaxFailureChance")
 	private val trainWitDuringFinale: Boolean = SettingsHelper.getBooleanSetting("training", "trainWitDuringFinale")
+	private val enablePrioritizeSkillHints: Boolean = SettingsHelper.getBooleanSetting("training", "enablePrioritizeSkillHints")
 	private val manualStatCap: Int = SettingsHelper.getIntSetting("training", "manualStatCap")
 	private val statTargetsByDistance: MutableMap<String, IntArray> = mutableMapOf(
 		"Sprint" to intArrayOf(0, 0, 0, 0, 0),
@@ -320,6 +321,25 @@ class Training(private val game: Game) {
 
 				// List to store all training analysis results for parallel processing.
 				val analysisResults = mutableListOf<TrainingAnalysisResult>()
+
+				// Early skill hint detection: If prioritization is enabled, scan for skill hints before analyzing trainings.
+				// This ensures skill hints are detected even if some trainings are blacklisted.
+				if (enablePrioritizeSkillHints) {
+					MessageLog.i(TAG, "[TRAINING] Skill hint prioritization is enabled. Scanning for skill hints before training analysis...")
+					val skillHintLocations = game.imageUtils.findAll("stat_skill_hint", region = game.imageUtils.regionBottomHalf)
+					if (skillHintLocations.isNotEmpty()) {
+						MessageLog.i(TAG, "[TRAINING] Found ${skillHintLocations.size} skill hint(s) on the training screen. Tapping on the first skill hint location and skipping training analysis.")
+                        val firstHint = skillHintLocations.first()
+                        game.tap(firstHint.x, firstHint.y, "stat_skill_hint", taps = 3)
+                        game.wait(1.0)
+                        // Dismiss any popup warning about a scheduled race.
+                        game.findAndTapImage("ok", tries = 1, region = game.imageUtils.regionMiddle, suppressError = true)
+                        MessageLog.i(TAG, "[TRAINING] Process to execute skill hint training completed.")
+                        return
+					} else {
+						MessageLog.i(TAG, "[TRAINING] No skill hints found. Proceeding with normal training analysis.")
+					}
+				}
 
 				// Iterate through every training that is not blacklisted.
 				for ((index, training) in trainings.withIndex()) {
