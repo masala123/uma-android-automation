@@ -774,6 +774,26 @@ class Racing (private val game: Game) {
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
+     * Finds a race location from a list of prediction locations by matching the race name.
+     *
+     * @param predictionLocations List of double-prediction locations to search through.
+     * @param targetRaceName The race name to find.
+     * @param logMatch If true, log when a match is found.
+     * @return The Point location if found, null otherwise.
+     */
+    private fun findRaceLocationByName(predictionLocations: ArrayList<Point>, targetRaceName: String, logMatch: Boolean = false): Point? {
+        return predictionLocations.find { location ->
+            val raceName = game.imageUtils.extractRaceName(location)
+            val raceDataList = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
+            val match = raceDataList.any { it.name == targetRaceName }
+            if (match && logMatch) {
+                MessageLog.i(TAG, "[RACE] ✓ Found target race at location (${location.x}, ${location.y}).")
+            }
+            match
+        }
+    }
+
+    /**
      * Checks if an aptitude value meets the minimum requirement (B or greater).
      *
      * @param aptitude The aptitude value to check (S, A, B, etc.).
