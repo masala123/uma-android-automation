@@ -1034,6 +1034,13 @@ class Training(private val game: Game) {
             }
 			score += 10.0 * skillHintLocations.size
 
+			// If skill hints are prioritized and we found some, return a massive score to override other factors.
+			// This handles the case where skill hints only become visible after a training is selected.
+			if (enablePrioritizeSkillHints && skillHintLocations.isNotEmpty()) {
+				MessageLog.i(TAG, "[TRAINING] Skill hints detected and priority is enabled. Applying maximum bonus to force selection.")
+				return 10000.0 + score
+			}
+
             return score.coerceIn(0.0, 100.0)
         }
 
