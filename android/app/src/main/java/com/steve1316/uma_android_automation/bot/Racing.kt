@@ -794,6 +794,33 @@ class Racing (private val game: Game) {
     }
 
     /**
+     * Scrolls the list of races up or down and returns the updated list of prediction locations.
+     *
+     * @param scrollDown If true, scroll down; if false, scroll up.
+     * @return The updated list of double-prediction locations after scrolling, or null if scroll failed.
+     */
+    private fun scrollRaceListAndRedetect(scrollDown: Boolean = true): ArrayList<Point>? {
+        val confirmButtonLocation = game.imageUtils.findImage("race_confirm", region = game.imageUtils.regionBottomHalf).first
+        if (confirmButtonLocation == null) {
+            MessageLog.i(TAG, "[RACE] Could not find \"race_confirm\" button for scroll reference.")
+            return null
+        }
+
+        val startX = confirmButtonLocation.x.toFloat()
+        val startY = (confirmButtonLocation.y - 300).toFloat()
+        val endY = (confirmButtonLocation.y - 400).toFloat()
+
+        if (scrollDown) {
+            game.gestureUtils.swipe(startX, startY, startX, endY)
+        } else {
+            game.gestureUtils.swipe(startX, endY, startX, startY)
+        }
+        game.wait(2.0)
+
+        return game.imageUtils.findAll("race_extra_double_prediction")
+    }
+
+    /**
      * Checks if an aptitude value meets the minimum requirement (B or greater).
      *
      * @param aptitude The aptitude value to check (S, A, B, etc.).
