@@ -498,39 +498,103 @@ class Racing (private val game: Game) {
             return false
         }
 
+        // Extracts race names from the screen and matches them with the in-game database.
+        MessageLog.i(TAG, "[RACE] Extracting race names and matching with database...")
+        val currentRaces = doublePredictionLocations.flatMap { location ->
+            val raceName = game.imageUtils.extractRaceName(location)
+            val raceDataList = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
+            if (raceDataList.isNotEmpty()) {
+                raceDataList.forEach { raceData ->
+                    MessageLog.i(TAG, "[RACE] ✓ Matched in database: ${raceData.name} (Grade: ${raceData.grade}, Fans: ${raceData.fans}, Terrain: ${raceData.terrain}).")
+                }
+                raceDataList
+            } else {
+                MessageLog.i(TAG, "[RACE] ✗ No match found in database for \"$raceName\".")
+                emptyList()
+            }
+        }
+
         // If mandatory extra race data is provided, immediately find and select it on screen.
         if (mandatoryExtraRaceData != null) {
             MessageLog.i(TAG, "[RACE] Mandatory mode for extra races enabled. Looking for planned race \"${mandatoryExtraRaceData.name}\" on screen for turn ${game.currentDate.turnNumber}.")
 
-            // Find the mandatory race on screen by matching race name with detected races.
-            val mandatoryExtraRaceLocation = doublePredictionLocations.find { location ->
-                val raceName = game.imageUtils.extractRaceName(location)
-                val detectedExtraRaceData = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
-                detectedExtraRaceData?.name == mandatoryExtraRaceData.name
+            // Check if there are multiple races with the same formatted name but different fan counts.
+            val raceVariants = currentRaces.filter { it.nameFormatted == mandatoryExtraRaceData.nameFormatted }
+            val hasMultipleFanVariants = raceVariants.size > 1
+            if (hasMultipleFanVariants) {
+                MessageLog.i(TAG, "[RACE] Found ${raceVariants.size} variants with different fan counts.")
             }
 
-            if (mandatoryExtraRaceLocation != null) {
-                MessageLog.i(TAG, "[RACE] Mandatory extra race \"${mandatoryExtraRaceData.name}\" found on screen with double predictions. Selecting it immediately (skipping opportunity cost analysis).")
-                game.tap(mandatoryExtraRaceLocation.x, mandatoryExtraRaceLocation.y, "race_extra_double_prediction", ignoreWaiting = true)
-                return true
-            } else {
-                MessageLog.i(TAG, "[RACE] Mandatory extra race \"${mandatoryExtraRaceData.name}\" not found on screen. Canceling racing process.")
-                return false
-            }
-        }
+            // Search for the mandatory extra race with scroll retry logic.
+            // Some devices show fewer races due to shorter screen heights, so scroll down up to 2 times to check.
+            val maxScrollAttempts = 2
+            var currentDoublePredictions = doublePredictionLocations
 
-        // Extracts race names from the screen and matches them with the in-game database.
-        MessageLog.i(TAG, "[RACE] Extracting race names and matching with database...")
-        val currentRaces = doublePredictionLocations.mapNotNull { location ->
-            val raceName = game.imageUtils.extractRaceName(location)
-            val raceData = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
-            if (raceData != null) {
-                MessageLog.i(TAG, "[RACE] ✓ Matched in database: ${raceData.name} (Grade: ${raceData.grade}, Fans: ${raceData.fans}, Terrain: ${raceData.terrain}).")
-                raceData
-            } else {
-                MessageLog.i(TAG, "[RACE] ✗ No match found in database for \"$raceName\".")
-                null
+            for (scrollAttempt in 0..maxScrollAttempts) {
+                // Find the mandatory extra race on screen.
+                val mandatoryExtraRaceLocation = findRaceLocationByName(currentDoublePredictions, mandatoryExtraRaceData.name)
+
+                if (mandatoryExtraRaceLocation != null) {
+                    // If multiple fan variants exist in database, scroll to try to find the higher-fan version.
+                    if (hasMultipleFanVariants && scrollAttempt == 0) {
+                        MessageLog.i(TAG, "[RACE] Found a match but database shows multiple fan variants. Scrolling to check for higher-fan version...")
+                        val firstFoundLocation = mandatoryExtraRaceLocation
+
+                        val newPredictions = scrollRaceListAndRedetect(scrollDown = true)
+                        if (newPredictions != null) {
+                            currentDoublePredictions = newPredictions
+                            val higherFanLocation = findRaceLocationByName(currentDoublePredictions, mandatoryExtraRaceData.name)
+
+                            if (higherFanLocation != null) {
+                                MessageLog.i(TAG, "[RACE] ✓ Found higher-fan variant after scrolling. Selecting it.")
+                                game.tap(higherFanLocation.x, higherFanLocation.y, "race_extra_double_prediction", ignoreWaiting = true)
+                                return true
+                            } else {
+                                // Not found after scroll, scroll back up and use the first found location.
+                                MessageLog.i(TAG, "[RACE] Higher-fan variant not found after scrolling. Scrolling back up...")
+                                val restoredPredictions = scrollRaceListAndRedetect(scrollDown = false)
+                                if (restoredPredictions != null) {
+                                    currentDoublePredictions = restoredPredictions
+                                    val relocatedLocation = findRaceLocationByName(currentDoublePredictions, mandatoryExtraRaceData.name)
+                                    val finalLocation = relocatedLocation ?: firstFoundLocation
+                                    MessageLog.i(TAG, "[RACE] Mandatory extra race \"${mandatoryExtraRaceData.name}\" found. Selecting it.")
+                                    game.tap(finalLocation.x, finalLocation.y, "race_extra_double_prediction", ignoreWaiting = true)
+                                    return true
+                                } else {
+                                    MessageLog.i(TAG, "[RACE] Could not scroll back. Using first found position.")
+                                    game.tap(firstFoundLocation.x, firstFoundLocation.y, "race_extra_double_prediction", ignoreWaiting = true)
+                                    return true
+                                }
+                            }
+                        }
+                    }
+
+                    MessageLog.i(TAG, "[RACE] Mandatory extra race \"${mandatoryExtraRaceData.name}\" found on screen with double predictions${if (scrollAttempt > 0) " after $scrollAttempt scroll(s)" else ""}. Selecting it immediately (skipping opportunity cost analysis).")
+                    game.tap(mandatoryExtraRaceLocation.x, mandatoryExtraRaceLocation.y, "race_extra_double_prediction", ignoreWaiting = true)
+                    return true
+                }
+
+                // If not found and we have scrolls remaining, scroll down and re-detect.
+                if (scrollAttempt < maxScrollAttempts) {
+                    MessageLog.i(TAG, "[RACE] Mandatory extra race \"${mandatoryExtraRaceData.name}\" not found on current screen. Scrolling down (attempt ${scrollAttempt + 1}/$maxScrollAttempts)...")
+
+                    val newPredictions = scrollRaceListAndRedetect(scrollDown = true)
+                    if (newPredictions == null) {
+                        MessageLog.i(TAG, "[RACE] Stopping scroll attempts due to scroll failure.")
+                        break
+                    }
+
+                    currentDoublePredictions = newPredictions
+                    MessageLog.i(TAG, "[RACE] After scrolling, found ${currentDoublePredictions.size} double-star prediction locations.")
+                    if (currentDoublePredictions.isEmpty()) {
+                        MessageLog.i(TAG, "[RACE] No double-star predictions found after scrolling. Stopping scroll attempts.")
+                        break
+                    }
+                }
             }
+
+            MessageLog.i(TAG, "[RACE] Mandatory extra race \"${mandatoryExtraRaceData.name}\" not found on screen after $maxScrollAttempts scroll(s). Canceling racing process.")
+            return false
         }
 
         if (currentRaces.isEmpty()) {
@@ -630,15 +694,55 @@ class Racing (private val game: Game) {
             MessageLog.i(TAG, "[RACE] Selected race is from regular available races.")
         }
 
+        // Check if there are multiple races with the same formatted name but different fan counts.
+        // If so, we may need to scroll to find the higher-fan version (game sorts by fan count ascending and ordered by grade).
+        // Reuse the already-extracted currentRaces list instead of querying the database again.
+        val targetRaceMatches = currentRaces.filter { it.nameFormatted == bestRace.raceData.nameFormatted }
+        val hasMultipleFanVariants = targetRaceMatches.size > 1
+
         // Locates the best race on screen and selects it.
         MessageLog.i(TAG, "[RACE] Looking for target race \"${bestRace.raceData.name}\" on screen...")
-        val targetRaceLocation = doublePredictionLocations.find { location ->
-            val raceName = game.imageUtils.extractRaceName(location)
-            val raceData = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
-            val matches = raceData?.name == bestRace.raceData.name
-            if (matches) MessageLog.i(TAG, "[RACE] ✓ Found target race at location (${location.x}, ${location.y}).")
-            matches
-        } ?: run {
+        var currentDoublePredictions = doublePredictionLocations
+        var targetRaceLocation = findRaceLocationByName(currentDoublePredictions, bestRace.raceData.name, logMatch = true)
+
+        // If multiple fan variants exist and we found one, try scrolling to find the higher-fan version.
+        if (hasMultipleFanVariants && targetRaceLocation != null) {
+            MessageLog.i(TAG, "[RACE] Found a match but there may be a higher-fan variant below (game sorts by fan count ascending).")
+            val firstFoundLocation = targetRaceLocation
+            
+            // Scroll down to look for the higher-fan variant.
+            MessageLog.i(TAG, "[RACE] Scrolling down to check for higher-fan variant...")
+            val newPredictions = scrollRaceListAndRedetect(scrollDown = true)
+            if (newPredictions != null) {
+                currentDoublePredictions = newPredictions
+                val newTargetLocation = findRaceLocationByName(currentDoublePredictions, bestRace.raceData.name)
+
+                if (newTargetLocation != null) {
+                    MessageLog.i(TAG, "[RACE] ✓ Found higher-fan variant at location (${newTargetLocation.x}, ${newTargetLocation.y}) after scrolling.")
+                    targetRaceLocation = newTargetLocation
+                } else {
+                    // Not found after scroll, scroll back up and use the first found location.
+                    MessageLog.i(TAG, "[RACE] Higher-fan variant not found after scrolling. Scrolling back up...")
+                    val restoredPredictions = scrollRaceListAndRedetect(scrollDown = false)
+                    if (restoredPredictions != null) {
+                        currentDoublePredictions = restoredPredictions
+                        targetRaceLocation = findRaceLocationByName(currentDoublePredictions, bestRace.raceData.name)
+
+                        if (targetRaceLocation == null) {
+                            MessageLog.i(TAG, "[RACE] Could not re-locate target race after scrolling back. Using last known position.")
+                            targetRaceLocation = firstFoundLocation
+                        } else {
+                            MessageLog.i(TAG, "[RACE] ✓ Re-located target race at (${targetRaceLocation.x}, ${targetRaceLocation.y}) after scrolling back.")
+                        }
+                    } else {
+                        MessageLog.i(TAG, "[RACE] Could not scroll back. Using first found position.")
+                        targetRaceLocation = firstFoundLocation
+                    }
+                }
+            }
+        }
+
+        if (targetRaceLocation == null) {
             MessageLog.i(TAG, "[RACE] Could not find target race \"${bestRace.raceData.name}\" on screen. Canceling racing process.")
             return false
         }
