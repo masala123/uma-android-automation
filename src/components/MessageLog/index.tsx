@@ -550,7 +550,7 @@ ${longTargetsString}
     // Copy all messages to clipboard.
     const copyToClipboard = useCallback(async () => {
         try {
-            const allText = introMessage + "\n" + mlc.messageLog.join("\n")
+            const allText = introMessage + "\n" + mlc.messageLog.map((entry) => entry.message).join("\n")
             await Clipboard.setStringAsync(allText)
         } catch (error) {
             showError("Failed to copy to clipboard")
