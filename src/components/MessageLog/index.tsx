@@ -370,12 +370,7 @@ ${longTargetsString}
             const match = text.match(/^\s*(\d{2}):(\d{2}):(\d{2})\.(\d{3})/)
             if (match) {
                 const [, hours, minutes, seconds, milliseconds] = match
-                return (
-                    parseInt(hours) * 3600000 +
-                    parseInt(minutes) * 60000 +
-                    parseInt(seconds) * 1000 +
-                    parseInt(milliseconds)
-                )
+                return parseInt(hours) * 3600000 + parseInt(minutes) * 60000 + parseInt(seconds) * 1000 + parseInt(milliseconds)
             }
             // Return -1 for messages without valid timestamps (e.g., "--:--:--.---").
             return -1
@@ -594,13 +589,13 @@ ${longTargetsString}
                 showError("Failed to copy message")
             }
         },
-        [showError]
+        [showError],
     )
 
     // Render individual log item.
     const renderLogItem = useCallback(
         ({ item }: { item: LogMessage }) => <LogItem item={item} fontSize={fontSize} onLongPress={handleLongPress} enableMessageIdDisplay={bsc.settings.misc.enableMessageIdDisplay} />,
-        [fontSize, handleLongPress, bsc.settings.misc.enableMessageIdDisplay]
+        [fontSize, handleLongPress, bsc.settings.misc.enableMessageIdDisplay],
     )
 
     // Key extractor for FlatList.
