@@ -1,19 +1,15 @@
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native"
-import { useNavigation, useRoute, RouteProp, DrawerActions } from "@react-navigation/native"
+import { View, Text, ScrollView, StyleSheet } from "react-native"
+import { useNavigation } from "@react-navigation/native"
 import { useTheme } from "../../context/ThemeContext"
 import CustomButton from "../../components/CustomButton"
 import { useSettingsFileManager, SettingsChange } from "../../hooks/useSettingsFileManager"
-import { Ionicons } from "@expo/vector-icons"
+import PageHeader from "../../components/PageHeader"
 
 const ImportSettingsPreview = () => {
     const { colors, isDark } = useTheme()
     const navigation = useNavigation()
     const { importPreviewChanges, confirmPendingImport, clearPreviewState } = useSettingsFileManager()
     const changes = importPreviewChanges
-
-    const openDrawer = () => {
-        navigation.dispatch(DrawerActions.openDrawer())
-    }
 
     // Group changes by category.
     const groupedChanges = changes.reduce((acc, change) => {
@@ -31,26 +27,6 @@ const ImportSettingsPreview = () => {
             justifyContent: "center",
             margin: 10,
             backgroundColor: colors.background,
-        },
-        header: {
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 20,
-        },
-        headerLeft: {
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-        },
-        menuButton: {
-            padding: 8,
-            borderRadius: 8,
-        },
-        title: {
-            fontSize: 24,
-            fontWeight: "bold",
-            color: colors.foreground,
         },
         content: {
             flex: 1,
@@ -164,14 +140,7 @@ const ImportSettingsPreview = () => {
 
     return (
         <View style={styles.root}>
-            <View style={styles.header}>
-                <View style={styles.headerLeft}>
-                    <TouchableOpacity onPress={openDrawer} style={styles.menuButton} activeOpacity={0.7}>
-                        <Ionicons name="menu" size={28} color={colors.foreground} />
-                    </TouchableOpacity>
-                    <Text style={styles.title}>Import Settings Preview</Text>
-                </View>
-            </View>
+            <PageHeader title="Import Settings Preview" />
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={true}>
                 {changes.length === 0 ? (

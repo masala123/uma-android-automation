@@ -1,8 +1,6 @@
 import React, { useMemo, useState, useCallback } from "react"
 import { StyleSheet, Text, View, TouchableOpacity } from "react-native"
 import { FlashList } from "@shopify/flash-list"
-import { useNavigation, DrawerActions } from "@react-navigation/native"
-import { Ionicons } from "@expo/vector-icons"
 import * as DocumentPicker from "expo-document-picker"
 import * as FileSystem from "expo-file-system"
 import DayRow from "../../components/EventLog/DayRow"
@@ -17,17 +15,14 @@ import { useSettings } from "../../context/SettingsContext"
 import { Tooltip, TooltipContent, TooltipTrigger } from "../../components/ui/tooltip"
 import { Info } from "lucide-react-native"
 import CustomCheckbox from "../../components/CustomCheckbox"
+import PageHeader from "../../components/PageHeader"
 
 type MixedRecord = DayRecord | GapRecord | FileDividerRecord
 
 const EventLogVisualizer: React.FC = () => {
     const { colors, isDark } = useTheme()
-    const navigation = useNavigation()
     const { openDataDirectory } = useSettings()
 
-    const openDrawer = () => {
-        navigation.dispatch(DrawerActions.openDrawer())
-    }
     const [records, setRecords] = useState<MixedRecord[]>([])
     const [errors, setErrors] = useState<string[]>([])
     const [snackbarOpen, setSnackbarOpen] = useState<boolean>(false)
@@ -41,21 +36,6 @@ const EventLogVisualizer: React.FC = () => {
         },
         content: {
             padding: 12,
-        },
-        header: {
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 12,
-        },
-        headerLeft: {
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-        },
-        menuButton: {
-            padding: 8,
-            borderRadius: 8,
         },
         title: {
             fontSize: 20,
@@ -171,7 +151,7 @@ const EventLogVisualizer: React.FC = () => {
             }
             return <DayRow record={item} showTriggers={showTriggers} />
         },
-        [showTriggers]
+        [showTriggers],
     )
 
     const keyExtractor = useCallback((item: MixedRecord, idx: number) => {
@@ -183,14 +163,7 @@ const EventLogVisualizer: React.FC = () => {
     return (
         <View style={styles.root}>
             <View style={styles.content}>
-                <View style={styles.header}>
-                    <View style={styles.headerLeft}>
-                        <TouchableOpacity onPress={openDrawer} style={styles.menuButton} activeOpacity={0.7}>
-                            <Ionicons name="menu" size={28} color={colors.foreground} />
-                        </TouchableOpacity>
-                        <Text style={styles.title}>Event Log Visualizer</Text>
-                    </View>
-                </View>
+                <PageHeader title="Event Log Visualizer" style={{ marginBottom: 12 }} />
 
                 <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12, gap: 8 }}>
                     <CustomButton onPress={openDataDirectory} variant="default">
