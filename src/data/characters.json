@@ -1845,17 +1845,17 @@
         ]
     },
     "Gold City": {
-        "Client's Orders": [
+        "A City Girl's Mood ♪": [
             "Speed +20",
-            "Guts +20"
+            "Energy +15"
         ],
-        "Children and Adults": [
-            "Wit +20",
-            "Stamina +10\nGuts +10"
+        "What's Prettier than Gold?": [
+            "Stamina +10\nPower +10\n(random) Get Hot Topic status",
+            "1,500,000 CC hint +2\n(random) Get Hot Topic status"
         ],
-        "Ideal Image": [
-            "Speed +20\n(random) Get Charming ○ status",
-            "Power +20\n(random) Get Charming ○ status"
+        "A Quiet Talk Before the Show": [
+            "Power +20",
+            "Slick Surge hint +2"
         ],
         "City's Salon": [
             "Guts +10",
@@ -2040,17 +2040,17 @@
         "Early Morning Shoot": [
             "Randomly either\n----------\nEnergy +15\nMood -1\nGuts -5\n----------\n\n----------\nEnergy +15\nGuts -5\nGet Slacker status\n----------\n\n----------\nEnergy +15\nMood -1\nGuts -5\nGet Slacker status"
         ],
-        "A City Girl's Mood ♪": [
+        "Client's Orders": [
             "Speed +20",
-            "Energy +15"
+            "Guts +20"
         ],
-        "What's Prettier than Gold?": [
-            "Stamina +10\nPower +10\n(random) Get Hot Topic status",
-            "1,500,000 CC hint +2\n(random) Get Hot Topic status"
+        "Children and Adults": [
+            "Wit +20",
+            "Stamina +10\nGuts +10"
         ],
-        "A Quiet Talk Before the Show": [
-            "Power +20",
-            "Slick Surge hint +2"
+        "Ideal Image": [
+            "Speed +20\n(random) Get Charming ○ status",
+            "Power +20\n(random) Get Charming ○ status"
         ]
     },
     "Gold Ship": {
@@ -3498,6 +3498,9 @@
         "The Tireless Wonder": [
             "※ 2-3\nStamina +10\nLong Straightaways ○ hint +1\n\n※ 4-5\nStamina +10\nGuts +10\nLong Straightaways ○ hint +2\n\n※ 6+\nStamina +10\nGuts +10\nSkill points +10\nLong Straightaways ○ hint +2\nLong Corners ○ hint +2"
         ],
+        "After the Japanese Derby: Standing Tall": [
+            "Energy -15\n1 random stat +10\nSkill points +45"
+        ],
         "Bonus at start": [
             "Skill points +120"
         ],
@@ -3636,9 +3639,6 @@
         ],
         "Dreamwalker": [
             "Randomly either\n----------\nEnergy +15\nMood -1\nGuts -5\n----------\n\n----------\nEnergy +15\nGuts -5\nGet Slacker status\n----------\n\n----------\nEnergy +15\nMood -1\nGuts -5\nGet Slacker status"
-        ],
-        "After the Japanese Derby: Standing Tall": [
-            "Energy -15\n1 random stat +10\nSkill points +45"
         ]
     },
     "Maruzensky": {
@@ -3704,7 +3704,7 @@
             "Stamina +5\nPower +5"
         ],
         "Fukushima in Summer": [
-            "Energy -15\nAll stats +3\nSkill points +60\nMood +1\nGet Hot Topic status"
+            "Energy -15\nAll stats +3\nSkill points +60\nMood +3\nGet Hot Topic status"
         ],
         "Bonus at start": [
             "Skill points +120"
@@ -4258,10 +4258,6 @@
         "Maya's Thrilling ☆ Test of Courage": [
             "Power +20",
             "Guts +20"
-        ],
-        "Sweet Feelings for You ♪": [
-            "Stamina +20",
-            "Wit +20"
         ],
         "Mayano Takes Off ☆": [
             "Speed +20\n(random) Get Charming ○ status",
@@ -5341,7 +5337,7 @@
             "Speed +5\nPower +5"
         ],
         "Forever Fervent": [
-            "※ 7+\nPower +30\nSkill points +15\nEarly Start hint +2\n\n※ 4-6\nPower +25\n\n※ 0-3\nPower +10"
+            "※ 7+\nPower +20\nSkill points +15\nEarly Start hint +2\n\n※ 4-6\nPower +20\n\n※ 0-3\nPower +10"
         ],
         "After the Nikkei Sho: Here Is Fine": [
             "※ Practice Poor was healed\nMood +4\nAll stats +20\nSkill points +70\nGet Practice Perfect ◎ status\n\n※ Practice Poor was not healed\nMood +4\nAll stats +15\nSkill points +70\nHeal Practice Poor"
@@ -5750,7 +5746,7 @@
             "Power +5\nWit +5"
         ],
         "At the Tenno Sho (Spring)": [
-            "Energy -20/-15\nMood +1\n1 random stat +4/+10\nSkill points +25/+45"
+            "Mood +1"
         ],
         "Together Forever": [
             "Speed +10\nStamina +10\nSkill points +30\nHydrate hint +1"
@@ -7319,17 +7315,17 @@
         ]
     },
     "Symboli Rudolf": {
-        "Midway Reflection": [
-            "Speed +20",
-            "Power +20"
+        "The Fire Within": [
+            "Speed +10\nPower +10",
+            "Prepared to Pass hint +2"
         ],
-        "The Smiling Emperor's New Clothes": [
-            "Wit +20",
-            "Guts +20"
+        "Imparting Wisdom": [
+            "Power +20",
+            "Pace Chaser Corners ○ hint +2"
         ],
-        "The Distant View from the End of the Road": [
-            "Stamina +20\n(random) Get Hot Topic status",
-            "Guts +20\n(random) Get Hot Topic status"
+        "Vivid Memories": [
+            "Stamina +10\nGuts +10\n(random) Get Fast Learner status",
+            "Skill points +40\n(random) Get Fast Learner status"
         ],
         "Those Who March Forth": [
             "Speed +5\nPower +5",
@@ -7381,7 +7377,7 @@
             "Power +10"
         ],
         "After the Kikuka Sho: Three Crowns Attained": [
-            "Standard race rewards"
+            "All stats +3\nGuts +15\nSkill points +45\nBe Still hint +2\nYayoi Akikawa bond +4"
         ],
         "Challenge Met": [
             "2 random stats +10"
@@ -7534,17 +7530,17 @@
         "The Emperor's Blunder": [
             "Randomly either\n----------\nEnergy +15\nMood -1\nGuts -5\n----------\n\n----------\nEnergy +15\nGuts -5\nGet Slacker status\n----------\n\n----------\nEnergy +15\nMood -1\nGuts -5\nGet Slacker status"
         ],
-        "The Fire Within": [
-            "Speed +10\nPower +10",
-            "Prepared to Pass hint +2"
+        "Midway Reflection": [
+            "Speed +20",
+            "Power +20"
         ],
-        "Imparting Wisdom": [
-            "Power +20",
-            "Pace Chaser Corners ○ hint +2"
+        "The Smiling Emperor's New Clothes": [
+            "Wit +20",
+            "Guts +20"
         ],
-        "Vivid Memories": [
-            "Stamina +10\nGuts +10\n(random) Get Fast Learner status",
-            "Skill points +40\n(random) Get Fast Learner status"
+        "The Distant View from the End of the Road": [
+            "Stamina +20\n(random) Get Hot Topic status",
+            "Guts +20\n(random) Get Hot Topic status"
         ]
     },
     "TM Opera O": {
