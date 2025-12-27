@@ -261,6 +261,9 @@ class Racing (private val game: Game) {
             return handleMandatoryRace()
         } else if (game.currentDate.phase != "Pre-Debut" && game.findAndTapImage("race_select_extra", tries = 1, region = game.imageUtils.regionBottomHalf)) {
             return handleExtraRace()
+        } else if (game.imageUtils.findImage("race_change_strategy", tries = 1, region = game.imageUtils.regionMiddle).first != null) {
+            MessageLog.i(TAG, "[RACE] The bot is currently sitting on the race screen.")
+            handleStandaloneRace()
         }
 
         // Clear requirement flags if no race selection buttons were found.
