@@ -480,6 +480,9 @@ open class Campaign(val game: Game) {
             return false
         }
 
+        // Perform first-time setup of loading the user's race agenda if needed.
+        game.racing.loadUserRaceAgenda()
+
         // Operations to be done every time the date changes.
         if (game.updateDate()) {
             // Reset flags on date change.

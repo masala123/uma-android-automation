@@ -21,6 +21,8 @@ export interface Settings {
         disableRaceRetries: boolean
         enableStopOnMandatoryRaces: boolean
         enableForceRacing: boolean
+        enableUserInGameRaceAgenda: boolean
+        selectedUserAgenda: string
         enableRacingPlan: boolean
         enableMandatoryRacingPlan: boolean
         racingPlan: string
@@ -69,6 +71,7 @@ export interface Settings {
         riskyTrainingMinStatGain: number
         riskyTrainingMaxFailureChance: number
         trainWitDuringFinale: boolean
+        enablePrioritizeSkillHints: boolean
     }
 
     // Training Stat Target settings
@@ -143,6 +146,8 @@ export const defaultSettings: Settings = {
         disableRaceRetries: false,
         enableStopOnMandatoryRaces: false,
         enableForceRacing: false,
+        enableUserInGameRaceAgenda: false,
+        selectedUserAgenda: "Agenda 1",
         enableRacingPlan: false,
         enableMandatoryRacingPlan: false,
         racingPlan: JSON.stringify(
@@ -232,6 +237,7 @@ export const defaultSettings: Settings = {
         riskyTrainingMinStatGain: 20,
         riskyTrainingMaxFailureChance: 30,
         trainWitDuringFinale: false,
+        enablePrioritizeSkillHints: false,
     },
     trainingStatTarget: {
         trainingSprintStatTarget_speedStatTarget: 900,
@@ -258,7 +264,7 @@ export const defaultSettings: Settings = {
     ocr: {
         ocrThreshold: 230,
         enableAutomaticOCRRetry: true,
-        ocrConfidence: 80,
+        ocrConfidence: 90,
     },
     debug: {
         enableDebugMode: false,

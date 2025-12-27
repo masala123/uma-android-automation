@@ -21,25 +21,7 @@ import com.steve1316.uma_android_automation.utils.types.RaceGrade
 import com.steve1316.uma_android_automation.utils.types.DateYear
 import com.steve1316.uma_android_automation.utils.types.BoundingBox
 
-import com.steve1316.uma_android_automation.components.DialogUtils
-import com.steve1316.uma_android_automation.components.DialogInterface
-import com.steve1316.uma_android_automation.components.ButtonChangeRunningStyle
-import com.steve1316.uma_android_automation.components.ButtonRaceStrategyFront
-import com.steve1316.uma_android_automation.components.ButtonRaceStrategyPace
-import com.steve1316.uma_android_automation.components.ButtonRaceStrategyLate
-import com.steve1316.uma_android_automation.components.ButtonRaceStrategyEnd
-import com.steve1316.uma_android_automation.components.ButtonSkip
-import com.steve1316.uma_android_automation.components.ButtonViewResults
-import com.steve1316.uma_android_automation.components.ButtonViewResultsLocked
-import com.steve1316.uma_android_automation.components.ButtonRaceSelectExtra
-import com.steve1316.uma_android_automation.components.ButtonRaceListFullStats
-import com.steve1316.uma_android_automation.components.ButtonRace
-import com.steve1316.uma_android_automation.components.ButtonBack
-import com.steve1316.uma_android_automation.components.IconRaceListPredictionDoubleStar
-import com.steve1316.uma_android_automation.components.IconRaceListMaidenPill
-import com.steve1316.uma_android_automation.components.IconRaceListTopLeft
-import com.steve1316.uma_android_automation.components.IconRaceListBottomRight
-import com.steve1316.uma_android_automation.components.IconRaceDayRibbon
+import com.steve1316.uma_android_automation.components.*
 
 class Racing (private val game: Game) {
     private val TAG: String = "[${MainActivity.loggerTag}]Racing"
@@ -61,6 +43,8 @@ class Racing (private val game: Game) {
     private val timeDecayFactor = SettingsHelper.getDoubleSetting("racing", "timeDecayFactor")
     private val improvementThreshold = SettingsHelper.getDoubleSetting("racing", "improvementThreshold")
     private val enableMandatoryRacingPlan = SettingsHelper.getBooleanSetting("racing", "enableMandatoryRacingPlan")
+    private val enableUserInGameRaceAgenda = SettingsHelper.getBooleanSetting("racing", "enableUserInGameRaceAgenda")
+    private val selectedUserAgenda = SettingsHelper.getStringSetting("racing", "selectedUserAgenda")
 
     private var raceRetries = 3
     var raceRepeatWarningCheck = false
@@ -69,6 +53,7 @@ class Racing (private val game: Game) {
     var hasFanRequirement = false  // Indicates that a fan requirement has been detected on the main screen.
     var hasTrophyRequirement = false  // Indicates that a trophy requirement has been detected on the main screen.
     private var nextSmartRaceDay: Int? = null  // Tracks the specific day to race based on opportunity cost analysis.
+    private var hasLoadedUserRaceAgenda = false  // Tracks if the user's race agenda has been loaded this career.
 
     // Used to tell the dialog handler to ignore the consecutive race warning.
     // This is a single-use flag, so whenever the "consecutive_race_warning" dialog is
@@ -361,15 +346,17 @@ class Racing (private val game: Game) {
             val raceName = game.imageUtils.extractRaceName(location)
             MessageLog.i(TAG, "[TEST] Race #${index + 1} - Detected name: \"$raceName\".")
             
-            // Query database for race details.
-            val raceData = lookupRaceInDatabase(game.currentDate.day, raceName)
+            // Query database for race details (may return multiple matches with different fan counts).
+            val raceDataList = lookupRaceInDatabase(game.currentDate.day, raceName)
             
-            if (raceData != null) {
-                MessageLog.i(TAG, "[TEST] Race #${index + 1} - Match found:")
-                MessageLog.i(TAG, "[TEST]     Name: ${raceData.name}")
-                MessageLog.i(TAG, "[TEST]     Grade: ${raceData.grade}")
-                MessageLog.i(TAG, "[TEST]     Fans: ${raceData.fans}")
-                MessageLog.i(TAG, "[TEST]     Formatted: ${raceData.nameFormatted}")
+            if (raceDataList.isNotEmpty()) {
+                MessageLog.i(TAG, "[TEST] Race #${index + 1} - Found ${raceDataList.size} match(es):")
+                raceDataList.forEach { raceData ->
+                    MessageLog.i(TAG, "[TEST]     Name: ${raceData.name}")
+                    MessageLog.i(TAG, "[TEST]     Grade: ${raceData.grade}")
+                    MessageLog.i(TAG, "[TEST]     Fans: ${raceData.fans}")
+                    MessageLog.i(TAG, "[TEST]     Formatted: ${raceData.nameFormatted}")
+                }
             } else {
                 MessageLog.i(TAG, "[TEST] Race #${index + 1} - No match found for turn ${game.currentDate.day}")
             }
@@ -414,7 +401,7 @@ class Racing (private val game: Game) {
             game.wait(0.5, skipWaitingForLoading = true)
             // Check for the consecutive race dialog before proceeding.
             handleDialogs()
-            // In case we didn't get the we still want to reset this flag.
+            // In case we didn't get the dialog we still want to reset this flag.
             bIgnoreConsecutiveRaceWarning = false
             return handleMandatoryRace()
         } else if (
@@ -438,6 +425,9 @@ class Racing (private val game: Game) {
                 return false
             }
             return handleExtraRace()
+        } else if (game.imageUtils.findImage("race_change_strategy", tries = 1, region = game.imageUtils.regionMiddle).first != null) {
+            MessageLog.i(TAG, "[RACE] The bot is currently sitting on the race screen.")
+            handleStandaloneRace()
         }
 
         // Clear requirement flags if no race selection buttons were found.
@@ -870,39 +860,103 @@ class Racing (private val game: Game) {
             return false
         }
 
+        // Extracts race names from the screen and matches them with the in-game database.
+        MessageLog.i(TAG, "[RACE] Extracting race names and matching with database...")
+        val currentRaces = doublePredictionLocations.flatMap { location ->
+            val raceName = game.imageUtils.extractRaceName(location)
+            val raceDataList = lookupRaceInDatabase(game.currentDate.day, raceName)
+            if (raceDataList.isNotEmpty()) {
+                raceDataList.forEach { raceData ->
+                    MessageLog.i(TAG, "[RACE] ✓ Matched in database: ${raceData.name} (Grade: ${raceData.grade}, Fans: ${raceData.fans}, Track Surface: ${raceData.trackSurface}).")
+                }
+                raceDataList
+            } else {
+                MessageLog.i(TAG, "[RACE] ✗ No match found in database for \"$raceName\".")
+                emptyList()
+            }
+        }
+
         // If mandatory extra race data is provided, immediately find and select it on screen.
         if (mandatoryExtraRaceData != null) {
             MessageLog.i(TAG, "[RACE] Mandatory mode for extra races enabled. Looking for planned race \"${mandatoryExtraRaceData.name}\" on screen for turn ${game.currentDate.day}.")
 
-            // Find the mandatory race on screen by matching race name with detected races.
-            val mandatoryExtraRaceLocation = doublePredictionLocations.find { location ->
-                val raceName = game.imageUtils.extractRaceName(location)
-                val detectedExtraRaceData = lookupRaceInDatabase(game.currentDate.day, raceName)
-                detectedExtraRaceData?.name == mandatoryExtraRaceData.name
+            // Check if there are multiple races with the same formatted name but different fan counts.
+            val raceVariants = currentRaces.filter { it.nameFormatted == mandatoryExtraRaceData.nameFormatted }
+            val hasMultipleFanVariants = raceVariants.size > 1
+            if (hasMultipleFanVariants) {
+                MessageLog.i(TAG, "[RACE] Found ${raceVariants.size} variants with different fan counts.")
             }
 
-            if (mandatoryExtraRaceLocation != null) {
-                MessageLog.i(TAG, "[RACE] Mandatory extra race \"${mandatoryExtraRaceData.name}\" found on screen with double predictions. Selecting it immediately (skipping opportunity cost analysis).")
-                game.tap(mandatoryExtraRaceLocation.x, mandatoryExtraRaceLocation.y, "race_extra_double_prediction", ignoreWaiting = true)
-                return true
-            } else {
-                MessageLog.i(TAG, "[RACE] Mandatory extra race \"${mandatoryExtraRaceData.name}\" not found on screen. Canceling racing process.")
-                return false
-            }
-        }
+            // Search for the mandatory extra race with scroll retry logic.
+            // Some devices show fewer races due to shorter screen heights, so scroll down up to 2 times to check.
+            val maxScrollAttempts = 2
+            var currentDoublePredictions = doublePredictionLocations
 
-        // Extracts race names from the screen and matches them with the in-game database.
-        MessageLog.i(TAG, "[RACE] Extracting race names and matching with database...")
-        val currentRaces = doublePredictionLocations.mapNotNull { location ->
-            val raceName = game.imageUtils.extractRaceName(location)
-            val raceData = lookupRaceInDatabase(game.currentDate.day, raceName)
-            if (raceData != null) {
-                MessageLog.i(TAG, "[RACE] ✓ Matched in database: ${raceData.name} (Grade: ${raceData.grade}, Fans: ${raceData.fans}, Track Surface: ${raceData.trackSurface}).")
-                raceData
-            } else {
-                MessageLog.i(TAG, "[RACE] ✗ No match found in database for \"$raceName\".")
-                null
+            for (scrollAttempt in 0..maxScrollAttempts) {
+                // Find the mandatory extra race on screen.
+                val mandatoryExtraRaceLocation = findRaceLocationByName(currentDoublePredictions, mandatoryExtraRaceData.name)
+
+                if (mandatoryExtraRaceLocation != null) {
+                    // If multiple fan variants exist in database, scroll to try to find the higher-fan version.
+                    if (hasMultipleFanVariants && scrollAttempt == 0) {
+                        MessageLog.i(TAG, "[RACE] Found a match but database shows multiple fan variants. Scrolling to check for higher-fan version...")
+                        val firstFoundLocation = mandatoryExtraRaceLocation
+
+                        val newPredictions = scrollRaceListAndRedetect(scrollDown = true)
+                        if (newPredictions != null) {
+                            currentDoublePredictions = newPredictions
+                            val higherFanLocation = findRaceLocationByName(currentDoublePredictions, mandatoryExtraRaceData.name)
+
+                            if (higherFanLocation != null) {
+                                MessageLog.i(TAG, "[RACE] ✓ Found higher-fan variant after scrolling. Selecting it.")
+                                game.tap(higherFanLocation.x, higherFanLocation.y, "race_extra_double_prediction", ignoreWaiting = true)
+                                return true
+                            } else {
+                                // Not found after scroll, scroll back up and use the first found location.
+                                MessageLog.i(TAG, "[RACE] Higher-fan variant not found after scrolling. Scrolling back up...")
+                                val restoredPredictions = scrollRaceListAndRedetect(scrollDown = false)
+                                if (restoredPredictions != null) {
+                                    currentDoublePredictions = restoredPredictions
+                                    val relocatedLocation = findRaceLocationByName(currentDoublePredictions, mandatoryExtraRaceData.name)
+                                    val finalLocation = relocatedLocation ?: firstFoundLocation
+                                    MessageLog.i(TAG, "[RACE] Mandatory extra race \"${mandatoryExtraRaceData.name}\" found. Selecting it.")
+                                    game.tap(finalLocation.x, finalLocation.y, "race_extra_double_prediction", ignoreWaiting = true)
+                                    return true
+                                } else {
+                                    MessageLog.i(TAG, "[RACE] Could not scroll back. Using first found position.")
+                                    game.tap(firstFoundLocation.x, firstFoundLocation.y, "race_extra_double_prediction", ignoreWaiting = true)
+                                    return true
+                                }
+                            }
+                        }
+                    }
+
+                    MessageLog.i(TAG, "[RACE] Mandatory extra race \"${mandatoryExtraRaceData.name}\" found on screen with double predictions${if (scrollAttempt > 0) " after $scrollAttempt scroll(s)" else ""}. Selecting it immediately (skipping opportunity cost analysis).")
+                    game.tap(mandatoryExtraRaceLocation.x, mandatoryExtraRaceLocation.y, "race_extra_double_prediction", ignoreWaiting = true)
+                    return true
+                }
+
+                // If not found and we have scrolls remaining, scroll down and re-detect.
+                if (scrollAttempt < maxScrollAttempts) {
+                    MessageLog.i(TAG, "[RACE] Mandatory extra race \"${mandatoryExtraRaceData.name}\" not found on current screen. Scrolling down (attempt ${scrollAttempt + 1}/$maxScrollAttempts)...")
+
+                    val newPredictions = scrollRaceListAndRedetect(scrollDown = true)
+                    if (newPredictions == null) {
+                        MessageLog.i(TAG, "[RACE] Stopping scroll attempts due to scroll failure.")
+                        break
+                    }
+
+                    currentDoublePredictions = newPredictions
+                    MessageLog.i(TAG, "[RACE] After scrolling, found ${currentDoublePredictions.size} double-star prediction locations.")
+                    if (currentDoublePredictions.isEmpty()) {
+                        MessageLog.i(TAG, "[RACE] No double-star predictions found after scrolling. Stopping scroll attempts.")
+                        break
+                    }
+                }
             }
+
+            MessageLog.i(TAG, "[RACE] Mandatory extra race \"${mandatoryExtraRaceData.name}\" not found on screen after $maxScrollAttempts scroll(s). Canceling racing process.")
+            return false
         }
 
         if (currentRaces.isEmpty()) {
@@ -1002,15 +1056,55 @@ class Racing (private val game: Game) {
             MessageLog.i(TAG, "[RACE] Selected race is from regular available races.")
         }
 
+        // Check if there are multiple races with the same formatted name but different fan counts.
+        // If so, we may need to scroll to find the higher-fan version (game sorts by fan count ascending and ordered by grade).
+        // Reuse the already-extracted currentRaces list instead of querying the database again.
+        val targetRaceMatches = currentRaces.filter { it.nameFormatted == bestRace.raceData.nameFormatted }
+        val hasMultipleFanVariants = targetRaceMatches.size > 1
+
         // Locates the best race on screen and selects it.
         MessageLog.i(TAG, "[RACE] Looking for target race \"${bestRace.raceData.name}\" on screen...")
-        val targetRaceLocation = doublePredictionLocations.find { location ->
-            val raceName = game.imageUtils.extractRaceName(location)
-            val raceData = lookupRaceInDatabase(game.currentDate.day, raceName)
-            val matches = raceData?.name == bestRace.raceData.name
-            if (matches) MessageLog.i(TAG, "[RACE] ✓ Found target race at location (${location.x}, ${location.y}).")
-            matches
-        } ?: run {
+        var currentDoublePredictions = doublePredictionLocations
+        var targetRaceLocation = findRaceLocationByName(currentDoublePredictions, bestRace.raceData.name, logMatch = true)
+
+        // If multiple fan variants exist and we found one, try scrolling to find the higher-fan version.
+        if (hasMultipleFanVariants && targetRaceLocation != null) {
+            MessageLog.i(TAG, "[RACE] Found a match but there may be a higher-fan variant below (game sorts by fan count ascending).")
+            val firstFoundLocation = targetRaceLocation
+            
+            // Scroll down to look for the higher-fan variant.
+            MessageLog.i(TAG, "[RACE] Scrolling down to check for higher-fan variant...")
+            val newPredictions = scrollRaceListAndRedetect(scrollDown = true)
+            if (newPredictions != null) {
+                currentDoublePredictions = newPredictions
+                val newTargetLocation = findRaceLocationByName(currentDoublePredictions, bestRace.raceData.name)
+
+                if (newTargetLocation != null) {
+                    MessageLog.i(TAG, "[RACE] ✓ Found higher-fan variant at location (${newTargetLocation.x}, ${newTargetLocation.y}) after scrolling.")
+                    targetRaceLocation = newTargetLocation
+                } else {
+                    // Not found after scroll, scroll back up and use the first found location.
+                    MessageLog.i(TAG, "[RACE] Higher-fan variant not found after scrolling. Scrolling back up...")
+                    val restoredPredictions = scrollRaceListAndRedetect(scrollDown = false)
+                    if (restoredPredictions != null) {
+                        currentDoublePredictions = restoredPredictions
+                        targetRaceLocation = findRaceLocationByName(currentDoublePredictions, bestRace.raceData.name)
+
+                        if (targetRaceLocation == null) {
+                            MessageLog.i(TAG, "[RACE] Could not re-locate target race after scrolling back. Using last known position.")
+                            targetRaceLocation = firstFoundLocation
+                        } else {
+                            MessageLog.i(TAG, "[RACE] ✓ Re-located target race at (${targetRaceLocation.x}, ${targetRaceLocation.y}) after scrolling back.")
+                        }
+                    } else {
+                        MessageLog.i(TAG, "[RACE] Could not scroll back. Using first found position.")
+                        targetRaceLocation = firstFoundLocation
+                    }
+                }
+            }
+        }
+
+        if (targetRaceLocation == null) {
             MessageLog.i(TAG, "[RACE] Could not find target race \"${bestRace.raceData.name}\" on screen. Canceling racing process.")
             return false
         }
@@ -1042,8 +1136,9 @@ class Racing (private val game: Game) {
             if (hasTrophyRequirement) {
                 game.updateDate()
                 val raceName = game.imageUtils.extractRaceName(doublePredictionLocations[0])
-                val raceData = lookupRaceInDatabase(game.currentDate.day, raceName)
-                if (raceData?.grade == RaceGrade.G1) {
+                val raceDataList = lookupRaceInDatabase(game.currentDate.day, raceName)
+                // Check if any matched race is G1.
+                if (raceDataList.any { it.grade == RaceGrade.G1 }) {
                     MessageLog.i(TAG, "[RACE] Only one race with double predictions and it's G1. Selecting it.")
                     game.tap(doublePredictionLocations[0].x, doublePredictionLocations[0].y, "race_extra_double_prediction", ignoreWaiting = true)
                     return true
@@ -1101,8 +1196,9 @@ class Racing (private val game: Game) {
         val (filteredRaces, filteredLocations, _) = if (hasTrophyRequirement) {
             game.updateDate()
             val g1Indices = raceNamesList.mapIndexedNotNull { index, raceName ->
-                val raceData = lookupRaceInDatabase(game.currentDate.day, raceName)
-                if (raceData?.grade == RaceGrade.G1) index else null
+                val raceDataList = lookupRaceInDatabase(game.currentDate.day, raceName)
+                // Check if any matched race is G1.
+                if (raceDataList.any { it.grade == RaceGrade.G1 }) index else null
             }
 
             if (g1Indices.isEmpty()) {
@@ -1153,7 +1249,209 @@ class Racing (private val game: Game) {
     ////////////////////////////////////////////////////////////////////////////////////////////////////
 
     /**
-     * Checks if the racer's aptitudes match the race requirements (both track surface and distance must be B or greater).
+     * Loads the user's selected in-game race agenda.
+     * This function navigates through the agenda UI, finds the matching agenda,
+     * and loads it. If the agenda is not immediately visible, it will scroll
+     * the list to find it.
+     */
+    fun loadUserRaceAgenda() {
+        // Only load the agenda once per career.
+        if (!enableUserInGameRaceAgenda || hasLoadedUserRaceAgenda || game.currentDate.bIsFinaleSeason) {
+            return
+        }
+
+        // Navigate to the race selection screen.
+        if (!ButtonRaceSelectExtra.click(game.imageUtils)) {
+            MessageLog.w(TAG, "[RACE] Could not find the Race Selection button. Skipping loading the user's race agenda.")
+            return
+        }
+
+        game.waitForLoading()
+
+        // We are forced to race, so we need to ignore this warning dialog.
+        bIgnoreConsecutiveRaceWarning = true
+
+        handleDialogs()
+
+        // In case we didn't get the dialog we still want to reset this flag.
+        bIgnoreConsecutiveRaceWarning = false
+
+        game.waitForLoading()
+
+        MessageLog.i(TAG, "[RACE] Loading user's in-game race agenda: $selectedUserAgenda")
+        
+        // It is assumed that the user is already at the screen with the list of selectable races.
+        // Now tap on the Agenda button.
+        if (!game.findAndTapImage("race_agenda", tries = 1, region = game.imageUtils.regionBottomHalf)) {
+            MessageLog.w(TAG, "[RACE] Could not find the Agenda button. Skipping agenda loading.")
+            return
+        }
+        game.waitForLoading()
+
+        // Now tap on the My Agenda button.
+        if (!game.findAndTapImage("race_my_agenda", tries = 1, region = game.imageUtils.regionBottomHalf)) {
+            MessageLog.w(TAG, "[RACE] Could not find the My Agenda button. Closing and skipping agenda loading.")
+            ButtonClose.click(game.imageUtils)
+            game.waitForLoading()
+            game.wait(0.5)
+            return
+        }
+        game.waitForLoading()
+        
+        // Check if an agenda is already loaded. If so, then the user must have loaded this earlier in the career so no need to select it again.
+        if (game.imageUtils.findImage("race_agenda_empty", tries = 1, region = game.imageUtils.regionTopHalf).first == null) {
+            MessageLog.i(TAG, "[RACE] A race agenda is already loaded. Skipping agenda selection.")
+
+            // Mark as loaded so we don't try again this run and close the popup.
+            hasLoadedUserRaceAgenda = true
+            ButtonClose.click(game.imageUtils)
+            game.waitForLoading()
+            ButtonClose.click(game.imageUtils)
+            game.waitForLoading()
+            
+            // Now back out of the race selection screen.
+            ButtonBack.click(game.imageUtils)
+            game.waitForLoading()
+            game.wait(0.5)
+            return
+        }
+        
+        var foundAgenda = false
+        var swipeCount = 0
+        val maxSwipes = 10
+        
+        while (!foundAgenda && swipeCount < maxSwipes) {
+            val sourceBitmap = game.imageUtils.getSourceBitmap()
+            
+            // Find all the Load List buttons on the current screen.
+            val loadListButtonLocations = game.imageUtils.findAll("race_agenda_load_list")
+            
+            if (loadListButtonLocations.isEmpty()) {
+                MessageLog.w(TAG, "[RACE] No Load List buttons found on screen.")
+                break
+            }
+            
+            MessageLog.i(TAG, "[RACE] Found ${loadListButtonLocations.size} Load List button(s) on screen.")
+            
+            // Get the mappings of button locations to agenda header texts via OCR.
+            val agendaMappings = game.imageUtils.determineAgendaHeaderMappings(sourceBitmap, loadListButtonLocations)
+            agendaMappings.forEach { (location, text) ->
+                MessageLog.i(TAG, "[RACE] Detected agenda at (${location.x}, ${location.y}): \"$text\"")
+            }
+            
+            // Search for the target agenda.
+            for ((buttonLocation, agendaText) in agendaMappings) {
+                if (agendaText == selectedUserAgenda) {
+                    MessageLog.i(TAG, "[RACE] ✓ Found $selectedUserAgenda. Tapping the Load List button...")
+                    game.gestureUtils.tap(buttonLocation.x, buttonLocation.y, "race_agenda_load_list")
+                    game.wait(0.5)
+                    
+                    // Tap the overwrite button.
+                    game.findAndTapImage("race_agenda_overwrite", tries = 1, region = game.imageUtils.regionMiddle)
+                    game.waitForLoading()
+                    
+                    foundAgenda = true
+                    break
+                }
+                
+                // Check if we've reached "Agenda 8" (end of list).
+                if (agendaText == "Agenda 8") {
+                    MessageLog.w(TAG, "[RACE] Reached Agenda 8 but target $selectedUserAgenda not found.")
+                    break
+                }
+            }
+            
+            if (!foundAgenda && swipeCount < maxSwipes - 1) {
+                // Swipe up to reveal more buttons.
+                // Use the Close button location as a reference point for swiping.
+                val closeButtonLocation = ButtonClose.find(game.imageUtils).first
+                if (closeButtonLocation != null) {
+                    val swipeX = closeButtonLocation.x.toFloat()
+                    val swipeY = closeButtonLocation.y.toFloat()
+                    MessageLog.i(TAG, "[RACE] Swiping up to reveal more agendas (attempt ${swipeCount + 1}/$maxSwipes)...")
+                    game.gestureUtils.swipe(swipeX, swipeY - 300f, swipeX, swipeY - 400f)
+                    game.wait(0.5)
+                } else {
+                    // If we can't find the close button for reference, try using the first Load List button.
+                    if (loadListButtonLocations.isNotEmpty()) {
+                        val swipeX = loadListButtonLocations[0].x.toFloat()
+                        val swipeY = loadListButtonLocations[0].y.toFloat()
+                        MessageLog.i(TAG, "[RACE] Swiping up using Load List button reference (attempt ${swipeCount + 1}/$maxSwipes)...")
+                        game.gestureUtils.swipe(swipeX, swipeY - 300f, swipeX, swipeY - 400f)
+                        game.wait(0.5)
+                    }
+                }
+                swipeCount++
+            } else if (!foundAgenda) {
+                swipeCount++
+            }
+        }
+        
+        if (!foundAgenda) {
+            MessageLog.w(TAG, "[RACE] Could not find $selectedUserAgenda after $swipeCount swipe(s). Closing agenda selection.")
+        }
+        
+        // Mark as loaded so we don't try again this run and close the popup.
+        hasLoadedUserRaceAgenda = true
+        ButtonClose.click(game.imageUtils)
+        game.waitForLoading()
+        ButtonClose.click(game.imageUtils)
+        game.waitForLoading()
+
+        // Now back out of the race selection screen.
+        ButtonBack.click(game.imageUtils)
+        game.waitForLoading()
+    }
+
+    /**
+     * Finds a race location from a list of prediction locations by matching the race name.
+     *
+     * @param predictionLocations List of double-prediction locations to search through.
+     * @param targetRaceName The race name to find.
+     * @param logMatch If true, log when a match is found.
+     * @return The Point location if found, null otherwise.
+     */
+    private fun findRaceLocationByName(predictionLocations: ArrayList<Point>, targetRaceName: String, logMatch: Boolean = false): Point? {
+        return predictionLocations.find { location ->
+            val raceName = game.imageUtils.extractRaceName(location)
+            val raceDataList = lookupRaceInDatabase(game.currentDate.day, raceName)
+            val match = raceDataList.any { it.name == targetRaceName }
+            if (match && logMatch) {
+                MessageLog.i(TAG, "[RACE] ✓ Found target race at location (${location.x}, ${location.y}).")
+            }
+            match
+        }
+    }
+
+    /**
+     * Scrolls the list of races up or down and returns the updated list of prediction locations.
+     *
+     * @param scrollDown If true, scroll down; if false, scroll up.
+     * @return The updated list of double-prediction locations after scrolling, or null if scroll failed.
+     */
+    private fun scrollRaceListAndRedetect(scrollDown: Boolean = true): ArrayList<Point>? {
+        val confirmButtonLocation = ButtonRace.find(game.imageUtils).first
+        if (confirmButtonLocation == null) {
+            MessageLog.i(TAG, "[RACE] Could not find \"Race\" button for scroll reference.")
+            return null
+        }
+
+        val startX = confirmButtonLocation.x.toFloat()
+        val startY = (confirmButtonLocation.y - 300).toFloat()
+        val endY = (confirmButtonLocation.y - 400).toFloat()
+
+        if (scrollDown) {
+            game.gestureUtils.swipe(startX, startY, startX, endY)
+        } else {
+            game.gestureUtils.swipe(startX, endY, startX, startY)
+        }
+        game.wait(2.0)
+
+        return IconRaceListPredictionDoubleStar.findAll(game.imageUtils)
+    }
+
+    /**
+     * Checks if the racer's aptitudes match the race requirements (both terrain and distance must be B or greater).
      *
      * @param raceData The race data to check aptitudes against.
      * @return True if both track surface and distance aptitudes are B or greater; false otherwise.
@@ -1681,27 +1979,30 @@ class Racing (private val game: Game) {
 
     /**
      * Race database lookup using exact and/or fuzzy matching.
-     * 
+     * Returns multiple matches when races share the same name and date but have different fan counts.
+     *
      * @param turnNumber The current turn number to match against.
      * @param detectedName The race name detected by OCR.
-     * @return A [RaceData] object if a match is found, null otherwise.
+     * @return A list of [RaceData] objects matching the criteria, or an empty list if no matches found.
      */
-    private fun lookupRaceInDatabase(turnNumber: Int, detectedName: String): RaceData? {
+    private fun lookupRaceInDatabase(turnNumber: Int, detectedName: String): ArrayList<RaceData> {
         val settingsManager = SQLiteSettingsManager(game.myContext)
         if (!settingsManager.initialize()) {
             MessageLog.e(TAG, "[ERROR] Database not available for race lookup.")
-            return null
+            return arrayListOf()
         }
 
         return try {
             MessageLog.i(TAG, "[RACE] Looking up race for turn $turnNumber with detected name: \"$detectedName\".")
-            
+
             val database = settingsManager.getDatabase()
             if (database == null) {
                 settingsManager.close()
-                return null
+                return arrayListOf()
             }
-            
+
+            val matches = arrayListOf<RaceData>()
+
             // Do exact matching based on the info gathered.
             val exactCursor = database.query(
                 TABLE_RACES,
@@ -1719,24 +2020,37 @@ class Racing (private val game: Game) {
                 null, null, null
             )
 
+            // Collect all exact matches (may have different fan counts).
             if (exactCursor.moveToFirst()) {
-                val race = RaceData(
-                    name = exactCursor.getString(0),
-                    grade = exactCursor.getString(1),
-                    fans = exactCursor.getInt(2),
-                    nameFormatted = exactCursor.getString(3),
-                    trackSurface = exactCursor.getString(4),
-                    trackDistance = exactCursor.getString(5),
-                    turnNumber = exactCursor.getInt(6)
-                )
+                do {
+                    val race = RaceData(
+                        name = exactCursor.getString(0),
+                        grade = exactCursor.getString(1),
+                        fans = exactCursor.getInt(2),
+                        nameFormatted = exactCursor.getString(3),
+                        trackSurface = exactCursor.getString(4),
+                        trackDistance = exactCursor.getString(5),
+                        turnNumber = exactCursor.getInt(6)
+                    )
+                    matches.add(race)
+                } while (exactCursor.moveToNext())
+
                 exactCursor.close()
                 settingsManager.close()
-                MessageLog.i(TAG, "[RACE] Found exact match: \"${race.name}\" AKA \"${race.nameFormatted}\".")
-                return race
+
+                if (matches.size == 1) {
+                    MessageLog.i(TAG, "[RACE] Found exact match: \"${matches[0].name}\" AKA \"${matches[0].nameFormatted}\" (Fans: ${matches[0].fans}).")
+                } else {
+                    MessageLog.i(TAG, "[RACE] Found ${matches.size} exact matches with same name but different fan counts:")
+                    matches.forEach { race ->
+                        MessageLog.i(TAG, "[RACE]     - \"${race.name}\" (Fans: ${race.fans})")
+                    }
+                }
+                return matches
             }
             exactCursor.close()
-            
-            // Otherwise, do fuzzy matching to find the most similar match using Jaro-Winkler.
+
+            // Otherwise, do fuzzy matching to find matches using Jaro-Winkler.
             val fuzzyCursor = database.query(
                 TABLE_RACES,
                 arrayOf(
@@ -1757,20 +2071,19 @@ class Racing (private val game: Game) {
                 fuzzyCursor.close()
                 settingsManager.close()
                 MessageLog.i(TAG, "[RACE] No match found for turn $turnNumber with name \"$detectedName\".")
-                return null
+                return arrayListOf()
             }
 
             val similarityService = StringSimilarityServiceImpl(JaroWinklerStrategy())
-            var bestMatch: RaceData? = null
             var bestScore = 0.0
+            val fuzzyMatches = mutableListOf<Pair<RaceData, Double>>()
 
             do {
                 val nameFormatted = fuzzyCursor.getString(3)
                 val similarity = similarityService.score(detectedName, nameFormatted)
-                
-                if (similarity > bestScore && similarity >= SIMILARITY_THRESHOLD) {
-                    bestScore = similarity
-                    bestMatch = RaceData(
+
+                if (similarity >= SIMILARITY_THRESHOLD) {
+                    val race = RaceData(
                         name = fuzzyCursor.getString(0),
                         grade = fuzzyCursor.getString(1),
                         fans = fuzzyCursor.getInt(2),
@@ -1779,25 +2092,37 @@ class Racing (private val game: Game) {
                         trackDistance = fuzzyCursor.getString(5),
                         turnNumber = fuzzyCursor.getInt(6)
                     )
-                    if (game.debugMode) MessageLog.d(TAG, "[DEBUG] Fuzzy match candidate: \"${bestMatch.name}\" AKA \"$nameFormatted\" with similarity ${game.decimalFormat.format(similarity)}.")
-                    else Log.d(TAG, "[DEBUG] Fuzzy match candidate: \"${bestMatch.name}\" AKA \"$nameFormatted\" with similarity ${game.decimalFormat.format(similarity)}.")
+                    fuzzyMatches.add(Pair(race, similarity))
+                    if (similarity > bestScore) bestScore = similarity
+                    if (game.debugMode) MessageLog.d(TAG, "[DEBUG] Fuzzy match candidate: \"${race.name}\" AKA \"$nameFormatted\" with similarity ${game.decimalFormat.format(similarity)} (Fans: ${race.fans}).")
+                    else Log.d(TAG, "[DEBUG] Fuzzy match candidate: \"${race.name}\" AKA \"$nameFormatted\" with similarity ${game.decimalFormat.format(similarity)} (Fans: ${race.fans}).")
                 }
             } while (fuzzyCursor.moveToNext())
 
             fuzzyCursor.close()
             settingsManager.close()
-            
-            if (bestMatch != null) {
-                MessageLog.i(TAG, "[RACE] Found fuzzy match: \"${bestMatch.name}\" AKA \"${bestMatch.nameFormatted}\" with similarity ${game.decimalFormat.format(bestScore)}.")
-                return bestMatch
+
+            // Return all matches with the best similarity score.
+            val bestMatches = ArrayList(fuzzyMatches.filter { it.second == bestScore }.map { it.first })
+
+            if (bestMatches.isNotEmpty()) {
+                if (bestMatches.size == 1) {
+                    MessageLog.i(TAG, "[RACE] Found fuzzy match: \"${bestMatches[0].name}\" AKA \"${bestMatches[0].nameFormatted}\" with similarity ${game.decimalFormat.format(bestScore)} (Fans: ${bestMatches[0].fans}).")
+                } else {
+                    MessageLog.i(TAG, "[RACE] Found ${bestMatches.size} fuzzy matches with similarity ${game.decimalFormat.format(bestScore)} but different fan counts:")
+                    bestMatches.forEach { race ->
+                        MessageLog.i(TAG, "[RACE]     - \"${race.name}\" (Fans: ${race.fans})")
+                    }
+                }
+                return bestMatches
             }
-            
+
             MessageLog.i(TAG, "[RACE] No match found for turn $turnNumber with name \"$detectedName\".")
-            null
+            arrayListOf()
         } catch (e: Exception) {
             MessageLog.e(TAG, "[ERROR] Error looking up race: ${e.message}.")
             settingsManager.close()
-            null
+            arrayListOf()
         }
     }
 

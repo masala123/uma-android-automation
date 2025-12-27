@@ -253,6 +253,7 @@ const MessageLog = () => {
 ✨ Focus on Sparks for Stat Targets: ${settings.training.focusOnSparkStatTarget.length === 0 ? "None" : settings.training.focusOnSparkStatTarget.join(", ")}
 📏 Preferred Distance Override: ${settings.training.preferredDistanceOverride === "Default" ? "Default" : settings.training.preferredDistanceOverride}
 🌈 Enable Rainbow Training Bonus: ${settings.training.enableRainbowTrainingBonus ? "✅" : "❌"}
+💡 Prioritize Skill Hints: ${settings.training.enablePrioritizeSkillHints ? "✅" : "❌"}
 ☀️ Must Rest Before Summer: ${settings.training.mustRestBeforeSummer ? "✅" : "❌"}
 📏 Manual Stat Cap: ${settings.training.manualStatCap}
 🎯 Train Wit During Finale: ${settings.training.trainWitDuringFinale ? "✅" : "❌"}
@@ -275,6 +276,8 @@ ${longTargetsString}
 🔄 Disable Race Retries: ${settings.racing.disableRaceRetries ? "✅" : "❌"}
 🏁 Stop on Mandatory Race: ${settings.racing.enableStopOnMandatoryRaces ? "✅" : "❌"}
 🏃 Force Racing Every Day: ${settings.racing.enableForceRacing ? "✅" : "❌"}
+🏁 Enable User In-Game Race Agenda: ${settings.racing.enableUserInGameRaceAgenda ? "✅" : "❌"}
+🏁 Selected User In-Game Race Agenda: ${settings.racing.selectedUserAgenda}
 🏁 Enable Racing Plan: ${settings.racing.enableRacingPlan ? "✅" : "❌"}
 🏁 Racing Plan is Mandatory: ${settings.racing.enableMandatoryRacingPlan ? "✅" : "❌"}
 🏁 Racing Plan: ${racingPlanString}
@@ -364,8 +367,29 @@ ${longTargetsString}
             }
         })
 
-        // Sort log messages by messageId (timestamp) based on sort order.
+        // Parse timestamp from message text (format: HH:MM:SS.mmm).
+        const parseTimestamp = (text: string): number => {
+            // Match timestamps like "00:00:00.462", allowing optional leading whitespace/newlines.
+            const match = text.match(/^\s*(\d{2}):(\d{2}):(\d{2})\.(\d{3})/)
+            if (match) {
+                const [, hours, minutes, seconds, milliseconds] = match
+                return parseInt(hours) * 3600000 + parseInt(minutes) * 60000 + parseInt(seconds) * 1000 + parseInt(milliseconds)
+            }
+            // Return -1 for messages without valid timestamps (e.g., "--:--:--.---").
+            return -1
+        }
+
+        // Sort log messages by timestamp (primary) and messageId (secondary/tiebreaker).
         const sortedLogMessages = [...logMessages].sort((a, b) => {
+            const timestampA = parseTimestamp(a.text)
+            const timestampB = parseTimestamp(b.text)
+
+            // Primary sort by timestamp for chronological order.
+            if (timestampA !== timestampB) {
+                return sortOrder === "desc" ? timestampB - timestampA : timestampA - timestampB
+            }
+
+            // Secondary sort by messageId when timestamps are equal.
             const idA = a.messageId ?? 0
             const idB = b.messageId ?? 0
             return sortOrder === "desc" ? idB - idA : idA - idB
@@ -552,7 +576,7 @@ ${longTargetsString}
     // Copy all messages to clipboard.
     const copyToClipboard = useCallback(async () => {
         try {
-            const allText = introMessage + "\n" + mlc.messageLog.join("\n")
+            const allText = introMessage + "\n" + mlc.messageLog.map((entry) => entry.message).join("\n")
             await Clipboard.setStringAsync(allText)
         } catch (error) {
             showError("Failed to copy to clipboard")
@@ -568,13 +592,13 @@ ${longTargetsString}
                 showError("Failed to copy message")
             }
         },
-        [showError]
+        [showError],
     )
 
     // Render individual log item.
     const renderLogItem = useCallback(
         ({ item }: { item: LogMessage }) => <LogItem item={item} fontSize={fontSize} onLongPress={handleLongPress} enableMessageIdDisplay={bsc.settings.misc.enableMessageIdDisplay} />,
-        [fontSize, handleLongPress, bsc.settings.misc.enableMessageIdDisplay]
+        [fontSize, handleLongPress, bsc.settings.misc.enableMessageIdDisplay],
     )
 
     // Key extractor for FlatList.
