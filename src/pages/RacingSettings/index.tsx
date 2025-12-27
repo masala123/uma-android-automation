@@ -21,17 +21,38 @@ const RacingSettings = () => {
     const { settings, setSettings } = bsc
     // Merge current racing settings with defaults to handle missing properties.
     const racingSettings = { ...defaultSettings.racing, ...settings.racing }
-    const { enableFarmingFans, daysToRunExtraRaces, disableRaceRetries, enableStopOnMandatoryRaces, enableForceRacing, enableRaceStrategyOverride, juniorYearRaceStrategy, originalRaceStrategy } =
-        racingSettings
+    const {
+        enableFarmingFans,
+        daysToRunExtraRaces,
+        disableRaceRetries,
+        enableStopOnMandatoryRaces,
+        enableForceRacing,
+        enableRaceStrategyOverride,
+        juniorYearRaceStrategy,
+        originalRaceStrategy,
+        enableUserInGameRaceAgenda,
+    } = racingSettings
 
     const updateRacingSetting = (key: keyof typeof settings.racing, value: any) => {
-        setSettings({
-            ...bsc.settings,
-            racing: {
-                ...bsc.settings.racing,
-                [key]: value,
-            },
-        })
+        if (key === "enableUserInGameRaceAgenda" && value) {
+            setSettings({
+                ...bsc.settings,
+                racing: {
+                    // Disable the Racing Plan settings when User In Game Race Agenda is enabled.
+                    ...bsc.settings.racing,
+                    enableUserInGameRaceAgenda: true,
+                    enableRacingPlan: false,
+                },
+            })
+        } else {
+            setSettings({
+                ...bsc.settings,
+                racing: {
+                    ...bsc.settings.racing,
+                    [key]: value,
+                },
+            })
+        }
     }
 
     const styles = StyleSheet.create({
@@ -233,11 +254,43 @@ const RacingSettings = () => {
                         )}
                     </View>
 
+                    <CustomCheckbox
+                        id="enable-user-in-game-race-agenda"
+                        checked={enableUserInGameRaceAgenda}
+                        onCheckedChange={(checked) => updateRacingSetting("enableUserInGameRaceAgenda", checked)}
+                        label="Enable User In-Game Race Agenda"
+                        description={
+                            "When enabled, the bot will load your selected in-game race agenda instead of using the racing plan settings. Note that this will disable the racing plan settings."
+                        }
+                        style={{ marginBottom: 16 }}
+                    />
+
+                    {enableUserInGameRaceAgenda && (
+                        <View style={styles.section}>
+                            <CustomSelect
+                                placeholder="Select an Agenda"
+                                width="100%"
+                                options={[
+                                    { value: "Agenda 1", label: "Agenda 1" },
+                                    { value: "Agenda 2", label: "Agenda 2" },
+                                    { value: "Agenda 3", label: "Agenda 3" },
+                                    { value: "Agenda 4", label: "Agenda 4" },
+                                    { value: "Agenda 5", label: "Agenda 5" },
+                                    { value: "Agenda 6", label: "Agenda 6" },
+                                    { value: "Agenda 7", label: "Agenda 7" },
+                                    { value: "Agenda 8", label: "Agenda 8" },
+                                ]}
+                                value={racingSettings.selectedUserAgenda}
+                                onValueChange={(value) => updateRacingSetting("selectedUserAgenda", value)}
+                            />
+                        </View>
+                    )}
+
                     <NavigationLink
                         title="Go to Racing Plan Settings"
                         description="Configure prioritized races to target including enabling additional filters for race selection."
-                        disabled={!enableFarmingFans || enableForceRacing}
-                        disabledDescription="Farming Fans must be enabled and Force Racing must be disabled to use the Racing Plan Settings."
+                        disabled={!enableFarmingFans || enableForceRacing || enableUserInGameRaceAgenda}
+                        disabledDescription="Farming Fans must be enabled and Force Racing and User In-Game Race Agenda settings must be disabled in order to use the Racing Plan Settings."
                         onPress={() => navigation.navigate("RacingPlanSettings" as never)}
                         style={{ ...styles.section, marginTop: 0 }}
                     />

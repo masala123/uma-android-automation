@@ -276,6 +276,8 @@ ${longTargetsString}
 🔄 Disable Race Retries: ${settings.racing.disableRaceRetries ? "✅" : "❌"}
 🏁 Stop on Mandatory Race: ${settings.racing.enableStopOnMandatoryRaces ? "✅" : "❌"}
 🏃 Force Racing Every Day: ${settings.racing.enableForceRacing ? "✅" : "❌"}
+🏁 Enable User In-Game Race Agenda: ${settings.racing.enableUserInGameRaceAgenda ? "✅" : "❌"}
+🏁 Selected User In-Game Race Agenda: ${settings.racing.selectedUserAgenda}
 🏁 Enable Racing Plan: ${settings.racing.enableRacingPlan ? "✅" : "❌"}
 🏁 Racing Plan is Mandatory: ${settings.racing.enableMandatoryRacingPlan ? "✅" : "❌"}
 🏁 Racing Plan: ${racingPlanString}
