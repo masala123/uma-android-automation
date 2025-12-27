@@ -21,6 +21,8 @@ export interface Settings {
         disableRaceRetries: boolean
         enableStopOnMandatoryRaces: boolean
         enableForceRacing: boolean
+        enableUserInGameRaceAgenda: boolean
+        selectedUserAgenda: string
         enableRacingPlan: boolean
         enableMandatoryRacingPlan: boolean
         racingPlan: string
@@ -143,6 +145,8 @@ export const defaultSettings: Settings = {
         disableRaceRetries: false,
         enableStopOnMandatoryRaces: false,
         enableForceRacing: false,
+        enableUserInGameRaceAgenda: false,
+        selectedUserAgenda: "Agenda 1",
         enableRacingPlan: false,
         enableMandatoryRacingPlan: false,
         racingPlan: JSON.stringify(

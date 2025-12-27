@@ -32,6 +32,8 @@ class Racing (private val game: Game) {
     private val timeDecayFactor = SettingsHelper.getDoubleSetting("racing", "timeDecayFactor")
     private val improvementThreshold = SettingsHelper.getDoubleSetting("racing", "improvementThreshold")
     private val enableMandatoryRacingPlan = SettingsHelper.getBooleanSetting("racing", "enableMandatoryRacingPlan")
+    private val enableUserInGameRaceAgenda = SettingsHelper.getBooleanSetting("racing", "enableUserInGameRaceAgenda")
+    private val selectedUserAgenda = SettingsHelper.getStringSetting("racing", "selectedUserAgenda")
 
     private var raceRetries = 3
     var raceRepeatWarningCheck = false
@@ -41,6 +43,7 @@ class Racing (private val game: Game) {
     var hasFanRequirement = false  // Indicates that a fan requirement has been detected on the main screen.
     var hasTrophyRequirement = false  // Indicates that a trophy requirement has been detected on the main screen.
     private var nextSmartRaceDay: Int? = null  // Tracks the specific day to race based on opportunity cost analysis.
+    private var hasLoadedUserRaceAgenda = false  // Tracks if the user's race agenda has been loaded this career.
 
     private val enableStopOnMandatoryRace: Boolean = SettingsHelper.getBooleanSetting("racing", "enableStopOnMandatoryRaces")
     var detectedMandatoryRaceCheck = false
@@ -880,6 +883,157 @@ class Racing (private val game: Game) {
     // Helper Functions
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Loads the user's selected in-game race agenda.
+     * This function navigates through the agenda UI, finds the matching agenda,
+     * and loads it. If the agenda is not immediately visible, it will scroll
+     * the list to find it.
+     */
+    fun loadUserRaceAgenda() {
+        // Only load the agenda once per career.
+        if (!enableUserInGameRaceAgenda || hasLoadedUserRaceAgenda || game.currentDate.turnNumber >= 72) {
+            return
+        }
+
+        // Navigate to the race selection screen.
+        if (!game.findAndTapImage("race_select_extra", tries = 1, region = game.imageUtils.regionBottomHalf)) {
+            MessageLog.w(TAG, "[RACE] Could not find the Race Selection button. Skipping loading the user's race agenda.")
+            return
+        }
+        game.waitForLoading()
+
+        if (game.imageUtils.findImage("race_repeat_warning", tries = 1, region = game.imageUtils.regionTopHalf).first != null) {
+            MessageLog.i(TAG, "[RACE] Consecutive race warning detected. Confirming the popup in order to proceed with loading the user race agenda.")
+            game.findAndTapImage("ok", tries = 1, region = game.imageUtils.regionMiddle)
+            game.waitForLoading()
+            game.wait(0.5)
+        }
+        
+        MessageLog.i(TAG, "[RACE] Loading user's in-game race agenda: $selectedUserAgenda")
+        
+        // It is assumed that the user is already at the screen with the list of selectable races.
+        // Now tap on the Agenda button.
+        if (!game.findAndTapImage("race_agenda", tries = 1, region = game.imageUtils.regionBottomHalf)) {
+            MessageLog.w(TAG, "[RACE] Could not find the Agenda button. Skipping agenda loading.")
+            return
+        }
+        game.waitForLoading()
+
+        // Now tap on the My Agenda button.
+        if (!game.findAndTapImage("race_my_agenda", tries = 1, region = game.imageUtils.regionBottomHalf)) {
+            MessageLog.w(TAG, "[RACE] Could not find the My Agenda button. Closing and skipping agenda loading.")
+            game.findAndTapImage("close", tries = 1, region = game.imageUtils.regionBottomHalf)
+            game.waitForLoading()
+            game.wait(0.5)
+            return
+        }
+        game.waitForLoading()
+        
+        // Check if an agenda is already loaded. If so, then the user must have loaded this earlier in the career so no need to select it again.
+        if (game.imageUtils.findImage("race_agenda_empty", tries = 1, region = game.imageUtils.regionTopHalf).first == null) {
+            MessageLog.i(TAG, "[RACE] A race agenda is already loaded. Skipping agenda selection.")
+
+            // Mark as loaded so we don't try again this run and close the popup.
+            hasLoadedUserRaceAgenda = true
+            game.findAndTapImage("close", tries = 1, region = game.imageUtils.regionBottomHalf)
+            game.waitForLoading()
+            game.findAndTapImage("close", tries = 1, region = game.imageUtils.regionBottomHalf)
+            game.waitForLoading()
+            
+            // Now back out of the race selection screen.
+            game.findAndTapImage("back", tries = 1, region = game.imageUtils.regionBottomHalf)
+            game.waitForLoading()
+            game.wait(0.5)
+            return
+        }
+        
+        var foundAgenda = false
+        var swipeCount = 0
+        val maxSwipes = 10
+        
+        while (!foundAgenda && swipeCount < maxSwipes) {
+            val sourceBitmap = game.imageUtils.getSourceBitmap()
+            
+            // Find all the Load List buttons on the current screen.
+            val loadListButtonLocations = game.imageUtils.findAll("race_agenda_load_list")
+            
+            if (loadListButtonLocations.isEmpty()) {
+                MessageLog.w(TAG, "[RACE] No Load List buttons found on screen.")
+                break
+            }
+            
+            MessageLog.i(TAG, "[RACE] Found ${loadListButtonLocations.size} Load List button(s) on screen.")
+            
+            // Get the mappings of button locations to agenda header texts via OCR.
+            val agendaMappings = game.imageUtils.determineAgendaHeaderMappings(sourceBitmap, loadListButtonLocations)
+            agendaMappings.forEach { (location, text) ->
+                MessageLog.i(TAG, "[RACE] Detected agenda at (${location.x}, ${location.y}): \"$text\"")
+            }
+            
+            // Search for the target agenda.
+            for ((buttonLocation, agendaText) in agendaMappings) {
+                if (agendaText == selectedUserAgenda) {
+                    MessageLog.i(TAG, "[RACE] ✓ Found $selectedUserAgenda. Tapping the Load List button...")
+                    game.gestureUtils.tap(buttonLocation.x, buttonLocation.y, "race_agenda_load_list")
+                    game.wait(0.5)
+                    
+                    // Tap the overwrite button.
+                    game.findAndTapImage("race_agenda_overwrite", tries = 1, region = game.imageUtils.regionMiddle)
+                    game.waitForLoading()
+                    
+                    foundAgenda = true
+                    break
+                }
+                
+                // Check if we've reached "Agenda 8" (end of list).
+                if (agendaText == "Agenda 8") {
+                    MessageLog.w(TAG, "[RACE] Reached Agenda 8 but target $selectedUserAgenda not found.")
+                    break
+                }
+            }
+            
+            if (!foundAgenda && swipeCount < maxSwipes - 1) {
+                // Swipe up to reveal more buttons.
+                // Use the Close button location as a reference point for swiping.
+                val closeButtonLocation = game.imageUtils.findImage("close", tries = 1, region = game.imageUtils.regionBottomHalf).first
+                if (closeButtonLocation != null) {
+                    val swipeX = closeButtonLocation.x.toFloat()
+                    val swipeY = closeButtonLocation.y.toFloat()
+                    MessageLog.i(TAG, "[RACE] Swiping up to reveal more agendas (attempt ${swipeCount + 1}/$maxSwipes)...")
+                    game.gestureUtils.swipe(swipeX, swipeY - 300f, swipeX, swipeY - 400f)
+                    game.wait(0.5)
+                } else {
+                    // If we can't find the close button for reference, try using the first Load List button.
+                    if (loadListButtonLocations.isNotEmpty()) {
+                        val swipeX = loadListButtonLocations[0].x.toFloat()
+                        val swipeY = loadListButtonLocations[0].y.toFloat()
+                        MessageLog.i(TAG, "[RACE] Swiping up using Load List button reference (attempt ${swipeCount + 1}/$maxSwipes)...")
+                        game.gestureUtils.swipe(swipeX, swipeY - 300f, swipeX, swipeY - 400f)
+                        game.wait(0.5)
+                    }
+                }
+                swipeCount++
+            } else if (!foundAgenda) {
+                swipeCount++
+            }
+        }
+        
+        if (!foundAgenda) {
+            MessageLog.w(TAG, "[RACE] Could not find $selectedUserAgenda after $swipeCount swipe(s). Closing agenda selection.")
+        }
+        
+        // Mark as loaded so we don't try again this run and close the popup.
+        hasLoadedUserRaceAgenda = true
+        game.findAndTapImage("close", tries = 1, region = game.imageUtils.regionBottomHalf)
+        game.waitForLoading()
+        game.findAndTapImage("close", tries = 1, region = game.imageUtils.regionBottomHalf)
+        game.waitForLoading()
+
+        // Now back out of the race selection screen.
+        game.findAndTapImage("back", tries = 1, region = game.imageUtils.regionBottomHalf)
+        game.waitForLoading()
+    }
 
     /**
      * Finds a race location from a list of prediction locations by matching the race name.

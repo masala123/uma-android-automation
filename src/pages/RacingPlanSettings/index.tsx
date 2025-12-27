@@ -97,13 +97,27 @@ const RacingPlanSettings = () => {
     })
 
     const updateRacingSetting = (key: string, value: any) => {
-        setSettings({
-            ...bsc.settings,
-            racing: {
-                ...bsc.settings.racing,
-                [key]: value,
-            },
-        })
+        if (key === "enableRacingPlan" && value) {
+            setSettings({
+                ...bsc.settings,
+                racing: {
+                    // The following settings need to be set due to being two distinct racing systems.
+                    ...bsc.settings.racing,
+                    enableFarmingFans: true,
+                    enableForceRacing: false,
+                    enableUserInGameRaceAgenda: false,
+                    enableRacingPlan: true,
+                },
+            })
+        } else {
+            setSettings({
+                ...bsc.settings,
+                racing: {
+                    ...bsc.settings.racing,
+                    [key]: value,
+                },
+            })
+        }
     }
 
     const handleRacePress = (race: Race) => {

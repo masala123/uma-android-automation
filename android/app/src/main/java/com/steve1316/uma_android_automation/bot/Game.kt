@@ -332,6 +332,9 @@ class Game(val myContext: Context) {
 			imageUtils.findImageWithBitmap("race_select_mandatory", sourceBitmap, region = imageUtils.regionBottomHalf, suppressError = true) == null) {
 			MessageLog.i(TAG, "Bot is at the Main screen.")
 
+            // Perform first-time setup of loading the user's race agenda if needed.
+            racing.loadUserRaceAgenda()
+
 			// Perform updates here if necessary.
             updateDate()
             if (needToUpdateAptitudes) updateAptitudes()

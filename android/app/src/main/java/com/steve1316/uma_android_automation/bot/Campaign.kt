@@ -101,6 +101,7 @@ open class Campaign(val game: Game) {
                             break
                         }
                         game.findAndTapImage("back", tries = 1, region = game.imageUtils.regionBottomHalf)
+                        game.findAndTapImage("cancel", tries = 1, region = game.imageUtils.regionMiddle)
                         game.racing.skipRacing = !game.racing.enableForceRacing
                         game.wait(1.0)
                         game.training.handleTraining()

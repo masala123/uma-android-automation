@@ -372,6 +372,63 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	}
 
 	/**
+	 * Determines the agenda header text associated with each Load List button.
+	 * Uses the relative offset between button positions and header text regions
+	 * to crop and OCR the "Agenda #" text.
+	 *
+	 * @param sourceBitmap The source screenshot.
+	 * @param loadListButtonLocations List of Point locations for each "race_load_list" button.
+	 * @return A map of Point (button location) to String (agenda text like "Agenda 1").
+	 */
+	fun determineAgendaHeaderMappings(sourceBitmap: Bitmap, loadListButtonLocations: ArrayList<Point>): Map<Point, String> {
+		val mappings = mutableMapOf<Point, String>()
+		
+		// Offset from button to header text (relative to 1080x2340 baseline).
+		val offsetX = -830
+		val offsetY = -190
+		val cropWidth = relWidth(135)
+		val cropHeight = relHeight(35)
+		
+		for ((index, buttonLocation) in loadListButtonLocations.withIndex()) {
+			val headerX = relX(buttonLocation.x, offsetX)
+			val headerY = relY(buttonLocation.y, offsetY)
+			
+			// Perform OCR on the header region.
+			val detectedText = performOCROnRegion(
+				sourceBitmap,
+				headerX,
+				headerY,
+				cropWidth,
+				cropHeight,
+				useThreshold = true,
+				useGrayscale = true,
+				scale = 2.0,
+				ocrEngine = "mlkit",
+				debugName = "AgendaHeader${index + 1}"
+			)
+			
+			// Clean up the detected text.
+			var cleanedText = detectedText.trim()
+			
+			// Handle OCR edge case: "Agenda I" should be "Agenda 1".
+			if (cleanedText.equals("Agenda I", ignoreCase = true)) {
+				cleanedText = "Agenda 1"
+			}
+			
+			if (cleanedText.isNotEmpty()) {
+				mappings[buttonLocation] = cleanedText
+				if (debugMode) {
+					MessageLog.d(TAG, "Agenda header #${index + 1} at button ($buttonLocation): \"$cleanedText\"")
+				} else {
+					Log.d(TAG, "[DEBUG] Agenda header #${index + 1} at button ($buttonLocation): \"$cleanedText\"")
+				}
+			}
+		}
+		
+		return mappings
+	}
+
+	/**
 	 * Determine the amount of fans that the extra race will give only if it matches the double star prediction.
 	 *
 	 * @param extraRaceLocation Point object of the extra race's location.
