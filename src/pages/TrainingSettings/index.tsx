@@ -1,8 +1,6 @@
 import React, { useContext, useEffect, useState } from "react"
 import { View, Text, ScrollView, StyleSheet, Modal, TouchableOpacity, Dimensions } from "react-native"
 import { Snackbar } from "react-native-paper"
-import { useNavigation, DrawerActions } from "@react-navigation/native"
-import { Ionicons } from "@expo/vector-icons"
 import { useTheme } from "../../context/ThemeContext"
 import { BotStateContext, defaultSettings, Settings } from "../../context/BotStateContext"
 import CustomButton from "../../components/CustomButton"
@@ -17,10 +15,10 @@ import { useSettings } from "../../context/SettingsContext"
 import { useProfileManager } from "../../hooks/useProfileManager"
 import { applyMigrations } from "../../hooks/useSettingsManager"
 import { databaseManager } from "../../lib/database"
+import PageHeader from "../../components/PageHeader"
 
 const TrainingSettings = () => {
     const { colors } = useTheme()
-    const navigation = useNavigation()
     const bsc = useContext(BotStateContext)
     const { saveSettingsImmediate } = useSettings()
     const { currentProfileName } = useProfileManager()
@@ -30,18 +28,14 @@ const TrainingSettings = () => {
     const [snackbarVisible, setSnackbarVisible] = useState(false)
     const [snackbarMessage, setSnackbarMessage] = useState("")
 
-    const openDrawer = () => {
-        navigation.dispatch(DrawerActions.openDrawer())
-    }
-
     const { settings, setSettings } = bsc
 
     // Initialize local state from settings, with fallback to defaults.
     const [statPrioritizationItems, setStatPrioritizationItems] = useState<string[]>(() =>
-        settings.training?.statPrioritization !== undefined ? settings.training.statPrioritization : defaultSettings.training.statPrioritization
+        settings.training?.statPrioritization !== undefined ? settings.training.statPrioritization : defaultSettings.training.statPrioritization,
     )
     const [blacklistItems, setBlacklistItems] = useState<string[]>(() =>
-        settings.training?.trainingBlacklist !== undefined ? settings.training.trainingBlacklist : defaultSettings.training.trainingBlacklist
+        settings.training?.trainingBlacklist !== undefined ? settings.training.trainingBlacklist : defaultSettings.training.trainingBlacklist,
     )
     const [sparkStatTargetItems, setSparkStatTargetItems] = useState<string[]>(() => {
         const value = settings.training?.focusOnSparkStatTarget
@@ -75,7 +69,6 @@ const TrainingSettings = () => {
         trainWitDuringFinale,
         enablePrioritizeSkillHints,
     } = trainingSettings
-
 
     useEffect(() => {
         updateTrainingSetting("statPrioritization", statPrioritizationItems)
@@ -156,16 +149,16 @@ const TrainingSettings = () => {
     const handleOverwriteSettings = async (profileSettings: Partial<Settings>) => {
         // Get the current profile name directly from the database to ensure we have the latest value.
         const dbProfileName = await databaseManager.getCurrentProfileName()
-        
+
         // Merge profile settings with current settings to create a complete Settings object for migration.
         const mergedSettings = {
             ...bsc.settings,
             ...profileSettings,
         } as Settings
-        
+
         // Apply migrations to the merged settings (this handles focusOnSparkStatTarget and any future migrations).
         const { settings: migratedSettings } = applyMigrations(mergedSettings)
-        
+
         // Create the updated settings object with the migrated profile settings.
         const updatedSettings = {
             ...migratedSettings,
@@ -199,30 +192,9 @@ const TrainingSettings = () => {
             margin: 10,
             backgroundColor: colors.background,
         },
-        header: {
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 20,
-        },
-        headerLeft: {
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-        },
-        menuButton: {
-            padding: 8,
-            borderRadius: 8,
-        },
-        title: {
-            fontSize: 24,
-            fontWeight: "bold",
-            color: colors.foreground,
-        },
         section: {
             marginBottom: 24,
         },
-
         row: {
             flexDirection: "row",
             justifyContent: "space-between",
@@ -328,7 +300,7 @@ const TrainingSettings = () => {
         modalVisible: boolean,
         setModalVisible: React.Dispatch<React.SetStateAction<boolean>>,
         description?: string,
-        mode: "checkbox" | "priority" = "checkbox"
+        mode: "checkbox" | "priority" = "checkbox",
     ) => (
         <View style={styles.section}>
             <View style={styles.row}>
@@ -403,14 +375,8 @@ const TrainingSettings = () => {
 
     return (
         <View style={styles.root}>
-            <View style={styles.header}>
-                <View style={styles.headerLeft}>
-                    <TouchableOpacity onPress={openDrawer} style={styles.menuButton} activeOpacity={0.7}>
-                        <Ionicons name="menu" size={28} color={colors.foreground} />
-                    </TouchableOpacity>
-                    <Text style={styles.title}>Training Settings</Text>
-                </View>
-            </View>
+            <PageHeader title="Training Settings" />
+
             <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
                 <View className="m-1">
                     <ProfileSelector
@@ -433,7 +399,7 @@ const TrainingSettings = () => {
                         blacklistModalVisible,
                         setBlacklistModalVisible,
                         "Select which stats to exclude from training. These stats will be skipped during training sessions.",
-                        "checkbox"
+                        "checkbox",
                     )}
 
                     {renderStatSelector(
@@ -443,7 +409,7 @@ const TrainingSettings = () => {
                         prioritizationModalVisible,
                         setPrioritizationModalVisible,
                         "Select the priority order of the stats. The stats will be trained in the order they are selected. If none are selected, then the default order will be used.",
-                        "priority"
+                        "priority",
                     )}
 
                     {bsc.settings.general.scenario === "Unity Cup" && (
@@ -542,7 +508,7 @@ const TrainingSettings = () => {
                         sparkStatTargetModalVisible,
                         setSparkStatTargetModalVisible,
                         "Select which stats should receive priority to get to at least 600 to get the best chance to receive 3* sparks.",
-                        "checkbox"
+                        "checkbox",
                     )}
 
                     <View style={styles.section}>
