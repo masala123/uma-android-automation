@@ -101,6 +101,9 @@ open class Campaign(val game: Game) {
 							game.racing.skipRacing = false
 						} else if (game.recoverMood() && !game.checkFinals()) {
 							game.racing.skipRacing = false
+                        } else if (game.imageUtils.findImage("race_scheduled", tries = 1, region = game.imageUtils.regionBottomHalf).first != null) {
+                            MessageLog.i(TAG, "[INFO] There is a scheduled race today. Setting the needToRace flag to true.")
+                            needToRace = true
                         } else if (game.currentDate.turnNumber >= 16 && game.racing.checkEligibilityToStartExtraRacingProcess()) {
 							MessageLog.i(TAG, "[INFO] Bot has no injuries, mood is sufficient and extra races can be run today. Setting the needToRace flag to true.")
 							needToRace = true
@@ -130,7 +133,7 @@ open class Campaign(val game: Game) {
 					game.notificationMessage = "Stopping bot due to detection of Mandatory Race."
 					break
 				}
-			} else if (game.imageUtils.findImage("race_scheduled", tries = 1, region = game.imageUtils.regionBottomHalf).first != null) {
+			} else if (game.imageUtils.findImage("race_scheduled_race_today", tries = 1, region = game.imageUtils.regionMiddle).first != null) {
                 MessageLog.i(TAG, "[INFO] There is a scheduled race today. Racing it now...")
                 if (!handleRaceEvents() && handleRaceEventFallback()) break
             } else if (game.checkRacingScreen()) {
