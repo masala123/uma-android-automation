@@ -503,6 +503,10 @@ class Game(val myContext: Context) {
 				10
 			)) {
 			if (findAndTapImage("recover_injury", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf)) {
+                // Tap OK for the possibility of a scheduled race warning popup.
+                wait(0.25)
+                findAndTapImage("ok", tries = 1, region = imageUtils.regionMiddle, suppressError = true)
+
 				wait(0.3)
 				if (imageUtils.findImage("recover_injury_header", tries = 1, region = imageUtils.regionMiddle).first != null) {
 					MessageLog.i(TAG, "[INJURY] Injury detected and attempted to heal.")
@@ -654,13 +658,19 @@ class Game(val myContext: Context) {
 		// Otherwise, fall back to the regular energy recovery logic.
 		return when {
 			findAndTapImage("recover_energy", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf) -> {
-				findAndTapImage("ok")
+				findAndTapImage("ok", region = imageUtils.regionMiddle, suppressError = true)
+                // Another OK tap for the possibility of a scheduled race warning popup.
+                wait(0.25)
+                findAndTapImage("ok", tries = 1, region = imageUtils.regionMiddle, suppressError = true)
 				MessageLog.i(TAG, "[ENERGY] Successfully recovered energy.")
 				racing.raceRepeatWarningCheck = false
 				true
 			}
 			findAndTapImage("recover_energy_summer", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf) -> {
-				findAndTapImage("ok")
+				findAndTapImage("ok", region = imageUtils.regionMiddle, suppressError = true)
+                // Another OK tap for the possibility of a scheduled race warning popup.
+                wait(0.25)
+                findAndTapImage("ok", tries = 1, region = imageUtils.regionMiddle, suppressError = true)
 				MessageLog.i(TAG, "[ENERGY] Successfully recovered energy for the Summer.")
 				racing.raceRepeatWarningCheck = false
 				true
@@ -715,7 +725,13 @@ class Game(val myContext: Context) {
                 recreationDateCompleted = true
                 if (!findAndTapImage("recover_mood", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
                     findAndTapImage("recover_energy_summer", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)
-                } else if (imageUtils.findImage("recreation_umamusume", region = imageUtils.regionMiddle, suppressError = true).first != null) {
+                }
+
+                // Tap OK for the possibility of a scheduled race warning popup.
+                wait(0.25)
+                findAndTapImage("ok", tries = 1, region = imageUtils.regionMiddle, suppressError = true)
+
+                if (imageUtils.findImage("recreation_umamusume", region = imageUtils.regionMiddle, suppressError = true).first != null) {
                     // The Recreation popup is now open so an additional step is required to recover mood.
                     MessageLog.i(TAG, "[MOOD] Recreation date is already completed. Recovering mood with the Umamusume now...")
                     findAndTapImage("recreation_umamusume", region = imageUtils.regionMiddle)
@@ -741,6 +757,10 @@ class Game(val myContext: Context) {
      */
     fun handleRecreationDate(recoverMoodIfCompleted: Boolean = false): Boolean {
         return if (findAndTapImage("recover_mood", tries = 1, region = imageUtils.regionBottomHalf)) {
+            // Tap OK for the possibility of a scheduled race warning popup.
+            wait(0.25)
+            findAndTapImage("ok", tries = 1, region = imageUtils.regionMiddle, suppressError = true)
+
             MessageLog.i(TAG, "\n[RECREATION_DATE] Recreation has a possible date available.")
             wait(1.0)
             // Check if the date is already done.
