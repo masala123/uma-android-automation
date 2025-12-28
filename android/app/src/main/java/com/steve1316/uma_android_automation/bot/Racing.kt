@@ -897,6 +897,9 @@ class Racing (private val game: Game) {
         // Only load the agenda once per career.
         if (!enableUserInGameRaceAgenda || hasLoadedUserRaceAgenda || game.currentDate.turnNumber >= 72) {
             return
+        } else if (game.imageUtils.findImage("race_maiden_criteria", tries = 1, region = game.imageUtils.regionTopHalf).first != null) {
+            MessageLog.i(TAG, "[RACE] A maiden race needs to be won first before applying the user's race agenda.")
+            return
         }
 
         // Navigate to the race selection screen.
