@@ -262,7 +262,7 @@ class Racing (private val game: Game) {
         } else if (game.currentDate.phase != "Pre-Debut" && game.findAndTapImage("race_select_extra", tries = 1, region = game.imageUtils.regionBottomHalf)) {
             return handleExtraRace()
         } else if (game.imageUtils.findImage("race_change_strategy", tries = 1, region = game.imageUtils.regionMiddle).first != null) {
-            MessageLog.i(TAG, "[RACE] The bot is currently sitting on the race screen.")
+            MessageLog.i(TAG, "[RACE] The bot is currently sitting on the race screen. Most likely here for a scheduled race.")
             handleStandaloneRace()
         }
 
@@ -896,6 +896,9 @@ class Racing (private val game: Game) {
     fun loadUserRaceAgenda() {
         // Only load the agenda once per career.
         if (!enableUserInGameRaceAgenda || hasLoadedUserRaceAgenda || game.currentDate.turnNumber >= 72) {
+            return
+        } else if (game.imageUtils.findImage("race_maiden_criteria", tries = 1, region = game.imageUtils.regionTopHalf).first != null) {
+            MessageLog.i(TAG, "[RACE] A maiden race needs to be won first before applying the user's race agenda.")
             return
         }
 

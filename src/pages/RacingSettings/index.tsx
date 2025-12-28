@@ -34,8 +34,9 @@ const RacingSettings = () => {
             setSettings({
                 ...bsc.settings,
                 racing: {
-                    // Disable the Racing Plan settings when User In Game Race Agenda is enabled.
+                    // Disable the Farming Fans and Racing Plan settings when User In Game Race Agenda is enabled.
                     ...bsc.settings.racing,
+                    enableFarmingFans: false,
                     enableUserInGameRaceAgenda: true,
                     enableRacingPlan: false,
                 },
@@ -230,7 +231,7 @@ const RacingSettings = () => {
                         onCheckedChange={(checked) => updateRacingSetting("enableUserInGameRaceAgenda", checked)}
                         label="Enable User In-Game Race Agenda"
                         description={
-                            "When enabled, the bot will load your selected in-game race agenda instead of using the racing plan settings. Note that this will disable the racing plan settings."
+                            "When enabled, the bot will load your selected in-game race agenda instead of using the racing plan settings. Note that this will disable the farming fans and racing plan settings."
                         }
                         style={{ marginBottom: 16 }}
                     />

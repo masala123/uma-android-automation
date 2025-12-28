@@ -37,6 +37,26 @@ open class Campaign(val game: Game) {
 	}
 
 	/**
+	 * Handles the fallback logic when racing fails.
+	 * This includes checking for mandatory race detection and falling back to training.
+	 *
+	 * @return True if the bot should break out of the main loop, false otherwise.
+	 */
+	private fun handleRaceEventFallback(): Boolean {
+		if (game.racing.detectedMandatoryRaceCheck) {
+			MessageLog.i(TAG, "\n[END] Stopping bot due to detection of Mandatory Race.")
+			game.notificationMessage = "Stopping bot due to detection of Mandatory Race."
+			return true
+		}
+		game.findAndTapImage("back", tries = 1, region = game.imageUtils.regionBottomHalf)
+		game.findAndTapImage("cancel", tries = 1, region = game.imageUtils.regionMiddle)
+		game.racing.skipRacing = !game.racing.enableForceRacing
+		game.wait(1.0)
+		game.training.handleTraining()
+		return false
+	}
+
+	/**
 	 * Main automation loop that handles all shared logic.
 	 */
 	fun start() {
@@ -81,9 +101,6 @@ open class Campaign(val game: Game) {
 							game.racing.skipRacing = false
 						} else if (game.recoverMood() && !game.checkFinals()) {
 							game.racing.skipRacing = false
-                        } else if (game.imageUtils.findImage("race_scheduled", tries = 1, region = game.imageUtils.regionBottomHalf).first != null) {
-                            MessageLog.i(TAG, "[INFO] There is a scheduled race today. Setting the needToRace flag to true.")
-                            needToRace = true
                         } else if (game.currentDate.turnNumber >= 16 && game.racing.checkEligibilityToStartExtraRacingProcess()) {
 							MessageLog.i(TAG, "[INFO] Bot has no injuries, mood is sufficient and extra races can be run today. Setting the needToRace flag to true.")
 							needToRace = true
@@ -97,18 +114,7 @@ open class Campaign(val game: Game) {
 
                 if (game.racing.encounteredRacingPopup || needToRace) {
                     MessageLog.i(TAG, "[INFO] All checks are cleared for racing.")
-                    if (!handleRaceEvents()) {
-                        if (game.racing.detectedMandatoryRaceCheck) {
-                            MessageLog.i(TAG, "\n[END] Stopping bot due to detection of Mandatory Race.")
-                            game.notificationMessage = "Stopping bot due to detection of Mandatory Race."
-                            break
-                        }
-                        game.findAndTapImage("back", tries = 1, region = game.imageUtils.regionBottomHalf)
-                        game.findAndTapImage("cancel", tries = 1, region = game.imageUtils.regionMiddle)
-                        game.racing.skipRacing = !game.racing.enableForceRacing
-                        game.wait(1.0)
-                        game.training.handleTraining()
-                    }
+                    if (!handleRaceEvents() && handleRaceEventFallback()) break
                 }
 			} else if (game.checkTrainingEventScreen()) {
 				// If the bot is at the Training Event screen, that means there are selectable options for rewards.
@@ -124,7 +130,10 @@ open class Campaign(val game: Game) {
 					game.notificationMessage = "Stopping bot due to detection of Mandatory Race."
 					break
 				}
-			} else if (game.checkRacingScreen()) {
+			} else if (game.imageUtils.findImage("race_scheduled", tries = 1, region = game.imageUtils.regionBottomHalf).first != null) {
+                MessageLog.i(TAG, "[INFO] There is a scheduled race today. Racing it now...")
+                if (!handleRaceEvents() && handleRaceEventFallback()) break
+            } else if (game.checkRacingScreen()) {
 				// If the bot is already at the Racing screen, then complete this standalone race.
 				game.racing.handleStandaloneRace()
 				game.racing.skipRacing = false
