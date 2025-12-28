@@ -91,7 +91,10 @@ open class Campaign(val game: Game) {
 						needToRace = true
 					} else {
 						// Check if we need to rest before Summer Training (June Early/Late in Classic/Senior Year).
-						if (mustRestBeforeSummer && (game.currentDate.year == 2 || game.currentDate.year == 3) && game.currentDate.month == 6 && game.currentDate.phase == "Late") {
+                        if (game.imageUtils.findImage("race_scheduled", tries = 1, region = game.imageUtils.regionBottomHalf).first != null) {
+                            MessageLog.i(TAG, "[INFO] There is a scheduled race today. Setting the needToRace flag to true.")
+                            needToRace = true
+                        } else if (mustRestBeforeSummer && (game.currentDate.year == 2 || game.currentDate.year == 3) && game.currentDate.month == 6 && game.currentDate.phase == "Late") {
 							MessageLog.i(TAG, "Forcing rest during June ${game.currentDate.phase} in Year ${game.currentDate.year} in preparation for Summer Training.")
 							game.recoverEnergy()
 							game.racing.skipRacing = false
@@ -130,7 +133,7 @@ open class Campaign(val game: Game) {
 					game.notificationMessage = "Stopping bot due to detection of Mandatory Race."
 					break
 				}
-			} else if (game.imageUtils.findImage("race_scheduled", tries = 1, region = game.imageUtils.regionBottomHalf).first != null) {
+			} else if (game.imageUtils.findImage("race_scheduled_race_today", tries = 1, region = game.imageUtils.regionMiddle).first != null) {
                 MessageLog.i(TAG, "[INFO] There is a scheduled race today. Racing it now...")
                 if (!handleRaceEvents() && handleRaceEventFallback()) break
             } else if (game.checkRacingScreen()) {

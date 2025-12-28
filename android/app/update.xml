@@ -1,22 +1,13 @@
 <AppUpdater>
   <update>
-    <latestVersion>4.3.1</latestVersion>
+    <latestVersion>4.3.2</latestVersion>
     <url>https://github.com/steve1316/uma-android-automation/releases</url>
     <releaseNotes>
-v4.3.1 - Changelog
+v4.3.2 - Changelog
 
-New
+Fixed
 ---
-- Disable farming fans settings when user in-game race agenda is to be used instead. This is not retroactive so users will need to turn off the farming fans checkbox themselves or toggle the User Agenda checkbox.
-- Add handling for scheduled race warning popup when trying to recover energy/mood/injury.
-
-Adjustments
----
-- Bump Automation Library to version 2.3.3 to provide additional fallback logic for the drag-to-dismiss feature.
-- Move scheduled race check outside of Main screen loop and consolidate fallback race event code.
-- Update the `Race` button image asset to prevent false positive with dialog header text.
-- Remove obsolete Unity Cup warning about farming fans from the `Settings` page.
-- Only apply the user's in-game race agenda if there is no maiden race criteria active.
+- Fix bug where there needed to an additional scheduled race check in conjunction with the first check in order to not do any other activity like Training, resting, etc.
 
     </releaseNotes>
   </update>
