@@ -91,7 +91,10 @@ open class Campaign(val game: Game) {
 						needToRace = true
 					} else {
 						// Check if we need to rest before Summer Training (June Early/Late in Classic/Senior Year).
-						if (mustRestBeforeSummer && (game.currentDate.year == 2 || game.currentDate.year == 3) && game.currentDate.month == 6 && game.currentDate.phase == "Late") {
+                        if (game.imageUtils.findImage("race_scheduled", tries = 1, region = game.imageUtils.regionBottomHalf).first != null) {
+                            MessageLog.i(TAG, "[INFO] There is a scheduled race today. Setting the needToRace flag to true.")
+                            needToRace = true
+                        } else if (mustRestBeforeSummer && (game.currentDate.year == 2 || game.currentDate.year == 3) && game.currentDate.month == 6 && game.currentDate.phase == "Late") {
 							MessageLog.i(TAG, "Forcing rest during June ${game.currentDate.phase} in Year ${game.currentDate.year} in preparation for Summer Training.")
 							game.recoverEnergy()
 							game.racing.skipRacing = false
@@ -101,9 +104,6 @@ open class Campaign(val game: Game) {
 							game.racing.skipRacing = false
 						} else if (game.recoverMood() && !game.checkFinals()) {
 							game.racing.skipRacing = false
-                        } else if (game.imageUtils.findImage("race_scheduled", tries = 1, region = game.imageUtils.regionBottomHalf).first != null) {
-                            MessageLog.i(TAG, "[INFO] There is a scheduled race today. Setting the needToRace flag to true.")
-                            needToRace = true
                         } else if (game.currentDate.turnNumber >= 16 && game.racing.checkEligibilityToStartExtraRacingProcess()) {
 							MessageLog.i(TAG, "[INFO] Bot has no injuries, mood is sufficient and extra races can be run today. Setting the needToRace flag to true.")
 							needToRace = true
