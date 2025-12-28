@@ -1,54 +1,13 @@
 <AppUpdater>
   <update>
-    <latestVersion>4.3.0</latestVersion>
+    <latestVersion>4.3.2</latestVersion>
     <url>https://github.com/steve1316/uma-android-automation/releases</url>
     <releaseNotes>
-v4.3.0 - Changelog
-
-New
----
-- Add new guidance overlays to where to put the floating overlay button on the screen to prevent potentially obscuring crucial image assets and a new dismiss overlay for drag-to-dismiss functionality.
-- Add a new option in the Racing Plan Settings to treat planned races as mandatory instead of suggestions.
-- Add a new option in the Racing Plan Settings to filter by distance in addition to grade and terrain.
-- Add a new option to adjust the wait delay between actions and imaging operations in the Settings page.
-- Replace bottom tab navigation with drawer navigation in the frontend and separate the debug settings into its own separate page.
-- Add a new option to prioritize acquiring skill hints to the Training Settings page.
-- Add new option to use the user's in-game race agenda 1-8 instead of the app's racing plan. Note that enabling this will disable usage of the Racing Plan settings.
-
-Adjustments
----
-- Updated game data up to Tosen Jordan 2025-12-17 including some data corrections by GameTora.
-- Bump Automation Library to 2.3.2 for various framework improvements including the floating overlay button improvements.
-- Force the whole screen option when starting MediaProjection on Android 14+.
-- Removed scenario validation check as it was too brittle to be reliable.
-- Stop searching for more locations of the plus symbol after finding the first one when processing stat gains for each stat to provide a tiny speed boost during training analysis.
-- Add WARN tag to the MessageLog component for proper color coding.
-- Added a 5s delay to the Date OCR test to allow the test to complete without being interrupted by the notification banner to disappear.
-- Updated the data scraper to be able to do deltas and provide a new webpack method to scrape the skills faster.
-- Updated the README with more clearer instructions about device setup including display requirements.
-- Update racing logic to treat the modulo days to run extra races setting as ignored when Racing Plan is enabled.
-- Stagger the logging for the loading check to prevent overly spamming the message log.
-- Adjust the conditions in checkEligibilityToStartExtraRacingProcess() to not analyze again if mandatory racing plan is enabled.
-- Adjust the timing of skipping the result screen when skipping a race.
-- Lowered the default minimum main stat gain for Risky Training from 30 to 20.
-- Refine the timings of the Crane Game attempts and increase the check delays to prevent it from exiting too early.
-- Boost default OCR confidence from 0.8 to 0.9 to reduce false positives.
-- Rework processSmartRacing() to try to look for the race with the most fan count when multiple matches are found in the lookup.
-- Set the racing flag to run scheduled races from the user's in-game race agenda when encountered.
-- Dismiss the consecutive races warning during the misc checks.
+v4.3.2 - Changelog
 
 Fixed
 ---
-- Fix bug where formatted line would become an empty string before Training Event condition checks.
-- Fix the timings of the skips during manual race handling to allow for the cleanup to proceed correctly.
-- Fix the failure state for recreation energy recovery when there is a date available.
-- Fix typo for Short distance type being named as Sprint in the code.
-- Fix bug where some profile settings were not being persisted when switching profiles.
-- Fix bug where races from the Racing Plan if it was set to mandatory was being skipped due to the consecutive races warning.
-- Fix bug with MessageLog's copy text not parsing the text from objects.
-- Fix occasional edge case where log messages after the app stops gets placed out of order.
-- Fix edge case where canceling the racing process would leave the consecutive race warning popup on the screen.
-- Fix edge case where handleRaceEvents() is already sitting on an active race waiting to be manually handled or skipped.
+- Fix bug where there needed to an additional scheduled race check in conjunction with the first check in order to not do any other activity like Training, resting, etc.
 
     </releaseNotes>
   </update>
