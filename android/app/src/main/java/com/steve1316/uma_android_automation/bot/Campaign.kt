@@ -135,8 +135,10 @@ open class Campaign(val game: Game) {
 					break
 				}
 			} else if (game.imageUtils.findImage("race_scheduled_race_today", tries = 1, region = game.imageUtils.regionMiddle).first != null) {
-                MessageLog.i(TAG, "[INFO] There is a scheduled race today. Racing it now...")
-                if (!handleRaceEvents() && handleRaceEventFallback()) break
+                MessageLog.i(TAG, "[INFO] There is a scheduled race today.")
+                // Need to dismiss the popup first. There is a chance that the user started the bot while this popup was open
+                // and there are code in place that depends on the date being updated first.
+                game.findAndTapImage("close", tries = 1, region = game.imageUtils.regionMiddle)
             } else if (game.checkRacingScreen()) {
 				// If the bot is already at the Racing screen, then complete this standalone race.
 				game.racing.handleStandaloneRace()
