@@ -31,7 +31,7 @@ class UnityCup(game: Game) : Campaign(game) {
         }
 	}
 
-	override fun handleRaceEvents(): Boolean {
+	override fun handleRaceEvents(isScheduledRace: Boolean): Boolean {
         MessageLog.i(TAG, "\n[UNITY_CUP] Running handleRaceEvents() for Unity Cup.")
 		if (game.imageUtils.findImage("unitycup_race", tries = 1, region = game.imageUtils.regionBottomHalf).first != null) {
             // Handle the Unity Cup race.
@@ -57,7 +57,7 @@ class UnityCup(game: Game) : Campaign(game) {
         }
 
 		// Fall back to the regular race handling logic.
-		return super.handleRaceEvents()
+		return super.handleRaceEvents(isScheduledRace)
 	}
 
 	override fun checkCampaignSpecificConditions(): Boolean {

@@ -24,13 +24,18 @@ open class Campaign(val game: Game) {
 
 	/**
 	 * Campaign-specific race event handling.
+	 * 
+     * @param isScheduledRace True if the race is scheduled, false otherwise.
+     * @return True if the race was handled successfully, false otherwise.
 	 */
-	open fun handleRaceEvents(): Boolean {
-		return game.racing.handleRaceEvents()
+	open fun handleRaceEvents(isScheduledRace: Boolean = false): Boolean {
+		return game.racing.handleRaceEvents(isScheduledRace)
 	}
 
 	/**
 	 * Campaign-specific checks for special screens or conditions.
+	 * 
+     * @return True if the conditions are met, false otherwise.
 	 */
 	open fun checkCampaignSpecificConditions(): Boolean {
 		return false
@@ -72,6 +77,7 @@ open class Campaign(val game: Game) {
 				}
 
 				var needToRace = false
+                var isScheduledRace = false
 				if (!game.racing.encounteredRacingPopup) {
 					// Refresh the stat values in memory.
 					game.updateStatValueMapping()
@@ -95,6 +101,7 @@ open class Campaign(val game: Game) {
                         if (game.imageUtils.findImage("race_scheduled", tries = 1, region = game.imageUtils.regionBottomHalf).first != null) {
                             MessageLog.i(TAG, "[INFO] There is a scheduled race today. Setting the needToRace flag to true.")
                             needToRace = true
+                            isScheduledRace = true
                         } else if (mustRestBeforeSummer && (game.currentDate.year == 2 || game.currentDate.year == 3) && game.currentDate.month == 6 && game.currentDate.phase == "Late") {
 							MessageLog.i(TAG, "Forcing rest during June ${game.currentDate.phase} in Year ${game.currentDate.year} in preparation for Summer Training.")
 							game.recoverEnergy()
@@ -118,7 +125,7 @@ open class Campaign(val game: Game) {
 
                 if (game.racing.encounteredRacingPopup || needToRace) {
                     MessageLog.i(TAG, "[INFO] All checks are cleared for racing.")
-                    if (!handleRaceEvents() && handleRaceEventFallback()) break
+                    if (!handleRaceEvents(isScheduledRace) && handleRaceEventFallback()) break
                 }
 			} else if (game.checkTrainingEventScreen()) {
 				// If the bot is at the Training Event screen, that means there are selectable options for rewards.
