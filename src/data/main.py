@@ -10,6 +10,7 @@ import os
 from typing import List, Dict
 from difflib import SequenceMatcher
 import bisect
+import requests
 
 IS_DELTA = True
 DELTA_BACKLOG_COUNT = 10
@@ -128,6 +129,16 @@ def calculate_turn_number(date_string: str) -> int:
     turn_number = ((year - 1) * 24) + ((month - 1) * 2) + (1 if phase == "Early" else 2)
 
     return turn_number
+
+
+def download_image(url, out_fp):
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        with open(out_fp, "wb") as f_out:
+            f_out.write(response.content)
+    except requests.exceptions.RequestException as exc:
+        print(f"An error occurred when downloading image: {e}")
 
 
 class BaseScraper:
@@ -482,6 +493,13 @@ class SkillScraper(BaseScraper):
                 downgrade_version = skill["versions"][index]
                 if downgrade_version in skill_id_to_name:
                     self.data[skill_name]["downgrade"] = downgrade_version
+
+        # Save the skill icons
+        icon_ids = set(x["icon_id"] for x in self.data.values())
+        for icon_id in icon_ids:
+            url = f"https://gametora.com/images/umamusume/skill_icons/utx_ico_skill_{icon_id}.png"
+            out_fp = f"../pages/SkillSettings/icons/utx_ico_skill_{icon_id}.png"
+            download_image(url, out_fp)
 
         self.save_data()
         driver.quit()
