@@ -93,8 +93,10 @@ class StartModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
         EventBus.getDefault().unregister(this)
         EventBus.getDefault().register(this)
         Log.d(TAG, "Event Bus registered for StartModule")
-        val mediaProjectionManager = reactContext?.getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
-        reactContext?.startActivityForResult(mediaProjectionManager.createScreenCaptureIntent(), 100, null)
+
+        // Use the library's helper which applies MediaProjectionConfig on Android 14+ to prefer full screen capture.
+        val screenCaptureIntent = MediaProjectionService.getScreenCaptureIntent(reactContext!!)
+        reactContext?.startActivityForResult(screenCaptureIntent, 100, null)
     }
 
     /**

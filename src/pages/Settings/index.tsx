@@ -1,11 +1,10 @@
 import scenarios from "../../data/scenarios.json"
 import { useContext, useEffect, useState } from "react"
 import { BotStateContext } from "../../context/BotStateContext"
-import { ScrollView, StyleSheet, Text, View, TouchableOpacity } from "react-native"
+import { ScrollView, StyleSheet, Text, View } from "react-native"
 import { Snackbar } from "react-native-paper"
-import { useNavigation, DrawerActions } from "@react-navigation/native"
+import { useNavigation } from "@react-navigation/native"
 import ThemeToggle from "../../components/ThemeToggle"
-import { Ionicons } from "@expo/vector-icons"
 import { useTheme } from "../../context/ThemeContext"
 import CustomSelect from "../../components/CustomSelect"
 import NavigationLink from "../../components/NavigationLink"
@@ -13,6 +12,7 @@ import CustomCheckbox from "../../components/CustomCheckbox"
 import CustomSlider from "../../components/CustomSlider"
 import CustomTitle from "../../components/CustomTitle"
 import CustomButton from "../../components/CustomButton"
+import PageHeader from "../../components/PageHeader"
 import { Separator } from "../../components/ui/separator"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../../components/ui/alert-dialog"
 import { useSettings } from "../../context/SettingsContext"
@@ -28,10 +28,6 @@ const Settings = () => {
     const { openDataDirectory, resetSettings } = useSettings()
     const { handleImportSettings, handleExportSettings, showImportDialog, setShowImportDialog, showResetDialog, setShowResetDialog } = useSettingsFileManager()
 
-    const openDrawer = () => {
-        navigation.dispatch(DrawerActions.openDrawer())
-    }
-
     const styles = StyleSheet.create({
         root: {
             flex: 1,
@@ -39,26 +35,6 @@ const Settings = () => {
             justifyContent: "center",
             margin: 10,
             backgroundColor: colors.background,
-        },
-        header: {
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 20,
-        },
-        headerLeft: {
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-        },
-        menuButton: {
-            padding: 8,
-            borderRadius: 8,
-        },
-        title: {
-            fontSize: 24,
-            fontWeight: "bold",
-            color: colors.foreground,
         },
         errorContainer: {
             backgroundColor: colors.warningBg,
@@ -113,11 +89,6 @@ const Settings = () => {
                         bsc.setReadyStatus(newScenario !== "")
                     }}
                 />
-                {bsc.settings.general.scenario === "Unity Cup" && (
-                    <View style={styles.errorContainer}>
-                        <Text style={styles.errorText}>⚠️ Unity Cup Warning: Running extra races via fan farming being enabled is highly discouraged in order to focus more on unity trainings.</Text>
-                    </View>
-                )}
                 {!bsc.settings.general.scenario && (
                     <View style={styles.errorContainer}>
                         <Text style={styles.errorText}>⚠️ A scenario must be selected before starting the bot.</Text>
@@ -369,15 +340,8 @@ const Settings = () => {
 
     return (
         <View style={styles.root}>
-            <View style={styles.header}>
-                <View style={styles.headerLeft}>
-                    <TouchableOpacity onPress={openDrawer} style={styles.menuButton} activeOpacity={0.7}>
-                        <Ionicons name="menu" size={28} color={colors.foreground} />
-                    </TouchableOpacity>
-                    <Text style={styles.title}>Settings</Text>
-                </View>
-                <ThemeToggle />
-            </View>
+            <PageHeader title="Settings" rightComponent={<ThemeToggle />} />
+
             <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
                 <View className="m-1">
                     {renderCampaignPicker()}

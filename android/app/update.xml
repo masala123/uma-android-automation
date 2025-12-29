@@ -1,13 +1,13 @@
 <AppUpdater>
   <update>
-    <latestVersion>4.2.6</latestVersion>
+    <latestVersion>4.3.2</latestVersion>
     <url>https://github.com/steve1316/uma-android-automation/releases</url>
     <releaseNotes>
-v4.2.6 - Changelog
+v4.3.2 - Changelog
 
 Fixed
 ---
-- Fix bug where the bot would do mood recovery instead of energy recovery in its search for dating completion.
+- Fix bug where there needed to an additional scheduled race check in conjunction with the first check in order to not do any other activity like Training, resting, etc.
 
     </releaseNotes>
   </update>

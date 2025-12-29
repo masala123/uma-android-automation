@@ -152,6 +152,15 @@ open class Campaign(val game: Game) {
                 // TODO: Go through menu to set this option.
                 dialog.ok(imageUtils = game.imageUtils)
             }
+            "scheduled_race_available" -> {
+                MessageLog.i(TAG, "[INFO] There is a scheduled race today. Racing it now...")
+                if (!handleRaceEvents() && handleRaceEventFallback()) {
+                    MessageLog.i(TAG, "\n[END] Stopping the bot due to failing to handle a scheduled race.")
+                    MessageLog.i(TAG, "********************")
+                    game.notificationMessage = "Stopping the bot due to failing to handle a scheduled race."
+                    throw IllegalStateException()
+                }
+            }
             "scheduled_races" -> dialog.close(imageUtils = game.imageUtils)
             "schedule_settings" -> dialog.close(imageUtils = game.imageUtils)
             "skill_details" -> dialog.close(imageUtils = game.imageUtils)
@@ -489,6 +498,9 @@ open class Campaign(val game: Game) {
             return false
         }
 
+        // Perform first-time setup of loading the user's race agenda if needed.
+        game.racing.loadUserRaceAgenda()
+
         // Operations to be done every time the date changes.
         if (game.updateDate()) {
             // Reset flags on date change.
@@ -580,12 +592,14 @@ open class Campaign(val game: Game) {
             return true
         }
 
+        val bIsScheduledRaceDay = LabelScheduledRace.check(game.imageUtils)
         val bIsMandatoryRaceDay = IconRaceDayRibbon.check(imageUtils = game.imageUtils)
-        var needToRace = bIsMandatoryRaceDay
+        var needToRace = bIsMandatoryRaceDay || bIsScheduledRaceDay
         // We don't need to bother checking fans on a mandatory race day.
         if (
             !game.currentDate.bIsFinaleSeason &&
             !bIsMandatoryRaceDay &&
+            !bIsScheduledRaceDay &&
             bNeedToCheckFans &&
             !bHasTriedCheckingFansToday
         ) {
@@ -598,9 +612,7 @@ open class Campaign(val game: Game) {
             throw InterruptedException("Reached finals. Stopping bot...")
         }
 
-        if (bIsMandatoryRaceDay) {
-            needToRace = true
-        } else if (!game.racing.encounteredRacingPopup) {
+        if (!needToRace && !game.racing.encounteredRacingPopup) {
             if (game.racing.enableForceRacing) {
                 // If force racing is enabled, skip all other activities and go straight to racing
                 MessageLog.i(TAG, "Force racing enabled - skipping all other activities and going straight to racing.")
@@ -628,6 +640,7 @@ open class Campaign(val game: Game) {
                 game.findAndTapImage("ok", region = game.imageUtils.regionMiddle)
                 game.wait(3.0)
             } else if (game.recoverMood() && !game.checkFinals()) {
+                // NO-OP
             } else if (game.currentDate.day >= 16 && game.racing.checkEligibilityToStartExtraRacingProcess()) {
                 MessageLog.i(TAG, "[INFO] Bot has no injuries, mood is sufficient and extra races can be run today. Setting the needToRace flag to true.")
                 needToRace = true
@@ -650,6 +663,25 @@ open class Campaign(val game: Game) {
         }
         return true
     }
+
+	/**
+	 * Handles the fallback logic when racing fails.
+	 * This includes checking for mandatory race detection and falling back to training.
+	 *
+	 * @return True if the bot should break out of the main loop, false otherwise.
+	 */
+	private fun handleRaceEventFallback(): Boolean {
+		if (game.racing.detectedMandatoryRaceCheck) {
+			MessageLog.i(TAG, "\n[END] Stopping bot due to detection of Mandatory Race.")
+			game.notificationMessage = "Stopping bot due to detection of Mandatory Race."
+			return true
+		}
+        ButtonBack.click(game.imageUtils)
+        ButtonCancel.click(game.imageUtils)
+		game.wait(1.0)
+		game.training.handleTraining()
+		return false
+	}
 
 	/**
 	 * Main automation loop that handles all shared logic.

@@ -15,6 +15,7 @@ import com.facebook.react.defaults.DefaultReactActivityDelegate
 import com.github.javiersantos.appupdater.AppUpdater
 import com.github.javiersantos.appupdater.enums.UpdateFrom
 import com.steve1316.automation_library.utils.ScreenStateReceiver
+import com.steve1316.automation_library.data.SharedData
 import org.opencv.android.OpenCVLoader
 import java.util.Locale
 
@@ -53,6 +54,12 @@ class MainActivity : ReactActivity() {
 		if (savedInstanceState == null) {
 			showSplashScreen()
 		}
+
+        // Setup the guidance regions for the floating overlay button.
+        SharedData.guidanceRegions = arrayOf(
+            intArrayOf(510, 0, 570, 110),
+            intArrayOf(205, 2215, 560, 120),
+        )
 	}
 
 	override fun onDestroy() {

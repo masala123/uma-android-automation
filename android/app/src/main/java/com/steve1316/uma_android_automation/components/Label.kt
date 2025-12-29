@@ -68,3 +68,8 @@ object LabelSkillListScreenSkillPoints : ComponentInterface {
     override val TAG: String = "LabelSkillListScreenSkillPoints"
     override val template = Template("components/label/skill_list_screen_skill_points", region = Region.topHalf)
 }
+
+object LabelScheduledRace : ComponentInterface {
+    override val TAG: String = "LabelScheduledRace"
+    override val template = Template("components/label/scheduled_race", region = Region.bottomHalf)
+}

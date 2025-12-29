@@ -1,7 +1,5 @@
 import { useContext, useState, useMemo, useCallback } from "react"
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Modal, TextInput, Dimensions } from "react-native"
-import { useNavigation, DrawerActions } from "@react-navigation/native"
-import { Ionicons } from "@expo/vector-icons"
 import { FlashList } from "@shopify/flash-list"
 import { useTheme } from "../../context/ThemeContext"
 import { BotStateContext, defaultSettings } from "../../context/BotStateContext"
@@ -11,6 +9,7 @@ import CustomSelect from "../../components/CustomSelect"
 import CustomTitle from "../../components/CustomTitle"
 import CustomButton from "../../components/CustomButton"
 import { Search, X } from "lucide-react-native"
+import PageHeader from "../../components/PageHeader"
 
 // Import the data files.
 import charactersData from "../../data/characters.json"
@@ -40,12 +39,7 @@ const excludedEventNames = new Set([
 
 const TrainingEventSettings = () => {
     const { colors } = useTheme()
-    const navigation = useNavigation()
     const bsc = useContext(BotStateContext)
-
-    const openDrawer = () => {
-        navigation.dispatch(DrawerActions.openDrawer())
-    }
 
     const { settings, setSettings } = bsc
     // Merge current training event settings with defaults to handle missing properties.
@@ -321,26 +315,6 @@ const TrainingEventSettings = () => {
             margin: 10,
             backgroundColor: colors.background,
         },
-        header: {
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 20,
-        },
-        headerLeft: {
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-        },
-        menuButton: {
-            padding: 8,
-            borderRadius: 8,
-        },
-        title: {
-            fontSize: 24,
-            fontWeight: "bold",
-            color: colors.foreground,
-        },
         section: {
             marginBottom: 24,
         },
@@ -507,14 +481,8 @@ const TrainingEventSettings = () => {
 
     return (
         <View style={styles.root}>
-            <View style={styles.header}>
-                <View style={styles.headerLeft}>
-                    <TouchableOpacity onPress={openDrawer} style={styles.menuButton} activeOpacity={0.7}>
-                        <Ionicons name="menu" size={28} color={colors.foreground} />
-                    </TouchableOpacity>
-                    <Text style={styles.title}>Training Event Settings</Text>
-                </View>
-            </View>
+            <PageHeader title="Training Event Settings" />
+
             <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
                 <View className="m-1">
                     <View style={styles.section}>

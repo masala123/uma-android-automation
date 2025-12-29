@@ -1,37 +1,54 @@
 import { useContext } from "react"
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native"
-import { useNavigation, DrawerActions } from "@react-navigation/native"
-import { Ionicons } from "@expo/vector-icons"
+import { View, Text, ScrollView, StyleSheet } from "react-native"
+import { useNavigation } from "@react-navigation/native"
 import { useTheme } from "../../context/ThemeContext"
 import { BotStateContext, defaultSettings } from "../../context/BotStateContext"
 import CustomCheckbox from "../../components/CustomCheckbox"
 import CustomSelect from "../../components/CustomSelect"
 import { Input } from "../../components/ui/input"
 import NavigationLink from "../../components/NavigationLink"
+import PageHeader from "../../components/PageHeader"
 
 const RacingSettings = () => {
     const { colors } = useTheme()
     const navigation = useNavigation()
     const bsc = useContext(BotStateContext)
 
-    const openDrawer = () => {
-        navigation.dispatch(DrawerActions.openDrawer())
-    }
-
     const { settings, setSettings } = bsc
     // Merge current racing settings with defaults to handle missing properties.
     const racingSettings = { ...defaultSettings.racing, ...settings.racing }
-    const { enableFarmingFans, daysToRunExtraRaces, disableRaceRetries, enableStopOnMandatoryRaces, enableForceRacing, juniorYearRaceStrategy, originalRaceStrategy } =
-        racingSettings
+    const {
+        enableFarmingFans,
+        daysToRunExtraRaces,
+        disableRaceRetries,
+        enableStopOnMandatoryRaces,
+        enableForceRacing,
+        juniorYearRaceStrategy,
+        originalRaceStrategy,
+        enableUserInGameRaceAgenda,
+    } = racingSettings
 
     const updateRacingSetting = (key: keyof typeof settings.racing, value: any) => {
-        setSettings({
-            ...bsc.settings,
-            racing: {
-                ...bsc.settings.racing,
-                [key]: value,
-            },
-        })
+        if (key === "enableUserInGameRaceAgenda" && value) {
+            setSettings({
+                ...bsc.settings,
+                racing: {
+                    // Disable the Farming Fans and Racing Plan settings when User In Game Race Agenda is enabled.
+                    ...bsc.settings.racing,
+                    enableFarmingFans: false,
+                    enableUserInGameRaceAgenda: true,
+                    enableRacingPlan: false,
+                },
+            })
+        } else {
+            setSettings({
+                ...bsc.settings,
+                racing: {
+                    ...bsc.settings.racing,
+                    [key]: value,
+                },
+            })
+        }
     }
 
     const styles = StyleSheet.create({
@@ -41,26 +58,6 @@ const RacingSettings = () => {
             justifyContent: "center",
             margin: 10,
             backgroundColor: colors.background,
-        },
-        header: {
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 20,
-        },
-        headerLeft: {
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-        },
-        menuButton: {
-            padding: 8,
-            borderRadius: 8,
-        },
-        title: {
-            fontSize: 24,
-            fontWeight: "bold",
-            color: colors.foreground,
         },
         section: {
             marginBottom: 24,
@@ -111,14 +108,8 @@ const RacingSettings = () => {
 
     return (
         <View style={styles.root}>
-            <View style={styles.header}>
-                <View style={styles.headerLeft}>
-                    <TouchableOpacity onPress={openDrawer} style={styles.menuButton} activeOpacity={0.7}>
-                        <Ionicons name="menu" size={28} color={colors.foreground} />
-                    </TouchableOpacity>
-                    <Text style={styles.title}>Racing Settings</Text>
-                </View>
-            </View>
+            <PageHeader title="Racing Settings" />
+
             <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
                 <View className="m-1">
                     <View style={styles.section}>
@@ -223,11 +214,43 @@ const RacingSettings = () => {
                         )}
                     </View>
 
+                    <CustomCheckbox
+                        id="enable-user-in-game-race-agenda"
+                        checked={enableUserInGameRaceAgenda}
+                        onCheckedChange={(checked) => updateRacingSetting("enableUserInGameRaceAgenda", checked)}
+                        label="Enable User In-Game Race Agenda"
+                        description={
+                            "When enabled, the bot will load your selected in-game race agenda instead of using the racing plan settings. Note that this will disable the farming fans and racing plan settings."
+                        }
+                        style={{ marginBottom: 16 }}
+                    />
+
+                    {enableUserInGameRaceAgenda && (
+                        <View style={styles.section}>
+                            <CustomSelect
+                                placeholder="Select an Agenda"
+                                width="100%"
+                                options={[
+                                    { value: "Agenda 1", label: "Agenda 1" },
+                                    { value: "Agenda 2", label: "Agenda 2" },
+                                    { value: "Agenda 3", label: "Agenda 3" },
+                                    { value: "Agenda 4", label: "Agenda 4" },
+                                    { value: "Agenda 5", label: "Agenda 5" },
+                                    { value: "Agenda 6", label: "Agenda 6" },
+                                    { value: "Agenda 7", label: "Agenda 7" },
+                                    { value: "Agenda 8", label: "Agenda 8" },
+                                ]}
+                                value={racingSettings.selectedUserAgenda}
+                                onValueChange={(value) => updateRacingSetting("selectedUserAgenda", value)}
+                            />
+                        </View>
+                    )}
+
                     <NavigationLink
                         title="Go to Racing Plan Settings"
                         description="Configure prioritized races to target including enabling additional filters for race selection."
-                        disabled={!enableFarmingFans || enableForceRacing}
-                        disabledDescription="Farming Fans must be enabled and Force Racing must be disabled to use the Racing Plan Settings."
+                        disabled={!enableFarmingFans || enableForceRacing || enableUserInGameRaceAgenda}
+                        disabledDescription="Farming Fans must be enabled and Force Racing and User In-Game Race Agenda settings must be disabled in order to use the Racing Plan Settings."
                         onPress={() => navigation.navigate("RacingPlanSettings" as never)}
                         style={{ ...styles.section, marginTop: 0 }}
                     />

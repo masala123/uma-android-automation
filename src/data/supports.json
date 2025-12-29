@@ -68,27 +68,27 @@
     },
     "Aoi Kiryuin": {
         "(❯) Studying with Your Body!": [
-            "Energy +35\nSkill points +37\nMood +2\nAoi Kiryuin bond +5"
+            "Energy +32\nSkill points +36\nMood +2\nAoi Kiryuin bond +5"
         ],
         "(❯❯) How I Play at the Park": [
-            "Energy +35\nWit +6\nAoi Kiryuin bond +5\n(random) Mood +1",
-            "Randomly either\n----------\nSkill points +18\nAoi Kiryuin bond +5\n----------\n\n----------\nSpeed +6\nSkill points +56\nMood +1\nAoi Kiryuin bond +5"
+            "Energy +32\nWit +6\nAoi Kiryuin bond +5\n(random) Mood +1",
+            "Randomly either\n----------\nSkill points +18\nAoi Kiryuin bond +5\n----------\n\n----------\nSpeed +6\nSkill points +54\nMood +1\nAoi Kiryuin bond +5"
         ],
         "(❯❯❯) Reckless Training": [
-            "Energy +28\nSkill points +37\nMood +1\nAoi Kiryuin bond +5"
+            "Energy +26\nSkill points +36\nMood +1\nAoi Kiryuin bond +5"
         ],
         "(❯❯❯❯) The Joy of Respect": [
-            "Power +12\nSkill points +56\nMood +1\nAoi Kiryuin bond +5"
+            "Power +12\nSkill points +54\nMood +1\nAoi Kiryuin bond +5"
         ],
         "(❯❯❯❯❯) Chasing Dreams": [
-            "Randomly either\n----------\nStamina +6\nSkill points +18\n(random) Subdued Front Runners hint +1\nAoi Kiryuin bond +5\n----------\n\n----------\nStamina +6\nPower +6\nGuts +6\nSkill points +56\nMood +1\nSubdued Front Runners hint +3\nAoi Kiryuin bond +5"
+            "Randomly either\n----------\nStamina +6\nSkill points +12\nAoi Kiryuin bond +5\n----------\n\n----------\nStamina +6\nPower +6\nGuts +6\nSkill points +26\nMood +1\nSubdued Front Runners hint +3\nAoi Kiryuin bond +5"
         ],
         "Trainer Tip: Always Improve Your Coaching": [
-            "Energy +14\nSkill points +18\nAoi Kiryuin bond +5",
+            "Energy +13\nSkill points +18\nAoi Kiryuin bond +5",
             "Speed +6\nWit +6\nAoi Kiryuin bond +5"
         ],
         "The Search for a Hobby\nDating starts": [
-            "Energy +28\nSkill points +18\nMood +1\nAoi Kiryuin bond +5\nCan start dating",
+            "Energy +26\nSkill points +18\nMood +1\nAoi Kiryuin bond +5\nCan start dating",
             "Mood -1\nMaverick ○ hint +1\nAoi Kiryuin bond -5\nEvent chain ended"
         ],
         "Fellow Trainer Aoi Kiryuin\nAfter first training": [
@@ -161,6 +161,26 @@
         "Step-Out-of-Your-Comfort-Zone Theory": [
             "Energy -10\nInside Scoop hint +1\nBiwa Hayahide bond +5",
             "Energy +10\nStamina +10\nBiwa Hayahide bond +5"
+        ]
+    },
+    "Curren Chan": {
+        "(❯) #CurrenPotential": [
+            "Randomly either\n----------\nSpeed +10\nWit +10\nStop Right There! hint +1\nCurren Chan bond +5\n----------\n\n----------\nSpeed +5\nWit +5\nCurren Chan bond +5",
+            "Energy +30\nPlaytime's Over! hint +1\nEvent chain ended"
+        ],
+        "(❯❯) #CurrenQuandary": [
+            "Wit +10"
+        ],
+        "(❯❯❯) #KeepItCurren": [
+            "Randomly either\n----------\nWit +10\nSkill points +20\nPerfect Prep! hint +3\nCurren Chan bond +5\n----------\n\n----------\nWit +5\nSkill points +10\nMeticulous Measures hint +3\nCurren Chan bond +5"
+        ],
+        "#UrUniqueCuteness": [
+            "Speed +5\nWit +10\nCurren Chan bond +5",
+            "Speed +10\nPower +5\nCurren Chan bond +5"
+        ],
+        "#Cuteness4U ☆": [
+            "Skill points +15\nCurren Chan bond +5",
+            "Intimidate hint +1\nCurren Chan bond +5"
         ]
     },
     "Daitaku Helios": {
@@ -794,14 +814,15 @@
         ]
     },
     "Narita Brian": {
-        "(❯) Brian, the Race Planner": [
-            "Maximum Energy +4\nSpeed +5"
+        "(❯) Target Across Time": [
+            "Stamina +10"
         ],
-        "(❯❯) Only a Sister Knows": [
-            "Energy -10\nSpeed +20"
+        "(❯❯) Lord of the Ducks": [
+            "Randomly either\n----------\nMaximum Energy +4\nStamina +10\nUp-Tempo hint +1\nNarita Brian bond +5\n----------\n\n----------\nGuts +10\nNarita Brian bond -5",
+            "Wit +10\nNarita Brian bond +5"
         ],
-        "(❯❯❯) Running for the Dream": [
-            "Energy -10\nSpeed +20\nShatterproof hint +1"
+        "(❯❯❯) Battlefield Experience": [
+            "Energy -5\nStamina +5\nBeeline Burst hint +2\nNarita Brian bond +5"
         ],
         "Student Council Member!": [
             "Mood +1\nSpeed +5\nNarita Brian bond +5",
@@ -810,6 +831,15 @@
         "Lone Wolf": [
             "Speed +3\nStamina +3\nPower +3\nNarita Brian bond +5",
             "Lone Wolf hint +1\nNarita Brian bond +5"
+        ],
+        "(❯) Brian, the Race Planner": [
+            "Maximum Energy +4\nSpeed +5"
+        ],
+        "(❯❯) Only a Sister Knows": [
+            "Energy -10\nSpeed +20"
+        ],
+        "(❯❯❯) Running for the Dream": [
+            "Energy -10\nSpeed +20\nShatterproof hint +1"
         ]
     },
     "Narita Taishin": {
@@ -948,13 +978,13 @@
         ],
         "(❯❯❯) Picture Their Joy": [
             "Energy +24\nMood +1\nStamina +12\nGuts +6\nRiko Kashimoto bond +5",
-            "Skill points +37\nMood +1\nRiko Kashimoto bond +5"
+            "Skill points +36\nMood +1\nRiko Kashimoto bond +5"
         ],
         "(❯❯❯❯) Confused by Kindness": [
             "Energy +24\nMood +1\nSpeed +12\nStamina +6\nPower +6\nRiko Kashimoto bond +5"
         ],
         "(❯❯❯❯❯) A Peek at Her Heart": [
-            "Randomly either\n----------\nEnergy +30\nMood +1\nStamina +12\nGuts +12\nRushing Gale! hint +3\nRiko Kashimoto bond +5\n----------\n\n----------\nEnergy +30\nMood +1\nStamina +6\nGuts +6\nRushing Gale! hint +1\nRiko Kashimoto bond +5"
+            "Randomly either\n----------\nEnergy +24\nMood +1\nStamina +6\nGuts +6\nStraightaway Acceleration hint +3\nRiko Kashimoto bond +5\n----------\n\n----------\nEnergy +24\nMood +1\nStraightaway Acceleration hint +1\nRiko Kashimoto bond +5"
         ],
         "The Kashimoto Art of Tidying Up": [
             "Stamina +18\nRiko Kashimoto bond +5",
@@ -972,13 +1002,13 @@
             "(random) Mood +1\nStamina +3\nRiko Kashimoto bond +5"
         ],
         "A Priceless Connection\nAfter Finals (bond maxed)": [
-            "Stamina +18\nGuts +18\nSkill points +25"
+            "Stamina +18\nGuts +18\nSkill points +24"
         ],
         "We Need This Sometimes\nAfter Finals (bond not maxed)": [
-            "Stamina +5\nGuts +5\nSkill points +7"
+            "Stamina +4\nGuts +4\nSkill points +7"
         ],
         "Bonding with Riko: No More Regrets\nDating before the first New Year's": [
-            "Mood +1\nStamina +15\nGuts +7\nSympathy hint +3\nRiko Kashimoto bond +5"
+            "Mood +1\nStamina +14\nGuts +7\nSympathy hint +3\nRiko Kashimoto bond +5"
         ]
     },
     "Sakura Bakushin O": {
@@ -1136,6 +1166,23 @@
         ],
         "(❯❯❯) Letters → Feelings → Wait for Me, Okay?": [
             "Speed +10\nUnrestrained hint +2\nSilence Suzuka bond +5"
+        ]
+    },
+    "Sirius Symboli": {
+        "(❯) Don of the Delinquents": [
+            "Guts +15\nSirius Symboli bond +5"
+        ],
+        "(❯❯) Oil and Water": [
+            "Randomly either\n----------\nSpeed +15\nPower +15\nSirius Symboli bond +5\n----------\n\n----------\nEnergy -5\nSpeed +10\nSirius Symboli bond -5",
+            "Skill points +20\nShrewd Step hint +1\nSirius Symboli bond +5"
+        ],
+        "Want Me to Teach You?": [
+            "Energy -5\nStamina +20\nSirius Symboli bond +5",
+            "Wit +10\nSirius Symboli bond +5"
+        ],
+        "Want Me to Help You?": [
+            "Wit +5\nDisorient hint +1\nSirius Symboli bond +5",
+            "Skill points +15\nSirius Symboli bond +5"
         ]
     },
     "Smart Falcon": {
@@ -1298,27 +1345,27 @@
     },
     "Tazuna Hayakawa": {
         "(❯) Milk with a Chance of Apples": [
-            "Energy +35\nSpeed +6\nMood +1\nTazuna Hayakawa bond +5"
+            "Energy +32\nSpeed +6\nMood +1\nTazuna Hayakawa bond +5"
         ],
         "(❯❯) Inexplicable Speed": [
-            "Energy +35\nTazuna Hayakawa bond +5\nHeal a negative status effect"
+            "Energy +32\nTazuna Hayakawa bond +5\nHeal a negative status effect"
         ],
         "(❯❯❯) Memories of Cinema": [
-            "Energy +35\nStamina +6\nMood +1\nTazuna Hayakawa bond +5",
+            "Energy +32\nStamina +6\nMood +1\nTazuna Hayakawa bond +5",
             "Stamina +12\nGuts +12\nMood +1\nTazuna Hayakawa bond +5"
         ],
         "(❯❯❯❯) A Sigh and a Bandage": [
-            "Energy +49\nWit +6\nMood +1\nTazuna Hayakawa bond +5\nHeal a negative status effect"
+            "Energy +45\nWit +6\nMood +1\nTazuna Hayakawa bond +5\nHeal a negative status effect"
         ],
         "(❯❯❯❯❯) A Surprise Breather": [
-            "Randomly either\n----------\nEnergy +49\nSkill points +37\nMood +2\nTazuna Hayakawa bond +5\nFocus hint +1\n----------\n\n----------\nEnergy +49\nSkill points +37\nMood +2\nTazuna Hayakawa bond +5\nConcentration hint +1"
+            "Energy +45\nSkill points +18\nMood +2\nTazuna Hayakawa bond +5\nFocus hint +1"
         ],
         "My Chosen Way of Life": [
-            "Energy +14\nMood +1\nTazuna Hayakawa bond +5",
+            "Energy +13\nMood +1\nTazuna Hayakawa bond +5",
             "Mood +1\nWit +6\nTazuna Hayakawa bond +5"
         ],
         "Enthusiastic Pair\nDating starts": [
-            "Energy +14\nWit +6\nMood +1\nTazuna Hayakawa bond +5\nCan start dating",
+            "Energy +13\nWit +6\nMood +1\nTazuna Hayakawa bond +5\nCan start dating",
             "Mood -1\nTazuna Hayakawa bond -5\nWatchful Eye hint +1\nEvent chain ended"
         ],
         "Tazuna, the Director's Secretary\nAfter first training": [
@@ -1328,13 +1375,13 @@
             "(random) Mood +1\nSpeed +3\nTazuna Hayakawa bond +5"
         ],
         "From Just a Little Closer\nAfter Finals (bond maxed)": [
-            "All stats +7\nSkill points +37"
+            "All stats +7\nSkill points +36"
         ],
         "The Usual, Please!\nAfter Finals (bond not maxed)": [
-            "All stats +6\nSkill points +25"
+            "All stats +6\nSkill points +24"
         ],
         "A Bond with Tazuna: Aspirations Entrusted\nDating before the first New Year's": [
-            "Energy +14\nSpeed +18\nMood +1\nTazuna Hayakawa bond +5\nTail Held High hint +3"
+            "Energy +13\nSpeed +18\nMood +1\nTazuna Hayakawa bond +5\nTail Held High hint +3"
         ]
     },
     "Tokai Teio": {
@@ -1474,6 +1521,24 @@
         ]
     },
     "Yukino Bijin": {
+        "(❯) A Help'n Hand!": [
+            "Energy -10\nGuts +10\nWit +10\nYukino Bijin bond +5"
+        ],
+        "(❯❯) Plain Ol' Charm": [
+            "Energy -10\nStamina +5\nGuts +10\nSnowy Days ○ hint +1\nYukino Bijin bond +5",
+            "Skill points +20\nPlaytime's Over! hint +1\nYukino Bijin bond -5\nEvent chain ended"
+        ],
+        "(❯❯❯) Star of the Show": [
+            "Energy -10\nGuts +10\nWit +5\nCorner Connoisseur hint +1\nYukino Bijin bond +5"
+        ],
+        "For a Spiffy Concert": [
+            "Guts +10\nYukino Bijin bond +5",
+            "Energy -10\nGuts +15\nYukino Bijin bond +5"
+        ],
+        "Aiming for the City Spots": [
+            "Energy -10\nMood +1\nGuts +10\nYukino Bijin bond +5",
+            "Corner Acceleration ○ hint +1\nYukino Bijin bond +5"
+        ],
         "(❯) Cozy Memories of Wanko Soba": [
             "Mood +1\nInner Post Proficiency ○ hint +1\nYukino Bijin bond +5",
             "Maximum Energy +4\nHydrate hint +1\nYukino Bijin bond +5"
@@ -1485,14 +1550,6 @@
         "(❯❯❯) I Wanna Win!": [
             "Mood +4\nNo Stopping Me! hint +2\nHeal a negative status effect\nYukino Bijin bond +5",
             "Power +10\nGuts +10\nWit +10\nNo Stopping Me! hint +2\nYukino Bijin bond +5"
-        ],
-        "For a Spiffy Concert": [
-            "Guts +10\nYukino Bijin bond +5",
-            "Energy -10\nGuts +15\nYukino Bijin bond +5"
-        ],
-        "Aiming for the City Spots": [
-            "Energy -10\nMood +1\nGuts +10\nYukino Bijin bond +5",
-            "Corner Acceleration ○ hint +1\nYukino Bijin bond +5"
         ],
         "(❯) Gotta Practice Order'n!": [
             "Mood +1\nPower +5\nYukino Bijin bond +5"

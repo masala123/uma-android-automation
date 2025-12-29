@@ -1,22 +1,16 @@
 import { useContext } from "react"
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native"
-import { useNavigation, DrawerActions } from "@react-navigation/native"
-import { Ionicons } from "@expo/vector-icons"
+import { View, Text, ScrollView, StyleSheet } from "react-native"
 import { useTheme } from "../../context/ThemeContext"
 import { BotStateContext } from "../../context/BotStateContext"
 import CustomSlider from "../../components/CustomSlider"
 import CustomCheckbox from "../../components/CustomCheckbox"
 import CustomTitle from "../../components/CustomTitle"
 import { Separator } from "../../components/ui/separator"
+import PageHeader from "../../components/PageHeader"
 
 const DebugSettings = () => {
     const { colors } = useTheme()
-    const navigation = useNavigation()
     const bsc = useContext(BotStateContext)
-
-    const openDrawer = () => {
-        navigation.dispatch(DrawerActions.openDrawer())
-    }
 
     const styles = StyleSheet.create({
         root: {
@@ -25,26 +19,6 @@ const DebugSettings = () => {
             justifyContent: "center",
             margin: 10,
             backgroundColor: colors.background,
-        },
-        header: {
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 20,
-        },
-        headerLeft: {
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-        },
-        menuButton: {
-            padding: 8,
-            borderRadius: 8,
-        },
-        title: {
-            fontSize: 24,
-            fontWeight: "bold",
-            color: colors.foreground,
         },
         errorContainer: {
             backgroundColor: colors.warningBg,
@@ -63,14 +37,8 @@ const DebugSettings = () => {
 
     return (
         <View style={styles.root}>
-            <View style={styles.header}>
-                <View style={styles.headerLeft}>
-                    <TouchableOpacity onPress={openDrawer} style={styles.menuButton} activeOpacity={0.7}>
-                        <Ionicons name="menu" size={28} color={colors.foreground} />
-                    </TouchableOpacity>
-                    <Text style={styles.title}>Debug Settings</Text>
-                </View>
-            </View>
+            <PageHeader title="Debug Settings" />
+
             <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
                 <View className="m-1">
                     <View style={{ marginTop: 16 }}>

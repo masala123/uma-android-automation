@@ -1,17 +1,15 @@
 import { useContext, useState, useEffect } from "react"
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native"
-import { useNavigation, DrawerActions } from "@react-navigation/native"
-import { Ionicons } from "@expo/vector-icons"
 import { Divider } from "react-native-paper"
 import { useTheme } from "../../context/ThemeContext"
 import { BotStateContext, defaultSettings } from "../../context/BotStateContext"
 import CustomCheckbox from "../../components/CustomCheckbox"
 import CustomButton from "../../components/CustomButton"
 import CustomScrollView from "../../components/CustomScrollView"
-import CustomTitle from "../../components/CustomTitle"
 import { Input } from "../../components/ui/input"
 import { CircleCheckBig, Plus, Trash2 } from "lucide-react-native"
 import racesData from "../../data/races.json"
+import PageHeader from "../../components/PageHeader"
 
 interface Race {
     name: string
@@ -33,12 +31,7 @@ interface PlannedRace {
 
 const RacingPlanSettings = () => {
     const { colors } = useTheme()
-    const navigation = useNavigation()
     const bsc = useContext(BotStateContext)
-
-    const openDrawer = () => {
-        navigation.dispatch(DrawerActions.openDrawer())
-    }
 
     const { settings, setSettings } = bsc
 
@@ -97,13 +90,27 @@ const RacingPlanSettings = () => {
     })
 
     const updateRacingSetting = (key: string, value: any) => {
-        setSettings({
-            ...bsc.settings,
-            racing: {
-                ...bsc.settings.racing,
-                [key]: value,
-            },
-        })
+        if (key === "enableRacingPlan" && value) {
+            setSettings({
+                ...bsc.settings,
+                racing: {
+                    // The following settings need to be set due to being two distinct racing systems.
+                    ...bsc.settings.racing,
+                    enableFarmingFans: true,
+                    enableForceRacing: false,
+                    enableUserInGameRaceAgenda: false,
+                    enableRacingPlan: true,
+                },
+            })
+        } else {
+            setSettings({
+                ...bsc.settings,
+                racing: {
+                    ...bsc.settings.racing,
+                    [key]: value,
+                },
+            })
+        }
     }
 
     const handleRacePress = (race: Race) => {
@@ -149,7 +156,7 @@ const RacingPlanSettings = () => {
         if (preferredGrades.includes(grade)) {
             updateRacingSetting(
                 "preferredGrades",
-                preferredGrades.filter((g: string) => g !== grade)
+                preferredGrades.filter((g: string) => g !== grade),
             )
         } else {
             updateRacingSetting("preferredGrades", [...preferredGrades, grade])
@@ -160,7 +167,7 @@ const RacingPlanSettings = () => {
         if (preferredDistances.includes(distance)) {
             updateRacingSetting(
                 "preferredDistances",
-                preferredDistances.filter((d: string) => d !== distance)
+                preferredDistances.filter((d: string) => d !== distance),
             )
         } else {
             updateRacingSetting("preferredDistances", [...preferredDistances, distance])
@@ -173,21 +180,6 @@ const RacingPlanSettings = () => {
             flexDirection: "column",
             margin: 10,
             backgroundColor: colors.background,
-        },
-        header: {
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 20,
-        },
-        headerLeft: {
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 12,
-        },
-        menuButton: {
-            padding: 8,
-            borderRadius: 8,
         },
         description: {
             fontSize: 14,
@@ -558,19 +550,15 @@ const RacingPlanSettings = () => {
 
     return (
         <View style={styles.root}>
-            <View style={styles.header}>
-                <View style={styles.headerLeft}>
-                    <TouchableOpacity onPress={openDrawer} style={styles.menuButton} activeOpacity={0.7}>
-                        <Ionicons name="menu" size={28} color={colors.foreground} />
-                    </TouchableOpacity>
-                    <Text style={styles.title}>Racing Plan</Text>
-                </View>
-            </View>
+            <PageHeader title="Racing Plan" />
+
             <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
                 <View className="m-1">
                     <View style={styles.section}>
                         <Text style={styles.description}>
-                            {"Uses opportunity cost analysis to optimize race selection by looking ahead N days for races matching your character's aptitudes (A/S terrain/distance). Scores races by fans, grade, and aptitude matches.\n\nUses standard settings until Classic Year, then combines both this and standard racing settings during Classic Year. Only fully activates in Senior Year. Races when current opportunities are good enough and waiting doesn't offer significantly better value, ensuring steady fan accumulation without endless waiting.\n\nNote: When Racing Plan is enabled, the \"Days to Run Extra Races\" setting in Racing Settings is ignored, as Racing Plan controls when races occur based on opportunity cost analysis or mandatory race detection."}
+                            {
+                                "Uses opportunity cost analysis to optimize race selection by looking ahead N days for races matching your character's aptitudes (A/S terrain/distance). Scores races by fans, grade, and aptitude matches.\n\nUses standard settings until Classic Year, then combines both this and standard racing settings during Classic Year. Only fully activates in Senior Year. Races when current opportunities are good enough and waiting doesn't offer significantly better value, ensuring steady fan accumulation without endless waiting.\n\nNote: When Racing Plan is enabled, the \"Days to Run Extra Races\" setting in Racing Settings is ignored, as Racing Plan controls when races occur based on opportunity cost analysis or mandatory race detection."
+                            }
                         </Text>
 
                         <Divider style={{ marginBottom: 16 }} />

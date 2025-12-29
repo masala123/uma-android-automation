@@ -242,6 +242,7 @@ object DialogObjects {
         DialogRestAndRecreation,            // Career
         DialogRewardsCollected,             // Main Screen, Special Events
         DialogRunners,                      // Career -> Race screens
+        DialogScheduledRaceAvailable,       // Career
         DialogScheduledRaces,               // Career
         DialogScheduleSettings,             // Career
         DialogSessionError,                 // Anywhere
@@ -1010,6 +1011,18 @@ object DialogRunners : DialogInterface {
     override val okButton = null
     override val buttons: List<ComponentInterface> = listOf(
         ButtonClose,
+    )
+}
+
+object DialogScheduledRaceAvailable : DialogInterface {
+    override val TAG: String = "DialogScheduledRaceAvailable"
+    override val name: String = "scheduled_race_available"
+    override val title: String = "Scheduled Race Available"
+    override val closeButton = null
+    override val okButton: ComponentInterface = ButtonRace
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+        ButtonRace,
     )
 }
 

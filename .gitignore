@@ -83,3 +83,4 @@ dist/
 web-build/
 expo-env.d.ts
 
+.vscode/
