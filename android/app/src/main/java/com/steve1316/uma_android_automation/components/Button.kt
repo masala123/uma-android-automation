@@ -539,6 +539,11 @@ object ButtonRaceListFullStats : ComponentInterface {
     override val template = Template("components/button/race_list_full_stats", region = Region.middle)
 }
 
+object ButtonSkillListFullStats : ComponentInterface {
+    override val TAG: String = "ButtonSkillListFullStats"
+    override val template = Template("components/button/skill_list_full_stats", region = Region.topHalf)
+}
+
 object ButtonHomeFullStats : ComponentInterface {
     override val TAG: String = "ButtonHomeFullStats"
     override val template = Template("components/button/home_full_stats", region = Region.middle)
