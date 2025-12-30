@@ -1,5 +1,5 @@
 import { useContext, useState, useEffect } from "react"
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native"
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from "react-native"
 import { useNavigation, DrawerActions } from "@react-navigation/native"
 import { Ionicons } from "@expo/vector-icons"
 import { Divider } from "react-native-paper"
@@ -9,8 +9,9 @@ import CustomCheckbox from "../../components/CustomCheckbox"
 import CustomButton from "../../components/CustomButton"
 import CustomScrollView from "../../components/CustomScrollView"
 import { Input } from "../../components/ui/input"
-import { CircleCheckBig, Plus, Trash2 } from "lucide-react-native"
+import { CircleCheckBig, Trash2 } from "lucide-react-native"
 import skillsData from "../../data/skills.json"
+import icons from "../SkillSettings/icons";
 
 interface Skill {
     id: number
@@ -246,14 +247,15 @@ const SkillPlanPreFinalsSettings = () => {
                 </View>
 
                 <View style={{ marginBottom: 16 }}>
-                    <Input style={styles.input} value={searchQuery} onChangeText={setSearchQuery} placeholder="Search skills by name..." />
-                    <View style={{ height: 300 }}>
+                    <Input style={styles.input} value={searchQuery} onChangeText={setSearchQuery} placeholder="Search skills by name or ID..." />
+                    <View style={{ height: 700 }}>
                         <CustomScrollView
                             targetProps={{
                                 data: filteredSkills,
                                 renderItem: ({ item: skill }) => (
                                     <TouchableOpacity onPress={() => handleSkillPress(skill)} style={styles.skillItem}>
                                         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                                            <Image source={icons[skill.icon_id]} style={{ width: 64, height: 64, marginRight: 8 }} />
                                             <View style={{ flex: 1 }}>
                                                 <Text style={styles.skillName}>{skill.name_en}</Text>
                                                 <Text style={styles.skillDescription}>{skill.desc_en}</Text>
