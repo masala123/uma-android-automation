@@ -135,12 +135,29 @@ object DialogUtils {
     fun getDialog(imageUtils: CustomImageUtils, tries: Int = 1): DialogInterface? {
         val title: String = getTitle(imageUtils = imageUtils) ?: return null
 
-        val match: String? = TextUtils.matchStringInList(title, DialogObjects.map.keys.toList())
-        return if (match != null) {
-            DialogObjects.map[match]
-        } else {
-            null
+        val match: String? = TextUtils.matchStringInList(title, DialogObjects.items.map { it.title })
+        if (match == null) {
+            return null
         }
+
+        // There may be multiple matches for titles since they are not unique.
+        val matches: List<DialogInterface> = DialogObjects.items.filter { it.title == match }
+
+        if (matches.size == 1) {
+            return matches[0]
+        }
+
+        // If we do have duplicates, then we need to check which dialog's
+        // set of buttons matches what is on screen.
+        if (matches.size > 1) {
+            for (dialog in matches) {
+                if (dialog.buttons.all { button -> button.check(imageUtils) }) {
+                    return dialog
+                }
+            }
+        }
+
+        return null
     }
 }
 
@@ -267,7 +284,7 @@ object DialogObjects {
         DialogViewStory,                    // Main Screen, end of career
     )
 
-    val map: Map<String, DialogInterface> = items.associateBy { it.title }
+    val map: Map<String, DialogInterface> = items.associateBy { it.name }
 }
 
 // =========================
