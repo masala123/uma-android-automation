@@ -22,16 +22,12 @@ import com.steve1316.automation_library.data.SharedData
 import com.steve1316.uma_android_automation.utils.types.BoundingBox
 import com.steve1316.uma_android_automation.utils.types.SkillData
 import com.steve1316.uma_android_automation.utils.types.SkillListEntry
+import com.steve1316.uma_android_automation.utils.types.SkillType
 
 import com.steve1316.uma_android_automation.components.*
 
 class Skills (private val game: Game) {
     private val TAG: String = "[${MainActivity.loggerTag}]Skills"
-
-    // Cached skill plan data loaded once per class instance.
-    private val skillData: Map<String, SkillData> = loadSkillData()
-    private val userPlannedPreFinalsSkills: List<String> = loadUserPlannedPreFinalsSkills()
-    private val userPlannedCareerCompleteSkills: List<String> = loadUserPlannedCareerCompleteSkills()
 
     private val enablePreFinalsSkillPlan = SettingsHelper.getBooleanSetting("skills", "enablePreFinalsSkillPlan")
     private val enablePreFinalsSpendAll = SettingsHelper.getBooleanSetting("skills", "enablePreFinalsSpendAll")
@@ -41,6 +37,11 @@ class Skills (private val game: Game) {
     private val enableCareerCompleteSpendAll = SettingsHelper.getBooleanSetting("skills", "enableCareerCompleteSpendAll")
     private val enableCareerCompleteMaximizeRank = SettingsHelper.getBooleanSetting("skills", "enableCareerCompleteMaximizeRank")
     private val careerCompleteSkillPlanJson = SettingsHelper.getStringSetting("skills", "careerCompleteSkillPlan")
+
+    // Cached skill plan data loaded once per class instance.
+    private val skillData: Map<String, SkillData> = loadSkillData()
+    private val userPlannedPreFinalsSkills: List<String> = loadUserPlannedPreFinalsSkills()
+    private val userPlannedCareerCompleteSkills: List<String> = loadUserPlannedCareerCompleteSkills()
 
     companion object {
         private const val TABLE_SKILLS = "skills"
@@ -58,7 +59,7 @@ class Skills (private val game: Game) {
 
     private fun loadSkillData(): Map<String, SkillData> {
         return try {
-            val skillPlanDataJson = SettingsHelper.getStringSetting("skill", "skillPlanData")
+            val skillPlanDataJson = SettingsHelper.getStringSetting("skills", "skillPlanData")
             if (skillPlanDataJson.isEmpty()) {
                 MessageLog.i(TAG, "[SKILLS] SKill plan data is empty, returning empty map.")
                 return emptyMap()
@@ -73,15 +74,16 @@ class Skills (private val game: Game) {
                 val skillObj = jsonObject.getJSONObject(key)
 
                 val skillData = SkillData(
-                    id = skillObj.getInt(SKILLS_COLUMN_SKILL_ID),
+                    // The JSON key is "id". We want this, not the database's "skill_id"
+                    id = skillObj.getInt("id"),
                     name = skillObj.getString(SKILLS_COLUMN_NAME_EN),
                     description = skillObj.getString(SKILLS_COLUMN_DESC_EN),
                     iconId = skillObj.getInt(SKILLS_COLUMN_ICON_ID),
-                    cost = skillObj.getInt(SKILLS_COLUMN_COST),
+                    cost = skillObj.optInt(SKILLS_COLUMN_COST),
                     rarity = skillObj.getInt(SKILLS_COLUMN_RARITY),
                     versions = skillObj.getString(SKILLS_COLUMN_VERSIONS),
-                    upgrade = skillObj.getInt(SKILLS_COLUMN_UPGRADE),
-                    downgrade = skillObj.getInt(SKILLS_COLUMN_DOWNGRADE),
+                    upgrade = skillObj.optInt(SKILLS_COLUMN_UPGRADE),
+                    downgrade = skillObj.optInt(SKILLS_COLUMN_DOWNGRADE),
                 )
 
                 skillDataMap[skillData.name] = skillData
@@ -221,7 +223,6 @@ class Skills (private val game: Game) {
         if (match == null) {
             return null
         }
-        MessageLog.e("REMOVEME", "MATCH: $match")
         return lookupSkillInDatabase(match)
     }
 
@@ -707,12 +708,10 @@ class Skills (private val game: Game) {
                 }
             }
 
-            MessageLog.e("REMOVEME", "skillListEntry: $skillListEntry")
             skills[skillListEntry.name] = skillListEntry
             i++
         }
 
-        MessageLog.e("REMOVEME", "HERE: $skills")
         return skills.toMap()
     }
 
@@ -722,7 +721,7 @@ class Skills (private val game: Game) {
             (bbox.x + (bbox.w / 2)).toFloat(),
             (bbox.y + (bbox.h / 2)).toFloat(),
             (bbox.x + (bbox.w / 2)).toFloat(),
-            ((bbox.y + (bbox.h / 2)) - bbox.h).toFloat(),
+            ((bbox.y + (bbox.h / 3)) - bbox.h).toFloat(),
             duration=500,
         )
         game.wait(0.1, skipWaitingForLoading = true)
@@ -884,24 +883,97 @@ class Skills (private val game: Game) {
     private fun getSkillsToBuy(skills: Map<String, SkillListEntry>, skillPoints: Int): List<String> {
         var remainingSkillPoints: Int = skillPoints
 
-        // Sort skills by price, cheapest first.
-        val priceMap: Map<String, Int> = skills.mapValues { it.value.price }
-        val sortedPrices = priceMap.entries.sortedBy { it.value }.map { it.toPair() }
-        
+        val userSkillPlan: List<String> = if (game.currentDate.day <= 72) userPlannedPreFinalsSkills else userPlannedCareerCompleteSkills
+
         val skillsToBuy: MutableList<String> = mutableListOf()
 
-        for ((name, price) in sortedPrices) {
-            if (remainingSkillPoints < price) {
-                break
-            }
+        // Create a priority list for skills.
+        //
+        // Negative skills always have highest priority.
+        // Next is user planned skills.
+        // Then yellow skills.
+        // Then blue skills.
+        // Then green skills.
+        // Finally red skills.
+        //
+        // For each skill type, we prioritize generic skills that don't depend
+        // on any aptitudes, then after exhausting those options, we attempt to
+        // purchase aptitude based skills.
+        //
+        // After exhausting every option, and if the user enabled the setting
+        // to spend all points, then we will just buy every skill from cheapest
+        // to most expensive in the following order yellow->blue->green->red.
+        // This will optimize the final rank of the trainee.
 
-            skillsToBuy.add(name)
-            remainingSkillPoints -= price
-            MessageLog.d(TAG, "[SKILLS] Buying $name for $price.")
+        // Add negative skills
+        for ((name, entry) in skills) {
+            if (entry.skillData.bIsNegative && entry.price <= remainingSkillPoints) {
+                skillsToBuy.add(name)
+                remainingSkillPoints -= entry.price
+            }
+        }
+
+        // Add user planned skills
+        for ((name, entry) in skills) {
+            if (name in userSkillPlan && entry.price <= remainingSkillPoints) {
+                skillsToBuy.add(name)
+                remainingSkillPoints -= entry.price
+            }
+        }
+
+        // Split skills by type
+        val filteredSkills: Map<String, SkillListEntry> = skills.filterKeys { it !in skillsToBuy }
+        val groupedByType: Map<SkillType, List<SkillListEntry>> = filteredSkills.values.groupBy { it.skillData.type }
+
+        fun partitionGroupedSkills(
+            group: List<SkillListEntry>?,
+        ): Pair<List<SkillListEntry>, List<SkillListEntry>> {
+            if (group == null) {
+                return Pair(emptyList(), emptyList())
+            }
+            val (a, b) = group.partition { it.skillData.style == null && it.skillData.distance == null }
+            // Filter the "b" list to only include items that match the trainee's preferred style/distance.
+            val filteredB = b.filter { it.skillData.style == game.trainee.runningStyle || it.skillData.distance == game.trainee.trackDistance }
+            return Pair(a, filteredB)
+        }
+
+        // Split each skill type into general skills and skills that rely on an aptitude.
+        val (yellow1, yellow2) = partitionGroupedSkills(groupedByType[SkillType.YELLOW])
+        val (blue1, blue2) = partitionGroupedSkills(groupedByType[SkillType.BLUE])
+        val (green1, green2) = partitionGroupedSkills(groupedByType[SkillType.GREEN])
+        val (red1, red2) = partitionGroupedSkills(groupedByType[SkillType.RED])
+
+        // Custom priority for skill type and aptitude-based skills.
+        val groupedAndPartitionedSkills: List<List<SkillListEntry>> = listOf(
+            yellow1,
+            yellow2,
+            blue1,
+            blue2,
+            green1,
+            green2,
+            red1,
+            red2,
+        )
+
+        for (skillListEntries in groupedAndPartitionedSkills) {
+            // Sort by price (lowest first)
+            val priceMap: Map<String, Int> = skillListEntries.associateBy { it.skillData.name }.mapValues { it.value.price } 
+            val sortedPrices: List<Pair<String, Int>> = priceMap.entries.sortedBy { it.value }.map { it.toPair() }
+
+            // Now add as many skills as we can afford.
+            for ((name, price) in sortedPrices) {
+                if (remainingSkillPoints < price) {
+                    break
+                }
+                skillsToBuy.add(name)
+                remainingSkillPoints -= price
+            }
         }
 
         MessageLog.d(TAG, "[SKILLS] Remaining skill points: $remainingSkillPoints")
-
+        for (name in skillsToBuy) {
+            MessageLog.d(TAG, "    $name: ${skills[name]?.price}")
+        }
         return skillsToBuy.toList()
     }
 

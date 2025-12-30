@@ -200,6 +200,39 @@ data class BoundingBox(val x: Int, val y: Int, val w: Int, val h: Int) {
     }
 }
 
+enum class SkillType {
+    GREEN,
+    BLUE,
+    YELLOW,
+    RED;
+
+    companion object {
+        private val nameMap = entries.associateBy { it.name }
+        private val ordinalMap = entries.associateBy { it.ordinal }
+
+        fun fromName(value: String): SkillType? = nameMap[value.uppercase()]
+        fun fromOrdinal(ordinal: Int): SkillType? = ordinalMap[ordinal]
+        fun fromIconId(iconId: Int): SkillType? {
+            val digits: String = iconId.toString()
+            return when {
+                digits.take(1) == "1" -> GREEN
+                // BLUE and YELLOW types both start with "20" so we filter
+                // out the BLUE types first since there are way fewer of them.
+                digits.take(4) == "2002" -> BLUE
+                digits.take(4) == "2003" -> BLUE
+                digits.take(4) == "2011" -> BLUE
+                // The rest of the skills starting with "2" are yellow
+                digits.take(1) == "2" -> YELLOW
+                digits.take(1) == "3" -> RED
+                // At the moment the Runaway skill starts with "40". Unsure why
+                // since it is a green skill.
+                iconId == 40012 -> GREEN
+                else -> null
+            }
+        }
+    }
+}
+
 data class SkillData(
     val id: Int,
     val name: String,
@@ -211,6 +244,20 @@ data class SkillData(
     val upgrade: Int?,
     val downgrade: Int?,
 ) {
+    val type: SkillType = SkillType.fromIconId(iconId)!!
+    // Some skills are for specific running styles or track distances.
+    // This information is appeneded to the end of the description
+    // string inside parentheses.
+    // We extract this and store it in a nullable property.
+    val style: RunningStyle?
+        get() = RunningStyle.entries.find { description.contains("(${it.name.replace('_', ' ')})", ignoreCase = true) }
+
+    val distance: TrackDistance?
+        get() = TrackDistance.entries.find { description.contains("($it)", ignoreCase = true) }
+
+    val bIsUnique: Boolean = iconId % 10 == 3
+    val bIsNegative: Boolean = iconId % 10 == 4
+
     constructor(
         id: Int,
         name: String,
@@ -228,7 +275,13 @@ data class SkillData(
         iconId,
         cost,
         rarity,
-        versions.split(",").filter { it.isNotEmpty() }.map { it.trim().toInt() }.filterNotNull(),
+        versions
+            .replace("[", "")
+            .replace("]", "")
+            .split(",")
+            .filter { it.isNotEmpty() }
+            .map { it.trim().toInt() }
+            .filterNotNull(),
         upgrade,
         downgrade,
     )
