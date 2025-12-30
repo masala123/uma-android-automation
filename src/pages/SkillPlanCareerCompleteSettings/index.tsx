@@ -46,7 +46,7 @@ const SkillPlanCareerCompleteSettings = () => {
     const {
         enableCareerCompleteSkillPlan,
         enableCareerCompleteSpendAll,
-        enableCareerCompleteMaximizeRank,
+        enableCareerCompleteOptimizeRank,
         careerCompleteSkillPlan,
     } = skillSettings
 
@@ -208,15 +208,15 @@ const SkillPlanCareerCompleteSettings = () => {
                     checked={enableCareerCompleteSpendAll}
                     onCheckedChange={(checked) => updateSkillsSetting("enableCareerCompleteSpendAll", checked)}
                     label="Spend All Skill Points"
-                    description={"When enabled, the bot will attempt to spend all available skill points."}
+                    description={"When enabled, the bot will attempt to spend all available skill points after purchasing skills from the Planned Skills list. Skills will be purchased to prioritize trainee aptitudes. This is not fully optimized so using this option is not recommended."}
                     style={{ marginTop: 16 }}
                 />
                 <CustomCheckbox
-                    id="enable-career-complete-maximize-rank"
-                    checked={enableCareerCompleteMaximizeRank}
-                    onCheckedChange={(checked) => updateSkillsSetting("enableCareerCompleteMaximizeRank", checked)}
-                    label="Purchase Skills to Maximize Rank"
-                    description={"When enabled, the bot will attempt to spend skill points on skills such that the final rank of the trainee is maximized."}
+                    id="enable-career-complete-optimize-rank"
+                    checked={enableCareerCompleteOptimizeRank}
+                    onCheckedChange={(checked) => updateSkillsSetting("enableCareerCompleteOptimizeRank", checked)}
+                    label="Purchase Skills to Optimize Rank"
+                    description={"When enabled, the bot will attempt to spend skill points on skills such that the final rank of the trainee is optimized. This is just a lazy evaluation so the optimization is only approximated."}
                     style={{ marginTop: 16 }}
                 />
             </>

@@ -45,11 +45,11 @@ export interface Settings {
     skills: {
         enablePreFinalsSkillPlan: boolean
         enablePreFinalsSpendAll: boolean
-        enablePreFinalsMaximizeRank: boolean
+        enablePreFinalsOptimizeRank: boolean
         preFinalsSkillPlan: string
         enableCareerCompleteSkillPlan: boolean
         enableCareerCompleteSpendAll: boolean
-        enableCareerCompleteMaximizeRank: boolean
+        enableCareerCompleteOptimizeRank: boolean
         careerCompleteSkillPlan: string
         skillPlanData: string
     }
@@ -187,11 +187,11 @@ export const defaultSettings: Settings = {
     skills: {
         enablePreFinalsSkillPlan: false,
         enablePreFinalsSpendAll: false,
-        enablePreFinalsMaximizeRank: false,
+        enablePreFinalsOptimizeRank: false,
         preFinalsSkillPlan: "",
         enableCareerCompleteSkillPlan: false,
         enableCareerCompleteSpendAll: false,
-        enableCareerCompleteMaximizeRank: false,
+        enableCareerCompleteOptimizeRank: false,
         careerCompleteSkillPlan: "",
         skillPlanData: JSON.stringify(skillsData),
     },

@@ -46,7 +46,7 @@ const SkillPlanPreFinalsSettings = () => {
     const {
         enablePreFinalsSkillPlan,
         enablePreFinalsSpendAll,
-        enablePreFinalsMaximizeRank,
+        enablePreFinalsOptimizeRank,
         preFinalsSkillPlan,
     } = skillSettings
 
@@ -208,15 +208,15 @@ const SkillPlanPreFinalsSettings = () => {
                     checked={enablePreFinalsSpendAll}
                     onCheckedChange={(checked) => updateSkillsSetting("enablePreFinalsSpendAll", checked)}
                     label="Spend All Skill Points"
-                    description={"When enabled, the bot will attempt to spend all available skill points."}
+                    description={"When enabled, the bot will attempt to spend all available skill points after purchasing skills from the Planned Skills list. Skills will be purchased to prioritize trainee aptitudes. This is not fully optimized so using this option is not recommended."}
                     style={{ marginTop: 16 }}
                 />
                 <CustomCheckbox
-                    id="enable-pre-finals-maximize-rank"
-                    checked={enablePreFinalsMaximizeRank}
-                    onCheckedChange={(checked) => updateSkillsSetting("enablePreFinalsMaximizeRank", checked)}
-                    label="Purchase Skills to Maximize Rank"
-                    description={"When enabled, the bot will attempt to spend skill points on skills such that the final rank of the trainee is maximized."}
+                    id="enable-pre-finals-optimize-rank"
+                    checked={enablePreFinalsOptimizeRank}
+                    onCheckedChange={(checked) => updateSkillsSetting("enablePreFinalsOptimizeRank", checked)}
+                    label="Purchase Skills to Optimize Rank"
+                    description={"When enabled, the bot will attempt to spend skill points on skills such that the final rank of the trainee is optimized. This is just a lazy evaluation so the optimization is only approximated."}
                     style={{ marginTop: 16 }}
                 />
             </>
