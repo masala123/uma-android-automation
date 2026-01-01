@@ -575,6 +575,18 @@ open class Campaign(val game: Game) {
 
             MessageLog.i(TAG, "[TRAINEE] Skills Updated: ${game.trainee.getStatsString()}")
             MessageLog.i(TAG, "[TRAINEE] Mood Updated: ${game.trainee.mood}")
+
+            // Now check if we need to handle skills before finals.
+            if (game.currentDate.day == 72 && game.skills.enablePreFinalsSkillPlan) {
+                ButtonSkills.click(game.imageUtils)
+                game.wait(0.5, skipWaitingForLoading = true)
+                if (!game.skills.handleSkillList()) {
+                    MessageLog.w(TAG, "handleMainScreen:: handleSkillList() failed.")
+                }
+                // Return to main screen.
+                ButtonBack.click(game.imageUtils)
+                game.wait(0.5, skipWaitingForLoading = true)
+            }
         }
 
         // If the required skill points has been reached, stop the bot.
@@ -710,6 +722,16 @@ open class Campaign(val game: Game) {
                     game.racing.handleStandaloneRace()
                 } else if (game.checkEndScreen()) {
                     // Stop when the bot has reached the screen where it details the overall result of the run.
+                    if (game.skills.enableCareerCompleteSkillPlan) {
+                        ButtonSkills.click(game.imageUtils)
+                        game.wait(0.5, skipWaitingForLoading = true)
+                        if (!game.skills.handleSkillList()) {
+                            MessageLog.w(TAG, "Career End Screen: handleSkillList() failed.")
+                        }
+                        // Return to main screen.
+                        ButtonBack.click(game.imageUtils)
+                        game.wait(0.5, skipWaitingForLoading = true)
+                    }
                     throw InterruptedException("Bot had reached end of run. Stopping bot...")
                 } else if (checkCampaignSpecificConditions()) {
                     MessageLog.i(TAG, "Campaign-specific checks complete.")

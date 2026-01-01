@@ -290,12 +290,18 @@ data class SkillData(
 data class SkillListEntry(
     val skillData: SkillData,
     val price: Int,
+    val discount: Int,
     val bIsObtained: Boolean,
 ) {
     val name: String
         get() = skillData.name
 
+    // If there is a direct upgrade/downgrade version of this entry in the skill list,
+    // then these variables can be set to form a pseudo linked list.
+    var upgrade: SkillListEntry? = null
+    var downgrade: SkillListEntry? = null
+
     override fun toString(): String {
-        return "name=$name, price=$price, bIsObtained=$bIsObtained"
+        return "name=$name, price=$price, discount=$discount, bIsObtained=$bIsObtained"
     }
 }

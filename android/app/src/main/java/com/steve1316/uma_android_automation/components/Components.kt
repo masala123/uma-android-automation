@@ -75,6 +75,10 @@ interface ComponentInterface: BaseComponentInterface {
         return imageUtils.findAll(template.path, region = region ?: template.region, confidence = (confidence ?: template.confidence) ?: 0.0)
     }
 
+    fun findAllWithBitmap(imageUtils: CustomImageUtils, sourceBitmap: Bitmap, region: IntArray? = null, confidence: Double? = null): ArrayList<Point> {
+        return imageUtils.findAllWithBitmap(template.path, sourceBitmap = sourceBitmap, region = region ?: template.region, customConfidence = (confidence ?: template.confidence) ?: 0.0)
+    }
+
     override fun check(imageUtils: CustomImageUtils, region: IntArray?, tries: Int, confidence: Double?): Boolean {
         return find(imageUtils = imageUtils, region = region, tries = tries, confidence = confidence ?: template.confidence).first != null
     }

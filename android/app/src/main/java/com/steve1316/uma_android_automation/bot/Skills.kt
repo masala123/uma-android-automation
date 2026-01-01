@@ -8,6 +8,9 @@ import org.json.JSONObject
 import java.util.concurrent.ConcurrentLinkedQueue
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
+import java.util.Collections
+import kotlinx.coroutines.*
+import kotlin.math.ceil
 
 import net.ricecode.similarity.JaroWinklerStrategy
 import net.ricecode.similarity.StringSimilarityServiceImpl
@@ -26,6 +29,7 @@ import com.steve1316.uma_android_automation.utils.types.SkillType
 
 import com.steve1316.uma_android_automation.components.*
 
+
 class Skills (private val game: Game) {
     private val TAG: String = "[${MainActivity.loggerTag}]Skills"
 
@@ -43,6 +47,10 @@ class Skills (private val game: Game) {
     private val userPlannedPreFinalsSkills: List<String> = loadUserPlannedPreFinalsSkills()
     private val userPlannedCareerCompleteSkills: List<String> = loadUserPlannedCareerCompleteSkills()
 
+    private val skillNameToId: Map<String, Int> = getSkillsToSkillIds()
+    // Invert the mapping.
+    private val skillIdToName: Map<Int, String> = skillNameToId.entries.associate { (k, v) -> v to k }
+
     companion object {
         private const val TABLE_SKILLS = "skills"
         private const val SKILLS_COLUMN_SKILL_ID = "skill_id"
@@ -56,6 +64,11 @@ class Skills (private val game: Game) {
         private const val SKILLS_COLUMN_DOWNGRADE = "downgrade"
         private const val SIMILARITY_THRESHOLD = 0.7
     }
+
+    data class SkillToBuy(
+        val name: String,
+        val numUpgrades: Int = 1,
+    )
 
     /**
      * Detects and handles any dialog popups.
@@ -140,17 +153,17 @@ class Skills (private val game: Game) {
         }
     }
 
-    fun getSkillsToSkillIds(): Map<String, Int>? {
+    fun getSkillsToSkillIds(): Map<String, Int> {
         val settingsManager = SQLiteSettingsManager(game.myContext)
         if (!settingsManager.initialize()) {
             MessageLog.e(TAG, "[ERROR] Database not available for skill lookup.")
-            return null
+            return emptyMap()
         }
         try {
             val res: MutableMap<String, Int> = mutableMapOf()
             val database = settingsManager.getDatabase()
             if (database == null) {
-                return null
+                return emptyMap()
             }
 
             val cursor = database.rawQuery("SELECT $SKILLS_COLUMN_SKILL_ID, $SKILLS_COLUMN_NAME_EN FROM $TABLE_SKILLS", null)
@@ -170,7 +183,7 @@ class Skills (private val game: Game) {
         } finally {
             settingsManager.close()
         }
-        return null
+        return emptyMap()
     }
 
     private fun loadUserPlannedPreFinalsSkills(): List<String> {
@@ -239,7 +252,7 @@ class Skills (private val game: Game) {
         val names: MutableList<String> = mutableListOf()
 
         try {
-            MessageLog.i(TAG, "[SKILLS] getSkillData: Looking up skill: $name")
+            MessageLog.d(TAG, "[SKILLS] getSkillData: Looking up skill: $name")
 
             val database = settingsManager.getDatabase()
             if (database == null) {
@@ -318,7 +331,7 @@ class Skills (private val game: Game) {
                 )
                 exactCursor.close()
                 settingsManager.close()
-                MessageLog.i(TAG, "[SKILLS] Found exact match: \"${skill.name}\"")
+                MessageLog.d(TAG, "[SKILLS] Found exact match: \"${skill.name}\"")
                 return skill
             }
             exactCursor.close()
@@ -442,6 +455,160 @@ class Skills (private val game: Game) {
 
         return bbox
     }
+
+    fun analyzeSkillListEntryThreadSafe(bitmap: Bitmap, bIsObtained: Boolean, debugString: String = ""): SkillListEntry? {
+        fun extractText(bitmap: Bitmap): String {
+            try {
+                val detectedText = game.imageUtils.performOCROnRegion(
+                    bitmap,
+                    0,
+                    0,
+                    bitmap.width - 1,
+                    bitmap.height - 1,
+                    useThreshold = false,
+                    useGrayscale = true,
+                    scale = 2.0,
+                    ocrEngine = "mlKit",
+                    debugName = "analyzeSkillListEntry::extractText"
+                )
+                MessageLog.d(TAG, "Extracted text: \"$detectedText\"")
+                return detectedText
+            } catch (e: Exception) {
+                MessageLog.e(TAG, "Exception during text extraction: ${e.message}")
+                return ""
+            }
+        }
+
+        var skillPrice: Int? = null
+        var skillDiscount: Int? = null
+        var skillData: SkillData? = null
+        val logMessages = ConcurrentLinkedQueue<String>()
+
+        // TITLE
+        val bboxTitle = BoundingBox(
+            x = (bitmap.width * 0.142).toInt(),
+            y = 0,
+            w = (bitmap.width * 0.57).toInt(),
+            h = (bitmap.height * 0.338).toInt(),
+        )
+        val croppedTitle = game.imageUtils.createSafeBitmap(
+            bitmap,
+            bboxTitle.x,
+            bboxTitle.y,
+            bboxTitle.w,
+            bboxTitle.h,
+            "bboxTitle_$debugString",
+        )
+
+        if (croppedTitle == null) {
+            Log.e(TAG, "[SKILLS] analyzeSkillListEntry: createSafeBitmap for croppedTitle returned NULL.")
+            return null
+        }
+
+        if (game.debugMode) {
+            game.imageUtils.saveBitmap(croppedTitle, filename = "bboxTitle_$debugString")
+        }
+
+        var skillName: String = extractText(croppedTitle).lowercase()
+        if (skillName == "") {
+            Log.e(TAG, "[SKILLS] Failed to extract skill name.")
+            return null
+        }
+
+        // Check if the skill has a special char (◎, ○, ×) at the end.
+        val componentsToCheck: List<ComponentInterface> = listOf(
+            IconSkillTitleDoubleCircle,
+            IconSkillTitleCircle,
+            IconSkillTitleX,
+        )
+        var match: ComponentInterface? = null
+        for (component in componentsToCheck) {
+            val loc: Point? = game.imageUtils.findImageWithBitmap(
+                component.template.path,
+                croppedTitle,
+                suppressError = true,
+            )
+            if (loc != null) {
+                match = component
+                break
+            }
+        }
+
+        // Get the appropriate char to append to the search string.
+        // Typically the extracted title will end with "O" or "x"
+        // but we can't just replace that character since some titles
+        // actually end in those letters. So we just append this to the title
+        // since it shouldn't cause fuzzy matching to fail.
+        val iconChar: String = when (match) {
+            IconSkillTitleDoubleCircle -> "◎"
+            IconSkillTitleCircle -> "○"
+            IconSkillTitleX -> "×"
+            else -> ""
+        }
+        skillName += iconChar
+
+        // Negative skills have "Remove" in front of their skill name in the title.
+        // The actual skill itself in the database does not have this prefix.
+        // Get rid of this prefix as it causes fuzzy matching to fail.
+        skillName = skillName.removePrefix("remove")
+
+        // Now lookup the name in the database and update it.
+        val tmpSkillData: SkillData? = getSkillData(skillName)
+        if (tmpSkillData == null) {
+            Log.e(TAG, "[SKILLS] lookupSkillInDatabase(\"${skillName}\") returned NULL.")
+            return null
+        }
+        skillData = tmpSkillData
+
+        // PRICE
+        val bboxPrice = BoundingBox(
+            x = (bitmap.width * 0.7935).toInt(),
+            y = (bitmap.height * 0.372).toInt(),
+            w = (bitmap.width * 0.1068).toInt(),
+            h = (bitmap.height * 0.251).toInt(),
+        )
+        val croppedPrice = game.imageUtils.createSafeBitmap(
+            bitmap,
+            bboxPrice.x,
+            bboxPrice.y,
+            bboxPrice.w,
+            bboxPrice.h,
+            "bboxPrice_$debugString",
+        )
+
+        if (croppedPrice == null) {
+            Log.e(TAG, "[SKILLS] analyzeSkillListEntry: createSafeBitmap for croppedPrice returned NULL.")
+            return null
+        }
+
+        if (game.debugMode) {
+            game.imageUtils.saveBitmap(croppedPrice, filename = "bboxPrice_$debugString")
+        }
+
+        val price: Int? = extractText(croppedPrice).replace("[^0-9]".toRegex(), "").toIntOrNull()
+        if (price == null) {
+            Log.e(TAG, "[SKILLS] Failed to extract skill price.")
+            return null
+        }
+        skillPrice = price ?: -1
+
+        if (skillData == null) {
+            MessageLog.e(TAG, "[SKILLS] analyzeSkillListEntry: Failed to infer skillData.")
+            return null
+        }
+
+        if (skillPrice == null) {
+            MessageLog.e(TAG, "[SKILLS] analyzeSkillListEntry: Failed to detect skillPrice.")
+            return null
+        }
+
+        return SkillListEntry(
+            skillData = skillData,
+            price = skillPrice,
+            discount = skillDiscount ?: -1,
+            bIsObtained = bIsObtained,
+        )
+    }
     
     fun analyzeSkillListEntry(bitmap: Bitmap, bIsObtained: Boolean, debugString: String = ""): SkillListEntry? {
         fun extractText(bitmap: Bitmap): String {
@@ -468,9 +635,11 @@ class Skills (private val game: Game) {
 
         val latch = CountDownLatch(2)
         var skillPrice: Int? = null
+        var skillDiscount: Int? = null
         var skillData: SkillData? = null
         val logMessages = ConcurrentLinkedQueue<String>()
 
+        // TITLE
         Thread {
             try {
                 val bboxTitle = BoundingBox(
@@ -554,6 +723,7 @@ class Skills (private val game: Game) {
             }
         }.start()
 
+        // PRICE
         Thread {
             try {
                 val bboxPrice = BoundingBox(
@@ -593,8 +763,58 @@ class Skills (private val game: Game) {
             }
         }.start()
 
+        // HINT LEVEL
+        /*
+        Thread {
+            try {
+                val bbox = BoundingBox(
+                    x = (bitmap.width * 0.7711).toInt(),
+                    y = (bitmap.height * 0.1645).toInt(),
+                    w = (bitmap.width * 0.15056).toInt(),
+                    h = (bitmap.height * 0.12987).toInt(),
+                )
+                val cropped = game.imageUtils.createSafeBitmap(
+                    bitmap,
+                    bbox.x,
+                    bbox.y,
+                    bbox.w,
+                    bbox.h,
+                    "bboxDiscount_$debugString",
+                )
+
+                if (cropped == null) {
+                    Log.e(TAG, "[SKILLS] analyzeSkillListEntry: createSafeBitmap for bboxDiscount returned NULL.")
+                    return@Thread
+                }
+
+                if (game.debugMode) {
+                    game.imageUtils.saveBitmap(cropped, filename = "bboxDiscount_$debugString")
+                }
+
+                val text: String = extractText(cropped)
+                // If we don't have any discount, then set to 0. This way we know
+                // that detection succeeded but there is no discount available.
+                if (!text.contains("OFF", ignoreCase = true)) {
+                    skillDiscount = 0
+                    return@Thread
+                }
+
+                val discount: Int? = text.replace("[^0-9]".toRegex(), "").toIntOrNull()
+                if (discount == null) {
+                    Log.e(TAG, "[SKILLS] Failed to extract skill discount.")
+                    return@Thread
+                }
+                skillDiscount = discount
+            } catch (e: Exception) {
+                Log.e(TAG, "[ERROR] Error processing skill discount: ${e.stackTraceToString()}")
+            } finally {
+                latch.countDown()
+            }
+        }.start()
+        */
+
         try {
-            latch.await(2, TimeUnit.SECONDS)
+            latch.await(3, TimeUnit.SECONDS)
         } catch (_: InterruptedException) {
             Log.e(TAG, "[ERROR] Parallel skill analysis timed out.")
         }
@@ -609,9 +829,17 @@ class Skills (private val game: Game) {
             return null
         }
 
+        /*
+        if (skillDiscount == null) {
+            MessageLog.e(TAG, "[SKILLS] analyzeSkillListEntry: Failed to detect skillDiscount.")
+            return null
+        }
+        */
+
         return SkillListEntry(
             skillData = skillData,
             price = skillPrice,
+            discount = skillDiscount ?: -1,
             bIsObtained = bIsObtained,
         )
     }
@@ -620,7 +848,8 @@ class Skills (private val game: Game) {
         bitmap: Bitmap? = null,
         bboxSkillList: BoundingBox? = null,
         debugString: String = "",
-        skillsToBuy: List<String>? = null,
+        skillsToBuy: List<SkillToBuy>? = null,
+        threadSafe: Boolean = false,
     ): Map<String, SkillListEntry>? {
         val bitmap = bitmap ?: game.imageUtils.getSourceBitmap()
         val bboxSkillList: BoundingBox? = if (bboxSkillList != null) {
@@ -680,13 +909,15 @@ class Skills (private val game: Game) {
             )
         }
 
-        val skillUpLocs: List<Pair<String, Point>> = ButtonSkillUp.findAll(
+        val skillUpLocs: List<Pair<String, Point>> = ButtonSkillUp.findAllWithBitmap(
             imageUtils = game.imageUtils,
+            sourceBitmap = bitmap,
             region = bboxSkillUpRegion.toIntArray(),
         ).map { point -> Pair("skillUp", point) }
 
-        val obtainedPillLocs: List<Pair<String, Point>> = IconObtainedPill.findAll(
+        val obtainedPillLocs: List<Pair<String, Point>> = IconObtainedPill.findAllWithBitmap(
             imageUtils = game.imageUtils,
+            sourceBitmap = bitmap,
             region = bboxObtainedPillRegion.toIntArray(),
         ).map { point -> Pair("obtained", point) }
 
@@ -735,7 +966,11 @@ class Skills (private val game: Game) {
                 game.imageUtils.saveBitmap(croppedSkillBox, filename = "bboxSkillBox_$i")
             }
 
-            val skillListEntry = analyzeSkillListEntry(croppedSkillBox, pointType == "obtained", "$i")
+            val skillListEntry = if (threadSafe) {
+                analyzeSkillListEntryThreadSafe(croppedSkillBox, pointType == "obtained", "$i")
+            } else {
+                analyzeSkillListEntry(croppedSkillBox, pointType == "obtained", "$i")
+            }
             if (skillListEntry == null) {
                 continue
             }
@@ -746,8 +981,9 @@ class Skills (private val game: Game) {
 
             // If this skill is in the skillsToBuy list, click the skill up button.
             if (skillsToBuy != null) {
-                if (skillListEntry.name in skillsToBuy) {
-                    game.tap(point.x, point.y, ButtonSkillUp.template.path)
+                val skillToBuy: SkillToBuy? = skillsToBuy.find { it.name == skillListEntry.name }
+                if (skillToBuy != null) {
+                    game.tap(point.x, point.y, ButtonSkillUp.template.path, taps = skillToBuy.numUpgrades)
                 }
             }
 
@@ -759,22 +995,24 @@ class Skills (private val game: Game) {
     }
 
     private fun scrollDown(bbox: BoundingBox) {
-        // Scroll down approx. 2 entries in list.
+        // Scroll down approx 2 entries in list.
         game.gestureUtils.swipe(
             (bbox.x + (bbox.w / 2)).toFloat(),
             (bbox.y + (bbox.h / 2)).toFloat(),
             (bbox.x + (bbox.w / 2)).toFloat(),
-            ((bbox.y + (bbox.h / 3)) - bbox.h).toFloat(),
+            // If we scrolled entire height of list, we'd possibly miss some
+            // entries. So we just go a bit shy of the full height.
+            (bbox.y - (bbox.h / 3)).toFloat(),
             duration=500,
         )
-        game.wait(0.1, skipWaitingForLoading = true)
         // Tap to prevent overscrolling. This location shouldn't select any skills.
         game.tap(
             game.imageUtils.relX(bbox.x.toDouble(), 15).toDouble(),
             game.imageUtils.relY(bbox.y.toDouble(), 15).toDouble(),
+            taps = 2,
             ignoreWaiting = true,
         )
-        game.wait(0.5, skipWaitingForLoading = true)
+        game.wait(0.25, skipWaitingForLoading = true)
     }
 
     private fun scrollToTop(bbox: BoundingBox) {
@@ -846,7 +1084,122 @@ class Skills (private val game: Game) {
         return skillPoints
     }
 
-    fun processSkillList(skillsToBuy: List<String>? = null): Map<String, SkillListEntry>? {
+    fun processSkillListThreaded(skillsToBuy: List<SkillToBuy>? = null): Map<String, SkillListEntry>? {
+        // List of skills in the order that they are shown in the game.
+        // We use this later to purchase items from top to bottom.
+        var skillList = mutableListOf<String>()
+
+        val bboxSkillList: BoundingBox? = getSkillListBoundingRegion()
+        if (bboxSkillList == null) {
+            MessageLog.e(TAG, "[SKILLS] detectSkills: getSkillListBoundingRegion() returned NULL.")
+            return null
+        }
+
+        val bboxScrollBar = BoundingBox(
+            x = game.imageUtils.relX((bboxSkillList.x + bboxSkillList.w).toDouble(), -22),
+            y = bboxSkillList.y,
+            w = 10,
+            h = bboxSkillList.h,
+        )
+
+        // The center column of pixels in the scrollbar.
+        val bboxScrollBarSingleColumn = BoundingBox(
+            x = bboxScrollBar.x + (bboxScrollBar.w / 2),
+            y = bboxScrollBar.y,
+            w = 1,
+            h = bboxScrollBar.h,
+        )
+
+        // Scroll to top before we do anything else.
+        scrollToTop(bboxSkillList)
+        
+        // Max time limit for the while loop to search for skills.
+        val startTime: Long = System.currentTimeMillis()
+        val maxTimeMs: Long = 30000
+        var prevScrollBarBitmap: Bitmap? = null
+        val bitmaps: MutableList<Bitmap> = mutableListOf()
+
+        // Scroll down in list, taking a screenshot every time we scroll.
+        while (System.currentTimeMillis() - startTime < maxTimeMs) {
+            val bitmap: Bitmap = game.imageUtils.getSourceBitmap()
+
+            // SCROLLBAR CHANGE DETECTION LOGIC
+            val scrollBarBitmap: Bitmap? = game.imageUtils.createSafeBitmap(
+                bitmap,
+                bboxScrollBarSingleColumn,
+                "skill list scrollbar right half bitmap",
+            )
+            if (scrollBarBitmap == null) {
+                MessageLog.e(TAG, "[SKILLS] Failed to createSafeBitmap for scrollbar.")
+                return null
+            }
+
+            // If after scrolling the scrollbar hasn't changed, that means
+            // we've reached the end of the list.
+            if (prevScrollBarBitmap != null && scrollBarBitmap.sameAs(prevScrollBarBitmap)) {
+                break
+            }
+
+            prevScrollBarBitmap = scrollBarBitmap
+
+            bitmaps.add(Bitmap.createBitmap(bitmap))
+
+            scrollDown(bboxSkillList)
+        }
+
+        val entries: MutableList<SkillListEntry> = Collections.synchronizedList(mutableListOf())
+        val latch = CountDownLatch(bitmaps.size)
+        for (bitmap in bitmaps) {
+            Thread {
+                try {
+                    val tmpSkills: Map<String, SkillListEntry>? = analyzeSkillList(
+                        bitmap,
+                        bboxSkillList,
+                        skillsToBuy = skillsToBuy,
+                        threadSafe = true,
+                    )
+                    if (tmpSkills != null) {
+                        for ((name, entry) in tmpSkills) {
+                            entries.add(entry)
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "[ERROR] Error processing bitmap: ${e.stackTraceToString()}")
+                } finally {
+                    latch.countDown()
+                }
+            }.start()
+        }
+
+        try {
+            latch.await(30, TimeUnit.SECONDS)
+        } catch (_: InterruptedException) {
+            Log.e(TAG, "[ERROR] Parallel skill analysis timed out.")
+        }
+
+        // Immediately free up memory stored in bitmaps.
+        for (bitmap in bitmaps) {
+            if (!bitmap.isRecycled) {
+                bitmap.recycle()
+            }
+        }
+
+        val skills: Map<String, SkillListEntry> = entries.distinctBy { it.skillData.name }.associateBy { it.skillData.name }
+        MessageLog.d(TAG, "[SKILLS] Detected ${skills.size} skills in list:")
+        for ((name, entry) in skills) {
+            MessageLog.d(TAG, "    ${name}: ${entry.price}")
+        }
+
+        // Now we need to update the upgrade/downgrade properties of each entry.
+        for ((name, entry) in skills) {
+            entry.upgrade = getDirectUpgrade(entry, skills)
+            entry.downgrade = getDirectDowngrade(entry, skills)
+        }
+
+        return skills.toMap()
+    }
+
+    fun processSkillList(skillsToBuy: List<SkillToBuy>? = null): Map<String, SkillListEntry>? {
         // List of skills in the order that they are shown in the game.
         // We use this later to purchase items from top to bottom.
         var skillList = mutableListOf<String>()
@@ -882,7 +1235,7 @@ class Skills (private val game: Game) {
         var lastTitle: String? = null
         // Max time limit for the while loop to search for skills.
         val startTime: Long = System.currentTimeMillis()
-        val maxTimeMs: Long = 30000
+        val maxTimeMs: Long = 60000
         var prevScrollBarBitmap: Bitmap? = null
         val skills: MutableMap<String, SkillListEntry> = mutableMapOf()
 
@@ -920,7 +1273,150 @@ class Skills (private val game: Game) {
             scrollDown(bboxSkillList)
         }
 
+        // Now we need to update the upgrade/downgrade properties of each entry.
+        for ((name, entry) in skills) {
+            entry.upgrade = getDirectUpgrade(entry, skills)
+            entry.downgrade = getDirectDowngrade(entry, skills)
+        }
+
         return skills.toMap()
+    }
+
+    /** Gets the direct upgrade to a SkillListEntry in the Skill List.
+     * 
+     * @param entry The SkillListEntry to check.
+     * @param skills A mapping of all skill names to SkillListEntries in the skill list.
+     *
+     * @return The SkillListEntry that is a direct upgrade to the passed skill entry.
+     * If no direct upgrades exist in the skill list, then NULL is returned.
+     */
+    private fun getDirectUpgrade(entry: SkillListEntry, skills: Map<String, SkillListEntry>): SkillListEntry? {
+        if (entry.skillData.upgrade == null) {
+            return null
+        }
+
+        val name: String? = skillIdToName[entry.skillData.upgrade]
+        if (name == null) {
+            return null
+        }
+
+        return skills[name]
+    }
+
+    /** Gets the direct downgrade to a SkillListEntry in the Skill List.
+     * 
+     * @param entry The SkillListEntry to check.
+     * @param skills A mapping of all skill names to SkillListEntries in the skill list.
+     *
+     * @return The SkillListEntry that is a direct downgrade to the passed skill entry.
+     * If no direct downgrades exist in the skill list, then NULL is returned.
+     */
+    private fun getDirectDowngrade(entry: SkillListEntry, skills: Map<String, SkillListEntry>): SkillListEntry? {
+        if (entry.skillData.downgrade == null) {
+            return null
+        }
+
+        val name: String? = skillIdToName[entry.skillData.downgrade]
+        if (name == null) {
+            return null
+        }
+
+        return skills[name]
+    }
+
+    private fun getOtherVersionsInSkillList(
+        skills: Map<String, SkillListEntry>,
+        entry: SkillListEntry,
+    ): Pair<List<SkillListEntry>, List<SkillListEntry>> {
+        // Follow the chain of downgrade IDs that exist in our skill list
+        // for this skill. This will tell us all of the previous versions
+        // of this skill that have not been purchased yet.
+        // This will only matter for skills which are not in-place upgrades
+        // (in-place like Wet Conditions ○ and double ◎ as opposed to
+        // something like Swinging Maestro and Corner Recovery ○)
+        val downgradeVersions: MutableList<SkillListEntry> = mutableListOf()
+        var tmpEntry: SkillListEntry? = entry
+        while (tmpEntry?.skillData?.downgrade != null) {
+            val downgradeId: Int = tmpEntry.skillData.downgrade
+            val downgradeName: String? = skillIdToName[downgradeId]
+            if (downgradeName == null) {
+                break
+            }
+            val downgradeEntry: SkillListEntry? = skills[downgradeName]
+            // We don't care about the downgrade if it doesn't exist in our skill list.
+            if (downgradeEntry == null) {
+                break
+            }
+
+            downgradeVersions.add(downgradeEntry)
+            tmpEntry = downgradeEntry
+        }
+
+        // Repeat this process but with upgrades instead of downgrades.
+        val upgradeVersions: MutableList<SkillListEntry> = mutableListOf()
+        tmpEntry = entry
+        while (tmpEntry?.skillData?.upgrade != null) {
+            val upgradeId: Int = tmpEntry.skillData.upgrade
+            val upgradeName: String? = skillIdToName[upgradeId]
+            if (upgradeName == null) {
+                break
+            }
+            val upgradeEntry: SkillListEntry? = skills[upgradeName]
+            // We don't care about the upgrade if it doesn't exist in our skill list.
+            if (upgradeEntry == null) {
+                break
+            }
+
+            upgradeVersions.add(upgradeEntry)
+            tmpEntry = upgradeEntry
+        }
+
+        return Pair(downgradeVersions.toList(), upgradeVersions.toList())
+    }
+
+    private fun validateSkillPrices(skills: Map<String, SkillListEntry>): Map<String, SkillListEntry>? {
+        throw NotImplementedError("Skills::validateSkillPrices: Not implemented!")
+
+        val result: MutableMap<String, SkillListEntry> = mutableMapOf()
+
+        for ((name, entry) in skills) {
+            val basePrice: Int? = entry.skillData.cost
+            if (basePrice == null) {
+                MessageLog.w(TAG, "[SKILLS] Invalid cost in database for ${entry.skillData.name}: NULL.")
+                continue
+            }
+
+            val (upgrades, downgrades) = getOtherVersionsInSkillList(skills, entry)
+            
+        }
+
+        // straightaways, corners, and green entries have in-place upgrades.
+
+        // Attempt to validate the price and discount.
+        /*
+        val basePrice: Int? = skillData.cost
+        if (basePrice == null) {
+            MessageLog.w(TAG, "[SKILLS] Invalid cost in database for ${skillData.name}: NULL.")
+            return null
+        }
+
+        if (skillDiscount == null) {
+            // If there is no discount, then the detected price should
+            // match what we have as the base cost in the database.
+            // If not, then set the price to reflect the base cost.
+            if (skillData.cost != null && skillPrice != skillData.cost) {
+                skillPrice = skillData.cost
+            }
+        } else {
+            if (skillData.cost)
+            val expectedPrice: Int = skillData.cost
+        }
+        if (skillDiscount < 0)
+
+        if (skillPrice > 500 || skillDiscount > 50) {
+
+        }
+        */
     }
 
     private fun getSkillsToBuyOptimizeRankStrategy(
@@ -928,42 +1424,132 @@ class Skills (private val game: Game) {
         skillPoints: Int,
         skillPlan: List<String>,
         spendAll: Boolean,
-    ): List<String> {
+    ): List<SkillToBuy> {
         var remainingSkills: MutableMap<String, SkillListEntry> = skills.toMutableMap()
         var remainingSkillPoints: Int = skillPoints
 
-        val skillsToBuy: MutableList<String> = mutableListOf()
-
-        // Create a priority list for skills.
-        //
-        // Negative skills always have highest priority.
-        // Next is user planned skills.
-        // Finally we buy every skill from cheapest to most expensive in
-        // the following order yellow->blue->green->red.
-        // This is a lazy way of giving ourselves a higher rank.
-        // There is definitely room to improve this strategy.
+        val skillsToBuy: MutableList<SkillToBuy> = mutableListOf()
 
         // Add negative skills
         for ((name, entry) in remainingSkills) {
             if (entry.skillData.bIsNegative && entry.price <= remainingSkillPoints) {
-                skillsToBuy.add(name)
+                skillsToBuy.add(SkillToBuy(name))
                 remainingSkillPoints -= entry.price
             }
         }
-        // Remove these entries from our available skills.
-        remainingSkills -= skillsToBuy
 
         // Add user planned skills
+
+        // If two different versions of one skill are in the skill list AND in the
+        // skill plan, we want to buy the highest level version of that skill.
+        // For example, if Corner Recovery O and Swinging Maestro are both in the skill
+        // plan, and both entries are in the skill list, then we want to buy Swinging Maestro.
+        // However, if we do not have enough points for Swinging Maestro, then attempt to
+        // buy Corner Recovery O instead.
+        for (name in skillPlan) {
+            var entry: SkillListEntry? = remainingSkills[name]
+            if (entry == null) {
+                continue
+            }
+
+            // Skip if we can't afford this entry.
+            if (entry.price > remainingSkillPoints) {
+                continue
+            }
+
+            // Get the highest level of this skill that we can afford.
+            // We are essentially walking up the linked list of upgrades.
+            while (entry != null) {
+                val upgrade: SkillListEntry? = entry.upgrade
+                if (upgrade == null) {
+                    break
+                }
+                if (upgrade.price > remainingSkillPoints) {
+                    break
+                }
+                if (entry != null){
+                    remainingSkills.remove(entry.skillData.name)
+                }
+                entry = upgrade
+            }
+
+            skillsToBuy.add(SkillToBuy(entry.skillData.name))
+            remainingSkillPoints -= entry.price
+        }
+        remainingSkills -= skillsToBuy.map { it.name }
+
+        // Now we need to handle skills in our plan which do not exist in the skill
+        // list BUT will exist if we upgrade a skill far enough. For example, if the
+        // user adds Firm Conditions ◎ to the skill plan but we only have
+        // Firm Conditions × in the skill list, then we'd need to purchase
+        // Firm Conditions ×, then Firm Conditions ○, and only then will we be able
+        // to purchase Firm Conditions ◎. This of course means we need to calculate
+        // the total price of the skill in our plan by adding the previous two skills
+        // prices.
+        val skillPlanIds: List<Int> = skillPlan.mapNotNull { skillNameToId[it] }
         for ((name, entry) in remainingSkills) {
-            if (name in skillPlan && entry.price <= remainingSkillPoints) {
-                skillsToBuy.add(name)
-                remainingSkillPoints -= entry.price
+            // Only certain types of skills can have in-place upgrades:
+            // Negative skills
+            // Green skills
+            // Distance-based straightaway/corner skills
+            //
+            // We only want inplace upgrades, so just skip all others.
+            if (
+                entry.skillData.type != SkillType.GREEN &&
+                !entry.skillData.bIsNegative &&
+                !entry.skillData.name.dropLast(2).endsWith("straightaways", ignoreCase = true) &&
+                !entry.skillData.name.dropLast(2).endsWith("corners", ignoreCase = true)
+            ) {
+                continue
+            }
+
+            val upgradeNames: MutableList<String> = mutableListOf()
+            var upgradeId: Int? = entry.skillData.upgrade
+            var totalPrice: Int = entry.price
+            if (entry.skillData.cost == null) {
+                continue
+            }
+            // The discount amount doesn't change when upgrading a skill.
+            val entryDiscount: Double = (entry.price).toDouble() / (entry.skillData.cost).toDouble()
+            while (upgradeId != null) {
+                val upgradeName: String? = skillIdToName[upgradeId]
+                if (upgradeName == null) {
+                    break
+                }
+                
+                val upgradeSkillData: SkillData? = skillData[upgradeName]
+                if (upgradeSkillData == null) {
+                    break
+                }
+
+                val upgradeCost: Int? = upgradeSkillData.cost
+                if (upgradeCost == null) {
+                    break
+                }
+                totalPrice += ceil(upgradeCost * entryDiscount).toInt()
+
+                upgradeNames.add(upgradeSkillData.name)
+                upgradeId = upgradeSkillData.upgrade
+
+                // If this upgrade version is in our skill plan, then we stop here
+                // and set it to be purchased. The numUpgrades is how many times
+                // we click the "+" button.
+                if (upgradeName in skillPlan && totalPrice <= remainingSkillPoints) {
+                    skillsToBuy.add(SkillToBuy(name, numUpgrades = upgradeNames.size + 1))
+                    remainingSkillPoints -= totalPrice
+                    break
+                }
             }
         }
-        remainingSkills -= skillsToBuy
+        remainingSkills -= skillsToBuy.map { it.name }
+
+        // Early exit if we aren't spending all our points.
+        if (!spendAll) {
+            return skillsToBuy.toList().distinctBy { it.name }
+        }
 
         // Split skills by type
-        val filteredSkills: Map<String, SkillListEntry> = remainingSkills.filterKeys { it !in skillsToBuy }
+        val filteredSkills: Map<String, SkillListEntry> = remainingSkills.filterKeys { it !in skillsToBuy.map { skillToBuy -> skillToBuy.name } }
         val groupedByType: Map<SkillType, List<SkillListEntry>> = filteredSkills.values.groupBy { it.skillData.type }
 
         val skillTypePriority: List<SkillType> = listOf(
@@ -984,13 +1570,13 @@ class Skills (private val game: Game) {
                 if (remainingSkillPoints < entry.price) {
                     break
                 }
-                skillsToBuy.add(entry.skillData.name)
+                skillsToBuy.add(SkillToBuy(entry.skillData.name))
                 remainingSkillPoints -= entry.price
             }
         }
-        remainingSkills -= skillsToBuy
+        remainingSkills -= skillsToBuy.map { it.name }
 
-        return skillsToBuy.toList().distinct()
+        return skillsToBuy.toList().distinctBy { it.name }
     }
 
     private fun getSkillsToBuyDefaultStrategy(
@@ -998,11 +1584,11 @@ class Skills (private val game: Game) {
         skillPoints: Int,
         skillPlan: List<String>,
         spendAll: Boolean,
-    ): List<String> {
+    ): List<SkillToBuy> {
         var remainingSkills: MutableMap<String, SkillListEntry> = skills.toMutableMap()
         var remainingSkillPoints: Int = skillPoints
 
-        val skillsToBuy: MutableList<String> = mutableListOf()
+        val skillsToBuy: MutableList<SkillToBuy> = mutableListOf()
 
         // Create a priority list for skills.
         //
@@ -1026,33 +1612,135 @@ class Skills (private val game: Game) {
         // Add negative skills
         for ((name, entry) in remainingSkills) {
             if (entry.skillData.bIsNegative && entry.price <= remainingSkillPoints) {
-                skillsToBuy.add(name)
+                skillsToBuy.add(SkillToBuy(name))
                 remainingSkillPoints -= entry.price
             }
         }
         // Remove these entries from our available skills.
-        remainingSkills -= skillsToBuy
+        remainingSkills -= skillsToBuy.map { it.name }
+
 
         // Add user planned skills
+
+        // If two different versions of one skill are in the skill list AND in the
+        // skill plan, we want to buy the highest level version of that skill.
+        // For example, if Corner Recovery O and Swinging Maestro are both in the skill
+        // plan, and both entries are in the skill list, then we want to buy Swinging Maestro.
+        // However, if we do not have enough points for Swinging Maestro, then attempt to
+        // buy Corner Recovery O instead.
+        for (name in skillPlan) {
+            var entry: SkillListEntry? = remainingSkills[name]
+            if (entry == null) {
+                continue
+            }
+
+            // Skip if we can't afford this entry.
+            if (entry.price > remainingSkillPoints) {
+                continue
+            }
+
+            // Get the highest level of this skill that we can afford.
+            // We are essentially walking up the linked list of upgrades.
+            while (entry != null) {
+                val upgrade: SkillListEntry? = entry.upgrade
+                if (upgrade == null) {
+                    break
+                }
+                if (upgrade.price > remainingSkillPoints) {
+                    break
+                }
+                if (entry != null){
+                    remainingSkills.remove(entry.skillData.name)
+                }
+                entry = upgrade
+            }
+
+            skillsToBuy.add(SkillToBuy(entry.skillData.name))
+            remainingSkillPoints -= entry.price
+        }
+        remainingSkills -= skillsToBuy.map { it.name }
+
+        // Now we need to handle skills in our plan which do not exist in the skill
+        // list BUT will exist if we upgrade a skill far enough. For example, if the
+        // user adds Firm Conditions ◎ to the skill plan but we only have
+        // Firm Conditions × in the skill list, then we'd need to purchase
+        // Firm Conditions ×, then Firm Conditions ○, and only then will we be able
+        // to purchase Firm Conditions ◎. This of course means we need to calculate
+        // the total price of the skill in our plan by adding the previous two skills
+        // prices.
+        val skillPlanIds: List<Int> = skillPlan.mapNotNull { skillNameToId[it] }
         for ((name, entry) in remainingSkills) {
-            if (name in skillPlan && entry.price <= remainingSkillPoints) {
-                skillsToBuy.add(name)
-                remainingSkillPoints -= entry.price
+            // Only certain types of skills can have in-place upgrades:
+            // Negative skills
+            // Green skills
+            // Distance-based straightaway/corner skills
+            //
+            // We only want inplace upgrades, so just skip all others.
+            if (
+                entry.skillData.type != SkillType.GREEN &&
+                !entry.skillData.bIsNegative &&
+                !entry.skillData.name.dropLast(2).endsWith("straightaways", ignoreCase = true) &&
+                !entry.skillData.name.dropLast(2).endsWith("corners", ignoreCase = true)
+            ) {
+                continue
+            }
+
+            val upgradeNames: MutableList<String> = mutableListOf()
+            var upgradeId: Int? = entry.skillData.upgrade
+            var totalPrice: Int = entry.price
+            if (entry.skillData.cost == null) {
+                continue
+            }
+            // The discount amount doesn't change when upgrading a skill.
+            val entryDiscount: Double = (entry.price).toDouble() / (entry.skillData.cost).toDouble()
+            while (upgradeId != null) {
+                val upgradeName: String? = skillIdToName[upgradeId]
+                if (upgradeName == null) {
+                    break
+                }
+                
+                val upgradeSkillData: SkillData? = skillData[upgradeName]
+                if (upgradeSkillData == null) {
+                    break
+                }
+
+                val upgradeCost: Int? = upgradeSkillData.cost
+                if (upgradeCost == null) {
+                    break
+                }
+                totalPrice += ceil(upgradeCost * entryDiscount).toInt()
+
+                upgradeNames.add(upgradeSkillData.name)
+                upgradeId = upgradeSkillData.upgrade
+
+                // If this upgrade version is in our skill plan, then we stop here
+                // and set it to be purchased. The numUpgrades is how many times
+                // we click the "+" button.
+                if (upgradeName in skillPlan && totalPrice <= remainingSkillPoints) {
+                    skillsToBuy.add(SkillToBuy(name, numUpgrades = upgradeNames.size + 1))
+                    remainingSkillPoints -= totalPrice
+                    break
+                }
             }
         }
-        remainingSkills -= skillsToBuy
+        remainingSkills -= skillsToBuy.map { it.name }
+
+        // Early exit if we aren't spending all our points.
+        if (!spendAll) {
+            return skillsToBuy.toList().distinctBy { it.name }
+        }
 
         // Add unique (inherited) skills
         for ((name, entry) in remainingSkills) {
             if (entry.skillData.rarity > 2 && entry.price <= remainingSkillPoints) {
-                skillsToBuy.add(name)
+                skillsToBuy.add(SkillToBuy(name))
                 remainingSkillPoints -= entry.price
             }
         }
-        remainingSkills -= skillsToBuy
+        remainingSkills -= skillsToBuy.map { it.name }
 
         // Split skills by type
-        val filteredSkills: Map<String, SkillListEntry> = remainingSkills.filterKeys { it !in skillsToBuy }
+        val filteredSkills: Map<String, SkillListEntry> = remainingSkills.filterKeys { it !in skillsToBuy.map { skillToBuy -> skillToBuy.name } }
         val groupedByType: Map<SkillType, List<SkillListEntry>> = filteredSkills.values.groupBy { it.skillData.type }
 
         val skillTypePriority: List<SkillType> = listOf(
@@ -1084,7 +1772,7 @@ class Skills (private val game: Game) {
                 if (remainingSkillPoints < entry.price) {
                     break
                 }
-                skillsToBuy.add(entry.skillData.name)
+                skillsToBuy.add(SkillToBuy(entry.skillData.name))
                 remainingSkillPoints -= entry.price
             }
 
@@ -1093,16 +1781,16 @@ class Skills (private val game: Game) {
                 if (remainingSkillPoints < entry.price) {
                     break
                 }
-                skillsToBuy.add(entry.skillData.name)
+                skillsToBuy.add(SkillToBuy(entry.skillData.name))
                 remainingSkillPoints -= entry.price
             }
         }
-        remainingSkills -= skillsToBuy
+        remainingSkills -= skillsToBuy.map { it.name }
 
-        return skillsToBuy.toList().distinct()
+        return skillsToBuy.toList().distinctBy { it.name }
     }
 
-    private fun getSkillsToBuyPreFinals(skills: Map<String, SkillListEntry>, skillPoints: Int): List<String> {
+    private fun getSkillsToBuyPreFinals(skills: Map<String, SkillListEntry>, skillPoints: Int): List<SkillToBuy> {
         if (!enablePreFinalsSkillPlan) {
             MessageLog.i(TAG, "[SKILLS] Pre-Finals skill plan is disabled. No skills will be purchased.")
             return emptyList()
@@ -1126,7 +1814,7 @@ class Skills (private val game: Game) {
         }
     }
 
-    private fun getSkillsToBuyCareerComplete(skills: Map<String, SkillListEntry>, skillPoints: Int): List<String> {
+    private fun getSkillsToBuyCareerComplete(skills: Map<String, SkillListEntry>, skillPoints: Int): List<SkillToBuy> {
         if(!enableCareerCompleteSkillPlan) {
             MessageLog.i(TAG, "[SKILLS] Career Complete skill plan is disabled. No skills will be purchased.")
             return emptyList()
@@ -1150,8 +1838,8 @@ class Skills (private val game: Game) {
         }
     }
 
-    private fun getSkillsToBuy(skills: Map<String, SkillListEntry>, skillPoints: Int): List<String> {
-        val skillsToBuy: List<String> = if (ButtonLog.check(game.imageUtils)) {
+    private fun getSkillsToBuy(skills: Map<String, SkillListEntry>, skillPoints: Int): List<SkillToBuy> {
+        val skillsToBuy: List<SkillToBuy> = if (ButtonLog.check(game.imageUtils)) {
             getSkillsToBuyPreFinals(skills, skillPoints)
         } else {
             // The Log button does not exist after the career ends.
@@ -1159,8 +1847,8 @@ class Skills (private val game: Game) {
         }
 
         MessageLog.d(TAG, "[SKILLS] Skills to Buy:")
-        for (name in skillsToBuy) {
-            MessageLog.d(TAG, "    $name: ${skills[name]?.price}")
+        for (skillToBuy in skillsToBuy) {
+            MessageLog.d(TAG, "    ${skillToBuy.name}: ${skills[skillToBuy.name]?.price} (numUpgrades=${skillToBuy.numUpgrades})")
         }
         MessageLog.d(TAG, "=======================================")
 
@@ -1205,7 +1893,7 @@ class Skills (private val game: Game) {
 
         // TODO: Add user configuration for forcing skill purchases.
 
-        val skillsToBuy: List<String> = getSkillsToBuy(skills, skillPoints)
+        val skillsToBuy: List<SkillToBuy> = getSkillsToBuy(skills, skillPoints)
 
         processSkillList(skillsToBuy)
 
