@@ -256,9 +256,7 @@ open class Campaign(val game: Game) {
     fun handleSkillListScreen(): Boolean {
         MessageLog.i(TAG, "Beginning process to purchase skills...")
 
-        game.skills.handleSkillList()
-
-        return true
+        return game.skills.handleSkillList()
     }
 
     fun checkAptitudes() {
@@ -584,8 +582,8 @@ open class Campaign(val game: Game) {
             // Now check if we need to handle skills before finals.
             if (game.currentDate.day == 72 && game.skills.enablePreFinalsSkillPlan) {
                 ButtonSkills.click(game.imageUtils)
-                game.wait(0.5, skipWaitingForLoading = true)
-                if (!game.skills.handleSkillList()) {
+                game.wait(1.0)
+                if (!handleSkillListScreen()) {
                     MessageLog.w(TAG, "handleMainScreen:: handleSkillList() failed.")
                 }
                 // Return to main screen.
@@ -724,9 +722,9 @@ open class Campaign(val game: Game) {
                 } else if (game.checkEndScreen()) {
                     // Stop when the bot has reached the screen where it details the overall result of the run.
                     if (game.skills.enableCareerCompleteSkillPlan) {
-                        ButtonSkills.click(game.imageUtils)
-                        game.wait(0.5, skipWaitingForLoading = true)
-                        if (!game.skills.handleSkillList()) {
+                        ButtonCareerEndSkills.click(game.imageUtils)
+                        game.wait(1.0)
+                        if (!handleSkillListScreen()) {
                             MessageLog.w(TAG, "Career End Screen: handleSkillList() failed.")
                         }
                         // Return to main screen.

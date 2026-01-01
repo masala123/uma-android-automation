@@ -255,6 +255,7 @@ data class SkillData(
     val distance: TrackDistance?
         get() = TrackDistance.entries.find { description.contains("($it)", ignoreCase = true) }
 
+    val bIsGold: Boolean = iconId % 10 == 2
     val bIsUnique: Boolean = iconId % 10 == 3
     val bIsNegative: Boolean = iconId % 10 == 4
 
