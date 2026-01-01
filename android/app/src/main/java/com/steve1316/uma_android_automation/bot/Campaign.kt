@@ -336,9 +336,12 @@ open class Campaign(val game: Game) {
 
 	/**
 	 * Campaign-specific race event handling.
+	 * 
+     * @param isScheduledRace True if the race is scheduled, false otherwise.
+     * @return True if the race was handled successfully, false otherwise.
 	 */
-	open fun handleRaceEvents(): Boolean {
-        val bDidRace: Boolean = game.racing.handleRaceEvents()
+	open fun handleRaceEvents(isScheduledRace: Boolean = false): Boolean {
+        val bDidRace: Boolean = game.racing.handleRaceEvents(isScheduledRace)
         bNeedToCheckFans = bDidRace
 
 		return bDidRace
@@ -346,6 +349,8 @@ open class Campaign(val game: Game) {
 
 	/**
 	 * Campaign-specific checks for special screens or conditions.
+	 * 
+     * @return True if the conditions are met, false otherwise.
 	 */
 	open fun checkCampaignSpecificConditions(): Boolean {
 		return false
@@ -664,13 +669,8 @@ open class Campaign(val game: Game) {
 
         if (game.racing.encounteredRacingPopup || needToRace) {
             MessageLog.i(TAG, "[INFO] All checks are cleared for racing.")
-            if (!handleRaceEvents()) {
-                if (game.racing.detectedMandatoryRaceCheck) {
-                    throw InterruptedException("Mandatory race detected. Stopping bot...")
-                }
-                ButtonBack.click(imageUtils = game.imageUtils)
-                game.wait(1.0)
-                game.training.handleTraining()
+            if (!handleRaceEvents(bIsScheduledRaceDay) && handleRaceEventFallback()) {
+                throw InterruptedException("Mandatory race detected. Stopping bot...")
             }
         }
         return true
@@ -690,6 +690,7 @@ open class Campaign(val game: Game) {
 		}
         ButtonBack.click(game.imageUtils)
         ButtonCancel.click(game.imageUtils)
+        ButtonClose.click(game.imageUtils)
 		game.wait(1.0)
 		game.training.handleTraining()
 		return false
