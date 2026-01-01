@@ -200,7 +200,6 @@ export class DatabaseManager {
 
             // Create skills table.
             logWithTimestamp("Creating skills table...")
-            await this.db.execAsync(`DROP TABLE ${this.TABLE_SKILLS}`)
             await this.db.execAsync(`
                 CREATE TABLE IF NOT EXISTS ${this.TABLE_SKILLS} (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -209,11 +208,11 @@ export class DatabaseManager {
                     name_en TEXT NOT NULL,
                     desc_en TEXT NOT NULL,
                     icon_id INTEGER NOT NULL,
-                    cost INTEGER NULL,
+                    cost INTEGER,
                     rarity INTEGER NOT NULL,
                     versions TEXT NOT NULL,
-                    upgrade INTEGER NULL,
-                    downgrade INTEGER NULL
+                    upgrade INTEGER,
+                    downgrade INTEGER
                 )
             `)
             logWithTimestamp("Skills table created successfully.")
