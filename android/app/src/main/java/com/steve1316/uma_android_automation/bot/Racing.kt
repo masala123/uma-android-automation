@@ -372,9 +372,10 @@ class Racing (private val game: Game) {
     /**
      * The entry point for handling mandatory or extra races.
      *
+     * @param isScheduledRace True if there is a scheduled race pending. False otherwise.
      * @return True if the mandatory/extra race was completed successfully. Otherwise false.
      */
-    fun handleRaceEvents(): Boolean {
+    fun handleRaceEvents(isScheduledRace: Boolean = false): Boolean {
         MessageLog.i(TAG, "\n********************")
         MessageLog.i(TAG, "[RACE] Starting Racing process on ${game.currentDate}.")
 
@@ -424,7 +425,7 @@ class Racing (private val game: Game) {
             if (dialog != null && dialog.name == "consecutive_race_warning") {
                 return false
             }
-            return handleExtraRace()
+            return handleExtraRace(isScheduledRace = isScheduledRace)
         } else if (game.imageUtils.findImage("race_change_strategy", tries = 1, region = game.imageUtils.regionMiddle).first != null) {
             MessageLog.i(TAG, "[RACE] The bot is currently sitting on the race screen. Most likely here for a scheduled race.")
             handleStandaloneRace()
@@ -703,122 +704,129 @@ class Racing (private val game: Game) {
     /**
      * Handles extra race processing.
      * 
+     * @param isScheduledRace True if there is a scheduled race pending. False otherwise.
      * @return True if the extra race was completed successfully, false otherwise.
      */
-    private fun handleExtraRace(): Boolean {
-        MessageLog.i(TAG, "[RACE] Starting process for handling a extra race.")
+    private fun handleExtraRace(isScheduledRace: Boolean = false): Boolean {
+        MessageLog.i(TAG, "[RACE] Starting process for handling a extra race ${if (isScheduledRace) "(scheduled)" else ""}.")
 
-        // Check for mandatory racing plan mode before any screen detection.
-        val (_, mandatoryExtraRaceData) = findMandatoryExtraRaceForCurrentTurn()
-        if (mandatoryExtraRaceData != null) {
-            // Check if aptitudes match (both track surface and distance must be B or greater) for double predictions.
-            val aptitudesMatch = checkRaceAptitudeMatch(mandatoryExtraRaceData)
-            if (!aptitudesMatch) {
-                // Get the trainee's aptitude for this race's track surface/distance.
-                val trackSurfaceAptitude: Aptitude = game.trainee.checkTrackSurfaceAptitude(mandatoryExtraRaceData.trackSurface)
-                val trackDistanceAptitude: Aptitude = game.trainee.checkTrackDistanceAptitude(mandatoryExtraRaceData.trackDistance)
-                MessageLog.i(TAG, "[RACE] Mandatory extra race \"${mandatoryExtraRaceData.name}\" aptitudes don't match requirements (TrackSurface: $trackSurfaceAptitude, TrackDistance: $trackDistanceAptitude). Both must be B or greater.")
-                return false
-            } else {
-                MessageLog.i(TAG, "[RACE] Mandatory extra race \"${mandatoryExtraRaceData.name}\" aptitudes match requirements. Proceeding to navigate to the Extra Races screen.")
+        // If there is a scheduled race pending, proceed to run it immediately.
+        if (!isScheduledRace) {
+            // Check for mandatory racing plan mode before any screen detection.
+            val (_, mandatoryExtraRaceData) = findMandatoryExtraRaceForCurrentTurn()
+            if (mandatoryExtraRaceData != null) {
+                // Check if aptitudes match (both track surface and distance must be B or greater) for double predictions.
+                val aptitudesMatch = checkRaceAptitudeMatch(mandatoryExtraRaceData)
+                if (!aptitudesMatch) {
+                    // Get the trainee's aptitude for this race's track surface/distance.
+                    val trackSurfaceAptitude: Aptitude = game.trainee.checkTrackSurfaceAptitude(mandatoryExtraRaceData.trackSurface)
+                    val trackDistanceAptitude: Aptitude = game.trainee.checkTrackDistanceAptitude(mandatoryExtraRaceData.trackDistance)
+                    MessageLog.i(TAG, "[RACE] Mandatory extra race \"${mandatoryExtraRaceData.name}\" aptitudes don't match requirements (TrackSurface: $trackSurfaceAptitude, TrackDistance: $trackDistanceAptitude). Both must be B or greater.")
+                    return false
+                } else {
+                    MessageLog.i(TAG, "[RACE] Mandatory extra race \"${mandatoryExtraRaceData.name}\" aptitudes match requirements. Proceeding to navigate to the Extra Races screen.")
+                }
             }
-        }
 
-        // If there is a popup warning about repeating races 3+ times, stop the process and do something else other than racing.
-        // Note that if the Racing Plan is set to be mandatory, then this popup is dismissed.
-        if (game.imageUtils.findImage("race_repeat_warning").first != null) {
-            if (!enableForceRacing && !enableMandatoryRacingPlan) {
-                raceRepeatWarningCheck = true
-                MessageLog.i(TAG, "[RACE] Closing popup warning of doing more than 3+ races and setting flag to prevent racing for now. Canceling the racing process and doing something else.")
-                game.findAndTapImage("cancel", region = game.imageUtils.regionBottomHalf)
+            // If there is a popup warning about repeating races 3+ times, stop the process and do something else other than racing.
+            // Note that if the Racing Plan is set to be mandatory, then this popup is dismissed.
+            if (game.imageUtils.findImage("race_repeat_warning").first != null) {
+                if (!enableForceRacing && !enableMandatoryRacingPlan) {
+                    raceRepeatWarningCheck = true
+                    MessageLog.i(TAG, "[RACE] Closing popup warning of doing more than 3+ races and setting flag to prevent racing for now. Canceling the racing process and doing something else.")
+                    game.findAndTapImage("cancel", region = game.imageUtils.regionBottomHalf)
+                    // Clear requirement flags since we cannot proceed with racing.
+                    hasFanRequirement = false
+                    hasTrophyRequirement = false
+                    MessageLog.i(TAG, "********************")
+                    return false
+                } else {
+                    game.findAndTapImage("ok", tries = 1, region = game.imageUtils.regionMiddle)
+                    game.wait(1.0)
+                }
+            }
+
+            // There is an extra race.
+            val statusLocation = ButtonRaceListFullStats.find(imageUtils = game.imageUtils, tries = 30).first
+            if (statusLocation == null) {
+                MessageLog.e(TAG, "[ERROR] Unable to determine existence of list of extra races. Canceling the racing process and doing something else.")
                 // Clear requirement flags since we cannot proceed with racing.
                 hasFanRequirement = false
                 hasTrophyRequirement = false
                 MessageLog.i(TAG, "********************")
                 return false
-            } else {
-                game.findAndTapImage("ok", tries = 1, region = game.imageUtils.regionMiddle)
-                game.wait(1.0)
             }
-        }
 
-        // There is a extra race.
-        val statusLocation = ButtonRaceListFullStats.find(imageUtils = game.imageUtils, tries = 30)
-        if (statusLocation.first == null) {
-            MessageLog.e(TAG, "[ERROR] Unable to determine existence of list of extra races. Canceling the racing process and doing something else.")
-            // Clear requirement flags since we cannot proceed with racing.
-            hasFanRequirement = false
-            hasTrophyRequirement = false
-            MessageLog.i(TAG, "********************")
-            return false
-        }
-
-        val maxCount = game.imageUtils.findAll("race_selection_fans", region = game.imageUtils.regionBottomHalf).size
-        if (maxCount == 0) {
-            // If there is a fan/trophy requirement but no races available, reset the flags and proceed with training to advance the day.
-            if (hasFanRequirement || hasTrophyRequirement) {
-                MessageLog.i(TAG, "[RACE] Fan/trophy requirement detected but no extra races available. Clearing requirement flags and proceeding with training to advance the day.")
-            } else {
-                MessageLog.e(TAG, "[ERROR] Was unable to find any extra races to select. Canceling the racing process and doing something else.")
-            }
-            // Always clear requirement flags when no races are available.
-            hasFanRequirement = false
-            hasTrophyRequirement = false
-            MessageLog.i(TAG, "********************")
-            return false
-        } else {
-            MessageLog.i(TAG, "[RACE] There are $maxCount extra race options currently on screen.")
-        }
-
-        if (hasFanRequirement) MessageLog.i(TAG, "[RACE] Fan requirement criteria detected. This race must be completed to meet the requirement.")
-        if (hasTrophyRequirement) MessageLog.i(TAG, "[RACE] Trophy requirement criteria detected. Only G1 races will be selected to meet the requirement.")
-
-        // Determine whether to use smart racing with user-selected races or standard racing.
-        val useSmartRacing = if (hasFanRequirement) {
-            // If fan requirement is needed, force standard racing to ensure the race proceeds.
-            false
-        } else if (hasTrophyRequirement) {
-            // Trophy requirement can use smart racing as it filters to G1 races internally.
-            // Use smart racing for all years except Year 1 (Junior Year).
-            game.currentDate.year != DateYear.JUNIOR
-        } else if (enableRacingPlan && game.currentDate.year != DateYear.JUNIOR) {
-            // Year 2 and 3: Use smart racing if conditions are met.
-            enableFarmingFans && !enableForceRacing
-        } else {
-            false
-        }
-
-        val success = if (useSmartRacing && game.currentDate.year != DateYear.JUNIOR) {
-            // Use the smart racing logic.
-            MessageLog.i(TAG, "[RACE] Using smart racing for Year ${game.currentDate.year}.")
-            processSmartRacing(mandatoryExtraRaceData)
-        } else {
-            // Use the standard racing logic.
-            // If needed, print the reason(s) to why the smart racing logic was not started.
-            if (enableRacingPlan && !hasFanRequirement && !hasTrophyRequirement) {
-                MessageLog.i(TAG, "[RACE] Smart racing conditions not met due to current settings, using traditional racing logic...")
-                MessageLog.i(TAG, "[RACE] Reason: One or more conditions failed:")
-                if (game.currentDate.year != DateYear.JUNIOR) {
-                    if (!enableFarmingFans) MessageLog.i(TAG, "[RACE]   - enableFarmingFans is false")
-                    if (enableForceRacing) MessageLog.i(TAG, "[RACE]   - enableForceRacing is true")
+            val maxCount = game.imageUtils.findAll("race_selection_fans", region = game.imageUtils.regionBottomHalf).size
+            if (maxCount == 0) {
+                // If there is a fan/trophy requirement but no races available, reset the flags and proceed with training to advance the day.
+                if (hasFanRequirement || hasTrophyRequirement) {
+                    MessageLog.i(TAG, "[RACE] Fan/trophy requirement detected but no extra races available. Clearing requirement flags and proceeding with training to advance the day.")
                 } else {
-                    MessageLog.i(TAG, "[RACE]   - It is currently the Junior Year.")
+                    MessageLog.e(TAG, "[ERROR] Was unable to find any extra races to select. Canceling the racing process and doing something else.")
                 }
+                // Always clear requirement flags when no races are available.
+                hasFanRequirement = false
+                hasTrophyRequirement = false
+                MessageLog.i(TAG, "********************")
+                return false
+            } else {
+                MessageLog.i(TAG, "[RACE] There are $maxCount extra race options currently on screen.")
             }
 
-            processStandardRacing()
-        }
+            if (hasFanRequirement) MessageLog.i(TAG, "[RACE] Fan requirement criteria detected. This race must be completed to meet the requirement.")
+            if (hasTrophyRequirement) MessageLog.i(TAG, "[RACE] Trophy requirement criteria detected. Only G1 races will be selected to meet the requirement.")
 
-        if (!success) {
-            // Clear requirement flags if race selection failed.
-            hasFanRequirement = false
-            hasTrophyRequirement = false
-            return false
+            // Determine whether to use smart racing with user-selected races or standard racing.
+            val useSmartRacing = if (hasFanRequirement) {
+                // If fan requirement is needed, force standard racing to ensure the race proceeds.
+                false
+            } else if (hasTrophyRequirement) {
+                // Trophy requirement can use smart racing as it filters to G1 races internally.
+                // Use smart racing for all years except Year 1 (Junior Year).
+                game.currentDate.year != DateYear.JUNIOR
+            } else if (enableRacingPlan && game.currentDate.year != DateYear.JUNIOR) {
+                // Year 2 and 3: Use smart racing if conditions are met.
+                enableFarmingFans && !enableForceRacing
+            } else {
+                false
+            }
+
+            val success = if (useSmartRacing && game.currentDate.year != DateYear.JUNIOR) {
+                // Use the smart racing logic.
+                MessageLog.i(TAG, "[RACE] Using smart racing for Year ${game.currentDate.year}.")
+                processSmartRacing(mandatoryExtraRaceData)
+            } else {
+                // Use the standard racing logic.
+                // If needed, print the reason(s) to why the smart racing logic was not started.
+                if (enableRacingPlan && !hasFanRequirement && !hasTrophyRequirement) {
+                    MessageLog.i(TAG, "[RACE] Smart racing conditions not met due to current settings, using traditional racing logic...")
+                    MessageLog.i(TAG, "[RACE] Reason: One or more conditions failed:")
+                    if (game.currentDate.year != DateYear.JUNIOR) {
+                        if (!enableFarmingFans) MessageLog.i(TAG, "[RACE]   - enableFarmingFans is false")
+                        if (enableForceRacing) MessageLog.i(TAG, "[RACE]   - enableForceRacing is true")
+                    } else {
+                        MessageLog.i(TAG, "[RACE]   - It is currently the Junior Year.")
+                    }
+                }
+
+                processStandardRacing()
+            }
+
+            if (!success) {
+                // Clear requirement flags if race selection failed.
+                hasFanRequirement = false
+                hasTrophyRequirement = false
+                return false
+            }
+        } else if (isScheduledRace) {
+            bIgnoreConsecutiveRaceWarning = true
+            handleDialogs()
         }
 
         // Confirm the selection and the resultant popup and then wait for the game to load.
-        game.findAndTapImage("race_confirm", tries = 30, region = game.imageUtils.regionBottomHalf)
-        game.findAndTapImage("race_confirm", tries = 10, region = game.imageUtils.regionBottomHalf)
+        ButtonRace.click(game.imageUtils, tries = 30)
+        ButtonRace.click(game.imageUtils, tries = 10)
         game.wait(2.0)
 
         // Handle race strategy override if enabled.
@@ -832,7 +840,7 @@ class Racing (private val game: Game) {
         // Clear the next smart race day tracker since we just completed a race.
         nextSmartRaceDay = null
 
-        MessageLog.i(TAG, "[RACE] Racing process for Extra Race is completed.")
+        MessageLog.i(TAG, "[RACE] Racing process for Extra Race ${if (isScheduledRace) "(scheduled)" else ""} is completed.")
         MessageLog.i(TAG, "********************")
         return true
     }
