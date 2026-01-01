@@ -47,6 +47,9 @@ const SkillPlanPreFinalsSettings = () => {
         enablePreFinalsSkillPlan,
         enablePreFinalsSpendAll,
         enablePreFinalsOptimizeRank,
+        enablePreFinalsBuyInheritedSkills,
+        enablePreFinalsBuyNegativeSkills,
+        enablePreFinalsIgnoreGoldSkills,
         preFinalsSkillPlan,
     } = skillSettings
 
@@ -217,6 +220,30 @@ const SkillPlanPreFinalsSettings = () => {
                     onCheckedChange={(checked) => updateSkillsSetting("enablePreFinalsOptimizeRank", checked)}
                     label="Purchase Skills to Optimize Rank"
                     description={"When enabled, the bot will attempt to spend skill points on skills such that the final rank of the trainee is optimized. This is just a lazy evaluation so the optimization is only approximated."}
+                    style={{ marginTop: 16 }}
+                />
+                <CustomCheckbox
+                    id="enable-pre-finals-buy-inherited-skills"
+                    checked={enablePreFinalsBuyInheritedSkills}
+                    onCheckedChange={(checked) => updateSkillsSetting("enablePreFinalsBuyInheritedSkills", checked)}
+                    label="Purchase All Inherited Unique Skills"
+                    description={"When enabled, the bot will attempt to purchase all inherited unique skills."}
+                    style={{ marginTop: 16 }}
+                />
+                <CustomCheckbox
+                    id="enable-pre-finals-buy-negative-skills"
+                    checked={enablePreFinalsBuyNegativeSkills}
+                    onCheckedChange={(checked) => updateSkillsSetting("enablePreFinalsBuyNegativeSkills", checked)}
+                    label="Purchase All Negative Skills"
+                    description={"When enabled, the bot will attempt to purchase all negative skills (i.e. Firm Conditions ×)."}
+                    style={{ marginTop: 16 }}
+                />
+                <CustomCheckbox
+                    id="enable-pre-finals-ignore-gold-skills"
+                    checked={enablePreFinalsIgnoreGoldSkills}
+                    onCheckedChange={(checked) => updateSkillsSetting("enablePreFinalsIgnoreGoldSkills", checked)}
+                    label="Ignore Gold Skills"
+                    description={"When enabled, the bot will not purchase any gold skills that are not included in the skill plan."}
                     style={{ marginTop: 16 }}
                 />
             </>

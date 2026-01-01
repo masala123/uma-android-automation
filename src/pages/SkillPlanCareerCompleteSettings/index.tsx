@@ -47,6 +47,9 @@ const SkillPlanCareerCompleteSettings = () => {
         enableCareerCompleteSkillPlan,
         enableCareerCompleteSpendAll,
         enableCareerCompleteOptimizeRank,
+        enableCareerCompleteBuyInheritedSkills,
+        enableCareerCompleteBuyNegativeSkills,
+        enableCareerCompleteIgnoreGoldSkills,
         careerCompleteSkillPlan,
     } = skillSettings
 
@@ -217,6 +220,30 @@ const SkillPlanCareerCompleteSettings = () => {
                     onCheckedChange={(checked) => updateSkillsSetting("enableCareerCompleteOptimizeRank", checked)}
                     label="Purchase Skills to Optimize Rank"
                     description={"When enabled, the bot will attempt to spend skill points on skills such that the final rank of the trainee is optimized. This is just a lazy evaluation so the optimization is only approximated."}
+                    style={{ marginTop: 16 }}
+                />
+                <CustomCheckbox
+                    id="enable-career-complete-buy-inherited-skills"
+                    checked={enableCareerCompleteBuyInheritedSkills}
+                    onCheckedChange={(checked) => updateSkillsSetting("enableCareerCompleteBuyInheritedSkills", checked)}
+                    label="Purchase All Inherited Unique Skills"
+                    description={"When enabled, the bot will attempt to purchase all inherited unique skills."}
+                    style={{ marginTop: 16 }}
+                />
+                <CustomCheckbox
+                    id="enable-career-complete-buy-negative-skills"
+                    checked={enableCareerCompleteBuyNegativeSkills}
+                    onCheckedChange={(checked) => updateSkillsSetting("enableCareerCompleteBuyNegativeSkills", checked)}
+                    label="Purchase All Negative Skills"
+                    description={"When enabled, the bot will attempt to purchase all negative skills (i.e. Firm Conditions ×)."}
+                    style={{ marginTop: 16 }}
+                />
+                <CustomCheckbox
+                    id="enable-career-complete-ignore-gold-skills"
+                    checked={enableCareerCompleteIgnoreGoldSkills}
+                    onCheckedChange={(checked) => updateSkillsSetting("enableCareerCompleteIgnoreGoldSkills", checked)}
+                    label="Ignore Gold Skills"
+                    description={"When enabled, the bot will not purchase any gold skills that are not included in the skill plan."}
                     style={{ marginTop: 16 }}
                 />
             </>

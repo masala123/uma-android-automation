@@ -46,10 +46,16 @@ export interface Settings {
         enablePreFinalsSkillPlan: boolean
         enablePreFinalsSpendAll: boolean
         enablePreFinalsOptimizeRank: boolean
+        enablePreFinalsBuyInheritedSkills: boolean
+        enablePreFinalsBuyNegativeSkills: boolean
+        enablePreFinalsIgnoreGoldSkills: boolean
         preFinalsSkillPlan: string
         enableCareerCompleteSkillPlan: boolean
         enableCareerCompleteSpendAll: boolean
         enableCareerCompleteOptimizeRank: boolean
+        enableCareerCompleteBuyInheritedSkills: boolean
+        enableCareerCompleteBuyNegativeSkills: boolean
+        enableCareerCompleteIgnoreGoldSkills: boolean
         careerCompleteSkillPlan: string
         skillPlanData: string
     }
@@ -188,10 +194,16 @@ export const defaultSettings: Settings = {
         enablePreFinalsSkillPlan: false,
         enablePreFinalsSpendAll: false,
         enablePreFinalsOptimizeRank: false,
+        enablePreFinalsBuyInheritedSkills: false,
+        enablePreFinalsBuyNegativeSkills: true,
+        enablePreFinalsIgnoreGoldSkills: false,
         preFinalsSkillPlan: "",
         enableCareerCompleteSkillPlan: false,
         enableCareerCompleteSpendAll: false,
         enableCareerCompleteOptimizeRank: false,
+        enableCareerCompleteBuyInheritedSkills: false,
+        enableCareerCompleteBuyNegativeSkills: true,
+        enableCareerCompleteIgnoreGoldSkills: false,
         careerCompleteSkillPlan: "",
         skillPlanData: JSON.stringify(skillsData),
     },
