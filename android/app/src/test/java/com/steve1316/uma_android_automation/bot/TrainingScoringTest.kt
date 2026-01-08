@@ -154,4 +154,64 @@ class TrainingScoringTest {
 		assertEquals("Speed", bestTraining?.name, "Speed rainbow training should be selected despite high current stat")
 		assertTrue(scores[speedTraining]!! > 0, "Speed training score should be positive")
 	}
+
+    // ============================================================================
+	// scoreFriendshipTraining Tests
+	// ============================================================================
+
+	@Test
+	@DisplayName("Blue and green bars are prioritized with priority order blue > green > orange")
+	fun testBarColorPriority() {
+		// Blue bar should contribute most, green next, orange nothing.
+		val blueBar = BarFillResult(fillPercent = 50.0, filledSegments = 2, dominantColor = "blue")
+		val greenBar = BarFillResult(fillPercent = 50.0, filledSegments = 2, dominantColor = "green")
+		val orangeBar = BarFillResult(fillPercent = 50.0, filledSegments = 2, dominantColor = "orange")
+
+		val trainingWithBlue = createDefaultTrainingOption(
+			relationshipBars = arrayListOf(blueBar)
+		)
+		val trainingWithGreen = createDefaultTrainingOption(
+			relationshipBars = arrayListOf(greenBar)
+		)
+		val trainingWithOrange = createDefaultTrainingOption(
+			relationshipBars = arrayListOf(orangeBar)
+		)
+
+		val blueScore = scoreFriendshipTraining(trainingWithBlue)
+		val greenScore = scoreFriendshipTraining(trainingWithGreen)
+		val orangeScore = scoreFriendshipTraining(trainingWithOrange)
+
+		// Verify priority order: blue > green > orange.
+        assertTrue(blueScore > greenScore, "Blue friendship bar should score higher than green")
+		assertTrue(greenScore > orangeScore, "Green friendship bar should score higher than orange")
+        assertTrue(blueScore > orangeScore, "Blue friendship bar should score higher than orange")
+	}
+
+	@Test
+	@DisplayName("No bars returns negative infinity")
+	fun testNoBarsReturnsNegativeInfinity() {
+		val trainingWithNoBars = createDefaultTrainingOption(
+			relationshipBars = arrayListOf()
+		)
+
+		val score = scoreFriendshipTraining(trainingWithNoBars)
+
+		assertEquals(Double.NEGATIVE_INFINITY, score, "Empty relationship bars should return negative infinity")
+	}
+
+	@Test
+	@DisplayName("Only orange bars returns zero score")
+	fun testOnlyOrangeBarsReturnsZero() {
+		val orangeBar1 = BarFillResult(fillPercent = 85.0, filledSegments = 3, dominantColor = "orange")
+		val orangeBar2 = BarFillResult(fillPercent = 95.0, filledSegments = 3, dominantColor = "orange")
+		val orangeBar3 = BarFillResult(fillPercent = 100.0, filledSegments = 4, dominantColor = "orange")
+
+		val trainingWithOnlyOrange = createDefaultTrainingOption(
+			relationshipBars = arrayListOf(orangeBar1, orangeBar2, orangeBar3)
+		)
+
+		val score = scoreFriendshipTraining(trainingWithOnlyOrange)
+
+		assertEquals(0.0, score, "A zero score should be given with only orange bars for the training")
+	}
 }
