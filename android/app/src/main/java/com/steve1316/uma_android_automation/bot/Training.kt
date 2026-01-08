@@ -33,6 +33,7 @@ class Training(private val game: Game) {
 		var isRainbow: Boolean = false
 		var numSpiritGaugesCanFill: Int = 0
 		var numSpiritGaugesReadyToBurst: Int = 0
+		var numSkillHints: Int = 0
 	}
 
 	data class TrainingOption(
@@ -42,7 +43,8 @@ class Training(private val game: Game) {
 		val relationshipBars: ArrayList<CustomImageUtils.BarFillResult>,
 		val isRainbow: Boolean,
 		val numSpiritGaugesCanFill: Int = 0,
-		val numSpiritGaugesReadyToBurst: Int = 0
+		val numSpiritGaugesReadyToBurst: Int = 0,
+		val numSkillHints: Int = 0
 	) {
 		override fun equals(other: Any?): Boolean {
 			if (this === other) return true
@@ -57,6 +59,7 @@ class Training(private val game: Game) {
 			if (isRainbow != other.isRainbow) return false
 			if (numSpiritGaugesCanFill != other.numSpiritGaugesCanFill) return false
 			if (numSpiritGaugesReadyToBurst != other.numSpiritGaugesReadyToBurst) return false
+			if (numSkillHints != other.numSkillHints) return false
 
 			return true
 		}
@@ -69,6 +72,7 @@ class Training(private val game: Game) {
 			result = 31 * result + isRainbow.hashCode()
 			result = 31 * result + numSpiritGaugesCanFill
 			result = 31 * result + numSpiritGaugesReadyToBurst
+			result = 31 * result + numSkillHints
 			return result
 		}
 	}
@@ -415,9 +419,9 @@ class Training(private val game: Game) {
 
 					// Unified approach: always use result object and start threads the same way.
 					// Use CountDownLatch to run the operations in parallel to cut down on processing time.
-					// Note: For parallel processing, Spirit Explosion Gauge is handled synchronously for Unity Cup, so latch count is 4.
-					// For singleTraining, Spirit Explosion Gauge runs in a thread for Unity Cup, so latch count is 5.
-					val latch = CountDownLatch(if (singleTraining && game.scenario == "Unity Cup") 5 else 4)
+					// Note: For parallel processing, Spirit Explosion Gauge is handled synchronously for Unity Cup.
+					// For singleTraining, Spirit Explosion Gauge runs in another thread for Unity Cup.
+					val latch = CountDownLatch(if (singleTraining && game.scenario == "Unity Cup") 6 else 5)
 
 					// Create log message buffer for this training.
 					val logMessages = ConcurrentLinkedQueue<String>()
@@ -524,7 +528,26 @@ class Training(private val game: Game) {
                             }
                         }.start()
 
-                        // Thread 5: Analyze Spirit Explosion Gauges (Unity Cup only, singleTraining mode only).
+                        // Thread 5: Detect skill hints.
+                        Thread {
+                            val startTimeSkillHints = System.currentTimeMillis()
+                            try {
+                                val skillHintLocations = game.imageUtils.findAllWithBitmap("stat_skill_hint", sourceBitmap, region = game.imageUtils.regionTopHalf)
+                                result.numSkillHints = skillHintLocations.size
+                            } catch (e: Exception) {
+                                Log.e(TAG, "[ERROR] Error in skill hint detection: ${e.stackTraceToString()}")
+                                result.numSkillHints = 0
+                            } finally {
+                                latch.countDown()
+                                val elapsedTime = System.currentTimeMillis() - startTimeSkillHints
+                                Log.d(TAG, "Total time to detect skill hints for $training: ${elapsedTime}ms")
+                                if (!singleTraining) {
+                                    logMessages.offer("[TRAINING] [$training] Skill hint detection completed in ${elapsedTime}ms")
+                                }
+                            }
+                        }.start()
+
+                        // Thread 6: Analyze Spirit Explosion Gauges (Unity Cup only, singleTraining mode only).
                         if (game.scenario == "Unity Cup" && singleTraining) {
                             Thread {
                                 val startTimeSpiritGauge = System.currentTimeMillis()
@@ -587,7 +610,8 @@ class Training(private val game: Game) {
 							relationshipBars = result.relationshipBars,
 							isRainbow = result.isRainbow,
 							numSpiritGaugesCanFill = result.numSpiritGaugesCanFill,
-							numSpiritGaugesReadyToBurst = result.numSpiritGaugesReadyToBurst
+							numSpiritGaugesReadyToBurst = result.numSpiritGaugesReadyToBurst,
+							numSkillHints = result.numSkillHints
 						)
 						trainingMap[result.training] = newTraining
 						break
@@ -666,7 +690,8 @@ class Training(private val game: Game) {
 							relationshipBars = result.relationshipBars,
 							isRainbow = result.isRainbow,
 							numSpiritGaugesCanFill = result.numSpiritGaugesCanFill,
-							numSpiritGaugesReadyToBurst = result.numSpiritGaugesReadyToBurst
+							numSpiritGaugesReadyToBurst = result.numSpiritGaugesReadyToBurst,
+							numSkillHints = result.numSkillHints
 						)
 						trainingMap[result.training] = newTraining
 					}
@@ -1162,12 +1187,34 @@ class Training(private val game: Game) {
 
 	/**
 	 * Prints the training map object for informational purposes.
+	 * Includes stat gains, failure chance, rainbow status, relationship bars, skill hints, etc.
 	 */
 	private fun printTrainingMap() {
-		MessageLog.i(TAG, "\nStat Gains by Training:")
+		MessageLog.i(TAG, "\n========== Training Analysis Results ==========")
 		trainingMap.forEach { name, training ->
-			MessageLog.i(TAG, "$name Training stat gains: ${training.statGains.contentToString()}, failure chance: ${training.failureChance}%, rainbow: ${training.isRainbow}.")
+			// Build the basic training info line.
+			val basicInfo = "$name Training: stats=${training.statGains.contentToString()}, fail=${training.failureChance}%, rainbow=${training.isRainbow}"
+			MessageLog.i(TAG, basicInfo)
+
+			// Print relationship bars if any.
+			if (training.relationshipBars.isNotEmpty()) {
+				val barsSummary = training.relationshipBars.mapIndexed { index, bar ->
+					"#${index + 1}:${bar.dominantColor}(${String.format("%.0f", bar.fillPercent)}%)"
+				}.joinToString(", ")
+				MessageLog.i(TAG, "  -> Relationship bars: $barsSummary")
+			}
+
+			// Print spirit gauge info if any gauges are present.
+			if (training.numSpiritGaugesCanFill > 0 || training.numSpiritGaugesReadyToBurst > 0) {
+				MessageLog.i(TAG, "  -> Spirit gauges: fillable=${training.numSpiritGaugesCanFill}, ready to burst=${training.numSpiritGaugesReadyToBurst}")
+			}
+
+			// Print skill hints if any.
+			if (training.numSkillHints > 0) {
+				MessageLog.i(TAG, "  -> Skill hints: ${training.numSkillHints}")
+			}
 		}
+		MessageLog.i(TAG, "================================================")
 	}
 
     /**
