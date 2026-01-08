@@ -99,4 +99,59 @@ class TrainingScoringTest {
 			enablePrioritizeSkillHints = enablePrioritizeSkillHints
 		)
 	}
+
+	@Test
+	@DisplayName("Speed rainbow training should be selected despite high current stat")
+	fun testSpeedRainbowTrainingSelectedWithHighStats() {
+		// Current stats with Speed already at 1100.
+		val currentStats = mapOf(
+			"Speed" to 1100,
+			"Stamina" to 700,
+			"Power" to 800,
+			"Guts" to 400,
+			"Wit" to 300
+		)
+
+		val speedTraining = createDefaultTrainingOption(
+			name = "Speed",
+			statGains = intArrayOf(60, 0, 30, 0, 0),
+			isRainbow = true
+		)
+		val staminaTraining = createDefaultTrainingOption(
+			name = "Stamina",
+			statGains = intArrayOf(0, 15, 0, 7, 0),
+			isRainbow = false
+		)
+		val powerTraining = createDefaultTrainingOption(
+			name = "Power",
+			statGains = intArrayOf(0, 25, 45, 0, 0),
+			isRainbow = true
+		)
+		val gutsTraining = createDefaultTrainingOption(
+			name = "Guts",
+			statGains = intArrayOf(0, 5, 0, 10, 0),
+			isRainbow = false
+		)
+		val witTraining = createDefaultTrainingOption(
+			name = "Wit",
+			statGains = intArrayOf(5, 0, 0, 0, 10),
+			isRainbow = false
+		)
+
+		val trainingOptions = listOf(speedTraining, staminaTraining, powerTraining, gutsTraining, witTraining)
+
+		val config = createDefaultConfig(
+			trainingOptions = trainingOptions,
+			currentStats = currentStats,
+			preferredDistance = "Medium",
+			currentDate = Game.Date(year = 2, phase = "Early", month = 6, turnNumber = 40),
+			enableRainbowTrainingBonus = true
+		)
+
+		// Speed training should have the highest score due to rainbow bonus.
+		val scores = trainingOptions.associateWith { calculateRawTrainingScore(config, it) }
+		val bestTraining = scores.maxByOrNull { it.value }?.key
+		assertEquals("Speed", bestTraining?.name, "Speed rainbow training should be selected despite high current stat")
+		assertTrue(scores[speedTraining]!! > 0, "Speed training score should be positive")
+	}
 }
