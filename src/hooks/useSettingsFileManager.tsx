@@ -205,8 +205,11 @@ export const useSettingsFileManager = () => {
             setPendingImportUri(fileUri)
             setImportPreviewChanges(formattedChanges)
 
-            // Navigate to the preview screen. The screen will read changes from hook state.
-            ;(navigation as any).navigate("ImportSettingsPreview")
+            // Navigate to the preview screen with data passed as params.
+            ;(navigation as any).navigate("ImportSettingsPreview", {
+                changes: formattedChanges,
+                fileUri: fileUri,
+            })
         } catch (error) {
             logErrorWithTimestamp("Error comparing settings:", error)
         }

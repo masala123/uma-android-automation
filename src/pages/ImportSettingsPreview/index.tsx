@@ -1,15 +1,29 @@
 import { View, Text, ScrollView, StyleSheet } from "react-native"
-import { useNavigation } from "@react-navigation/native"
+import { useNavigation, useRoute } from "@react-navigation/native"
 import { useTheme } from "../../context/ThemeContext"
 import CustomButton from "../../components/CustomButton"
-import { useSettingsFileManager, SettingsChange } from "../../hooks/useSettingsFileManager"
+import { SettingsChange } from "../../hooks/useSettingsFileManager"
+import { useSettings } from "../../context/SettingsContext"
 import PageHeader from "../../components/PageHeader"
+
+/**
+ * Route params passed from the settings file manager when navigating to this screen.
+ */
+interface ImportSettingsPreviewParams {
+    changes: SettingsChange[]
+    fileUri: string
+}
 
 const ImportSettingsPreview = () => {
     const { colors, isDark } = useTheme()
     const navigation = useNavigation()
-    const { importPreviewChanges, confirmPendingImport, clearPreviewState } = useSettingsFileManager()
-    const changes = importPreviewChanges
+    const route = useRoute()
+    const { importSettings } = useSettings()
+
+    // Get the changes and fileUri from navigation params.
+    const params = (route.params as ImportSettingsPreviewParams) || { changes: [], fileUri: "" }
+    const changes = params.changes || []
+    const fileUri = params.fileUri || ""
 
     // Group changes by category.
     const groupedChanges = changes.reduce((acc, change) => {
@@ -127,14 +141,15 @@ const ImportSettingsPreview = () => {
     })
 
     const handleConfirm = async () => {
-        await confirmPendingImport()
-        // Navigate back to Settings page after import
+        if (fileUri) {
+            await importSettings(fileUri)
+        }
+        // Navigate back to Settings page after import.
         navigation.navigate("Settings" as never)
     }
 
     const handleCancel = () => {
-        clearPreviewState()
-        // Navigate back to Settings page
+        // Navigate back to Settings page.
         navigation.navigate("Settings" as never)
     }
 
