@@ -91,7 +91,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	 * @param customConfidence Override the default confidence threshold for template matching. Defaults to 0.0 which uses the default confidence.
 	 * @return An ArrayList of Point objects containing all the occurrences of the specified image or null if not found.
 	 */
-	private fun findAllWithBitmap(templateName: String, sourceBitmap: Bitmap, region: IntArray = intArrayOf(0, 0, 0, 0), customConfidence: Double = 0.0): ArrayList<Point> {
+	fun findAllWithBitmap(templateName: String, sourceBitmap: Bitmap, region: IntArray = intArrayOf(0, 0, 0, 0), customConfidence: Double = 0.0): ArrayList<Point> {
 		var templateBitmap: Bitmap?
 		context.assets?.open("images/$templateName.png").use { inputStream ->
 			templateBitmap = BitmapFactory.decodeStream(inputStream)
