@@ -214,4 +214,121 @@ class TrainingScoringTest {
 
 		assertEquals(0.0, score, "A zero score should be given with only orange bars for the training")
 	}
+
+	// ============================================================================
+	// calculateStatEfficiencyScore Tests
+	// ============================================================================
+
+	@Test
+	@DisplayName("Stats furthest behind target get highest multiplier")
+	fun testStatsBehindTargetGetHigherMultiplier() {
+		val currentStats = mapOf(
+			"Speed" to 300,
+			"Stamina" to 600,
+			"Power" to 300,
+			"Guts" to 300,
+			"Wit" to 300
+		)
+
+		val speedTraining = createDefaultTrainingOption(
+			name = "Speed",
+			statGains = intArrayOf(30, 0, 15, 0, 0)
+		)
+		val staminaTraining = createDefaultTrainingOption(
+			name = "Stamina",
+			statGains = intArrayOf(0, 45, 0, 20, 0)
+		)
+
+		val config = createDefaultConfig(
+			trainingOptions = listOf(speedTraining, staminaTraining),
+			currentStats = currentStats,
+			preferredDistance = "Medium"
+		)
+
+		val speedScore = calculateStatEfficiencyScore(config, speedTraining)
+		val staminaScore = calculateStatEfficiencyScore(config, staminaTraining)
+
+		assertTrue(speedScore > staminaScore, "Speed should score higher than Stamina due to being more behind target and is higher in the stat priority list")
+	}
+
+	@Test
+	@DisplayName("High main stat gains get bonus multiplier")
+	fun testHighMainStatGainsGetBonus() {
+		val currentStats = mapOf(
+			"Speed" to 600,
+			"Stamina" to 600,
+			"Power" to 600,
+			"Guts" to 600,
+			"Wit" to 600
+		)
+
+		val highMainStatTraining = createDefaultTrainingOption(
+			name = "Speed",
+			statGains = intArrayOf(35, 0, 10, 0, 0)
+		)
+		val lowMainStatTraining = createDefaultTrainingOption(
+			name = "Speed",
+			statGains = intArrayOf(20, 0, 10, 0, 0)
+		)
+
+		val config = createDefaultConfig(
+			trainingOptions = listOf(highMainStatTraining, lowMainStatTraining),
+			currentStats = currentStats
+		)
+
+		val highScore = calculateStatEfficiencyScore(config, highMainStatTraining)
+		val lowScore = calculateStatEfficiencyScore(config, lowMainStatTraining)
+
+		val expectedRatio = 35.0 / 20.0
+		val actualRatio = highScore / lowScore
+		assertTrue(actualRatio > expectedRatio, "High main stat gains (30+) should get bonus beyond just stat gain difference")
+	}
+
+	@Test
+	@DisplayName("Spark bonus applies for stats below 600 when enabled")
+	fun testSparkBonusAppliesForLowStats() {
+		val currentStats = mapOf(
+			"Speed" to 400,
+			"Stamina" to 400,
+			"Power" to 400,
+			"Guts" to 400,
+			"Wit" to 400
+		)
+
+		val speedTraining = createDefaultTrainingOption(
+			name = "Speed",
+			statGains = intArrayOf(20, 0, 10, 0, 0)
+		)
+
+		val configWithSpark = createDefaultConfig(
+			trainingOptions = listOf(speedTraining),
+			currentStats = currentStats,
+			focusOnSparkStatTarget = listOf("Speed")
+		)
+		val configWithoutSpark = createDefaultConfig(
+			trainingOptions = listOf(speedTraining),
+			currentStats = currentStats,
+			focusOnSparkStatTarget = emptyList()
+		)
+
+		val sparkScore = calculateStatEfficiencyScore(configWithSpark, speedTraining)
+		val noSparkScore = calculateStatEfficiencyScore(configWithoutSpark, speedTraining)
+
+		assertTrue(sparkScore > noSparkScore, "Spark bonus should increase score for stats below 600")
+	}
+
+	@Test
+	@DisplayName("Zero stat gains return zero score")
+	fun testZeroStatGainsReturnZero() {
+		val training = createDefaultTrainingOption(
+			name = "Speed",
+			statGains = intArrayOf(0, 0, 0, 0, 0)
+		)
+
+		val config = createDefaultConfig(trainingOptions = listOf(training))
+		val score = calculateStatEfficiencyScore(config, training)
+
+		assertEquals(0.0, score, "Training with no stat gains should return zero")
+	}
+
 }
