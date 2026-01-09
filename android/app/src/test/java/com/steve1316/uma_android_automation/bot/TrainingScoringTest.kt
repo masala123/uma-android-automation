@@ -400,4 +400,159 @@ class TrainingScoringTest {
 		assertTrue(priorityScore > normalScore, "Prioritized skill hints should return higher score than normal skill hints")
 	}
 
+	// ============================================================================
+	// calculateRawTrainingScore Tests
+	// ============================================================================
+
+	@Test
+	@DisplayName("Blacklisted training returns zero score")
+	fun testBlacklistedTrainingReturnsZero() {
+		val training = createDefaultTrainingOption(name = "Speed")
+
+		val config = createDefaultConfig(
+			trainingOptions = listOf(training),
+			blacklist = listOf("Speed")
+		)
+
+		val score = calculateRawTrainingScore(config, training)
+
+		assertEquals(0.0, score, "Blacklisted training should return zero score")
+	}
+
+	@Test
+	@DisplayName("Training at stat cap returns zero score")
+	fun testTrainingAtStatCapReturnsZero() {
+		val currentStats = mapOf(
+			"Speed" to 1200,
+			"Stamina" to 400,
+			"Power" to 400,
+			"Guts" to 400,
+			"Wit" to 400
+		)
+
+		val training = createDefaultTrainingOption(
+			name = "Speed",
+			statGains = intArrayOf(60, 0, 30, 0, 0)
+		)
+
+		val config = createDefaultConfig(
+			trainingOptions = listOf(training),
+			currentStats = currentStats,
+			currentStatCap = 1200
+		)
+
+		val score = calculateRawTrainingScore(config, training)
+
+		assertEquals(0.0, score, "Training that would exceed stat cap should return zero score")
+	}
+
+	@Test
+	@DisplayName("Maxed stat with disableTrainingOnMaxedStat returns zero")
+	fun testMaxedStatWithDisableSettingReturnsZero() {
+		val currentStats = mapOf(
+			"Speed" to 1999,
+			"Stamina" to 400,
+			"Power" to 400,
+			"Guts" to 400,
+			"Wit" to 400
+		)
+
+		val training = createDefaultTrainingOption(
+			name = "Speed",
+			statGains = intArrayOf(60, 0, 30, 0, 0)
+		)
+
+		val config = createDefaultConfig(
+			trainingOptions = listOf(training),
+			currentStats = currentStats,
+			disableTrainingOnMaxedStat = true,
+			currentStatCap = 1000
+		)
+
+		val score = calculateRawTrainingScore(config, training)
+
+		assertEquals(0.0, score, "Training for would-be maxed stat should return zero when disableTrainingOnMaxedStat is true")
+	}
+
+	@Test
+	@DisplayName("Rainbow training scores higher")
+	fun testRainbowMultiplierInYear2Plus() {
+		val rainbowTraining = createDefaultTrainingOption(
+			name = "Speed",
+			statGains = intArrayOf(30, 0, 15, 0, 0),
+			isRainbow = true
+		)
+		val normalTraining = createDefaultTrainingOption(
+			name = "Speed",
+			statGains = intArrayOf(30, 0, 15, 0, 0),
+			isRainbow = false
+		)
+
+		val config = createDefaultConfig(
+			trainingOptions = listOf(rainbowTraining, normalTraining),
+			currentDate = Game.Date(year = 2, phase = "Late", month = 12, turnNumber = 50),
+			enableRainbowTrainingBonus = true
+		)
+
+		val rainbowScore = calculateRawTrainingScore(config, rainbowTraining)
+		val normalScore = calculateRawTrainingScore(config, normalTraining)
+
+		assertTrue(rainbowScore > normalScore, "Rainbow training should score higher")
+	}
+
+	@Test
+	@DisplayName("Training with relationship bars uses different weights")
+	fun testRelationshipBarsChangeWeightDistribution() {
+		val bar = BarFillResult(fillPercent = 20.0, filledSegments = 2, dominantColor = "blue")
+		val trainingWithBars = createDefaultTrainingOption(
+			name = "Speed",
+			statGains = intArrayOf(20, 0, 10, 0, 0),
+			relationshipBars = arrayListOf(bar)
+		)
+		val trainingWithoutBars = createDefaultTrainingOption(
+			name = "Speed",
+			statGains = intArrayOf(20, 0, 10, 0, 0),
+			relationshipBars = arrayListOf()
+		)
+
+		val config = createDefaultConfig(
+			trainingOptions = listOf(trainingWithBars, trainingWithoutBars)
+		)
+
+		val withBarsScore = calculateRawTrainingScore(config, trainingWithBars)
+		val withoutBarsScore = calculateRawTrainingScore(config, trainingWithoutBars)
+
+		// Both should have positive scores, and the relationship bar contribution should affect total.
+		assertTrue(withBarsScore > 0, "Training with bars should have positive score")
+		assertTrue(withoutBarsScore > 0, "Training without bars should have positive score")
+		// The training with bars gets relationship contribution.
+		assertNotEquals(withBarsScore, withoutBarsScore, "Scores should differ based on relationship bars presence")
+	}
+
+	@Test
+	@DisplayName("Rainbow bonus is reduced when enableRainbowTrainingBonus is false")
+	fun testReducedRainbowBonusWhenDisabled() {
+		val rainbowTraining = createDefaultTrainingOption(
+			name = "Speed",
+			statGains = intArrayOf(30, 0, 15, 0, 0),
+			isRainbow = true
+		)
+		val normalTraining = createDefaultTrainingOption(
+			name = "Speed",
+			statGains = intArrayOf(30, 0, 15, 0, 0),
+			isRainbow = false
+		)
+
+		val config = createDefaultConfig(
+			trainingOptions = listOf(rainbowTraining, normalTraining),
+			currentDate = Game.Date(year = 2, phase = "Late", month = 12, turnNumber = 50),
+			enableRainbowTrainingBonus = false
+		)
+
+		val rainbowScore = calculateRawTrainingScore(config, rainbowTraining)
+		val normalScore = calculateRawTrainingScore(config, normalTraining)
+
+		assertTrue(rainbowScore > normalScore, "Rainbow training should still score higher when bonus is disabled")
+	}
+
 }
