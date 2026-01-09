@@ -331,4 +331,29 @@ class TrainingScoringTest {
 		assertEquals(0.0, score, "Training with no stat gains should return zero")
 	}
 
+	// ============================================================================
+	// calculateRelationshipScore Tests
+	// ============================================================================
+
+	@Test
+	@DisplayName("Diminishing returns apply as bars fill up")
+	fun testDiminishingReturnsForFilledBars() {
+		val lowFillBar = BarFillResult(fillPercent = 20.0, filledSegments = 1, dominantColor = "blue")
+		val highFillBar = BarFillResult(fillPercent = 70.0, filledSegments = 3, dominantColor = "green")
+
+		val lowFillTraining = createDefaultTrainingOption(
+			relationshipBars = arrayListOf(lowFillBar)
+		)
+		val highFillTraining = createDefaultTrainingOption(
+			relationshipBars = arrayListOf(highFillBar)
+		)
+
+		val config = createDefaultConfig(trainingOptions = listOf(lowFillTraining, highFillTraining))
+
+		val lowFillScore = calculateRelationshipScore(config, lowFillTraining)
+		val highFillScore = calculateRelationshipScore(config, highFillTraining)
+
+		assertTrue(lowFillScore > highFillScore, "Lower fill bars should score higher due to diminishing returns")
+	}
+
 }
