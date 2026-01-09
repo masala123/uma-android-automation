@@ -555,4 +555,125 @@ class TrainingScoringTest {
 		assertTrue(rainbowScore > normalScore, "Rainbow training should still score higher when bonus is disabled")
 	}
 
+	// ============================================================================
+	// scoreUnityCupTraining Tests
+	// ============================================================================
+
+	@Test
+	@DisplayName("Spirit gauges ready to burst get highest priority")
+	fun testSpiritGaugesReadyToBurstHighestPriority() {
+		val trainingWithBurst = createDefaultTrainingOption(
+			name = "Speed",
+			numSpiritGaugesReadyToBurst = 1,
+			numSpiritGaugesCanFill = 0
+		)
+		val trainingWithFill = createDefaultTrainingOption(
+			name = "Stamina",
+			numSpiritGaugesReadyToBurst = 0,
+			numSpiritGaugesCanFill = 3
+		)
+		val trainingWithNoGauges = createDefaultTrainingOption(
+			name = "Power",
+			numSpiritGaugesReadyToBurst = 0,
+			numSpiritGaugesCanFill = 0
+		)
+
+		val config = createDefaultConfig(
+			trainingOptions = listOf(trainingWithBurst, trainingWithFill, trainingWithNoGauges),
+			scenario = "Unity Cup"
+		)
+
+		val burstScore = scoreUnityCupTraining(config, trainingWithBurst)
+		val fillScore = scoreUnityCupTraining(config, trainingWithFill)
+		val noGaugeScore = scoreUnityCupTraining(config, trainingWithNoGauges)
+
+		assertTrue(burstScore > fillScore, "Training with gauges ready to burst should score higher than training that can fill gauges")
+		assertTrue(fillScore > noGaugeScore, "Training that can fill gauges should score higher than training with no gauges")
+	}
+
+	@Test
+	@DisplayName("Speed and Wit get facility preference bonuses when spirit gauge bursting")
+	fun testFacilityPreferenceBonusesForBursting() {
+		// Zero out stat gains to isolate facility bonuses.
+		val speedTraining = createDefaultTrainingOption(
+			name = "Speed",
+			statGains = intArrayOf(0, 0, 0, 0, 0),
+			numSpiritGaugesReadyToBurst = 1
+		)
+		val witTraining = createDefaultTrainingOption(
+			name = "Wit",
+			statGains = intArrayOf(0, 0, 0, 0, 0),
+			numSpiritGaugesReadyToBurst = 1
+		)
+		val gutsTraining = createDefaultTrainingOption(
+			name = "Guts",
+			statGains = intArrayOf(0, 0, 0, 0, 0),
+			numSpiritGaugesReadyToBurst = 1,
+			numSpiritGaugesCanFill = 0
+		)
+
+		val config = createDefaultConfig(
+			trainingOptions = listOf(speedTraining, witTraining, gutsTraining),
+			scenario = "Unity Cup"
+		)
+
+		val speedScore = scoreUnityCupTraining(config, speedTraining)
+		val witScore = scoreUnityCupTraining(config, witTraining)
+		val gutsScore = scoreUnityCupTraining(config, gutsTraining)
+
+		// Speed and Wit should have same bonuses (both get +500 facility bonus).
+		assertEquals(speedScore, witScore, 0.01, "Speed and Wit should have equal facility bonuses")
+		// Guts should score lower since it doesn't have the facility bonus.
+		assertTrue(speedScore > gutsScore, "Speed should score higher than Guts for facility preference")
+	}
+
+	@Test
+	@DisplayName("Early game provides spirit gauge filling bonus")
+	fun testEarlyGameGaugeFillingBonus() {
+		val training = createDefaultTrainingOption(
+			name = "Speed",
+			numSpiritGaugesCanFill = 2
+		)
+
+		val earlyConfig = createDefaultConfig(
+			trainingOptions = listOf(training),
+			scenario = "Unity Cup",
+			currentDate = Game.Date(year = 1, phase = "Early", month = 1, turnNumber = 1)
+		)
+		val lateConfig = createDefaultConfig(
+			trainingOptions = listOf(training),
+			scenario = "Unity Cup",
+			currentDate = Game.Date(year = 2, phase = "Early", month = 6, turnNumber = 40)
+		)
+
+		val earlyScore = scoreUnityCupTraining(earlyConfig, training)
+		val lateScore = scoreUnityCupTraining(lateConfig, training)
+
+		assertTrue(earlyScore > lateScore, "Early game should provide bonus for spirit gauge filling")
+	}
+
+	@Test
+	@DisplayName("Rainbow training provides bonus when spirit gauge bursting")
+	fun testRainbowBonusWhenBursting() {
+		val rainbowBurstTraining = createDefaultTrainingOption(
+			name = "Speed",
+			numSpiritGaugesReadyToBurst = 1,
+			isRainbow = true
+		)
+		val normalBurstTraining = createDefaultTrainingOption(
+			name = "Speed",
+			numSpiritGaugesReadyToBurst = 1,
+			isRainbow = false
+		)
+
+		val config = createDefaultConfig(
+			trainingOptions = listOf(rainbowBurstTraining, normalBurstTraining),
+			scenario = "Unity Cup"
+		)
+
+		val rainbowScore = scoreUnityCupTraining(config, rainbowBurstTraining)
+		val normalScore = scoreUnityCupTraining(config, normalBurstTraining)
+
+		assertTrue(rainbowScore > normalScore, "Rainbow training should score higher when spirit gauge bursting")
+	}
 }
