@@ -356,4 +356,48 @@ class TrainingScoringTest {
 		assertTrue(lowFillScore > highFillScore, "Lower fill bars should score higher due to diminishing returns")
 	}
 
+	// ============================================================================
+	// calculateMiscScore Tests
+	// ============================================================================
+
+	@Test
+	@DisplayName("Trainings with skill hints score higher than those without")
+	fun testSkillHintsAdd10PointsEach() {
+		val speedTraining = createDefaultTrainingOption(name = "Speed")
+		val staminaTraining = createDefaultTrainingOption(name = "Stamina")
+
+		// Speed has 2 skill hints, Stamina has 0.
+		val config = createDefaultConfig(
+			trainingOptions = listOf(speedTraining, staminaTraining),
+			skillHintsPerLocation = listOf(2, 0, 0, 0, 0)
+		)
+
+		val speedScore = calculateMiscScore(config, speedTraining)
+		val staminaScore = calculateMiscScore(config, staminaTraining)
+
+		assertTrue(speedScore > staminaScore, "A training with skill hints should score higher than a training with no skill hints")
+	}
+
+	@Test
+	@DisplayName("Prioritized skill hints return massive score")
+	fun testPrioritizedSkillHintsReturnMassiveScore() {
+		val training = createDefaultTrainingOption(name = "Speed")
+
+		val configWithPriority = createDefaultConfig(
+			trainingOptions = listOf(training),
+			skillHintsPerLocation = listOf(1, 0, 0, 0, 0),
+			enablePrioritizeSkillHints = true
+		)
+		val configWithoutPriority = createDefaultConfig(
+			trainingOptions = listOf(training),
+			skillHintsPerLocation = listOf(1, 0, 0, 0, 0),
+			enablePrioritizeSkillHints = false
+		)
+
+		val priorityScore = calculateMiscScore(configWithPriority, training)
+		val normalScore = calculateMiscScore(configWithoutPriority, training)
+
+		assertTrue(priorityScore > normalScore, "Prioritized skill hints should return higher score than normal skill hints")
+	}
+
 }
