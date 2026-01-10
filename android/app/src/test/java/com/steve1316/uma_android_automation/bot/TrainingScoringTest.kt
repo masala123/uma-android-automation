@@ -3,6 +3,8 @@ package com.steve1316.uma_android_automation.bot
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.MethodSource
 import com.steve1316.uma_android_automation.bot.Training.Companion.scoreFriendshipTraining
 import com.steve1316.uma_android_automation.bot.Training.Companion.scoreUnityCupTraining
 import com.steve1316.uma_android_automation.bot.Training.Companion.calculateStatEfficiencyScore
@@ -12,6 +14,7 @@ import com.steve1316.uma_android_automation.bot.Training.Companion.calculateRawT
 import com.steve1316.uma_android_automation.bot.Training.TrainingConfig
 import com.steve1316.uma_android_automation.bot.Training.TrainingOption
 import com.steve1316.uma_android_automation.utils.CustomImageUtils.BarFillResult
+import java.util.stream.Stream
 
 /**
  * Unit tests for the Training scoring functions.
@@ -155,7 +158,7 @@ class TrainingScoringTest {
 		assertTrue(scores[speedTraining]!! > 0, "Speed training score should be positive")
 	}
 
-    // ============================================================================
+	// ============================================================================
 	// scoreFriendshipTraining Tests
 	// ============================================================================
 
@@ -182,9 +185,9 @@ class TrainingScoringTest {
 		val orangeScore = scoreFriendshipTraining(trainingWithOrange)
 
 		// Verify priority order: blue > green > orange.
-        assertTrue(blueScore > greenScore, "Blue friendship bar should score higher than green")
+		assertTrue(blueScore > greenScore, "Blue friendship bar should score higher than green")
 		assertTrue(greenScore > orangeScore, "Green friendship bar should score higher than orange")
-        assertTrue(blueScore > orangeScore, "Blue friendship bar should score higher than orange")
+		assertTrue(blueScore > orangeScore, "Blue friendship bar should score higher than orange")
 	}
 
 	@Test
@@ -675,5 +678,246 @@ class TrainingScoringTest {
 		val normalScore = scoreUnityCupTraining(config, normalBurstTraining)
 
 		assertTrue(rainbowScore > normalScore, "Rainbow training should score higher when spirit gauge bursting")
+	}
+
+	// ============================================================================
+	// Training Example Cases (Parameterized)
+	// ============================================================================
+
+	/**
+	 * Data class representing a training scenario test case.
+	 */
+	data class TrainingTestCase(
+		val description: String,
+		val currentStats: Map<String, Int>,
+		val trainings: List<TrainingDef>,
+		val preferredDistance: String,
+		val date: Game.Date,
+		val expectedTraining: String
+	) {
+		// Override toString() to only show the description in test names.
+		override fun toString(): String = description
+	}
+
+	/**
+	 * Simplified training definition for test cases.
+	 */
+	data class TrainingDef(
+		val name: String,
+		val statGains: IntArray,
+		val relationshipBars: List<BarDef> = emptyList(),
+		val numSpiritGaugesCanFill: Int = 0,
+		val numSpiritGaugesReadyToBurst: Int = 0,
+		val isRainbow: Boolean = false
+	) {
+		override fun equals(other: Any?): Boolean {
+			if (this === other) return true
+			if (javaClass != other?.javaClass) return false
+
+			other as TrainingDef
+
+			if (numSpiritGaugesCanFill != other.numSpiritGaugesCanFill) return false
+			if (numSpiritGaugesReadyToBurst != other.numSpiritGaugesReadyToBurst) return false
+			if (isRainbow != other.isRainbow) return false
+			if (name != other.name) return false
+			if (!statGains.contentEquals(other.statGains)) return false
+			if (relationshipBars != other.relationshipBars) return false
+
+			return true
+		}
+
+		override fun hashCode(): Int {
+			var result = numSpiritGaugesCanFill
+			result = 31 * result + numSpiritGaugesReadyToBurst
+			result = 31 * result + isRainbow.hashCode()
+			result = 31 * result + name.hashCode()
+			result = 31 * result + statGains.contentHashCode()
+			result = 31 * result + relationshipBars.hashCode()
+			return result
+		}
+	}
+
+	/**
+	 * Simplified bar definition for test cases.
+	 */
+	data class BarDef(
+		val fillPercent: Double = 50.0,
+		val filledSegments: Int = 2,
+		val color: String
+	)
+
+    // Note: Stat prioritization follows the default of [Speed, Stamina, Power, Wit, Guts].
+	companion object {
+		/**
+		 * Provides Unity Cup test cases for parameterized testing.
+		 * Add new test cases here - each one will automatically be tested.
+		 */
+		@JvmStatic
+		fun unityCupTestCases(): Stream<TrainingTestCase> = Stream.of(
+			TrainingTestCase(
+				description = "Junior Year Early Dec - Guts with the only burstable gauge",
+				currentStats = mapOf("Speed" to 358, "Stamina" to 217, "Power" to 258, "Guts" to 168, "Wit" to 168),
+				trainings = listOf(
+					TrainingDef("Speed", intArrayOf(15, 0, 6, 0, 0), listOf(BarDef(color = "green")), numSpiritGaugesCanFill = 1),
+					TrainingDef("Stamina", intArrayOf(0, 8, 0, 4, 0)),
+					TrainingDef("Power", intArrayOf(0, 4, 8, 0, 0)),
+					TrainingDef("Guts", intArrayOf(11, 0, 10, 31, 0), listOf(BarDef(color = "green"), BarDef(color = "green"), BarDef(color = "green")), numSpiritGaugesCanFill = 1, numSpiritGaugesReadyToBurst = 1),
+					TrainingDef("Wit", intArrayOf(4, 0, 0, 0, 17), numSpiritGaugesReadyToBurst = 1)
+				),
+				preferredDistance = "Medium",
+				date = Game.Date(year = 1, phase = "Early", month = 12, turnNumber = 23),
+				expectedTraining = "Guts"
+			),
+			TrainingTestCase(
+				description = "Classic Year Early Aug - Stamina with more relationship bars and fillable gauge",
+				currentStats = mapOf("Speed" to 453, "Stamina" to 372, "Power" to 483, "Guts" to 244, "Wit" to 214),
+				trainings = listOf(
+					TrainingDef("Speed", intArrayOf(22, 0, 10, 0, 0), listOf(BarDef(color = "green")), numSpiritGaugesCanFill = 1),
+					TrainingDef("Stamina", intArrayOf(0, 25, 0, 13, 0), listOf(BarDef(color = "orange"), BarDef(color = "green"), BarDef(color = "green")), numSpiritGaugesCanFill = 1),
+					TrainingDef("Power", intArrayOf(0, 15, 23, 0, 0), listOf(BarDef(color = "orange")), numSpiritGaugesCanFill = 1, isRainbow = true),
+					TrainingDef("Guts", intArrayOf(5, 0, 5, 15, 0)),
+					TrainingDef("Wit", intArrayOf(5, 0, 0, 0, 12))
+				),
+				preferredDistance = "Medium",
+				date = Game.Date(year = 2, phase = "Early", month = 8, turnNumber = 39),
+				expectedTraining = "Stamina"
+			),
+			TrainingTestCase(
+				description = "Senior Year Early Jul - Speed with high main stat gain, rainbow bonus and fillable gauges",
+				currentStats = mapOf("Speed" to 834, "Stamina" to 588, "Power" to 724, "Guts" to 335, "Wit" to 283),
+				trainings = listOf(
+					TrainingDef("Speed", intArrayOf(33, 0, 13, 0, 0), listOf(BarDef(color = "orange")), numSpiritGaugesCanFill = 2, isRainbow = true),
+					TrainingDef("Stamina", intArrayOf(0, 47, 0, 22, 0), listOf(BarDef(color = "orange")), numSpiritGaugesReadyToBurst = 1),
+					TrainingDef("Power", intArrayOf(0, 8, 14, 0, 0), numSpiritGaugesCanFill = 1),
+					TrainingDef("Guts", intArrayOf(12, 0, 9, 35, 0), numSpiritGaugesReadyToBurst = 1),
+					TrainingDef("Wit", intArrayOf(6, 0, 0, 0, 13))
+				),
+				preferredDistance = "Medium",
+				date = Game.Date(year = 3, phase = "Early", month = 7, turnNumber = 53),
+				expectedTraining = "Speed"
+			)
+		)
+
+		/**
+		 * Provides URA Finale test cases for parameterized testing.
+		 * Add new test cases here - each one will automatically be tested.
+		 */
+		@JvmStatic
+		fun uraFinaleTestCases(): Stream<TrainingTestCase> = Stream.of(
+			TrainingTestCase(
+				description = "URA Finale Qualifier - Speed with high main stat gain and rainbow bonus",
+				currentStats = mapOf("Speed" to 1042, "Stamina" to 615, "Power" to 841, "Guts" to 362, "Wit" to 315),
+				trainings = listOf(
+					TrainingDef("Speed", intArrayOf(31, 0, 15, 0, 0), isRainbow = true),
+					TrainingDef("Stamina", intArrayOf(0, 15, 0, 6, 0)),
+					TrainingDef("Power", intArrayOf(0, 7, 15, 0, 0)),
+					TrainingDef("Guts", intArrayOf(6, 0, 4, 16, 0)),
+					TrainingDef("Wit", intArrayOf(5, 0, 0, 0, 15))
+				),
+				preferredDistance = "Medium",
+				date = Game.Date(year = 3, phase = "Late", month = 12, turnNumber = 73),
+				expectedTraining = "Speed"
+			),
+			TrainingTestCase(
+				description = "Classic Year Early Aug - Speed with high main stat gain and rainbow bonus",
+				currentStats = mapOf("Speed" to 537, "Stamina" to 386, "Power" to 388, "Guts" to 228, "Wit" to 255),
+				trainings = listOf(
+					TrainingDef("Speed", intArrayOf(29, 0, 12, 0, 0), listOf(BarDef(color = "orange")), isRainbow = true),
+					TrainingDef("Stamina", intArrayOf(0, 25, 0, 10, 0), listOf(BarDef(color = "orange"))),
+					TrainingDef("Power", intArrayOf(0, 8, 12, 0, 0)),
+					TrainingDef("Guts", intArrayOf(7, 0, 7, 15, 0), listOf(BarDef(color = "green"))),
+					TrainingDef("Wit", intArrayOf(6, 0, 0, 0, 14))
+				),
+				preferredDistance = "Medium",
+				date = Game.Date(year = 2, phase = "Early", month = 8, turnNumber = 39),
+				expectedTraining = "Speed"
+			),
+			TrainingTestCase(
+				description = "Junior Year Pre-Debut - Power with the most relationship bars",
+				currentStats = mapOf("Speed" to 136, "Stamina" to 189, "Power" to 160, "Guts" to 76, "Wit" to 135),
+				trainings = listOf(
+					TrainingDef("Speed", intArrayOf(10, 0, 4, 0, 0), listOf(BarDef(color = "blue"), BarDef(color = "blue"))),
+					TrainingDef("Stamina", intArrayOf(0, 8, 0, 3, 0)),
+					TrainingDef("Power", intArrayOf(0, 8, 12, 0, 0), listOf(BarDef(color = "blue"), BarDef(color = "blue"), BarDef(color = "blue"))),
+					TrainingDef("Guts", intArrayOf(3, 0, 3, 6, 0)),
+					TrainingDef("Wit", intArrayOf(3, 0, 0, 0, 9))
+				),
+				preferredDistance = "Medium",
+				date = Game.Date(year = 1, phase = "Pre-Debut", month = 2, turnNumber = 2),
+				expectedTraining = "Power"
+			)
+		)
+	}
+
+	@ParameterizedTest(name = "{index}: {0}")
+	@MethodSource("unityCupTestCases")
+	@DisplayName("Unity Cup Training Selection")
+	fun testUnityCupTrainingSelection(testCase: TrainingTestCase) {
+		// Convert TrainingDef to TrainingOption.
+		val trainingOptions = testCase.trainings.map { def ->
+			createDefaultTrainingOption(
+				name = def.name,
+				statGains = def.statGains,
+				relationshipBars = ArrayList(def.relationshipBars.map { bar ->
+					BarFillResult(bar.fillPercent, bar.filledSegments, bar.color)
+				}),
+				numSpiritGaugesCanFill = def.numSpiritGaugesCanFill,
+				numSpiritGaugesReadyToBurst = def.numSpiritGaugesReadyToBurst,
+				isRainbow = def.isRainbow
+			)
+		}
+
+		val config = createDefaultConfig(
+			trainingOptions = trainingOptions,
+			currentStats = testCase.currentStats,
+			preferredDistance = testCase.preferredDistance,
+			currentDate = testCase.date,
+			scenario = "Unity Cup"
+		)
+
+		// Score all trainings using Unity Cup scoring.
+		val scores = if (testCase.date.year < 3) {
+			trainingOptions.associateWith { scoreUnityCupTraining(config, it) }
+		} else {
+			trainingOptions.associateWith { calculateRawTrainingScore(config, it) }
+		}
+		val bestTraining = scores.maxByOrNull { it.value }?.key
+
+		assertEquals(testCase.expectedTraining, bestTraining?.name, testCase.description)
+	}
+
+	@ParameterizedTest(name = "{index}: {0}")
+	@MethodSource("uraFinaleTestCases")
+	@DisplayName("URA Finale Training Selection")
+	fun testURAFinaleTrainingSelection(testCase: TrainingTestCase) {
+		// Convert TrainingDef to TrainingOption.
+		val trainingOptions = testCase.trainings.map { def ->
+			createDefaultTrainingOption(
+				name = def.name,
+				statGains = def.statGains,
+				relationshipBars = ArrayList(def.relationshipBars.map { bar ->
+					BarFillResult(bar.fillPercent, bar.filledSegments, bar.color)
+				}),
+				isRainbow = def.isRainbow
+			)
+		}
+
+		val config = createDefaultConfig(
+			trainingOptions = trainingOptions,
+			currentStats = testCase.currentStats,
+			preferredDistance = testCase.preferredDistance,
+			currentDate = testCase.date,
+			scenario = "URA Finale"
+		)
+
+		// Use friendship training scoring for Junior Year, otherwise use standard scoring.
+		val scores = if (testCase.date.year == 1) {
+			trainingOptions.associateWith { scoreFriendshipTraining(it) }
+		} else {
+			trainingOptions.associateWith { calculateRawTrainingScore(config, it) }
+		}
+		val bestTraining = scores.maxByOrNull { it.value }?.key
+
+		assertEquals(testCase.expectedTraining, bestTraining?.name, testCase.description)
 	}
 }
