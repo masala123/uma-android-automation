@@ -20,6 +20,8 @@
     <!--Grants permission to download and update the application's Firebase Machine Learning OCR.-->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
     <application
         android:name=".MainApplication"
         android:allowBackup="false"
