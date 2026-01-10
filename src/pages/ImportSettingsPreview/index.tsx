@@ -1,5 +1,5 @@
 import { View, Text, ScrollView, StyleSheet } from "react-native"
-import { useNavigation, useRoute } from "@react-navigation/native"
+import { useNavigation, useRoute, CommonActions } from "@react-navigation/native"
 import { useTheme } from "../../context/ThemeContext"
 import CustomButton from "../../components/CustomButton"
 import { SettingsChange } from "../../hooks/useSettingsFileManager"
@@ -144,13 +144,23 @@ const ImportSettingsPreview = () => {
         if (fileUri) {
             await importSettings(fileUri)
         }
-        // Navigate back to Settings page after import.
-        navigation.navigate("Settings" as never)
+        // Reset the stack to SettingsMain, removing ImportSettingsPreview from history.
+        navigation.dispatch(
+            CommonActions.reset({
+                index: 0,
+                routes: [{ name: "SettingsMain" }],
+            }),
+        )
     }
 
     const handleCancel = () => {
-        // Navigate back to Settings page.
-        navigation.navigate("Settings" as never)
+        // Reset the stack to SettingsMain, removing ImportSettingsPreview from history.
+        navigation.dispatch(
+            CommonActions.reset({
+                index: 0,
+                routes: [{ name: "SettingsMain" }],
+            }),
+        )
     }
 
     return (
