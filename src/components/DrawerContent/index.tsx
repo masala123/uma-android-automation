@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from "react"
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native"
 import { DrawerContentScrollView, DrawerContentComponentProps, useDrawerStatus } from "@react-navigation/drawer"
+import { CommonActions } from "@react-navigation/native"
 import { Ionicons } from "@expo/vector-icons"
 import { useTheme } from "../../context/ThemeContext"
 import { BotStateContext } from "../../context/BotStateContext"
@@ -195,6 +196,24 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
         },
     ]
 
+    /**
+     * Gets the current active screen name, handling nested navigators.
+     * If on Settings stack, returns the nested screen name (e.g., "TrainingSettings").
+     * Otherwise returns the drawer route name (e.g., "Home").
+     */
+    const getCurrentActiveScreen = (): string => {
+        const drawerRoute = state.routes[state.index]
+        if (drawerRoute?.name === "Settings") {
+            // Check if there's nested state from the stack navigator.
+            const nestedState = drawerRoute.state
+            if (nestedState?.routes && nestedState.index !== undefined) {
+                return nestedState.routes[nestedState.index]?.name || "SettingsMain"
+            }
+            return "SettingsMain"
+        }
+        return drawerRoute?.name || "Home"
+    }
+
     // Ensure Settings is expanded when drawer opens, and auto-expand sections if nested routes are active.
     useEffect(() => {
         // Check if drawer just opened (transitioned from closed to open).
@@ -211,16 +230,16 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
 
         previousDrawerStatus.current = drawerStatus
 
-        const currentRoute = state.routes[state.index]?.name
+        const currentScreen = getCurrentActiveScreen()
         const newExpanded = new Set<string>()
 
         // Auto-expand Settings if any nested route is active.
-        if (settingsNestedRoutes.includes(currentRoute)) {
+        if (settingsNestedRoutes.includes(currentScreen) || currentScreen === "SettingsMain") {
             newExpanded.add("Settings")
         }
 
         // Auto-expand Racing Settings if Racing Plan Settings is active.
-        if (currentRoute === "RacingPlanSettings") {
+        if (currentScreen === "RacingPlanSettings") {
             newExpanded.add("RacingSettings")
         }
 
@@ -248,8 +267,28 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
     }
 
     // Navigate to a route and close the drawer.
+    // For nested routes, we navigate to the Settings drawer and then the specific screen.
     const handleNavigation = (routeName: string) => {
-        navigation.navigate(routeName as never)
+        if (routeName === "Home") {
+            // Navigate to Home drawer screen.
+            navigation.dispatch(CommonActions.navigate({ name: "Home" }))
+        } else if (routeName === "Settings") {
+            // Navigate to Settings main page.
+            navigation.dispatch(
+                CommonActions.navigate({
+                    name: "Settings",
+                    params: { screen: "SettingsMain", initial: false },
+                }),
+            )
+        } else {
+            // Settings sub-pages: navigate to Settings drawer, then to the specific screen.
+            navigation.dispatch(
+                CommonActions.navigate({
+                    name: "Settings",
+                    params: { screen: routeName, initial: false },
+                }),
+            )
+        }
         navigation.closeDrawer()
     }
 
@@ -271,7 +310,12 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
 
     // Check if a route is active.
     const isRouteActive = (routeName: string) => {
-        return state.routes[state.index]?.name === routeName
+        const currentScreen = getCurrentActiveScreen()
+        // Settings menu item is active when on SettingsMain.
+        if (routeName === "Settings") {
+            return currentScreen === "SettingsMain"
+        }
+        return currentScreen === routeName
     }
 
     // Recursive component to render menu items at any nesting level.
