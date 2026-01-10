@@ -12,12 +12,16 @@ app-jvm-toolchain = "17"
 
 
 androidGradleBuildTools = "8.13.0"
+junitJupiter = "6.0.2"
+junitPlatformLauncher = "6.0.2"
 kotlinGradlePlugin = "2.2.0"
 androidCvAutomationLibrary = "2.3.4"
 lottie = "6.6.9"
 
 [libraries]
 androidGradleBuildTools = { group = "com.android.tools.build", name = "gradle", version.ref = "androidGradleBuildTools" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junitJupiter" }
+junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junitPlatformLauncher" }
 kotlinGradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlinGradlePlugin" }
 lottie = { module = "com.airbnb.android:lottie", version.ref = "lottie" }
 react-native-gradle-plugin = { module = "com.facebook.react:react-native-gradle-plugin" }

@@ -13,8 +13,6 @@ import java.util.concurrent.ConcurrentLinkedQueue
 import kotlin.intArrayOf
 
 class Training(private val game: Game) {
-	private val TAG: String = "[${MainActivity.loggerTag}]Training"
-
 	/**
 	 * Class to store analysis results for a training during parallel processing.
 	 * Uses mutable properties so threads can update them.
@@ -33,6 +31,7 @@ class Training(private val game: Game) {
 		var isRainbow: Boolean = false
 		var numSpiritGaugesCanFill: Int = 0
 		var numSpiritGaugesReadyToBurst: Int = 0
+		var numSkillHints: Int = 0
 	}
 
 	data class TrainingOption(
@@ -42,7 +41,8 @@ class Training(private val game: Game) {
 		val relationshipBars: ArrayList<CustomImageUtils.BarFillResult>,
 		val isRainbow: Boolean,
 		val numSpiritGaugesCanFill: Int = 0,
-		val numSpiritGaugesReadyToBurst: Int = 0
+		val numSpiritGaugesReadyToBurst: Int = 0,
+		val numSkillHints: Int = 0
 	) {
 		override fun equals(other: Any?): Boolean {
 			if (this === other) return true
@@ -57,6 +57,7 @@ class Training(private val game: Game) {
 			if (isRainbow != other.isRainbow) return false
 			if (numSpiritGaugesCanFill != other.numSpiritGaugesCanFill) return false
 			if (numSpiritGaugesReadyToBurst != other.numSpiritGaugesReadyToBurst) return false
+			if (numSkillHints != other.numSkillHints) return false
 
 			return true
 		}
@@ -69,7 +70,460 @@ class Training(private val game: Game) {
 			result = 31 * result + isRainbow.hashCode()
 			result = 31 * result + numSpiritGaugesCanFill
 			result = 31 * result + numSpiritGaugesReadyToBurst
+			result = 31 * result + numSkillHints
 			return result
+		}
+	}
+
+	/**
+	 * Configuration data class for training scoring calculations.
+	 * All scoring function inputs come from this config to make it generic and reusable for unit testing.
+	 * Contains an array of TrainingOptions to score using the global configuration.
+	 */
+	data class TrainingConfig(
+		// Global configuration.
+		val currentStats: Map<String, Int>,
+		val statPrioritization: List<String>,
+		val statTargets: IntArray,
+		val currentDate: Game.Date,
+		val scenario: String,
+		val enableRainbowTrainingBonus: Boolean,
+		val focusOnSparkStatTarget: List<String>,
+		val blacklist: List<String> = emptyList(),
+		val disableTrainingOnMaxedStat: Boolean = false,
+		val currentStatCap: Int = 1200,
+		val trainingOptions: List<TrainingOption>,
+		val skillHintsPerLocation: List<Int> = listOf(0, 0, 0, 0, 0),
+		val enablePrioritizeSkillHints: Boolean = false
+	) {
+		override fun equals(other: Any?): Boolean {
+			if (this === other) return true
+			if (javaClass != other?.javaClass) return false
+
+			other as TrainingConfig
+
+			if (currentStats != other.currentStats) return false
+			if (statPrioritization != other.statPrioritization) return false
+			if (!statTargets.contentEquals(other.statTargets)) return false
+			if (currentDate != other.currentDate) return false
+			if (scenario != other.scenario) return false
+			if (enableRainbowTrainingBonus != other.enableRainbowTrainingBonus) return false
+			if (focusOnSparkStatTarget != other.focusOnSparkStatTarget) return false
+			if (blacklist != other.blacklist) return false
+			if (disableTrainingOnMaxedStat != other.disableTrainingOnMaxedStat) return false
+			if (currentStatCap != other.currentStatCap) return false
+			if (trainingOptions != other.trainingOptions) return false
+			if (skillHintsPerLocation != other.skillHintsPerLocation) return false
+			if (enablePrioritizeSkillHints != other.enablePrioritizeSkillHints) return false
+
+			return true
+		}
+
+		override fun hashCode(): Int {
+			var result = currentStats.hashCode()
+			result = 31 * result + statPrioritization.hashCode()
+			result = 31 * result + statTargets.contentHashCode()
+			result = 31 * result + currentDate.hashCode()
+			result = 31 * result + scenario.hashCode()
+			result = 31 * result + enableRainbowTrainingBonus.hashCode()
+			result = 31 * result + focusOnSparkStatTarget.hashCode()
+			result = 31 * result + blacklist.hashCode()
+			result = 31 * result + disableTrainingOnMaxedStat.hashCode()
+			result = 31 * result + currentStatCap
+			result = 31 * result + trainingOptions.hashCode()
+			result = 31 * result + skillHintsPerLocation.hashCode()
+			result = 31 * result + enablePrioritizeSkillHints.hashCode()
+			return result
+		}
+	}
+
+	companion object {
+		private val TAG: String = "[${MainActivity.loggerTag}]Training"
+		private val TRAININGS: List<String> = listOf("Speed", "Stamina", "Power", "Guts", "Wit")
+
+		/**
+		 * Scores the training option based on friendship bar progress.
+		 * Prefers training options with the least relationship progress (especially blue bars).
+		 *
+		 * @param training The training option to score.
+		 *
+		 * @return A score representing relationship-building value.
+		 */
+		fun scoreFriendshipTraining(training: TrainingOption): Double {
+            // Ignore the blacklist in favor of making sure we build up the relationship bars as fast as possible.
+			MessageLog.i(TAG, "\n[TRAINING] Starting process to score ${training.name} Training with a focus on building relationship bars.")
+
+			val barResults = training.relationshipBars
+			if (barResults.isEmpty()) return Double.NEGATIVE_INFINITY
+
+			var score = 0.0
+			for (bar in barResults) {
+				val contribution = when (bar.dominantColor) {
+					"orange" -> 0.0
+					"green" -> 1.0
+					"blue" -> 2.5
+					else -> 0.0
+				}
+				score += contribution
+			}
+
+            MessageLog.i(TAG, "[TRAINING] ${training.name} Training has a score of ${String.format("%.2f", score)} with a focus on building relationship bars.")
+			return score
+		}
+
+		/**
+		 * Scores training options for Unity Cup based on Spirit Explosion Gauge priority system.
+		 *
+		 * Priority order:
+		 * 1. Highest Priority: Trainings with Spirit Explosion Gauges ready to burst.
+		 * 2. Second Priority: Trainings that can fill Spirit Explosion Gauges (not at 100% yet).
+		 * 3. Third Priority: Trainings that fill relationship bars.
+		 * 4. Lowest Priority: Stat prioritization (only if no gauge/relationship opportunities).
+		 *
+		 * Additional considerations:
+		 * - If gauges can be filled for deprioritized stat trainings, ignore stat prioritization (early game).
+		 * - Sometimes worth doing training with no relationship bar gains if building up several bursts.
+		 * - Ideally doing unity training at the same time as triggering regular rainbow trainings.
+		 * - Good facilities to burst: Speed (increased speed stat gains), Wit (energy recovery + speed stat gain).
+		 * - Stamina and Power can be bursted if lacking stats.
+		 * - Guts is not ideal but can be worth it if building up several other bursts.
+		 *
+		 * @param config The training configuration containing global scoring inputs.
+		 * @param training The training option to score.
+		 *
+		 * @return A score representing Unity Cup training value.
+		 */
+		fun scoreUnityCupTraining(config: TrainingConfig, training: TrainingOption): Double {
+            MessageLog.i(TAG, "\n[TRAINING] Starting process to score ${training.name} Training for Unity Cup with Spirit Explosion Gauge priority.")
+
+			// 1. Highest Priority: Trainings with Spirit Explosion Gauges ready to burst.
+			var score = 0.0
+			if (training.numSpiritGaugesReadyToBurst > 0) {
+				score += 1000.0 + (training.numSpiritGaugesReadyToBurst * 1000.0)
+                MessageLog.i(TAG, "[TRAINING] ${training.name} Training has ${training.numSpiritGaugesReadyToBurst} Spirit Explosion Gauge(s) ready to burst. Highest priority.")
+
+				// Facility preference bonuses for bursting.
+				when (training.name) {
+					"Speed" -> score += 500.0 // Best for increased speed stat gains.
+					"Wit" -> score += 500.0 // Best for energy recovery and slightly increased speed stat gain.
+					"Stamina", "Power" -> {
+                        // Can be bursted if lacking stats.
+						val statIndex = TRAININGS.indexOf(training.name)
+						val currentStat = config.currentStats.getOrDefault(training.name, 0)
+						val targetStat = config.statTargets.getOrElse(statIndex) { 600 }
+						if (currentStat < targetStat * 0.8) {
+							score += 300.0
+						}
+					}
+					"Guts" -> {
+						// Guts is not ideal, but can be worth it if building up gauges to max them out for bursting.
+						if (training.numSpiritGaugesCanFill >= 2) {
+							score += 200.0 // Building up multiple gauges to allow for bursting.
+						} else {
+							score -= 100.0 // Not ideal without building up multiple gauges.
+						}
+					}
+				}
+
+				// Bonus for rainbow training while bursting.
+				if (training.isRainbow) {
+					score += 200.0
+					MessageLog.i(TAG, "[TRAINING] Adding some score for ${training.name} Training for being a rainbow training.")
+				}
+			}
+
+			// 2. Second Priority: Trainings that can fill Spirit Explosion Gauges (not at 100% yet).
+			if (training.numSpiritGaugesCanFill > 0) {
+                // Score increases with number of gauges that can be filled.
+				// Each gauge fills by 25% per training execution.
+				score += 1000.0 + (training.numSpiritGaugesCanFill * 200.0)
+                MessageLog.i(TAG, "[TRAINING] ${training.name} Training can fill ${training.numSpiritGaugesCanFill} Spirit Explosion Gauge(s).")
+
+				// Early game: If gauges can be filled for deprioritized stat trainings, ignore stat prioritization.
+				val isEarlyGame = config.currentDate.year < 2
+				if (isEarlyGame) {
+					score += 500.0
+                    MessageLog.i(TAG, "[TRAINING] Early game: Prioritizing gauge filling over stat prioritization.")
+				}
+			}
+
+			// 3. Third Priority: Trainings that fill relationship bars.
+			if (training.relationshipBars.isNotEmpty()) {
+				var relationshipScore = 0.0
+				for (bar in training.relationshipBars) {
+					val contribution = when (bar.dominantColor) {
+						"orange" -> 0.0
+						"green" -> 1.0
+						"blue" -> 2.5
+						else -> 0.0
+					}
+					relationshipScore += contribution
+				}
+				score += 100.0 + (relationshipScore * 20.0)
+                MessageLog.i(TAG, "[TRAINING] ${training.name} Training fills relationship bars. Score: ${String.format("%.2f", relationshipScore)}.")
+			}
+
+			// 4. Lowest Priority: Stat prioritization.
+			val statIndex = TRAININGS.indexOf(training.name)
+			val statGain = training.statGains.getOrElse(statIndex) { 0 }
+			score += statGain.toDouble() * 0.1
+            MessageLog.i(TAG, "[TRAINING] ${training.name} Training stat gain contribution: ${statGain}.")
+
+            // Sometimes worth doing training with no relationship bar gains if building up several bursts.
+			if (training.relationshipBars.isEmpty() && training.numSpiritGaugesCanFill > 0) {
+				val otherBurstsBuilding = config.trainingOptions.sumOf { it.numSpiritGaugesCanFill } - training.numSpiritGaugesCanFill
+				if (otherBurstsBuilding >= 2) {
+					score += 300.0
+                    Log.d(TAG, "[DEBUG] ${training.name} Training has no relationship bars but is building up ${training.numSpiritGaugesCanFill} gauge(s) along with $otherBurstsBuilding other gauges being built.")
+				}
+			}
+
+            MessageLog.i(TAG, "[TRAINING] ${training.name} Training has a Unity Cup score of ${String.format("%.2f", score)}.")
+			return score
+		}
+
+		/**
+		 * Calculates stat efficiency based on ratio completion toward targets.
+		 *
+		 * This function treats stat targets as desired ratios rather than sequential goals.
+		 * It scores training based on how well it balances the overall stat distribution.
+		 *
+		 * Key principles:
+		 * - Stats furthest behind their target ratio get highest priority
+		 * - Completion percentage = currentStat / targetStat
+		 * - Priority order only breaks ties when completion percentages are similar
+		 * - High main stat gains receive bonus (likely undetected rainbow)
+		 *
+		 * @param config The training configuration containing global scoring inputs.
+		 * @param training The training option to score.
+		 *
+		 * @return Raw score representing stat efficiency.
+		 */
+		fun calculateStatEfficiencyScore(config: TrainingConfig, training: TrainingOption): Double {
+			var score = 0.0
+
+			for ((index, stat) in TRAININGS.withIndex()) {
+				val currentStat = config.currentStats.getOrDefault(stat, 0)
+				val targetStat = config.statTargets.getOrElse(index) { 0 }
+				val statGain = training.statGains.getOrElse(index) { 0 }
+
+				if (statGain > 0 && targetStat > 0) {
+					val priorityIndex = config.statPrioritization.indexOf(stat)
+
+					// Calculate completion percentage (how far along this stat is toward its target).
+					val completionPercent = (currentStat.toDouble() / targetStat) * 100.0
+
+					// Ratio-based multiplier: Stats furthest behind get highest priority.
+					val ratioMultiplier = when {
+						completionPercent < 30.0 -> 5.0   // Severely behind.
+						completionPercent < 50.0 -> 4.0   // Significantly behind.
+						completionPercent < 70.0 -> 3.0   // Moderately behind.
+						completionPercent < 90.0 -> 2.0   // Slightly behind.
+						completionPercent < 110.0 -> 1.0  // At target.
+						completionPercent < 130.0 -> 0.5  // Slightly over.
+						else -> 0.3                       // Well over.
+					}
+
+					// Priority-based tiebreaker (only applies when completion is similar).
+					// Find the completion percentage of the highest priority stat for comparison.
+					val highestPriorityStat = config.statPrioritization.firstOrNull() ?: stat
+					val highestPriorityIndex = TRAININGS.indexOf(highestPriorityStat)
+					val highestPriorityCompletion = if (highestPriorityIndex != -1) {
+						val hpCurrent = config.currentStats.getOrDefault(highestPriorityStat, 0)
+						val hpTarget = config.statTargets.getOrElse(highestPriorityIndex) { 1 }
+						(hpCurrent.toDouble() / hpTarget) * 100.0
+					} else {
+						completionPercent
+					}
+
+                    // Only apply priority bonus if this stat's completion is within 10% of highest priority stat.
+					val priorityMultiplier = if (priorityIndex != -1 && kotlin.math.abs(completionPercent - highestPriorityCompletion) <= 10.0) {
+						1.0 + (0.1 * (config.statPrioritization.size - priorityIndex))
+					} else {
+						1.0
+					}
+
+					// Main stat gain bonus: If training improves its MAIN stat by a large amount, it is most likely an undetected rainbow.
+					val isMainStat = training.name == stat
+					val mainStatBonus = if (isMainStat && statGain >= 30) {
+						2.0
+					} else {
+						1.0
+					}
+
+					// Spark bonus: Prioritize training sessions for 3* sparks for selected stats below 600 if the setting is enabled.
+					val isSparkStat = stat in config.focusOnSparkStatTarget
+					val canTriggerSpark = currentStat < 600
+					val sparkBonus = if (isSparkStat && canTriggerSpark) {
+                        MessageLog.i(TAG, "[TRAINING] $stat is at $currentStat (< 600). Prioritizing this training for potential spark event to get above 600.")
+                        2.5
+                    } else {
+                        1.0
+                    }
+
+					// Log debug information about stat scoring.
+					val bonusNote = if (isMainStat && statGain >= 30) " [HIGH MAIN STAT]" else ""
+					val sparkNote = if (isSparkStat && canTriggerSpark) " [SPARK PRIORITY]" else ""
+					Log.d(
+						TAG,
+						"$stat: gain=$statGain, completion=${String.format("%.2f", completionPercent)}%, " +
+							"ratioMult=${String.format("%.2f", ratioMultiplier)}, priorityMult=${String.format("%.2f", priorityMultiplier)}$bonusNote$sparkNote"
+					)
+
+					// Calculate final score for this stat.
+					var statScore = statGain.toDouble()
+					statScore *= ratioMultiplier
+					statScore *= priorityMultiplier
+					statScore *= mainStatBonus
+					statScore *= sparkBonus
+
+					score += statScore
+				}
+			}
+
+			return score
+		}
+
+		/**
+		 * Calculates relationship building score with diminishing returns.
+		 *
+		 * Evaluates the value of relationship bars based on their color and fill level:
+		 * - Blue bars: 2.5 points (highest priority)
+		 * - Green bars: 1.0 points (medium priority)
+		 * - Orange bars: 0.0 points (no value)
+		 *
+		 * Applies diminishing returns as bars fill up and early game bonuses for relationship building.
+		 *
+		 * @param config The training configuration containing global scoring inputs.
+		 * @param training The training option to score.
+		 *
+		 * @return A normalized score (0-100) representing relationship building value.
+		 */
+		fun calculateRelationshipScore(config: TrainingConfig, training: TrainingOption): Double {
+			if (training.relationshipBars.isEmpty()) return 0.0
+
+			var score = 0.0
+			var maxScore = 0.0
+
+			for (bar in training.relationshipBars) {
+				val baseValue = when (bar.dominantColor) {
+					"orange" -> 0.0
+					"green" -> 1.0
+					"blue" -> 2.5
+					else -> 0.0
+				}
+
+				if (baseValue > 0) {
+					// Apply diminishing returns for relationship building.
+					val fillLevel = bar.fillPercent / 100.0
+					val diminishingFactor = 1.0 - (fillLevel * 0.5) // Less valuable as bars fill up.
+
+					// Early game bonus for relationship building.
+					val earlyGameBonus = if (config.currentDate.year == 1 || config.currentDate.phase == "Pre-Debut") 1.3 else 1.0
+
+					val contribution = baseValue * diminishingFactor * earlyGameBonus
+					score += contribution
+					maxScore += 2.5 * 1.3
+				}
+			}
+
+			return if (maxScore > 0) (score / maxScore * 100.0) else 0.0
+		}
+
+		/**
+		 * Calculates miscellaneous bonuses and penalties based on training properties.
+		 *
+		 * Applies bonuses for skill hints that provide additional value to training sessions.
+		 * Removed complex phase bonuses to avoid conflicts with target-based scoring.
+		 *
+		 * @return A misc score between 0-100 representing situational bonuses.
+		 */
+		fun calculateMiscScore(config: TrainingConfig, training: TrainingOption): Double {
+            // Start with neutral score.
+			var score = 50.0
+
+			// Get the number of skill hints for this training location.
+			val trainingIndex = TRAININGS.indexOf(training.name)
+			val numSkillHints = if (trainingIndex >= 0 && trainingIndex < config.skillHintsPerLocation.size) {
+				config.skillHintsPerLocation[trainingIndex]
+			} else {
+				0
+			}
+
+			// Bonuses for skill hints.
+			score += 10.0 * numSkillHints
+
+			// If skill hints are prioritized and we found some, return a massive score to override other factors.
+			// This handles the case where skill hints only become visible after a training is selected.
+			if (config.enablePrioritizeSkillHints && numSkillHints > 0) {
+				return 10000.0 + score
+			}
+
+			return score.coerceIn(0.0, 100.0)
+		}
+
+		/**
+		 * Calculates raw training score without normalization.
+		 *
+		 * This function calculates raw training scores
+		 * that will be normalized based on the actual maximum score in the current session.
+		 *
+		 * @param config The training configuration containing global scoring inputs.
+		 * @param training The training option to score.
+		 *
+		 * @return Raw score representing overall training value.
+		 */
+		fun calculateRawTrainingScore(config: TrainingConfig, training: TrainingOption): Double {
+			if (training.name in config.blacklist) return 0.0
+
+			// Don't score for stats that are maxed or would be maxed.
+			val trainingIndex = TRAININGS.indexOf(training.name)
+			val currentStatValue = config.currentStats.getOrDefault(training.name, 0)
+			val potentialStat = currentStatValue + training.statGains.getOrElse(trainingIndex) { 0 }
+
+			if ((config.disableTrainingOnMaxedStat && currentStatValue >= config.currentStatCap) ||
+				(potentialStat >= config.currentStatCap)) {
+				return 0.0
+			}
+
+			var totalScore = 0.0
+
+			// 1. Stat Efficiency scoring.
+			val statScore = calculateStatEfficiencyScore(config, training)
+
+			// 2. Friendship scoring.
+			val relationshipScore = calculateRelationshipScore(config, training)
+
+			// 3. Misc-aware scoring.
+			val miscScore = calculateMiscScore(config, training)
+
+			// Define scoring weights based on relationship bars presence.
+			val statWeight = if (training.relationshipBars.isNotEmpty()) 0.6 else 0.7
+			val relationshipWeight = if (training.relationshipBars.isNotEmpty()) 0.1 else 0.0
+			val miscWeight = 0.3
+
+			// Calculate weighted total score.
+			totalScore += statScore * statWeight
+			totalScore += relationshipScore * relationshipWeight
+			totalScore += miscScore * miscWeight
+
+			// Rainbow training multiplier (Year 2+ only).
+			val rainbowMultiplier = if (training.isRainbow && config.currentDate.year >= 2) {
+				if (config.enableRainbowTrainingBonus) {
+                    MessageLog.i(TAG, "[TRAINING] ${training.name} Training is detected as a rainbow training. Adding multiplier to score.")
+					2.0
+				} else {
+                    MessageLog.i(TAG, "[TRAINING] ${training.name} Training is detected as a rainbow training, but rainbow training bonus is not enabled.")
+					1.5
+				}
+			} else {
+				1.0
+			}
+
+			// Apply rainbow multiplier to total score.
+			totalScore *= rainbowMultiplier
+
+			return totalScore.coerceAtLeast(0.0)
 		}
 	}
 
@@ -397,9 +851,9 @@ class Training(private val game: Game) {
 
 					// Unified approach: always use result object and start threads the same way.
 					// Use CountDownLatch to run the operations in parallel to cut down on processing time.
-					// Note: For parallel processing, Spirit Explosion Gauge is handled synchronously for Unity Cup, so latch count is 4.
-					// For singleTraining, Spirit Explosion Gauge runs in a thread for Unity Cup, so latch count is 5.
-					val latch = CountDownLatch(if (singleTraining && game.scenario == "Unity Cup") 5 else 4)
+					// Note: For parallel processing, Spirit Explosion Gauge is handled synchronously for Unity Cup.
+					// For singleTraining, Spirit Explosion Gauge runs in another thread for Unity Cup.
+					val latch = CountDownLatch(if (singleTraining && game.scenario == "Unity Cup") 6 else 5)
 
 					// Create log message buffer for this training.
 					val logMessages = ConcurrentLinkedQueue<String>()
@@ -506,7 +960,26 @@ class Training(private val game: Game) {
                             }
                         }.start()
 
-                        // Thread 5: Analyze Spirit Explosion Gauges (Unity Cup only, singleTraining mode only).
+                        // Thread 5: Detect skill hints.
+                        Thread {
+                            val startTimeSkillHints = System.currentTimeMillis()
+                            try {
+                                val skillHintLocations = game.imageUtils.findAllWithBitmap("stat_skill_hint", sourceBitmap, region = game.imageUtils.regionTopHalf)
+                                result.numSkillHints = skillHintLocations.size
+                            } catch (e: Exception) {
+                                Log.e(TAG, "[ERROR] Error in skill hint detection: ${e.stackTraceToString()}")
+                                result.numSkillHints = 0
+                            } finally {
+                                latch.countDown()
+                                val elapsedTime = System.currentTimeMillis() - startTimeSkillHints
+                                Log.d(TAG, "Total time to detect skill hints for $training: ${elapsedTime}ms")
+                                if (!singleTraining) {
+                                    logMessages.offer("[TRAINING] [$training] Skill hint detection completed in ${elapsedTime}ms")
+                                }
+                            }
+                        }.start()
+
+                        // Thread 6: Analyze Spirit Explosion Gauges (Unity Cup only, singleTraining mode only).
                         if (game.scenario == "Unity Cup" && singleTraining) {
                             Thread {
                                 val startTimeSpiritGauge = System.currentTimeMillis()
@@ -569,7 +1042,8 @@ class Training(private val game: Game) {
 							relationshipBars = result.relationshipBars,
 							isRainbow = result.isRainbow,
 							numSpiritGaugesCanFill = result.numSpiritGaugesCanFill,
-							numSpiritGaugesReadyToBurst = result.numSpiritGaugesReadyToBurst
+							numSpiritGaugesReadyToBurst = result.numSpiritGaugesReadyToBurst,
+							numSkillHints = result.numSkillHints
 						)
 						trainingMap[result.training] = newTraining
 						break
@@ -648,7 +1122,8 @@ class Training(private val game: Game) {
 							relationshipBars = result.relationshipBars,
 							isRainbow = result.isRainbow,
 							numSpiritGaugesCanFill = result.numSpiritGaugesCanFill,
-							numSpiritGaugesReadyToBurst = result.numSpiritGaugesReadyToBurst
+							numSpiritGaugesReadyToBurst = result.numSpiritGaugesReadyToBurst,
+							numSkillHints = result.numSkillHints
 						)
 						trainingMap[result.training] = newTraining
 					}
@@ -693,411 +1168,39 @@ class Training(private val game: Game) {
 	 * @return The name of the recommended training option, or empty string if no suitable option found.
 	 */
 	private fun recommendTraining(): String {
-		/**
-		 * Scores the currently selected training option during Junior Year based on friendship bar progress.
-		 *
-		 * This algorithm prefers training options with the least relationship progress (especially blue bars).
-		 * It ignores stat gains unless all else is equal.
-		 *
-		 * @param training The training option to evaluate.
-		 *
-		 * @return A score representing relationship-building value.
-		 */
-		fun scoreFriendshipTraining(training: TrainingOption): Double {
-			// Ignore the blacklist in favor of making sure we build up the relationship bars as fast as possible.
-			MessageLog.i(TAG, "\n[TRAINING] Starting process to score ${training.name} Training with a focus on building relationship bars.")
-
-			val barResults = training.relationshipBars
-			if (barResults.isEmpty()) return Double.NEGATIVE_INFINITY
-
-			var score = 0.0
-			for (bar in barResults) {
-				val contribution = when (bar.dominantColor) {
-					"orange" -> 0.0
-					"green" -> 1.0
-					"blue" -> 2.5
-					else -> 0.0
-				}
-				score += contribution
-			}
-
-			MessageLog.i(TAG, "[TRAINING] ${training.name} Training has a score of ${game.decimalFormat.format(score)} with a focus on building relationship bars.")
-			return score
+		// Build skillHintsPerLocation from the training map.
+		// Order: Speed, Stamina, Power, Guts, Wit (matches TRAININGS list).
+		val skillHintsPerLocation = trainings.map { trainingName ->
+			trainingMap[trainingName]?.numSkillHints ?: 0
 		}
 
-		/**
-		 * Scores training options for Unity Cup based on Spirit Explosion Gauge priority system.
-		 *
-		 * Priority order:
-		 * 1. Highest Priority: Trainings with Spirit Explosion Gauges ready to burst.
-		 * 2. Second Priority: Trainings that can fill Spirit Explosion Gauges (not at 100% yet).
-		 * 3. Third Priority: Trainings that fill relationship bars.
-		 * 4. Lowest Priority: Stat prioritization (only if no gauge/relationship opportunities).
-		 *
-		 * Additional considerations:
-		 * - If gauges can be filled for deprioritized stat trainings, ignore stat prioritization (early game).
-		 * - Sometimes worth doing training with no relationship bar gains if building up several bursts.
-		 * - Ideally doing unity training at the same time as triggering regular rainbow trainings.
-		 * - Good facilities to burst: Speed (increased speed stat gains), Wit (energy recovery + speed stat gain).
-		 * - Stamina and Power can be bursted if lacking stats.
-		 * - Guts is not ideal but can be worth it if building up several other bursts.
-		 *
-		 * @param training The training option to evaluate.
-		 *
-		 * @return A score representing Unity Cup training value.
-		 */
-		fun scoreUnityCupTraining(training: TrainingOption): Double {
-			MessageLog.i(TAG, "\n[TRAINING] Starting process to score ${training.name} Training for Unity Cup with Spirit Explosion Gauge priority.")
-
-			// 1. Highest Priority: Trainings with Spirit Explosion Gauges ready to burst.
-            var score = 0.0
-			if (training.numSpiritGaugesReadyToBurst > 0) {
-				// Score increases with number of gauges ready to burst.
-				score += 1000.0 + (training.numSpiritGaugesReadyToBurst * 1000.0)
-				MessageLog.i(TAG, "[TRAINING] ${training.name} Training has ${training.numSpiritGaugesReadyToBurst} Spirit Explosion Gauge(s) ready to burst. Highest priority.")
-				
-				// Facility preference bonuses for bursting.
-				when (training.name) {
-					"Speed" -> score += 500.0 // Best for increased speed stat gains.
-					"Wit" -> score += 500.0 // Best for energy recovery and slightly increased speed stat gain.
-					"Stamina", "Power" -> {
-						// Can be bursted if lacking stats.
-						val statIndex = trainings.indexOf(training.name)
-						val currentStat = currentStatsMap.getOrDefault(training.name, 0)
-						val target = statTargetsByDistance[preferredDistance] ?: intArrayOf(600, 600, 600, 300, 300)
-						val targetStat = target.getOrElse(statIndex) { 600 }
-						if (currentStat < targetStat * 0.8) {
-							score += 300.0
-						}
-					}
-					"Guts" -> {
-						// Guts is not ideal, but can be worth it if building up gauges to max them out for bursting.
-						if (training.numSpiritGaugesCanFill >= 2) {
-							score += 200.0 // Building up multiple gauges to allow for bursting.
-						} else {
-							score -= 100.0 // Not ideal without building up multiple gauges.
-						}
-					}
-				}
-
-				// Bonus for rainbow training while bursting.
-				if (training.isRainbow) {
-					score += 200.0
-					MessageLog.i(TAG, "[TRAINING] Adding some score for ${training.name} Training for being a rainbow training.")
-				}
-			}
-
-			// 2. Second Priority: Trainings that can fill Spirit Explosion Gauges (not at 100% yet).
-			if (training.numSpiritGaugesCanFill > 0) {
-				// Score increases with number of gauges that can be filled.
-				// Each gauge fills by 25% per training execution.
-				score += 1000.0 + (training.numSpiritGaugesCanFill * 200.0)
-				MessageLog.i(TAG, "[TRAINING] ${training.name} Training can fill ${training.numSpiritGaugesCanFill} Spirit Explosion Gauge(s).")
-
-				// Early game: If gauges can be filled for deprioritized stat trainings, ignore stat prioritization.
-				val isEarlyGame = game.currentDate.year < 2
-				if (isEarlyGame) {
-					score += 500.0
-					MessageLog.i(TAG, "[TRAINING] Early game: Prioritizing gauge filling over stat prioritization.")
-				}
-			}
-
-			// 3. Third Priority: Trainings that fill relationship bars.
-			if (training.relationshipBars.isNotEmpty()) {
-				var relationshipScore = 0.0
-				for (bar in training.relationshipBars) {
-					val contribution = when (bar.dominantColor) {
-						"orange" -> 0.0
-						"green" -> 1.0
-						"blue" -> 2.5
-						else -> 0.0
-					}
-					relationshipScore += contribution
-				}
-				score += 100.0 + (relationshipScore * 20.0)
-				MessageLog.i(TAG, "[TRAINING] ${training.name} Training fills relationship bars. Score: ${game.decimalFormat.format(relationshipScore)}.")
-			}
-
-			// 4. Lowest Priority: Stat prioritization.
-			val statIndex = trainings.indexOf(training.name)
-			val statGain = training.statGains.getOrElse(statIndex) { 0 }
-			score += statGain.toDouble() * 0.1
-			MessageLog.i(TAG, "[TRAINING] ${training.name} Training stat gain contribution: ${statGain}.")
-
-			// Sometimes worth doing training with no relationship bar gains if building up several bursts.
-			if (training.relationshipBars.isEmpty() && training.numSpiritGaugesCanFill > 0) {
-				val otherBurstsBuilding = trainingMap.values.sumOf { it.numSpiritGaugesCanFill } - training.numSpiritGaugesCanFill
-				if (otherBurstsBuilding >= 2) {
-					score += 300.0 // Building up several bursts is worth it.
-					Log.d(TAG, "[DEBUG] ${training.name} Training has no relationship bars but is building up ${training.numSpiritGaugesCanFill} gauge(s) along with $otherBurstsBuilding other gauges being built.")
-				}
-			}
-
-			MessageLog.i(TAG, "[TRAINING] ${training.name} Training has a Unity Cup score of ${game.decimalFormat.format(score)}.")
-			return score
-		}
-
-		/**
-		 * Calculates stat efficiency based on ratio completion toward targets.
-		 *
-		 * This function treats stat targets as desired ratios rather than sequential goals.
-		 * It scores training based on how well it balances the overall stat distribution.
-		 *
-		 * Key principles:
-		 * - Stats furthest behind their target ratio get highest priority
-		 * - Completion percentage = currentStat / targetStat
-		 * - Priority order only breaks ties when completion percentages are similar
-		 * - High main stat gains receive bonus (likely undetected rainbow)
-		 *
-		 * @param training The training option to evaluate.
-		 * @param target Array of target stat values representing desired ratio.
-		 *
-		 * @return Raw score representing stat efficiency (will be normalized later).
-		 */
-		fun calculateStatEfficiencyScore(training: TrainingOption, target: IntArray): Double {
-			var score = 0.0
-			
-			for ((index, stat) in trainings.withIndex()) {
-				val currentStat = currentStatsMap.getOrDefault(stat, 0)
-				val targetStat = target.getOrElse(index) { 0 }
-				val statGain = training.statGains.getOrElse(index) { 0 }
-				
-				if (statGain > 0 && targetStat > 0) {
-					val priorityIndex = statPrioritization.indexOf(stat)
-					
-					// Calculate completion percentage (how far along this stat is toward its target).
-					val completionPercent = (currentStat.toDouble() / targetStat) * 100.0
-					
-					// Ratio-based multiplier: Stats furthest behind get highest priority.
-					val ratioMultiplier = when {
-						completionPercent < 30.0 -> 5.0   // Severely behind.
-						completionPercent < 50.0 -> 4.0   // Significantly behind.
-						completionPercent < 70.0 -> 3.0   // Moderately behind.
-						completionPercent < 90.0 -> 2.0   // Slightly behind.
-						completionPercent < 110.0 -> 1.0  // At target.
-						completionPercent < 130.0 -> 0.5  // Slightly over.
-						else -> 0.3                       // Well over.
-					}
-					
-					// Priority-based tiebreaker (only applies when completion is similar).
-					// Find the completion percentage of the highest priority stat for comparison.
-					val highestPriorityStat = statPrioritization.firstOrNull() ?: stat
-					val highestPriorityIndex = trainings.indexOf(highestPriorityStat)
-					val highestPriorityCompletion = if (highestPriorityIndex != -1) {
-						val hpCurrent = currentStatsMap.getOrDefault(highestPriorityStat, 0)
-						val hpTarget = target.getOrElse(highestPriorityIndex) { 1 }
-						(hpCurrent.toDouble() / hpTarget) * 100.0
-					} else {
-						completionPercent
-					}
-					
-					// Only apply priority bonus if this stat's completion is within 10% of highest priority stat.
-					val priorityMultiplier = if (priorityIndex != -1 && kotlin.math.abs(completionPercent - highestPriorityCompletion) <= 10.0) {
-						1.0 + (0.1 * (statPrioritization.size - priorityIndex))
-					} else {
-						1.0
-					}
-					
-					// Main stat gain bonus: If training improves its MAIN stat by a large amount, it is most likely an undetected rainbow.
-					val isMainStat = training.name == stat
-					val mainStatBonus = if (isMainStat && statGain >= 30) {
-						2.0
-					} else {
-						1.0
-					}
-					
-                    // Spark bonus: Prioritize training sessions for 3* sparks for selected stats below 600 if the setting is enabled.
-                    val isSparkStat = stat in focusOnSparkStatTarget
-                    val canTriggerSpark = currentStat < 600
-                    val sparkBonus = if (isSparkStat && canTriggerSpark) {
-                        MessageLog.i(TAG, "[TRAINING] $stat is at $currentStat (< 600). Prioritizing this training for potential spark event to get above 600.")
-                        2.5
-                    } else {
-                        1.0
-                    }
-                    
-                    if (game.debugMode) {
-                        val bonusNote = if (isMainStat && statGain >= 30) " [HIGH MAIN STAT]" else ""
-                        val sparkNote = if (isSparkStat && canTriggerSpark) " [SPARK PRIORITY]" else ""
-						MessageLog.d(
-                            TAG,
-                            "$stat: gain=$statGain, completion=${game.decimalFormat.format(completionPercent)}%, " +
-							"ratioMult=${game.decimalFormat.format(ratioMultiplier)}, priorityMult=${game.decimalFormat.format(priorityMultiplier)}$bonusNote$sparkNote",
-						)
-					} else {
-						Log.d(TAG, "$stat: gain=$statGain, completion=${game.decimalFormat.format(completionPercent)}%, ratioMult=$ratioMultiplier, priorityMult=$priorityMultiplier")
-					}
-					
-					// Calculate final score for this stat.
-					var statScore = statGain.toDouble()
-					statScore *= ratioMultiplier
-					statScore *= priorityMultiplier
-					statScore *= mainStatBonus
-					statScore *= sparkBonus
-					
-					score += statScore
-				}
-			}
-			
-			return score
-		}
-
-		/**
-		 * Calculates relationship building score with diminishing returns.
-		 *
-		 * Evaluates the value of relationship bars based on their color and fill level:
-		 * - Blue bars: 2.5 points (highest priority)
-		 * - Green bars: 1.0 points (medium priority)
-		 * - Orange bars: 0.0 points (no value)
-		 *
-		 * Applies diminishing returns as bars fill up and early game bonuses for relationship building.
-		 *
-		 * @param training The training option to evaluate.
-		 *
-		 * @return A normalized score (0-100) representing relationship building value.
-		 */
-		fun calculateRelationshipScore(training: TrainingOption): Double {
-			if (training.relationshipBars.isEmpty()) return 0.0
-
-			var score = 0.0
-			var maxScore = 0.0
-
-			for (bar in training.relationshipBars) {
-				val baseValue = when (bar.dominantColor) {
-					"orange" -> 0.0
-					"green" -> 1.0
-					"blue" -> 2.5
-					else -> 0.0
-				}
-
-				if (baseValue > 0) {
-					// Apply diminishing returns for relationship building.
-					val fillLevel = bar.fillPercent / 100.0
-					val diminishingFactor = 1.0 - (fillLevel * 0.5) // Less valuable as bars fill up.
-
-					// Early game bonus for relationship building.
-					val earlyGameBonus = if (game.currentDate.year == 1 || game.currentDate.phase == "Pre-Debut") 1.3 else 1.0
-
-					val contribution = baseValue * diminishingFactor * earlyGameBonus
-					score += contribution
-					maxScore += 2.5 * 1.3
-				}
-			}
-
-			return if (maxScore > 0) (score / maxScore * 100.0) else 0.0
-		}
-
-		/**
-		 * Calculates miscellaneous bonuses and penalties based on training properties.
-		 *
-		 * Applies bonuses for skill hints that provide additional value to training sessions.
-		 * Removed complex phase bonuses to avoid conflicts with target-based scoring.
-		 *
-		 * @param training The training option to evaluate.
-		 *
-		 * @return A misc score between 0-100 representing situational bonuses.
-		 */
-		fun calculateMiscScore(training: TrainingOption): Double {
-			// Start with neutral score.
-			var score = 50.0
-
-			// Bonuses for skill hints.
-            val skillHintLocations = game.imageUtils.findAll(
-                "stat_skill_hint",
-				region = intArrayOf(
-					SharedData.displayWidth - (SharedData.displayWidth / 3),
-					0,
-					(SharedData.displayWidth / 3),
-					SharedData.displayHeight - (SharedData.displayHeight / 3)
-				)
-			)
-            if (skillHintLocations.isNotEmpty()) {
-                MessageLog.i(TAG, "[TRAINING] Skill hint(s) detected for ${training.name} Training.")
-            }
-			score += 10.0 * skillHintLocations.size
-
-			// If skill hints are prioritized and we found some, return a massive score to override other factors.
-			// This handles the case where skill hints only become visible after a training is selected.
-			if (enablePrioritizeSkillHints && skillHintLocations.isNotEmpty()) {
-				MessageLog.i(TAG, "[TRAINING] Skill hints detected and priority is enabled. Applying maximum bonus to force selection.")
-				return 10000.0 + score
-			}
-
-            return score.coerceIn(0.0, 100.0)
-        }
-
-	    /**
-		 * Calculates raw training score without normalization.
-		 *
-		 * This function calculates raw training scores
-		 * that will be normalized based on the actual maximum score in the current session.
-		 *
-		 * @param training The training option to evaluate.
-		 *
-		 * @return Raw score representing overall training value.
-		 */
-		fun calculateRawTrainingScore(training: TrainingOption): Double {
-			if (training.name in blacklist) return 0.0
-
-			// Don't score for stats that are maxed or would be maxed.
-			if ((disableTrainingOnMaxedStat && currentStatsMap[training.name]!! >= currentStatCap) ||
-				(currentStatsMap.getOrDefault(training.name, 0) + training.statGains[trainings.indexOf(training.name)] >= currentStatCap)) {
-				return 0.0
-			}
-
-			val target = statTargetsByDistance[preferredDistance] ?: intArrayOf(600, 600, 600, 300, 300)
-
-			var totalScore = 0.0
-
-			// 1. Stat Efficiency scoring
-			val statScore = calculateStatEfficiencyScore(training, target)
-
-			// 2. Friendship scoring
-			val relationshipScore = calculateRelationshipScore(training)
-
-			// 3. Misc-aware scoring
-			val miscScore = calculateMiscScore(training)
-
-			// Define scoring weights based on relationship bars presence.
-			val statWeight = if (training.relationshipBars.isNotEmpty()) 0.6 else 0.7
-			val relationshipWeight = if (training.relationshipBars.isNotEmpty()) 0.1 else 0.0
-			val miscWeight = 0.3
-
-			// Calculate weighted total score.
-			totalScore += statScore * statWeight
-			totalScore += relationshipScore * relationshipWeight
-			totalScore += miscScore * miscWeight
-
-			// 4. Rainbow training multiplier (Year 2+ only).
-			// Rainbow is heavily favored because it improves overall ratio balance.
-			val rainbowMultiplier = if (training.isRainbow && game.currentDate.year >= 2) {
-				if (enableRainbowTrainingBonus) {
-                    MessageLog.i(TAG, "[TRAINING] ${training.name} Training is detected as a rainbow training. Adding multiplier to score.")
-					2.0
-				} else {
-                    MessageLog.i(TAG, "[TRAINING] ${training.name} Training is detected as a rainbow training, but rainbow training bonus is not enabled.")
-					1.5
-				}
-			} else {
-				1.0
-			}
-
-			// Apply rainbow multiplier to total score.
-			totalScore *= rainbowMultiplier
-
-			return totalScore.coerceAtLeast(0.0)
-		}
+		// Build a TrainingConfig using the current game state for use with companion object scoring functions.
+		val trainingConfig = TrainingConfig(
+			currentStats = currentStatsMap.toMap(),
+			statPrioritization = statPrioritization,
+			statTargets = statTargetsByDistance[preferredDistance] ?: intArrayOf(600, 600, 600, 300, 300),
+			currentDate = game.currentDate,
+			scenario = game.scenario,
+			enableRainbowTrainingBonus = enableRainbowTrainingBonus,
+			focusOnSparkStatTarget = focusOnSparkStatTarget,
+			blacklist = blacklist,
+			disableTrainingOnMaxedStat = disableTrainingOnMaxedStat,
+			currentStatCap = currentStatCap,
+			trainingOptions = trainingMap.values.toList(),
+			skillHintsPerLocation = skillHintsPerLocation,
+			enablePrioritizeSkillHints = enablePrioritizeSkillHints
+		)
 
 		// Decide which scoring function to use based on campaign, phase, or year.
 		val best = if (game.scenario == "Unity Cup" && game.currentDate.year < 3) {
-            // Unity Cup (Year < 3): Use Spirit Explosion Gauge priority system.
-			trainingMap.values.maxByOrNull { scoreUnityCupTraining(it) }
+			// Unity Cup (Year < 3): Use Spirit Explosion Gauge priority system.
+			trainingMap.values.maxByOrNull { scoreUnityCupTraining(trainingConfig, it) }
 		} else if (game.currentDate.phase == "Pre-Debut" || game.currentDate.year == 1) {
-            // Junior Year: Focus on building relationship bars.
+			// Junior Year: Focus on building relationship bars.
 			trainingMap.values.maxByOrNull { scoreFriendshipTraining(it) }
 		} else {
 			// For Year 2+, calculate all scores first, then normalize based on actual maximum.
-			val trainingScores = trainingMap.values.associateWith { training -> calculateRawTrainingScore(training) }
+			val trainingScores = trainingMap.values.associateWith { training -> calculateRawTrainingScore(trainingConfig, training) }
 
             val maxScore = trainingScores.values.maxOrNull() ?: 0.0
 			
@@ -1144,12 +1247,34 @@ class Training(private val game: Game) {
 
 	/**
 	 * Prints the training map object for informational purposes.
+	 * Includes stat gains, failure chance, rainbow status, relationship bars, skill hints, etc.
 	 */
 	private fun printTrainingMap() {
-		MessageLog.i(TAG, "\nStat Gains by Training:")
+		MessageLog.i(TAG, "\n========== Training Analysis Results ==========")
 		trainingMap.forEach { name, training ->
-			MessageLog.i(TAG, "$name Training stat gains: ${training.statGains.contentToString()}, failure chance: ${training.failureChance}%, rainbow: ${training.isRainbow}.")
+			// Build the basic training info line.
+			val basicInfo = "$name Training: stats=${training.statGains.contentToString()}, fail=${training.failureChance}%, rainbow=${training.isRainbow}"
+			MessageLog.i(TAG, basicInfo)
+
+			// Print relationship bars if any.
+			if (training.relationshipBars.isNotEmpty()) {
+				val barsSummary = training.relationshipBars.mapIndexed { index, bar ->
+					"#${index + 1}:${bar.dominantColor}(${String.format("%.0f", bar.fillPercent)}%)"
+				}.joinToString(", ")
+				MessageLog.i(TAG, "  -> Relationship bars: $barsSummary")
+			}
+
+			// Print spirit gauge info if any gauges are present.
+			if (training.numSpiritGaugesCanFill > 0 || training.numSpiritGaugesReadyToBurst > 0) {
+				MessageLog.i(TAG, "  -> Spirit gauges: fillable=${training.numSpiritGaugesCanFill}, ready to burst=${training.numSpiritGaugesReadyToBurst}")
+			}
+
+			// Print skill hints if any.
+			if (training.numSkillHints > 0) {
+				MessageLog.i(TAG, "  -> Skill hints: ${training.numSkillHints}")
+			}
 		}
+		MessageLog.i(TAG, "================================================")
 	}
 
     /**
