@@ -164,17 +164,9 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		}
 
 		// Use the match location acquired from finding the energy text image and acquire the (x, y) coordinates of the event title container right below the location of the energy text image.
-		val newX: Int
-		val newY: Int
-		var croppedBitmap: Bitmap? = if (isTablet) {
-			newX = max(0, matchLocation.x.toInt() - relWidth(250))
-			newY = max(0, matchLocation.y.toInt() + relHeight(154))
-			createSafeBitmap(sourceBitmap, newX, newY, relWidth(746), relHeight(85), "findEventTitle tablet crop")
-		} else {
-			newX = max(0, matchLocation.x.toInt() - relWidth(125))
-			newY = max(0, matchLocation.y.toInt() + relHeight(116))
-			createSafeBitmap(sourceBitmap, newX, newY, relWidth(645), relHeight(65), "findEventTitle phone crop")
-		}
+		val newX: Int = max(0, matchLocation.x.toInt() - relWidth(125))
+		val newY: Int = max(0, matchLocation.y.toInt() + relHeight(116))
+		var croppedBitmap: Bitmap? = createSafeBitmap(sourceBitmap, newX, newY, relWidth(645), relHeight(65), "findEventTitle crop")
 		if (croppedBitmap == null) {
 			MessageLog.e(TAG, "Failed to create cropped bitmap for text detection")
 			return ""
@@ -249,12 +241,8 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			return -1
 		}
 
-		// Determine crop region based on device type.
-		val (offsetX, offsetY, width, height) = if (isTablet) {
-			listOf(-65, 23, relWidth(130), relHeight(50))
-		} else {
-			listOf(-45, 15, relWidth(100), relHeight(37))
-		}
+		// Determine crop region.
+		val (offsetX, offsetY, width, height) = listOf(-45, 15, relWidth(100), relHeight(37))
 
 		// Perform OCR with 2x scaling and no thresholding.
 		val detectedText = performOCROnRegion(
@@ -297,19 +285,11 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		val (energyTextLocation, sourceBitmap) = findImage("energy", tries = 1, region = regionTopHalf)
 
 		if (energyTextLocation != null) {
-			// Determine crop region based on campaign and device type.
+			// Determine crop region based on campaign.
 			val (offsetX, offsetY, width, height) = if (game.scenario == "Unity Cup") {
-				if (isTablet) {
-					listOf(-(260 * 1.32).toInt(), -(140 * 1.32).toInt(), relWidth(135), relHeight(100))
-				} else {
-					listOf(-260, -137, relWidth(100), relHeight(80))
-				}
+				listOf(-260, -137, relWidth(100), relHeight(80))
 			} else {
-				if (isTablet) {
-					listOf(-(246 * 1.32).toInt(), -(96 * 1.32).toInt(), relWidth(175), relHeight(116))
-				} else {
-					listOf(-246, -100, relWidth(140), relHeight(95))
-				}
+				listOf(-246, -100, relWidth(140), relHeight(95))
 			}
 
 			// Perform OCR with 2x scaling.
@@ -439,11 +419,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	 */
 	fun determineExtraRaceFans(extraRaceLocation: Point, sourceBitmap: Bitmap, doubleStarPredictionBitmap: Bitmap, forceRacing: Boolean = false): RaceDetails {
 		// Crop the source screenshot to show only the fan amount and the predictions.
-		val croppedBitmap = if (isTablet) {
-			createSafeBitmap(sourceBitmap, relX(extraRaceLocation.x, -(173 * 1.34).toInt()), relY(extraRaceLocation.y, -(106 * 1.34).toInt()), relWidth(220), relHeight(125), "determineExtraRaceFans prediction tablet")
-		} else {
-			createSafeBitmap(sourceBitmap, relX(extraRaceLocation.x, -173), relY(extraRaceLocation.y, -106), relWidth(163), relHeight(96), "determineExtraRaceFans prediction phone")
-		}
+		val croppedBitmap = createSafeBitmap(sourceBitmap, relX(extraRaceLocation.x, -173), relY(extraRaceLocation.y, -106), relWidth(163), relHeight(96), "determineExtraRaceFans prediction")
 		if (croppedBitmap == null) {
 			MessageLog.e(TAG, "Failed to create cropped bitmap for extra race prediction detection.")
 			return RaceDetails(-1, false)
@@ -461,11 +437,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			else if (debugMode) MessageLog.d(TAG, "Check for double predictions was skipped due to the force racing flag being enabled. Now checking how many fans this race gives.")
 
 			// Crop the source screenshot to show only the fans.
-			val croppedBitmap2 = if (isTablet) {
-				createSafeBitmap(sourceBitmap, relX(extraRaceLocation.x, -(625 * 1.40).toInt()), relY(extraRaceLocation.y, -(75 * 1.34).toInt()), relWidth(320), relHeight(45), "determineExtraRaceFans fans tablet")
-			} else {
-				createSafeBitmap(sourceBitmap, relX(extraRaceLocation.x, -625), relY(extraRaceLocation.y, -75), relWidth(250), relHeight(35), "determineExtraRaceFans fans phone")
-			}
+			val croppedBitmap2 = createSafeBitmap(sourceBitmap, relX(extraRaceLocation.x, -625), relY(extraRaceLocation.y, -75), relWidth(250), relHeight(35), "determineExtraRaceFans fans")
 			if (croppedBitmap2 == null) {
 				MessageLog.e(TAG, "Failed to create cropped bitmap for extra race fans detection.")
 				return RaceDetails(-1, predictionCheck)
@@ -537,12 +509,8 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		val (skillPointLocation, sourceBitmap) = findImage("skill_points", tries = 1)
 
 		return if (skillPointLocation != null) {
-			// Determine crop region based on device type.
-			val (offsetX, offsetY, width, height) = if (isTablet) {
-				listOf(-75, 45, relWidth(150), relHeight(70))
-			} else {
-				listOf(-70, 28, relWidth(135), relHeight(70))
-			}
+			// Determine crop region.
+			val (offsetX, offsetY, width, height) = listOf(-70, 28, relWidth(135), relHeight(70))
 
 			// Perform OCR with thresholding.
 			val detectedText = performOCROnRegion(

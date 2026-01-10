@@ -376,30 +376,12 @@ class Training(private val game: Game) {
 					}
 
 					if (newX != 0.0 && !singleTraining) {
-						if (game.imageUtils.isTablet) {
-							if (training == "Stamina") {
-								game.tap(
-									speedStatTextLocation.x + game.imageUtils.relWidth((newX * 1.05).toInt()),
-									speedStatTextLocation.y + game.imageUtils.relHeight((319 * 1.50).toInt()),
-									"training_option_circular",
-									ignoreWaiting = true
-								)
-							} else {
-								game.tap(
-									speedStatTextLocation.x + game.imageUtils.relWidth((newX * 1.36).toInt()),
-									speedStatTextLocation.y + game.imageUtils.relHeight((319 * 1.50).toInt()),
-									"training_option_circular",
-									ignoreWaiting = true
-								)
-							}
-						} else {
-							game.tap(
-								speedStatTextLocation.x + game.imageUtils.relWidth(newX.toInt()),
-								speedStatTextLocation.y + game.imageUtils.relHeight(319),
-								"training_option_circular",
-								ignoreWaiting = true
-							)
-						}
+						game.tap(
+							speedStatTextLocation.x + game.imageUtils.relWidth(newX.toInt()),
+							speedStatTextLocation.y + game.imageUtils.relHeight(319),
+							"training_option_circular",
+							ignoreWaiting = true
+						)
 						
 						// Wait briefly for UI to update after tapping training button.
 						game.wait(0.2)
