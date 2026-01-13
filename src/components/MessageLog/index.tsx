@@ -1,6 +1,7 @@
 import { useContext, useState, useMemo, useCallback, memo, useEffect, useRef } from "react"
 import { MessageLogContext } from "../../context/MessageLogContext"
 import { BotStateContext } from "../../context/BotStateContext"
+import { useSettings } from "../../context/SettingsContext"
 import { StyleSheet, Text, View, TextInput, TouchableOpacity, Animated } from "react-native"
 import * as Clipboard from "expo-clipboard"
 import { Copy, Plus, Minus, Type, X, ArrowUp, ArrowDown, ArrowUpAZ, ArrowDownZA } from "lucide-react-native"
@@ -167,8 +168,8 @@ const LogItem = memo(({ item, fontSize, onLongPress, enableMessageIdDisplay }: {
 const MessageLog = () => {
     const mlc = useContext(MessageLogContext)
     const bsc = useContext(BotStateContext)
+    const { saveSettingsImmediate } = useSettings()
     const [searchQuery, setSearchQuery] = useState("")
-    const [fontSize, setFontSize] = useState(8)
     const [showErrorDialog, setShowErrorDialog] = useState(false)
     const [errorMessage, setErrorMessage] = useState("")
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc")
@@ -176,6 +177,8 @@ const MessageLog = () => {
     const [scrollOffset, setScrollOffset] = useState(0)
     const [contentHeight, setContentHeight] = useState(0)
     const [viewportHeight, setViewportHeight] = useState(0)
+
+    const fontSize = bsc.settings.misc.messageLogFontSize
 
     // Animated values for smooth scroll button transitions.
     const topButtonOpacity = useRef(new Animated.Value(0)).current
@@ -557,13 +560,25 @@ ${longTargetsString}
     }, [showScrollToTop, showScrollToBottom, topButtonOpacity, bottomButtonOpacity])
 
     // Font size control functions.
-    const increaseFontSize = useCallback(() => {
-        setFontSize((prev) => Math.min(prev + 1, 24))
-    }, [])
+    const increaseFontSize = useCallback(async () => {
+        const newFontSize = Math.min(fontSize + 1, 24)
+        const updatedSettings = {
+            ...bsc.settings,
+            misc: { ...bsc.settings.misc, messageLogFontSize: newFontSize },
+        }
+        bsc.setSettings(updatedSettings)
+        await saveSettingsImmediate(updatedSettings)
+    }, [fontSize, bsc.settings, bsc.setSettings, saveSettingsImmediate])
 
-    const decreaseFontSize = useCallback(() => {
-        setFontSize((prev) => Math.max(prev - 1, 8))
-    }, [])
+    const decreaseFontSize = useCallback(async () => {
+        const newFontSize = Math.max(fontSize - 1, 8)
+        const updatedSettings = {
+            ...bsc.settings,
+            misc: { ...bsc.settings.misc, messageLogFontSize: newFontSize },
+        }
+        bsc.setSettings(updatedSettings)
+        await saveSettingsImmediate(updatedSettings)
+    }, [fontSize, bsc.settings, bsc.setSettings, saveSettingsImmediate])
 
     // Clear search query.
     const clearSearch = useCallback(() => {
