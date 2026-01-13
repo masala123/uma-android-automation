@@ -19,6 +19,7 @@ import com.steve1316.automation_library.events.StartEvent
 import com.steve1316.automation_library.utils.MediaProjectionService
 import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.automation_library.utils.MyAccessibilityService
+import com.steve1316.automation_library.utils.BatteryOptimizationUtils
 import com.steve1316.uma_android_automation.bot.Game
 import com.steve1316.uma_android_automation.utils.SettingsHelper
 import com.steve1316.uma_android_automation.utils.SQLiteSettingsManager
@@ -127,7 +128,7 @@ class StartModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
      * @return True if both permissions were already granted and false otherwise.
      */
     private fun readyCheck(): Boolean {
-        return checkForOverlayPermission() && checkForAccessibilityPermission()
+        return checkForOverlayPermission() && checkForAccessibilityPermission() && checkForBatteryOptimization()
     }
 
     /**
@@ -201,6 +202,34 @@ class StartModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
             setNeutralButton("Accessibility Settings") { _, _ ->
                 val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
                 this@StartModule.reactApplicationContext.currentActivity?.startActivity(intent)
+            }
+            setNegativeButton(android.R.string.cancel, null)
+        }.show()
+
+        return false
+    }
+
+    /**
+     * Checks if battery optimization is disabled for this app and guides the user to enable it if needed.
+     *
+     * This ensures the app can run reliably in the background without being killed by Android's
+     * battery optimization features during long-running automation tasks.
+     *
+     * @return True if battery optimization is already disabled for this app.
+     */
+    private fun checkForBatteryOptimization(): Boolean {
+        if (BatteryOptimizationUtils.isIgnoringBatteryOptimizations(context)) {
+            Log.d(TAG, "Application is already ignoring battery optimizations.")
+            return true
+        }
+
+        Log.d(TAG, "Application is not ignoring battery optimizations.")
+
+        AlertDialog.Builder(this.reactApplicationContext.currentActivity).apply {
+            setTitle(R.string.battery_optimization_title)
+            setMessage(R.string.battery_optimization_message)
+            setPositiveButton(R.string.go_to_settings) { _, _ ->
+                BatteryOptimizationUtils.requestIgnoreBatteryOptimizations(context)
             }
             setNegativeButton(android.R.string.cancel, null)
         }.show()

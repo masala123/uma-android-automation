@@ -54,6 +54,7 @@ export interface Settings {
         formattedSettingsString: string
         enableMessageIdDisplay: boolean
         currentProfileName: string
+        messageLogFontSize: number
     }
 
     // Training settings
@@ -155,7 +156,7 @@ export const defaultSettings: Settings = {
                 raceName: race.name,
                 date: race.date,
                 priority: index,
-            }))
+            })),
         ),
         racingPlanData: JSON.stringify(racesData),
         minFansThreshold: 0,
@@ -222,6 +223,7 @@ export const defaultSettings: Settings = {
         formattedSettingsString: "",
         enableMessageIdDisplay: false,
         currentProfileName: "",
+        messageLogFontSize: 8,
     },
     training: {
         trainingBlacklist: [],

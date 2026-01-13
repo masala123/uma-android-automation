@@ -30,5 +30,8 @@
 
     <string name="go_to_settings">Go to Settings</string>
 
+    <string name="battery_optimization_title">Battery Optimization Required</string>
+    <string name="battery_optimization_message">This app requires unrestricted battery access to run reliably in the background.\n\nWithout this permission, certain Android manufacturers may kill the automation service to save battery, causing it to stop unexpectedly during long-running tasks.\n\nPlease tap "Allow" on the next screen to disable battery optimization for this app.</string>
+
     <string name="go_to_github">Go to GitHub</string>
 </resources>

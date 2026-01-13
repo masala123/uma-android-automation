@@ -13,6 +13,7 @@ import { Text } from "../../components/ui/text"
 import { AlertDialog, AlertDialogAction, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "../../components/ui/alert-dialog"
 import { useNavigation, DrawerActions } from "@react-navigation/native"
 import { Ionicons } from "@expo/vector-icons"
+import { Tooltip, TooltipContent, TooltipTrigger } from "../../components/ui/tooltip"
 
 const styles = StyleSheet.create({
     root: {
@@ -118,9 +119,21 @@ const Home = () => {
                 <TouchableOpacity onPress={openDrawer} style={styles.menuButton} activeOpacity={0.7}>
                     <Ionicons name="menu" size={28} color={colors.foreground} />
                 </TouchableOpacity>
-                <CustomButton variant={isRunning ? "destructive" : isDark ? "default" : "secondary"} onPress={handleButtonPress} isLoading={isRunning} style={styles.button}>
-                    {isRunning ? "Stop" : bsc.readyStatus ? "Start" : "Not Ready"}
-                </CustomButton>
+                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                    <CustomButton variant={isRunning ? "destructive" : isDark ? "default" : "secondary"} onPress={handleButtonPress} isLoading={isRunning} style={styles.button}>
+                        {isRunning ? "Stop" : bsc.readyStatus ? "Start" : "Not Ready"}
+                    </CustomButton>
+                    {!bsc.readyStatus && !isRunning && (
+                        <Tooltip delayDuration={150}>
+                            <TooltipTrigger>
+                                <Ionicons name="information-circle-outline" size={24} color={colors.foreground} />
+                            </TooltipTrigger>
+                            <TooltipContent side="bottom">
+                                <Text>Select a Scenario in Settings to start</Text>
+                            </TooltipContent>
+                        </Tooltip>
+                    )}
+                </View>
                 <View style={{ width: 36 }} />
             </View>
 

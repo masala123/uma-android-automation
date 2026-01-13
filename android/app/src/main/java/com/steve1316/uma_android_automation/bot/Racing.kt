@@ -1182,18 +1182,8 @@ class Racing (private val game: Game) {
             listOfRaces.add(raceDetails)
 
             if (count + 1 < maxCount) {
-                val nextX = if (game.imageUtils.isTablet) {
-                    game.imageUtils.relX(selectedExtraRace.x, (-100 * 1.36).toInt())
-                } else {
-                    game.imageUtils.relX(selectedExtraRace.x, -100)
-                }
-
-                val nextY = if (game.imageUtils.isTablet) {
-                    game.imageUtils.relY(selectedExtraRace.y, (150 * 1.50).toInt())
-                } else {
-                    game.imageUtils.relY(selectedExtraRace.y, 150)
-                }
-
+                val nextX = game.imageUtils.relX(selectedExtraRace.x, -100)
+                val nextY = game.imageUtils.relY(selectedExtraRace.y, 150)
                 game.tap(nextX.toDouble(), nextY.toDouble(), "race_extra_selection", ignoreWaiting = true)
             }
 
