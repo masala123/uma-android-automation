@@ -271,7 +271,7 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
         }
 
         // Auto-expact Skill Settings if Skill Plan Settings is active.
-        if (currentRoute === "SkillPlanPreFinalsSettings" || currentRoute === "SkillPlanCareerCompleteSettings") {
+        if (currentScreen === "SkillPlanPreFinalsSettings" || currentScreen === "SkillPlanCareerCompleteSettings") {
             newExpanded.add("SkillSettings")
         }
 
