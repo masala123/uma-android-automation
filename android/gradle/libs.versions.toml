@@ -10,12 +10,11 @@ app-versionCode = "42"
 app-versionName = "4.3.3"
 app-jvm-toolchain = "17"
 
-
 androidGradleBuildTools = "8.13.0"
 junitJupiter = "6.0.2"
 junitPlatformLauncher = "6.0.2"
 kotlinGradlePlugin = "2.2.0"
-androidCvAutomationLibrary = "2.3.4"
+androidCvAutomationLibrary = "2.3.5"
 lottie = "6.6.9"
 
 [libraries]
