@@ -1637,8 +1637,19 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			}
 
 			val result = numericPart.toInt()
-			Log.d(TAG, "[DEBUG] Successfully constructed integer value: $result from \"$constructedString\".")
-			result
+
+			// Correct stat gains that exceed +100 by dropping the third digit.
+			// The max stat gain per training is +100, so higher values indicate a false 3rd digit detection.
+			val correctedResult = if (result > 100) {
+				val corrected = result / 10
+				Log.d(TAG, "[DEBUG] Corrected stat gain from $result to $corrected (dropped false 3rd digit).")
+				corrected
+			} else {
+				result
+			}
+
+			Log.d(TAG, "[DEBUG] Successfully constructed integer value: $correctedResult from \"$constructedString\".")
+			correctedResult
 		} catch (e: NumberFormatException) {
 			Log.e(TAG, "[ERROR] Could not convert \"$constructedString\" to integer for stat gain: ${e.stackTraceToString()}")
 			0
