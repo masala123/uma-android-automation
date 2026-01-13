@@ -199,6 +199,16 @@
         "Smiles Forever": [
             "Speed +5\nPower +10\nDaitaku Helios bond +5",
             "Long Shot ○ hint +1\nDaitaku Helios bond +5"
+        ],
+        "(❯) A Legendary Smile in the House!": [
+            "Energy -5\nPower +15\n(random) Early Lead hint +1\nDaitaku Helios bond +5",
+            "Energy +10\nSpeed +15\nPace Chaser Corners ○ hint +1\nEvent chain ended"
+        ],
+        "(❯❯) Helios's ☆ Hype Channel!": [
+            "Energy -5\nPower +10\nSkill points +20"
+        ],
+        "(❯❯❯) A Smile for the World": [
+            "Randomly either\n----------\nEnergy -10\nSpeed +20\nPower +20\nEscape Artist hint +3\nDaitaku Helios bond +5\n----------\n\n----------\nEnergy -10\nSpeed +10\nPower +10\nFast-Paced hint +3\nDaitaku Helios bond +5"
         ]
     },
     "Daiwa Scarlet": {
@@ -584,6 +594,16 @@
         "How To Be More Marvelous ☆": [
             "Energy +10\nMood +1\nMarvelous Sunday bond +5",
             "Hanshin Racecourse ○ hint +1\nMarvelous Sunday bond +5"
+        ],
+        "(❯) Marvelous Guidance ☆": [
+            "Speed +10"
+        ],
+        "(❯❯) Dazzling and Marvelous ☆": [
+            "Energy +10\nMarvelous Sunday bond +5",
+            "Cloudy Days ○ hint +2\nMarvelous Sunday bond +5"
+        ],
+        "(❯❯❯) Pure White Marvelousness ☆": [
+            "Randomly either\n----------\nSpeed +5\nSkill points +5\nFast & Furious hint +3\nMarvelous Sunday bond +5\n----------\n\n----------\nSpeed +5\nSkill points +10\nPosition Pilfer hint +3\nMarvelous Sunday bond +5"
         ]
     },
     "Matikanefukukitaru": {
@@ -637,6 +657,17 @@
         "Fashion Advice for Mayano!": [
             "Straightaway Adept hint +1\nMayano Top Gun bond +5",
             "Stamina +10\nMayano Top Gun bond +5"
+        ],
+        "(❯) Just Because ♪": [
+            "Randomly either\n----------\nMood +1\nSpeed +20\nGuts +10\nHead-On hint +1\nMayano Top Gun bond +5\n----------\n\n----------\nEnergy -10\nMood +1\nGuts +10\nMayano Top Gun bond +5",
+            "Wit +15\nMayano Top Gun bond +5",
+            "Energy +20\nStamina +10\nCompetitive Spirit ○ hint +1\nEvent chain ended"
+        ],
+        "(❯❯) A Wonderful Weekend ♪": [
+            "Speed +10\nGuts +5"
+        ],
+        "(❯❯❯) Special Gifts for a Special Day ♪": [
+            "Energy +10\nSpeed +10\nGuts +5\nRestless hint +1\nMayano Top Gun bond +5"
         ]
     },
     "Meisho Doto": {
@@ -856,6 +887,16 @@
         "Just Don't Bother Me": [
             "Pressure hint +1\nNarita Taishin bond +5",
             "Skill points +30\nNarita Taishin bond +5"
+        ],
+        "(❯) Taishin's Debt of Gratitude": [
+            "Energy -5\nStamina +10\nWit +10\nNarita Taishin bond +5"
+        ],
+        "(❯❯) Learning to Mean It!": [
+            "Power +10\nSoft Step hint +1\nNarita Taishin bond +5",
+            "Stamina +10\nPassing Pro hint +1\nNarita Taishin bond +5"
+        ],
+        "(❯❯❯) Yours Sincerely!": [
+            "Randomly either\n----------\nStamina +10\nWit +10\nSleeping Lion hint +3\n----------\n\n----------\nStamina +5\nWit +5\nStanding By hint +3"
         ]
     },
     "Nice Nature": {

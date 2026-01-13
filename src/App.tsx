@@ -1,5 +1,6 @@
 import { NavigationContainer } from "@react-navigation/native"
 import { createDrawerNavigator } from "@react-navigation/drawer"
+import { createNativeStackNavigator } from "@react-navigation/native-stack"
 import { PortalHost } from "@rn-primitives/portal"
 import { StatusBar } from "expo-status-bar"
 import { SafeAreaView } from "react-native-safe-area-context"
@@ -27,6 +28,30 @@ import { NAV_THEME } from "./lib/theme"
 export const Tag = "UAA"
 
 const Drawer = createDrawerNavigator()
+const Stack = createNativeStackNavigator()
+
+/**
+ * Stack navigator for Settings and all sub-pages.
+ * This enables proper back button navigation that respects the navigation history.
+ */
+function SettingsStack() {
+    return (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="SettingsMain" component={Settings} />
+            <Stack.Screen name="TrainingSettings" component={TrainingSettings} />
+            <Stack.Screen name="TrainingEventSettings" component={TrainingEventSettings} />
+            <Stack.Screen name="OCRSettings" component={OCRSettings} />
+            <Stack.Screen name="RacingSettings" component={RacingSettings} />
+            <Stack.Screen name="RacingPlanSettings" component={RacingPlanSettings} />
+            <Stack.Screen name="SkillSettings" component={SkillSettings} />
+            <Stack.Screen name="SkillPlanPreFinalsSettings" component={SkillPlanPreFinalsSettings} />
+            <Stack.Screen name="SkillPlanCareerCompleteSettings" component={SkillPlanCareerCompleteSettings} />
+            <Stack.Screen name="EventLogVisualizer" component={EventLogVisualizer} />
+            <Stack.Screen name="ImportSettingsPreview" component={ImportSettingsPreview} />
+            <Stack.Screen name="DebugSettings" component={DebugSettings} />
+        </Stack.Navigator>
+    )
+}
 
 function MainDrawer() {
     const { colors } = useTheme()
@@ -47,18 +72,7 @@ function MainDrawer() {
             }}
         >
             <Drawer.Screen name="Home" component={Home} />
-            <Drawer.Screen name="Settings" component={Settings} />
-            <Drawer.Screen name="TrainingSettings" component={TrainingSettings} />
-            <Drawer.Screen name="TrainingEventSettings" component={TrainingEventSettings} />
-            <Drawer.Screen name="OCRSettings" component={OCRSettings} />
-            <Drawer.Screen name="RacingSettings" component={RacingSettings} />
-            <Drawer.Screen name="RacingPlanSettings" component={RacingPlanSettings} />
-            <Drawer.Screen name="SkillSettings" component={SkillSettings} />
-            <Drawer.Screen name="SkillPlanPreFinalsSettings" component={SkillPlanPreFinalsSettings} />
-            <Drawer.Screen name="SkillPlanCareerCompleteSettings" component={SkillPlanCareerCompleteSettings} />
-            <Drawer.Screen name="EventLogVisualizer" component={EventLogVisualizer} />
-            <Drawer.Screen name="ImportSettingsPreview" component={ImportSettingsPreview} />
-            <Drawer.Screen name="DebugSettings" component={DebugSettings} />
+            <Drawer.Screen name="Settings" component={SettingsStack} />
         </Drawer.Navigator>
     )
 }

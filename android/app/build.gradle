@@ -162,6 +162,23 @@ android {
     androidResources {
         noCompress += ["bundle"]
     }
+
+    testOptions {
+        unitTests {
+            // Allow unmocked Android framework methods to return default values.
+            returnDefaultValues = true
+        }
+        unitTests.all {
+            // Ensure JUnit 5 is used for Android unit test tasks.
+            useJUnitPlatform()
+
+            testLogging {
+                events "passed", "skipped", "failed", "standardOut", "standardError"
+                showStandardStreams = true
+                exceptionFormat = "full"
+            }
+        }
+    }
 }
 
 // Apply static values from `gradle.properties` to the `android.packagingOptions`
@@ -201,6 +218,10 @@ dependencies {
     } else {
         implementation jscFlavor
     }
+
+    // Unit testing.
+    testImplementation(libs.junit.jupiter)
+    testRuntimeOnly(libs.junit.platform.launcher)
 }
 
 // ============================================================================
