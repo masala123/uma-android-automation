@@ -426,6 +426,8 @@ class Trainee {
     /** Updates all aptitudes for trainee.
      *
      * Requires the Umamusume Details dialog to be opened.
+     *
+     * @param imageUtils A reference to a CustomImageUtils instance.
      */
     fun updateAptitudes(imageUtils: CustomImageUtils) {
         updateTrackSurfaceAptitudes(imageUtils = imageUtils)

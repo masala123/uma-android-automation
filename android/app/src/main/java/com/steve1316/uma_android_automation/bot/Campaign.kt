@@ -253,12 +253,24 @@ open class Campaign(val game: Game) {
         return Pair(true, dialog)
     }
 
+    /**
+     * Opens the Umamusume Details dialog to update trainee aptitudes.
+     *
+     * This function only opens the dialog - the actual aptitude update is performed
+     * by [handleDialogs] when it processes the "umamusume_details" dialog.
+     */
     fun openAptitudesDialog() {
         MessageLog.d(TAG, "Opening aptitudes dialog...")
         ButtonHomeFullStats.click(imageUtils = game.imageUtils)
         game.wait(1.0, skipWaitingForLoading = true)
     }
 
+    /**
+     * Opens the Umamusume Class dialog to update trainee fan count.
+     *
+     * This function only opens the dialog - the actual fan count update is performed
+     * by [handleDialogs] when it processes the "umamusume_class" dialog.
+     */
     fun openFansDialog() {
         MessageLog.d(TAG, "Opening fans dialog...")
         if (game.scenario == "Unity Cup") {
@@ -270,6 +282,15 @@ open class Campaign(val game: Game) {
         bHasTriedCheckingFansToday = true
     }
 
+    /**
+     * Detects the trainee's current fan count class from the main screen.
+     *
+     * This reads the fan count class label directly from the screen using OCR
+     * without opening any dialogs.
+     *
+     * @param bitmap Optional pre-captured bitmap to analyze.
+     * @return The detected [FanCountClass], or NULL if detection failed.
+     */
     fun getFanCountClass(bitmap: Bitmap? = null): FanCountClass? {
         val (bitmap, templateBitmap) = game.imageUtils.getBitmaps(ButtonHomeFansInfo.template.path)
         if (templateBitmap == null) {
@@ -339,6 +360,12 @@ open class Campaign(val game: Game) {
 		return false
 	}
 
+	/**
+	 * Test function to verify aptitude detection on the Main screen.
+	 *
+	 * Opens the aptitudes dialog and processes it to test OCR accuracy.
+	 * Note: This test is dependent on having the correct scale.
+	 */
 	fun startAptitudesDetectionTest() {
 		MessageLog.i(TAG, "\n[TEST] Now beginning the Aptitudes Detection test on the Main screen.")
 		MessageLog.i(TAG, "[TEST] Note that this test is dependent on having the correct scale.")
@@ -346,6 +373,9 @@ open class Campaign(val game: Game) {
         handleDialogs()
 	}
 
+    /**
+     * Test function to verify OCR detection on the Training screen.
+     */
     fun startTrainingScreenOCRTest() {
         MessageLog.i(TAG, "---- startTrainingScreenOCRTest START ----")
 
@@ -406,6 +436,9 @@ open class Campaign(val game: Game) {
         MessageLog.i(TAG, "---- startTrainingScreenOCRTest END: PASS=$numPass, FAIL=$numFail ----")
     }
 
+    /**
+     * Test function to verify OCR detection on the Main screen.
+     */
     fun startMainScreenOCRTest() {
         MessageLog.i(TAG, "---- startMainScreenOCRTest START ----")
 
@@ -481,6 +514,15 @@ open class Campaign(val game: Game) {
         MessageLog.i(TAG, "---- startMainScreenOCRTest END: PASS=$numPass, FAIL=$numFail ----")
     }
 
+    /**
+     * Handles all main screen logic including daily updates, racing decisions, and training.
+     *
+     * This is the primary decision-making function that determines what action the bot
+     * should take when at the main screen. It handles date changes, aptitude/fan updates,
+     * race detection, mood recovery, and training.
+     *
+     * @return True if the main screen was detected and handled, false otherwise.
+     */
     fun handleMainScreen(): Boolean {
         if (!game.checkMainScreen()) {
             return false
