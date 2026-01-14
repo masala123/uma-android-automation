@@ -60,7 +60,7 @@ import com.steve1316.uma_android_automation.components.LabelStatStyle
  */
 class Trainee {
     companion object {
-        const val TAG: String = "[${MainActivity.Companion.loggerTag}]Trainee"
+        const val TAG: String = "[${MainActivity.loggerTag}]Trainee"
 
         /** Stores the trainee's current stat values. */
         data class Stats(

@@ -7,106 +7,107 @@
 
 package com.steve1316.uma_android_automation.components
 
+import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.components.ComponentInterface
 import com.steve1316.uma_android_automation.components.Template
 import com.steve1316.uma_android_automation.components.Region
 
 object IconMoodGreat : ComponentInterface {
-    override val TAG: String = "IconMoodGreat"
+    override val TAG: String = "[${MainActivity.loggerTag}]IconMoodGreat"
     override val template = Template("components/icon/mood_great", region = Region.topHalf)
 }
 
 object IconMoodGood : ComponentInterface {
-    override val TAG: String = "IconMoodGood"
+    override val TAG: String = "[${MainActivity.loggerTag}]IconMoodGood"
     override val template = Template("components/icon/mood_good", region = Region.topHalf)
 }
 
 object IconMoodNormal : ComponentInterface {
-    override val TAG: String = "IconMoodNormal"
+    override val TAG: String = "[${MainActivity.loggerTag}]IconMoodNormal"
     override val template = Template("components/icon/mood_normal", region = Region.topHalf)
 }
 
 object IconMoodBad : ComponentInterface {
-    override val TAG: String = "IconMoodBad"
+    override val TAG: String = "[${MainActivity.loggerTag}]IconMoodBad"
     override val template = Template("components/icon/mood_bad", region = Region.topHalf)
 }
 
 object IconMoodAwful : ComponentInterface {
-    override val TAG: String = "IconMoodAwful"
+    override val TAG: String = "[${MainActivity.loggerTag}]IconMoodAwful"
     override val template = Template("components/icon/mood_awful", region = Region.topHalf)
 }
 
 object IconTrainingHeaderSpeed : ComponentInterface {
-    override val TAG: String = "IconTrainingHeaderSpeed"
+    override val TAG: String = "[${MainActivity.loggerTag}]IconTrainingHeaderSpeed"
     override val template = Template("components/icon/training_header_speed", region = Region.topHalf)
 }
 
 object IconTrainingHeaderStamina : ComponentInterface {
-    override val TAG: String = "IconTrainingHeaderStamina"
+    override val TAG: String = "[${MainActivity.loggerTag}]IconTrainingHeaderStamina"
     override val template = Template("components/icon/training_header_stamina", region = Region.topHalf)
 }
 
 object IconTrainingHeaderPower : ComponentInterface {
-    override val TAG: String = "IconTrainingHeaderPower"
+    override val TAG: String = "[${MainActivity.loggerTag}]IconTrainingHeaderPower"
     override val template = Template("components/icon/training_header_power", region = Region.topHalf)
 }
 
 object IconTrainingHeaderGuts : ComponentInterface {
-    override val TAG: String = "IconTrainingHeaderGuts"
+    override val TAG: String = "[${MainActivity.loggerTag}]IconTrainingHeaderGuts"
     override val template = Template("components/icon/training_header_guts", region = Region.topHalf)
 }
 
 object IconTrainingHeaderWit : ComponentInterface {
-    override val TAG: String = "IconTrainingHeaderWit"
+    override val TAG: String = "[${MainActivity.loggerTag}]IconTrainingHeaderWit"
     override val template = Template("components/icon/training_header_wit", region = Region.topHalf)
 }
 
 object IconHorseshoe : ComponentInterface {
-    override val TAG: String = "IconHorseshoe"
+    override val TAG: String = "[${MainActivity.loggerTag}]IconHorseshoe"
     override val template = Template("components/icon/horseshoe")
 }
 
 object IconDoubleCircle : ComponentInterface {
-    override val TAG: String = "IconDoubleCircle"
+    override val TAG: String = "[${MainActivity.loggerTag}]IconDoubleCircle"
     override val template = Template("components/icon/double_circle")
 }
 
 object IconUnityCupRaceEndLogo : ComponentInterface {
-    override val TAG: String = "IconUnityCupRaceEndLogo"
+    override val TAG: String = "[${MainActivity.loggerTag}]IconUnityCupRaceEndLogo"
     override val template = Template("components/icon/unity_cup_race_end_logo", region = Region.topHalf)
 }
 
 object IconTazuna : ComponentInterface {
-    override val TAG: String = "IconTazuna"
+    override val TAG: String = "[${MainActivity.loggerTag}]IconTazuna"
     override val template = Template("components/icon/tazuna", region = Region.topHalf)
 }
 
 object IconRaceDayRibbon : ComponentInterface {
-    override val TAG: String = "IconRaceDayRibbon"
+    override val TAG: String = "[${MainActivity.loggerTag}]IconRaceDayRibbon"
     override val template = Template("components/icon/race_day_ribbon", region = Region.bottomHalf)
 }
 
 object IconGoalRibbon : ComponentInterface {
-    override val TAG: String = "IconGoalRibbon"
+    override val TAG: String = "[${MainActivity.loggerTag}]IconGoalRibbon"
     override val template = Template("components/icon/goal_ribbon", region = Region.leftHalf)
 }
 
 object IconRaceListPredictionDoubleStar : ComponentInterface {
-    override val TAG: String = "IconRaceListPredictionDoubleStar"
+    override val TAG: String = "[${MainActivity.loggerTag}]IconRaceListPredictionDoubleStar"
     override val template = Template("components/icon/race_list_prediction_double_star", region = Region.rightHalf)
 }
 
 object IconRaceListMaidenPill : ComponentInterface {
-    override val TAG: String = "IconRaceListMaidenPill"
+    override val TAG: String = "[${MainActivity.loggerTag}]IconRaceListMaidenPill"
     override val template = Template("components/icon/race_list_maiden_pill", region = Region.bottomHalf)
 }
 
 object IconRaceListTopLeft : ComponentInterface {
-    override val TAG: String = "IconRaceListTopLeft"
+    override val TAG: String = "[${MainActivity.loggerTag}]IconRaceListTopLeft"
     override val template = Template("components/icon/race_list_top_left", region = Region.leftHalf)
 }
 
 object IconRaceListBottomRight : ComponentInterface {
-    override val TAG: String = "IconRaceListBottomRight"
+    override val TAG: String = "[${MainActivity.loggerTag}]IconRaceListBottomRight"
     override val template = Template("components/icon/race_list_bottom_right", region = Region.rightHalf)
 }

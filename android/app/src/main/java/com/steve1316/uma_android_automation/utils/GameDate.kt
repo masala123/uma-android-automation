@@ -3,6 +3,7 @@ package com.steve1316.uma_android_automation.utils
 import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.automation_library.utils.TextUtils
 
+import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
 import com.steve1316.uma_android_automation.utils.types.DateYear
 import com.steve1316.uma_android_automation.utils.types.DateMonth
@@ -59,7 +60,7 @@ class GameDate {
     }
 
     companion object {
-        const val TAG: String = "GameDate"
+        const val TAG: String = "[${MainActivity.loggerTag}]GameDate"
 
         /** Converts a year/month/phase to a day number. */
         fun toDay(year: DateYear, month: DateMonth, phase: DatePhase): Int {
