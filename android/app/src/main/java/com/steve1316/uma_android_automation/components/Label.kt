@@ -1,3 +1,8 @@
+/** Defines label components.
+ *
+ * These are non-clickable regions of text on screen.
+ */
+
 package com.steve1316.uma_android_automation.components
 
 import com.steve1316.uma_android_automation.components.ComponentInterface

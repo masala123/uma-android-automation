@@ -1,3 +1,46 @@
+/** Defines Dialog components.
+ *
+ * A dialog is just any pop-up window on the screen. These typically have
+ * one or two buttons.
+ *
+ * Adding a New Dialog:
+ *
+ * After creating your DialogInterface object, you must add this
+ * object to the `DialogUtils.items` list.
+ * Please add it in alphabetical order for readability.
+ * 
+ * Example usage:
+ * 
+ * import com.steve1316.uma_android_automation.components.DialogUtils
+ * import com.steve1316.uma_android_automation.components.DialogInterface
+ * 
+ * fun handleDialogs() {
+ *     val dialog: DialogInterface? = DialogUtils.getDialog(imageUtils=game.imageUtils)
+ *     if (dialog == null) {
+ *         MessageLog.i(TAG, "\n[DIALOG] No dialog found.")
+ *         return
+ *     }
+ * 
+ *     when (dialog.name) {
+ *         "open_soon" -> {
+ *             dialog.close(imageUtils=game.imageUtils)
+ *             game.notificationMessage = "open_soon"
+ *             MessageLog.i(TAG, "\n[DIALOG] Open Soon!")
+ *         }
+ *         "continue_career" -> {
+ *             dialog.close(imageUtils=game.imageUtils)
+ *             //ButtonClose.click(imageUtils=game.imageUtils)
+ *             MessageLog.i(TAG, "\n[DIALOG] Continue Career")
+ *         }
+ *         else -> {
+ *             MessageLog.i(TAG, "\n[DIALOG] ${dialog.name}")
+ *             game.notificationMessage = "${dialog.name}"
+ *             dialog.close(imageUtils=game.imageUtils)
+ *         }
+ *     }
+ * }
+ */
+
 package com.steve1316.uma_android_automation.components
 
 import android.graphics.Bitmap
@@ -8,38 +51,6 @@ import com.steve1316.automation_library.utils.ImageUtils
 import com.steve1316.automation_library.utils.TextUtils
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
 import com.steve1316.uma_android_automation.components.ComponentInterface
-
-/* Example usage:
-
-import com.steve1316.uma_android_automation.components.DialogUtils
-import com.steve1316.uma_android_automation.components.DialogInterface
-
-fun handleDialogs() {
-    val dialog: DialogInterface? = DialogUtils.getDialog(imageUtils=game.imageUtils)
-    if (dialog == null) {
-        MessageLog.i(TAG, "\n[DIALOG] No dialog found.")
-        return
-    }
-
-    when (dialog.name) {
-        "open_soon" -> {
-            dialog.close(imageUtils=game.imageUtils)
-            game.notificationMessage = "open_soon"
-            MessageLog.i(TAG, "\n[DIALOG] Open Soon!")
-        }
-        "continue_career" -> {
-            dialog.close(imageUtils=game.imageUtils)
-            //ButtonClose.click(imageUtils=game.imageUtils)
-            MessageLog.i(TAG, "\n[DIALOG] Continue Career")
-        }
-        else -> {
-            MessageLog.i(TAG, "\n[DIALOG] ${dialog.name}")
-            game.notificationMessage = "${dialog.name}"
-            dialog.close(imageUtils=game.imageUtils)
-        }
-    }
-}
-*/
 
 object DialogUtils {
     private val titleGradientTemplates: List<String> = listOf(
@@ -161,10 +172,16 @@ object DialogUtils {
     }
 }
 
+/** Defines the key components and functions for interacting with Dialogs. */
 interface DialogInterface {
     val TAG: String
+    // This is a unique name used to identify this dialog.
     val name: String
+    // This is the on-screen title of the dialog. Multiple dialogs may have the same title.
     val title: String
+    // Defines all the button components within the dialog.
+    // If there is a button used to close the dialog, then it MUST be the first
+    // entry in this list.
     val buttons: List<ComponentInterface>
     // The close button is just which ever button is used primarily to close the dialog
     // If not specified, the first button in Buttons will be used.
@@ -177,6 +194,11 @@ interface DialogInterface {
     // If there is only one button in the dialog, then okButton will be set to that.
     val okButton: ComponentInterface?
 
+    /** Closes the dialog by clicking the Close button.
+     *
+     * If no Close button is specified, then the first button in the `buttons`
+     * list is treated as the close button and is clicked.
+     */
     fun close(imageUtils: CustomImageUtils, tries: Int = 1): Boolean {
         if (closeButton == null) {
             return buttons.getOrNull(0)?.click(imageUtils = imageUtils, tries = tries) ?: false
@@ -184,6 +206,11 @@ interface DialogInterface {
         return closeButton?.click(imageUtils = imageUtils, tries = tries) ?: false
     }
 
+    /** Closes the dialog by clicking the OK button.
+     *
+     * If no OK button is defined for this dialog,
+     * then the `close()` function is called instead.
+     */
     fun ok(imageUtils: CustomImageUtils, tries: Int = 1): Boolean {
         if (okButton == null) {
             return if (buttons.size == 1) {
@@ -198,6 +225,11 @@ interface DialogInterface {
 
 // Simple object used to store a list of all dialog objects.
 // This is used to easily iterate over all dialogs.
+/** Object used to store list of all dialog objects and a mapping of them.
+ *
+ * @property items A list of all Dialog interfaces.
+ * @property map A mapping of each DialogInterface's name to the interface object.
+ */
 object DialogObjects {
     val items: List<DialogInterface> = listOf(
         DialogAgendaDetails,                // Career

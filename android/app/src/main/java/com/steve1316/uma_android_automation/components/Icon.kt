@@ -1,3 +1,10 @@
+/** Defines icon components.
+ *
+ * These are images which are typically not clickable, however they DO
+ * have click functionality; it just isn't their primary purpose. This is
+ * why we classify them as Icons instead of Buttons.
+ */
+
 package com.steve1316.uma_android_automation.components
 
 import com.steve1316.uma_android_automation.components.ComponentInterface

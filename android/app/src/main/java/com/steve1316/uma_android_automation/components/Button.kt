@@ -1,3 +1,15 @@
+/** Defines button components.
+ *
+ * Buttons are any element on screen that can be clicked to
+ * perform an action.
+ *
+ * Do not add checkboxes or radio buttons to this file.
+ * Those have their own files.
+ *
+ * Some buttons may have multiple different states. These should use
+ * the MultiStateButtonInterface interface instead of ComponentInterface.
+ */
+
 package com.steve1316.uma_android_automation.components
 
 import com.steve1316.uma_android_automation.components.ComponentInterface
