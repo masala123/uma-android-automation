@@ -1394,6 +1394,7 @@ class Racing (private val game: Game) {
         game.waitForLoading()
         ButtonClose.click(game.imageUtils)
         game.waitForLoading()
+        game.wait(0.25)
 
         // Now back out of the race selection screen.
         ButtonBack.click(game.imageUtils)
