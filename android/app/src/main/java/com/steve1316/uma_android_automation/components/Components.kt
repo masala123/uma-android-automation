@@ -84,7 +84,7 @@ interface BaseComponentInterface {
 
     /** Gets the location of the component on screen.
      *
-     * Mostly a wrapper around CustomImageUtils::findImage
+     * Mostly a wrapper around [CustomImageUtils.findImage].
      *
      * @param imageUtils A reference to a CustomImageUtils instance.
      * @param region The screen region to search in.
@@ -97,7 +97,7 @@ interface BaseComponentInterface {
     fun find(imageUtils: CustomImageUtils, region: IntArray? = null, tries: Int = 1, confidence: Double? = null): Pair<Point?, Bitmap>
     /** Gets the location of the component within a source bitmap.
      *
-     * Mostly a wrapper around CustomImageUtils::findImageWithBitmap
+     * Mostly a wrapper around [CustomImageUtils.findImageWithBitmap].
      *
      * @param imageUtils A reference to a CustomImageUtils instance.
      * @param sourceBitmap The source bitmap to search within for the component.

@@ -116,7 +116,7 @@ class GameDate {
         /**
          * Detects the date on the screen.
          *
-         * This is just a simple wrapper around `fromDateString`.
+         * This is just a simple wrapper around [fromDateString].
          *
          * @return The detected GameDate object or NULL if nothing could be detected.
          */

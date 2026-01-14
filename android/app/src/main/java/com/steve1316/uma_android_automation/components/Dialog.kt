@@ -6,7 +6,7 @@
  * Adding a New Dialog:
  *
  * After creating your DialogInterface object, you must add this
- * object to the `DialogUtils.items` list.
+ * object to the [DialogObjects.items] list.
  * Please add it in alphabetical order for readability.
  * 
  * Example usage:
@@ -197,7 +197,7 @@ interface DialogInterface {
 
     /** Closes the dialog by clicking the Close button.
      *
-     * If no Close button is specified, then the first button in the `buttons`
+     * If no Close button is specified, then the first button in the [buttons]
      * list is treated as the close button and is clicked.
      */
     fun close(imageUtils: CustomImageUtils, tries: Int = 1): Boolean {
@@ -210,7 +210,7 @@ interface DialogInterface {
     /** Closes the dialog by clicking the OK button.
      *
      * If no OK button is defined for this dialog,
-     * then the `close()` function is called instead.
+     * then the [close] function is called instead.
      */
     fun ok(imageUtils: CustomImageUtils, tries: Int = 1): Boolean {
         if (okButton == null) {
