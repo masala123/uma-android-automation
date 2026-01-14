@@ -1822,6 +1822,8 @@ class Racing (private val game: Game) {
 
                 // Now tap on the screen to get past the Race Result screen.
                 game.tap(350.0, 450.0, "ok", taps = 5)
+                game.wait(0.1)
+                game.tap(350.0, 450.0, "ok", taps = 5)
                 game.waitForLoading()
                 game.wait(1.0)
 
