@@ -405,10 +405,7 @@ class Racing (private val game: Game) {
             // In case we didn't get the dialog we still want to reset this flag.
             bIgnoreConsecutiveRaceWarning = false
             return handleMandatoryRace()
-        } else if (
-            !game.trainee.bHasCompletedMaidenRace &&
-            ButtonRaceSelectExtra.click(imageUtils = game.imageUtils)
-        ) {
+        } else if (!game.trainee.bHasCompletedMaidenRace && !isScheduledRace && ButtonRaceSelectExtra.click(imageUtils = game.imageUtils)) {
             // Winning a maiden race ASAP is extremely important. Ignore this warning.
             bIgnoreConsecutiveRaceWarning = true
 
@@ -418,7 +415,7 @@ class Racing (private val game: Game) {
             // In case we didn't get the we still want to reset this flag.
             bIgnoreConsecutiveRaceWarning = false
             return handleMaidenRace()
-        } else if (!game.currentDate.bIsPreDebut && ButtonRaceSelectExtra.click(imageUtils = game.imageUtils)) {
+        } else if ((!game.currentDate.bIsPreDebut && ButtonRaceSelectExtra.click(imageUtils = game.imageUtils)) || isScheduledRace) {
             game.wait(0.5, skipWaitingForLoading = true)
             // Check for the consecutive race dialog before proceeding.
             val (bWasDialogHandled, dialog) = handleDialogs()
