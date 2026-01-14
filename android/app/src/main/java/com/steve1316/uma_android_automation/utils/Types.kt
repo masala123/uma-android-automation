@@ -1,6 +1,17 @@
+/** This file contains various custom data types used throughout the app.
+ *
+ * This just allows us to keep these custom types in a central location.
+ * Of course, if a custom type is only used in a single class then keep it in a
+ * companion object in that class. Anything else that could be used elsewhere
+ * should go in here.
+ *
+ * If a custom type gets too complex (such as GameDate) then it should be moved
+ * to its own file.
+ */
+
 package com.steve1316.uma_android_automation.utils.types
 
-// Classes based on fan count.
+/** These are the different tiers defined in game and awarded based on fan count. */
 enum class FanCountClass {
     DEBUT,
     MAIDEN,
@@ -190,11 +201,36 @@ enum class DateYear(val longName: String) {
 
 // DATA CLASSES
 
+/** A simple class used to define a bounding box on the screen.
+ *
+ * @param x The bounding region's bottom left corner's X-coordinate.
+ * @param y The bounding region's bottom left corner's Y-coordinate.
+ * @param w The bounding region's width.
+ * @param h The bounding region's height.
+ *
+ * @property cx The bounding region's center X-coordinate.
+ * @property cy The bounding region's center Y-coordinate.
+ * @property center A pair containing the bounding region's center coordinates.
+ */
 data class BoundingBox(val x: Int, val y: Int, val w: Int, val h: Int) {
+    val cx: Int
+        get() = (x + (w / 2)).toInt()
+    
+    val cy: Int
+        get() = (y + (h / 2)).toInt()
+
+    val center: Pair<Int, Int>
+        get() = Pair(cx, cy)
+
     override fun toString(): String {
         return "x=$x, y=$y, w=$w, h=$h"
     }
 
+    /** Converts the parameters to an integer array.
+     *
+     * Mostly used for backward compatibility.
+     * Does not include any of the center coordinates.
+     */
     fun toIntArray(): IntArray {
         return intArrayOf(x, y, w, h)
     }

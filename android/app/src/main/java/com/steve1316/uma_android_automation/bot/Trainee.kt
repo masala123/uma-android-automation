@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit
 import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.automation_library.utils.BotService
 
+import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.utils.SettingsHelper
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
 import com.steve1316.uma_android_automation.utils.types.StatName
@@ -31,10 +32,37 @@ import com.steve1316.uma_android_automation.components.LabelStatDistance
 import com.steve1316.uma_android_automation.components.LabelStatTrackSurface
 import com.steve1316.uma_android_automation.components.LabelStatStyle
 
+/** Defines a trainee (uma).
+ *
+ * This class tracks a trainee's state across the runtime of the bot.
+ * This includes things such as their current stats, aptitudes, etc.
+ *
+ * @property stats The trainee's current stats.
+ * @property trackSurfaceAptitudes Mapping of TrackSurface to the trainee's aptitudes.
+ * @property trackDistanceAptitudes Mapping of TrackDistance to the trainee's aptitudes.
+ * @property runningStyleAptitudes Mapping of RunningStyle to the trainee's aptitudes.
+ * @property skillPoints The trainee's current number of skill points.
+ * @property fans The trainee's current fan count.
+ * @property mood The trainee's current mood.
+ * @property bHasUpdatedAptitudes Whether the trainee's aptitudes have been checked and updated.
+ * @property bHasUpdatedStats Whether the trainee's stats have been checked and updated.
+ * @property bHasUpdatedSkillPoints Whether the trainee's skill points have been checked and updated.
+ * @property bTemporaryRunningStyleAptitudesUpdated This flag is set when the trainee has
+ * not yet set its aptitudes but has read the running style aptitudes on the race prep screen.
+ * @property bHasSetRunningStyle Whether the trainee has set its preferred running style
+ * in the race prep screen.
+ * @property fanCountClass The trainee's current FanCountClass based on its fan count.
+ * @property bIsInitialized Whether we have updated the aptitudes, stats, and skill points.
+ * @property bHasCompletedMaidenRace Whether we have completed the maiden race.
+ * @property trackSurface The trainee's preferred `TrackSurface`.
+ * @property trackDistance The trainee's preferred `TrackDistance`.
+ * @property runningStyle The trainee's preferred `RunningStyle`.
+ */
 class Trainee {
     companion object {
-        const val TAG: String = "Trainee"
+        const val TAG: String = "[${MainActivity.loggerTag}]Trainee"
 
+        /** Stores the trainee's current stat values. */
         data class Stats(
             var speed: Int = -1,
             var stamina: Int = -1,
@@ -92,7 +120,7 @@ class Trainee {
         RunningStyle.LATE_SURGER to Aptitude.G,
         RunningStyle.END_CLOSER to Aptitude.G,
     )
-    var skillPoints: Int = 120
+    var skillPoints: Int = 120 // From what I can tell, all trainees start at 120.
     var fans: Int = 1
     var mood: Mood = Mood.NORMAL
 
@@ -112,7 +140,12 @@ class Trainee {
 
     /** Calculates the highest weighted key based on aptitude for the passed Enum
     *
-    *   See trackDistance getter for example.
+    * See trackDistance getter for example.
+    *
+    * @param aptitudeMap A mapping of the passed enum's names to their current aptitudes.
+    * @param defaultMaxKey The default value in case  no aptitudes could be detected.
+    *
+    * @return The passed enum's name for the associated highest aptitude.
     */
     inline fun <reified T : Enum<T>> getMaxAptitude(
         aptitudeMap: MutableMap<T, Aptitude>,
@@ -215,30 +248,32 @@ class Trainee {
         runningStyleAptitudes[runningStyle] = aptitude
     }
 
-    /** Returns the offset integer aptitude for the track surface.
-    * G=-5,F=-4,E=-3,D=-2,C=-1,B=0,A=1,S=2
-    * Values offset by 5 for easier calculations later on.
-    */
+    /** Returns the trainee's aptitude for a specified `TrackSurface`. */
     fun checkTrackSurfaceAptitude(trackSurface: TrackSurface): Aptitude {
         return trackSurfaceAptitudes[trackSurface] ?: Aptitude.G
     }
 
-    /** Returns the offset integer aptitude for the track distance.
-    * G=-5,F=-4,E=-3,D=-2,C=-1,B=0,A=1,S=2
-    * Values offset by 5 for easier calculations later on.
-    */
+    /** Returns the trainee's aptitude for a specified `TrackDistance`. */
     fun checkTrackDistanceAptitude(trackDistance: TrackDistance): Aptitude {
         return trackDistanceAptitudes[trackDistance] ?: Aptitude.G
     }
 
-    /** Returns the offset integer aptitude for the running style.
-    * G=-5,F=-4,E=-3,D=-2,C=-1,B=0,A=1,S=2
-    * Values offset by 5 for easier calculations later on.
-    */
+    /** Returns the trainee's aptitude for a specified `RunningStyle`. */
     fun checkRunningStyleAptitude(runningStyle: RunningStyle): Aptitude {
         return runningStyleAptitudes[runningStyle] ?: Aptitude.G
     }
 
+    /** Detects the trainee's aptitudes for the specified enum.
+     *
+     * This scans a single row of aptitudes in the Umamusume Details dialog
+     * where the row is determined by the `label` parameter.
+     *
+     * See `updateTrackSurfaceAptitudes()` for an example.
+     *
+     * @param label This is the label at the far left of the row in the dialog.
+     * This determines which row in the dialog that we want to read.
+     * @return a mapping of the passed enum's names to the aptitude values.
+     */
     inline fun <reified T : Enum<T>> findAptitudesInBitmap(
         imageUtils: CustomImageUtils,
         label: ComponentInterface,
@@ -440,7 +475,8 @@ class Trainee {
     }
 
     /**
-	 * Sets up stat targets for different race distances by reading values from SQLite settings. These targets are used to determine training priorities based on the expected race distance.
+	 * Sets up stat targets for different race distances by reading values from SQLite settings.
+     * These targets are used to determine training priorities based on the expected race distance.
 	 */
 	fun setStatTargetsByDistances() {
 		for (trackDistance in TrackDistance.entries) {

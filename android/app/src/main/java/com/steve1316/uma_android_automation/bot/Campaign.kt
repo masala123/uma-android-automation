@@ -150,7 +150,6 @@ open class Campaign(val game: Game) {
             }
             "rest_and_recreation" -> {
                 // Does not have a checkbox unlike the other rest/rec/etc.
-                // TODO: Go through menu to set this option.
                 dialog.ok(imageUtils = game.imageUtils)
             }
             "scheduled_race_available" -> {

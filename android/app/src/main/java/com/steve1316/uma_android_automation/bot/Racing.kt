@@ -1306,13 +1306,12 @@ class Racing (private val game: Game) {
             // Mark as loaded so we don't try again this run and close the popup.
             hasLoadedUserRaceAgenda = true
             ButtonClose.click(game.imageUtils)
-            game.waitForLoading()
+            game.wait(0.5)
             ButtonClose.click(game.imageUtils)
-            game.waitForLoading()
+            game.wait(0.5)
             
             // Now back out of the race selection screen.
             ButtonBack.click(game.imageUtils)
-            game.waitForLoading()
             game.wait(0.5)
             return
         }

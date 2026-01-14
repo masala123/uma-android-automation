@@ -11,7 +11,6 @@ import com.steve1316.automation_library.utils.ImageUtils
 import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.bot.Game
-import com.steve1316.uma_android_automation.bot.MAX_STAT_VALUE
 import com.steve1316.uma_android_automation.utils.types.StatName
 import com.steve1316.uma_android_automation.utils.types.Aptitude
 import com.steve1316.uma_android_automation.utils.types.BoundingBox
@@ -49,6 +48,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	override var debugMode: Boolean = SettingsHelper.getBooleanSetting("debug", "enableDebugMode")
 	override var confidence: Double = SettingsHelper.getStringSetting("debug", "templateMatchConfidence").toDouble()
 	override var customScale: Double = SettingsHelper.getStringSetting("debug", "templateMatchCustomScale").toDouble()
+    private val manualStatCap: Int = SettingsHelper.getIntSetting("training", "manualStatCap")
 
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
@@ -902,13 +902,13 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		// Parse the text.
 		Log.d(TAG, "Detected number of stats for $statName from Tesseract before formatting: $text")
 		if (text.lowercase().contains("max") || text.lowercase().contains("ax")) {
-			Log.d(TAG, "$statName seems to be maxed out. Setting it to ${MAX_STAT_VALUE}.")
-			return MAX_STAT_VALUE
+			Log.d(TAG, "$statName seems to be maxed out. Setting it to ${manualStatCap}.")
+			return manualStatCap
 		} else {
 			try {
 				Log.d(TAG, "Converting $text to integer for $statName stat value")
 				val cleanedText = text.replace(Regex("[^0-9]"), "")
-				return cleanedText.toInt().coerceIn(0, MAX_STAT_VALUE)
+				return cleanedText.toInt().coerceIn(0, manualStatCap)
 			} catch (_: NumberFormatException) {
 				return -1
 			}
@@ -954,13 +954,13 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 				// Parse the text.
 				Log.d(TAG, "Detected number of stats for $statName from Tesseract before formatting: $text")
 				if (text.lowercase().contains("max") || text.lowercase().contains("ax")) {
-					Log.d(TAG, "$statName seems to be maxed out. Setting it to ${MAX_STAT_VALUE}.")
-					result[statName] = MAX_STAT_VALUE
+					Log.d(TAG, "$statName seems to be maxed out. Setting it to ${manualStatCap}.")
+					result[statName] = manualStatCap
 				} else {
 					try {
 						Log.d(TAG, "Converting $text to integer for $statName stat value")
 						val cleanedText = text.replace(Regex("[^0-9]"), "")
-						result[statName] = cleanedText.toInt().coerceIn(0, MAX_STAT_VALUE)
+						result[statName] = cleanedText.toInt().coerceIn(0, manualStatCap)
 					} catch (_: NumberFormatException) {
 						result[statName] = -1
 					}
@@ -1790,6 +1790,10 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		)
 	}
 
+    /** Detects the number of fans from the Umamusume Class dialog.
+     *
+     * @return The number of fans if successful. Otherwise NULL.
+     */
     fun getUmamusumeClassDialogFanCount(bitmap: Bitmap): Int? {
         val cvImage = Mat()
 		Utils.bitmapToMat(bitmap, cvImage)

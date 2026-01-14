@@ -1,14 +1,25 @@
+/** Defines interfaces used by various components.
+ *
+ * These interfaces provide functions which are used as wrappers around
+ * the `CustomImageUtils` functions. This includes functions for finding and
+ * clicking on different types of components.
+ */
+
 package com.steve1316.uma_android_automation.components
 
 import android.graphics.Bitmap
 import androidx.core.graphics.createBitmap
 import org.opencv.core.Point
 
-import com.steve1316.uma_android_automation.components.ComponentUtils
+import com.steve1316.automation_library.utils.MyAccessibilityService
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
 
 import com.steve1316.automation_library.data.SharedData
 
+/** Defines various screen regions.
+ *
+ * Used to refine search areas during OCR for performance.
+ */
 object Region {
     val topHalf: IntArray = intArrayOf(0, 0, SharedData.displayWidth, SharedData.displayHeight / 2)
     val topQuarter: IntArray = intArrayOf(0, 0, SharedData.displayWidth, SharedData.displayHeight / 4)
@@ -19,13 +30,18 @@ object Region {
     val rightHalf: IntArray = intArrayOf(SharedData.displayWidth / 2, 0, SharedData.displayWidth / 2, SharedData.displayHeight)
 }
 
-enum class TemplateComparisonMode {AND, OR}
+/** Defines a template image file and provides helpful functions. */
 data class Template(val path: String, val region: IntArray = intArrayOf(0, 0, 0, 0), val confidence: Double = 0.0) {
     val dirname: String
         get() = path.substringBeforeLast('/')
 
     val basename: String
         get() = path.substringAfterLast('/')
+
+    /** Returns this template's bitmap. */
+    fun getBitmap(imageUtils: CustomImageUtils): Bitmap? {
+        return imageUtils.getTemplateBitmap(path.substringAfterLast('/'), "images/" + path.substringBeforeLast('/'))
+    }
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -45,21 +61,82 @@ data class Template(val path: String, val region: IntArray = intArrayOf(0, 0, 0,
         result = 31 * result + confidence.hashCode()
         return result
     }
-
-    fun getBitmap(imageUtils: CustomImageUtils): Bitmap? {
-        return imageUtils.getTemplateBitmap(path.substringAfterLast('/'), "images/" + path.substringBeforeLast('/'))
-    }
 }
 
+/** Defines the most basic component.
+ *
+ * Contains functions used by all types of components such as finding and clicking
+ * on the component. 
+ */
 interface BaseComponentInterface {
     val TAG: String
 
+    /** Checks if the component is on screen.
+     *
+     * @param imageUtils A reference to a CustomImageUtils instance.
+     * @param region The screen region to search in.
+     * @param tries The number of attempts when searching for this image.
+     * @param confidence The threshold (0.0, 1.0] to use when performing OCR.
+     *
+     * @return True if the component exists on screen.
+     */
     fun check(imageUtils: CustomImageUtils, region: IntArray? = null, tries: Int = 1, confidence: Double? = null): Boolean
+
+    /** Gets the location of the component on screen.
+     *
+     * Mostly a wrapper around CustomImageUtils::findImage
+     *
+     * @param imageUtils A reference to a CustomImageUtils instance.
+     * @param region The screen region to search in.
+     * @param tries The number of attempts when searching for this image.
+     * @param confidence The threshold (0.0, 1.0] to use when performing OCR.
+     *
+     * @return If the component was detected, then the Point and the screenshot bitmap are returned.
+     * Otherwise, NULL and the screenshot bitmap are returned.
+     */
     fun find(imageUtils: CustomImageUtils, region: IntArray? = null, tries: Int = 1, confidence: Double? = null): Pair<Point?, Bitmap>
+    /** Gets the location of the component within a source bitmap.
+     *
+     * Mostly a wrapper around CustomImageUtils::findImageWithBitmap
+     *
+     * @param imageUtils A reference to a CustomImageUtils instance.
+     * @param sourceBitmap The source bitmap to search within for the component.
+     * @param region The screen region to search in.
+     * @param tries The number of attempts when searching for this image.
+     * @param confidence The threshold (0.0, 1.0] to use when performing OCR.
+     *
+     * @return If the component was detected, returns the Point. Else returns NULL.
+     */
     fun findImageWithBitmap(imageUtils: CustomImageUtils, sourceBitmap: Bitmap, region: IntArray = intArrayOf(0, 0, 0, 0), confidence: Double? = null): Point?
+    /** Attempts to click on the component.
+     *
+     * @param imageUtils A reference to a CustomImageUtils instance.
+     * @param region The screen region to search in.
+     * @param tries The number of attempts when searching for this image.
+     * @param confidence The threshold (0.0, 1.0] to use when performing OCR.
+     *
+     * @return True if the component was detected and clicked.
+     */
     fun click(imageUtils: CustomImageUtils, region: IntArray? = null, tries: Int = 1, taps: Int = 1, confidence: Double? = null): Boolean
+
+    /**
+     * Performs a tap on the screen at the coordinates and then will wait until the game processes the server request and gets a response back.
+     *
+     * @param x The x-coordinate.
+     * @param y The y-coordinate.
+     * @param imageName The template image name to use for tap location randomization.
+     * @param taps The number of taps.
+     */
+    fun tap(x: Double, y: Double, imageName: String? = null, taps: Int = 1) {
+        MyAccessibilityService.getInstance().tap(x, y, imageName, taps=taps)
+    }
 }
 
+/** This is an interface for the most common components seen throughout the game.
+ *
+ * These components are simple and only ever have a single design so they only
+ * require a single template image to find.
+ */
 interface ComponentInterface: BaseComponentInterface {
     val template: Template
     
@@ -89,14 +166,27 @@ interface ComponentInterface: BaseComponentInterface {
             return false
         }
 
-        ComponentUtils.tap(point.x, point.y, template.path, taps=taps)
+        tap(point.x, point.y, template.path, taps=taps)
         return true
     }
 }
 
+/** Defines a component which has multiple templates.
+ *
+ * This defines components which can possibly have more than one design and
+ * thus require multiple template files in order to accurately detect them.
+ *
+ * For example, if there is a button whose background is an image and that
+ * image can have multiple different designs, then each of those designs would
+ * be a separate template.
+ */
 interface ComplexComponentInterface: BaseComponentInterface {
     val templates: List<Template>
 
+    /** Since this type of component can have multiple different templates,
+     * we need to check if any are on screen and then return the location
+     * of the first one we find.
+     */
     override fun find(imageUtils: CustomImageUtils, region: IntArray?, tries: Int, confidence: Double?): Pair<Point?, Bitmap> {
         for (template in templates) {
             val result: Pair<Point?, Bitmap> = imageUtils.findImage(template.path, region = region ?: template.region, tries = tries, confidence = confidence ?: template.confidence, suppressError = true)
@@ -107,6 +197,7 @@ interface ComplexComponentInterface: BaseComponentInterface {
         return Pair(null, imageUtils.getSourceBitmap())
     }
 
+    /** Same as `find()` but searches for the component in the `sourceBitmap`. */
     override fun findImageWithBitmap(imageUtils: CustomImageUtils, sourceBitmap: Bitmap, region: IntArray, confidence: Double?): Point? {
         for (template in templates) {
             val result: Point? = imageUtils.findImageWithBitmap(template.path, sourceBitmap, region, customConfidence = confidence ?: template.confidence, suppressError = true)
@@ -121,6 +212,7 @@ interface ComplexComponentInterface: BaseComponentInterface {
         return find(imageUtils = imageUtils, region = region, tries = tries).first != null
     }
 
+    /** Find and click on the first template that we can find. */
     override fun click(imageUtils: CustomImageUtils, region: IntArray?, tries: Int, taps: Int, confidence: Double?): Boolean {
         var resultTemplate: Template? = null
         var resultPoint: Point? = null
@@ -137,16 +229,24 @@ interface ComplexComponentInterface: BaseComponentInterface {
             return false
         }
 
-        ComponentUtils.tap(resultPoint.x, resultPoint.y, resultTemplate.path, taps = taps)
+        tap(resultPoint.x, resultPoint.y, resultTemplate.path, taps = taps)
         return true
     }
 }
 
-// More complex buttons have multiple templates which could match them based
-// on the button state. This interface handles this by finding buttons
-// where one state is active at a time. Logical OR between templates, essentially.
+/** Defines a multi-state button component.
+ *
+ * Very similar to `ComplexComponentInterface` but exclusively used for buttons
+ * with multiple different states.
+ *
+ * This interface handles this by finding buttons where one state is active
+ * at a time. Logical OR between templates, essentially.
+ */
 interface MultiStateButtonInterface : ComplexComponentInterface {
-    /** Finds image on screen and returns its location if it exists. */
+    /** Since this type of component can have multiple different templates,
+     * we need to check if any are on screen and then return the location
+     * of the first one we find.
+     */
     override fun find(imageUtils: CustomImageUtils, region: IntArray?, tries: Int, confidence: Double?): Pair<Point?, Bitmap> {
         for (template in templates) {
             val (point, bitmap) = imageUtils.findImage(
@@ -163,6 +263,7 @@ interface MultiStateButtonInterface : ComplexComponentInterface {
         return Pair(null, createBitmap(1, 1))
     }
 
+    /** Same as `find()` but searches for the component in the `sourceBitmap`. */
     override fun findImageWithBitmap(imageUtils: CustomImageUtils, sourceBitmap: Bitmap, region: IntArray, confidence: Double?): Point? {
         for (template in templates) {
             val result: Point? = imageUtils.findImageWithBitmap(template.path, sourceBitmap, region, customConfidence = confidence ?: template.confidence, suppressError = true)
@@ -173,18 +274,18 @@ interface MultiStateButtonInterface : ComplexComponentInterface {
         return null
     }
 
-    /** Finds image on screen and returns boolean whether it exists. */
     override fun check(imageUtils: CustomImageUtils, region: IntArray?, tries: Int, confidence: Double?): Boolean {
         return find(imageUtils = imageUtils, region = region, tries = tries, confidence = confidence).first != null
     }
 
+    /** Find and click on the first template that we can find. */
     override fun click(imageUtils: CustomImageUtils, region: IntArray?, tries: Int, taps: Int, confidence: Double?): Boolean {
         val point = find(imageUtils = imageUtils, region = region, tries = tries, confidence = confidence).first
         if (point == null) {
             return false
         }
 
-        ComponentUtils.tap(point.x, point.y, templates.first().path, taps=taps)
+        tap(point.x, point.y, templates.first().path, taps=taps)
         return true
     }
 }
