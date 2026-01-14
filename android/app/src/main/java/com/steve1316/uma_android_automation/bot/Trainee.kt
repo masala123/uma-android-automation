@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit
 import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.automation_library.utils.BotService
 
+import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.utils.SettingsHelper
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
 import com.steve1316.uma_android_automation.utils.types.StatName
@@ -33,7 +34,7 @@ import com.steve1316.uma_android_automation.components.LabelStatStyle
 
 class Trainee {
     companion object {
-        const val TAG: String = "Trainee"
+        const val TAG: String = "[${MainActivity.Companion.loggerTag}]Trainee"
 
         data class Stats(
             var speed: Int = -1,
