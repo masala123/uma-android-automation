@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit
  * By default, URA Finale is handled by this base class.
  */
 open class Campaign(val game: Game) {
-	protected open val TAG: String = "[${MainActivity.Companion.loggerTag}]Normal"
+	protected open val TAG: String = "[${MainActivity.loggerTag}]Normal"
 
     private val mustRestBeforeSummer: Boolean = SettingsHelper.getBooleanSetting("training", "mustRestBeforeSummer")
     private val enableFarmingFans: Boolean = SettingsHelper.getBooleanSetting("racing", "enableFarmingFans")
