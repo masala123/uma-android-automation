@@ -249,6 +249,10 @@ class GameDate {
             return false
         }
 
+        /** Determines the day number in the finale season.
+         *
+         * @return The day number if detection was successful. Otherwise NULL.
+         */
         fun getFinalsDay(imageUtils: CustomImageUtils): Int? {
             val goalText = imageUtils.getGoalText().lowercase()
 
