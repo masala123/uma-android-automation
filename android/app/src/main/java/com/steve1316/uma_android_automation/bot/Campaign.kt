@@ -93,6 +93,7 @@ open class Campaign(val game: Game) {
             "menu" -> dialog.close(imageUtils = game.imageUtils)
             "mood_effect" -> dialog.close(imageUtils = game.imageUtils)
             "my_agendas" -> dialog.close(imageUtils = game.imageUtils)
+            "no_retries" -> dialog.ok(imageUtils = game.imageUtils)
             "options" -> dialog.close(imageUtils = game.imageUtils)
             "perks" -> dialog.close(imageUtils = game.imageUtils)
             "placing" -> dialog.close(imageUtils = game.imageUtils)
