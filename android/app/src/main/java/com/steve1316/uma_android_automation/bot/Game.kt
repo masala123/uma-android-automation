@@ -38,8 +38,6 @@ import org.opencv.core.Point
 import java.text.DecimalFormat
 import kotlin.intArrayOf
 
-const val MAX_STAT_VALUE = 1200
-
 /**
  * Main driver for bot activity and navigation.
  */
