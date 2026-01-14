@@ -153,7 +153,8 @@ open class Campaign(val game: Game) {
             }
             "scheduled_race_available" -> {
                 MessageLog.i(TAG, "[INFO] There is a scheduled race today. Racing it now...")
-                if (!handleRaceEvents() && handleRaceEventFallback()) {
+                dialog.ok(imageUtils = game.imageUtils)
+                if (!handleRaceEvents(isScheduledRace = true) && handleRaceEventFallback()) {
                     MessageLog.i(TAG, "\n[END] Stopping the bot due to failing to handle a scheduled race.")
                     MessageLog.i(TAG, "********************")
                     game.notificationMessage = "Stopping the bot due to failing to handle a scheduled race."
@@ -591,6 +592,7 @@ open class Campaign(val game: Game) {
         val bIsScheduledRaceDay = LabelScheduledRace.check(game.imageUtils)
         val bIsMandatoryRaceDay = IconRaceDayRibbon.check(imageUtils = game.imageUtils)
         var needToRace = bIsMandatoryRaceDay || bIsScheduledRaceDay
+
         // We don't need to bother checking fans on a mandatory race day.
         if (
             !game.currentDate.bIsFinaleSeason &&
