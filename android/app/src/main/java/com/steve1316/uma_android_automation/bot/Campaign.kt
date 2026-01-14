@@ -253,23 +253,14 @@ open class Campaign(val game: Game) {
         return Pair(true, dialog)
     }
 
-    fun checkAptitudes() {
-        MessageLog.d(TAG, "Checking aptitudes...")
-        // We update the trainee aptitudes by checking the stats dialog.
-        // So in here we just open the dialog then the dialog handler
-        // will take care of the rest.
+    fun openAptitudesDialog() {
+        MessageLog.d(TAG, "Opening aptitudes dialog...")
         ButtonHomeFullStats.click(imageUtils = game.imageUtils)
         game.wait(1.0, skipWaitingForLoading = true)
     }
 
-    fun checkFans() {
-        MessageLog.d(TAG, "Checking fans...")
-        // Detect the new fan count by clicking the fans info button.
-        // This opens the "Umamusume Class" dialog.
-        // We process this dialog in the dialog handler.
-        // This button is in a different position for Unity/URA scenarios.
-        // The Unity scenario has an info button just like the ButtonHomeFansInfo
-        // button so they are easily mistaken by OCR, thus we just tap the location manually.
+    fun openFansDialog() {
+        MessageLog.d(TAG, "Opening fans dialog...")
         if (game.scenario == "Unity Cup") {
             ButtonHomeFansInfo.click(game.imageUtils, region = game.imageUtils.regionBottomHalf, tries = 10)
         } else {
@@ -351,7 +342,7 @@ open class Campaign(val game: Game) {
 	fun startAptitudesDetectionTest() {
 		MessageLog.i(TAG, "\n[TEST] Now beginning the Aptitudes Detection test on the Main screen.")
 		MessageLog.i(TAG, "[TEST] Note that this test is dependent on having the correct scale.")
-        checkAptitudes()
+        openAptitudesDialog()
         handleDialogs()
 	}
 
@@ -584,8 +575,7 @@ open class Campaign(val game: Game) {
         game.trainee.bTemporaryRunningStyleAptitudesUpdated = false
 
         if (!game.trainee.bHasUpdatedAptitudes) {
-            checkAptitudes()
-            MessageLog.i(TAG, "\n[TRAINEE] Current aptitudes:\n${game.trainee.getAptitudesString()}")
+            openAptitudesDialog()
             return true
         }
 
@@ -601,7 +591,7 @@ open class Campaign(val game: Game) {
             bNeedToCheckFans &&
             !bHasTriedCheckingFansToday
         ) {
-            checkFans()
+            openFansDialog()
             return true
         }
 
