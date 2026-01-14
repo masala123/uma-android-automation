@@ -241,6 +241,7 @@ object DialogObjects {
         DialogMenu,                         // Career
         DialogMoodEffect,                   // Career
         DialogMyAgendas,                    // Career
+        DialogNoRetries,                    // Career
         DialogNotices,                      // Main Screen
         DialogOpenSoon,                     // Shop (only when clicking inactive daily sales button)
         DialogOptions,                      // Anywhere
@@ -770,6 +771,17 @@ object DialogMyAgendas : DialogInterface {
     override val okButton = null
     override val buttons: List<ComponentInterface> = listOf(
         ButtonClose,
+    )
+}
+
+object DialogNoRetries : DialogInterface {
+    override val TAG: String = "DialogNoRetries"
+    override val name: String = "no_retries"
+    override val title: String = "No Retries"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonEndCareer,
     )
 }
 
