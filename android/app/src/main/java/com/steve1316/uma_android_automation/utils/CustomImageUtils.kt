@@ -626,12 +626,17 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
         // Unique block for trainer supports.
         val thread = Thread {
-			blockMap["trainer"] = findAllWithBitmap(
-                "stat_trainer_block",
-                sourceBitmap,
-                region=customRegion,
-            )
-            latch.countDown()
+            try {
+                blockMap["trainer"] = findAllWithBitmap(
+                    "stat_trainer_block",
+                    sourceBitmap,
+                    region=customRegion,
+                )
+            } catch (_: InterruptedException) {
+                // Gracefully handle interruption when bot is stopped.
+            } finally {
+                latch.countDown()
+            }
 		}
         threads.add(thread)
         thread.start()
