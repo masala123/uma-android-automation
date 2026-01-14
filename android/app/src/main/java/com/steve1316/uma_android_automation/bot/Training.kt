@@ -475,8 +475,7 @@ class Training(private val game: Game) {
 			// Start with neutral score.
 			var score = 50.0
 
-            // TODO: Get num skill hints from training analysis.
-            val numSkillHints: Int = 0
+            val numSkillHints: Int = config.skillHintsPerLocation[training.name] ?: 0
 			score += 10.0 * numSkillHints
 
 			// If skill hints are prioritized and we found some, return a massive score to override other factors.
