@@ -435,8 +435,6 @@ class Trainee {
         updateRunningStyleAptitudes(imageUtils = imageUtils)
 
         bHasUpdatedAptitudes = true
-
-        MessageLog.i(TAG, "[TRAINEE] Aptitudes Updated:\n${this}")
     }
 
     /** Updates the trainee's skill points from the current screen.
@@ -591,6 +589,11 @@ class Trainee {
             statTargetsByDistance[trackDistance] = newStats
         }
 	}
+
+    /** Logs the trainee's current state to the message log. */
+    fun logInfo() {
+        MessageLog.i(TAG, "[TRAINEE] Current State:\n${this}")
+    }
 
     /** Returns a formatted string of the trainee's preferred aptitudes.
      *

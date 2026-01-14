@@ -227,6 +227,9 @@ open class Campaign(val game: Game) {
                 }
                 
                 dialog.close(imageUtils = game.imageUtils)
+
+                // Print the trainee info with the updated fan count.
+                game.trainee.logInfo()
             }
             "umamusume_details" -> {
                 val prevTrackSurface = game.trainee.trackSurface
@@ -605,6 +608,7 @@ open class Campaign(val game: Game) {
 
             MessageLog.i(TAG, "[TRAINEE] Skills Updated: ${game.trainee.getStatsString()}")
             MessageLog.i(TAG, "[TRAINEE] Mood Updated: ${game.trainee.mood}")
+            if (game.trainee.bHasUpdatedAptitudes) game.trainee.logInfo()
         }
 
         // If the required skill points has been reached, stop the bot.
