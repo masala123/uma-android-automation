@@ -149,7 +149,7 @@ interface ComponentInterface: BaseComponentInterface {
     }
 
     fun findAll(imageUtils: CustomImageUtils, region: IntArray? = null, confidence: Double? = null): ArrayList<Point> {
-        return imageUtils.findAll(template.path, region = region ?: template.region, confidence = (confidence ?: template.confidence) ?: 0.0)
+        return imageUtils.findAll(template.path, region = region ?: template.region, confidence = (confidence ?: template.confidence))
     }
 
     override fun check(imageUtils: CustomImageUtils, region: IntArray?, tries: Int, confidence: Double?): Boolean {
@@ -157,11 +157,7 @@ interface ComponentInterface: BaseComponentInterface {
     }
 
     override fun click(imageUtils: CustomImageUtils, region: IntArray?, tries: Int, taps: Int, confidence: Double?): Boolean {
-        val point = find(imageUtils = imageUtils, region = region, tries = tries, confidence = confidence ?: template.confidence).first
-        if (point == null) {
-            return false
-        }
-
+        val point = find(imageUtils = imageUtils, region = region, tries = tries, confidence = confidence ?: template.confidence).first ?: return false
         tap(point.x, point.y, template.path, taps=taps)
         return true
     }
@@ -276,11 +272,7 @@ interface MultiStateButtonInterface : ComplexComponentInterface {
 
     /** Find and click on the first template that we can find. */
     override fun click(imageUtils: CustomImageUtils, region: IntArray?, tries: Int, taps: Int, confidence: Double?): Boolean {
-        val point = find(imageUtils = imageUtils, region = region, tries = tries, confidence = confidence).first
-        if (point == null) {
-            return false
-        }
-
+        val point = find(imageUtils = imageUtils, region = region, tries = tries, confidence = confidence).first ?: return false
         tap(point.x, point.y, templates.first().path, taps=taps)
         return true
     }

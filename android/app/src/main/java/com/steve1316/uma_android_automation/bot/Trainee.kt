@@ -417,7 +417,7 @@ class Trainee {
             for ((statName, newValue) in statMapping) {
                 val oldValue = getStat(statName)
                 val diff = abs(newValue - oldValue)
-                // If our previous stat value is <= 0, that means we havent set it yet.
+                // If our previous stat value is <= 0, that means we haven't set it yet.
                 if (oldValue <= 0 || diff < 150) {
                     stats.setStat(statName, newValue)
                     bHasUpdatedStats = true
@@ -434,7 +434,7 @@ class Trainee {
             for ((statName, newValue) in statMapping) {
                 val oldValue = getStat(statName)
                 val diff = abs(newValue - oldValue)
-                // If our previous stat value is <= 0, that means we havent set it yet.
+                // If our previous stat value is <= 0, that means we haven't set it yet.
                 if (oldValue <= 0 || diff < 150) {
                     stats.setStat(statName, newValue)
                     bHasUpdatedStats = true

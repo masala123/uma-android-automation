@@ -358,8 +358,8 @@ open class Campaign(val game: Game) {
     fun startTrainingScreenOCRTest() {
         MessageLog.i(TAG, "---- startTrainingScreenOCRTest START ----")
 
-        var numPass: Int = 0
-        var numFail: Int = 0
+        var numPass = 0
+        var numFail = 0
 
         // Simple components to test.
         val componentsToTest: List<ComponentInterface> = listOf(
@@ -418,8 +418,8 @@ open class Campaign(val game: Game) {
     fun startMainScreenOCRTest() {
         MessageLog.i(TAG, "---- startMainScreenOCRTest START ----")
 
-        var numPass: Int = 0
-        var numFail: Int = 0
+        var numPass = 0
+        var numFail = 0
 
         // Simple components to test.
         val componentsToTest: List<ComponentInterface> = listOf(
