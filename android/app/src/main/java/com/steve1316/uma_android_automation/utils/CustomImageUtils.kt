@@ -1788,7 +1788,8 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
     /** Detects the number of fans from the Umamusume Class dialog.
      *
-     * @return The number of fans if successful. Otherwise NULL.
+     * @param bitmap The source bitmap to analyze.
+     * @return The number of fans if successful, or NULL if detection failed.
      */
     fun getUmamusumeClassDialogFanCount(bitmap: Bitmap): Int? {
         val cvImage = Mat()

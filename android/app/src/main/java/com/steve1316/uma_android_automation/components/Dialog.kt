@@ -199,6 +199,10 @@ interface DialogInterface {
      *
      * If no Close button is specified, then the first button in the [buttons]
      * list is treated as the close button and is clicked.
+     *
+     * @param imageUtils A reference to a CustomImageUtils instance.
+     * @param tries The number of attempts when searching for the button.
+     * @return True if the close button was found and clicked.
      */
     fun close(imageUtils: CustomImageUtils, tries: Int = 1): Boolean {
         if (closeButton == null) {
@@ -211,6 +215,10 @@ interface DialogInterface {
      *
      * If no OK button is defined for this dialog,
      * then the [close] function is called instead.
+     *
+     * @param imageUtils A reference to a CustomImageUtils instance.
+     * @param tries The number of attempts when searching for the button.
+     * @return True if the OK button was found and clicked.
      */
     fun ok(imageUtils: CustomImageUtils, tries: Int = 1): Boolean {
         if (okButton == null) {
@@ -224,8 +232,6 @@ interface DialogInterface {
     }
 }
 
-// Simple object used to store a list of all dialog objects.
-// This is used to easily iterate over all dialogs.
 /** Object used to store list of all dialog objects and a mapping of them.
  *
  * @property items A list of all Dialog interfaces.

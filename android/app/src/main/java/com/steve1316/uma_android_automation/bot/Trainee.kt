@@ -70,6 +70,11 @@ class Trainee {
             var guts: Int = -1,
             var wit: Int = -1,
         ) {
+            /** Sets a stat value by its name.
+             *
+             * @param statName The stat to set.
+             * @param value The value to set the stat to.
+             */
             fun setStat(statName: StatName, value: Int) {
                 when (statName) {
                     StatName.SPEED -> speed = value
@@ -84,10 +89,18 @@ class Trainee {
                 return "Spd=$speed, Sta=$stamina, Pow=$power, Gut=$guts, Wit=$wit"
             }
 
+            /** Converts the stats to an integer array.
+             *
+             * @return An array of stat values in order: Speed, Stamina, Power, Guts, Wit.
+             */
             fun toIntArray(): IntArray {
                 return intArrayOf(speed, stamina, power, guts, wit)
             }
 
+            /** Converts the stats to a map keyed by `StatName`.
+             *
+             * @return A mapping of stat names to their values.
+             */
             fun asMap(): Map<StatName, Int> {
                 return mapOf(
                     StatName.SPEED to speed,
@@ -139,14 +152,14 @@ class Trainee {
         get() = fanCountClass.ordinal > FanCountClass.MAIDEN.ordinal
 
     /** Calculates the highest weighted key based on aptitude for the passed Enum
-    *
-    * See trackDistance getter for example.
-    *
-    * @param aptitudeMap A mapping of the passed enum's names to their current aptitudes.
-    * @param defaultMaxKey The default value in case  no aptitudes could be detected.
-    *
-    * @return The passed enum's name for the associated highest aptitude.
-    */
+     *
+     * See trackDistance getter for example.
+     *
+     * @param aptitudeMap A mapping of the passed enum's names to their current aptitudes.
+     * @param defaultMaxKey The default value in case  no aptitudes could be detected.
+     *
+     * @return The passed enum's name for the associated highest aptitude.
+     */
     inline fun <reified T : Enum<T>> getMaxAptitude(
         aptitudeMap: MutableMap<T, Aptitude>,
         defaultMaxKey: T,
@@ -192,6 +205,11 @@ class Trainee {
         setStatTargetsByDistances()
     }
 
+    /** Retrieves a single stat value by its name.
+     *
+     * @param statName The stat to retrieve.
+     * @return The current value of the specified stat.
+     */
     fun getStat(statName: StatName): Int {
         return when (statName) {
             StatName.SPEED -> stats.speed
@@ -202,6 +220,16 @@ class Trainee {
         }
     }
 
+    /**
+	 * Retrieves the stat targets for a given track distance.
+	 *
+	 * If no distance is provided, the trainee's calculated preferred track distance is used.
+	 * If the distance is not found in the mapping, a default set of stat targets is returned.
+	 *
+	 * @param distance The track distance to get stat targets for. Defaults to the trainee's
+	 * preferred track distance if NULL.
+	 * @return A mapping of stat names to their target values.
+	 */
     fun getStatTargetsByDistance(distance: TrackDistance? = null): Map<StatName, Int> {
         // If distance is NULL, we want to use the calculated preferred track distance.
         val distance: TrackDistance = distance ?: trackDistance
@@ -220,6 +248,16 @@ class Trainee {
         return statTargetsByDistance[distance]!!.asMap()
     }
 
+    /** Sets the trainee's stats with optional values.
+     *
+     * Only non-null values will be updated.
+     *
+     * @param speed The new speed value, or NULL to leave unchanged.
+     * @param stamina The new stamina value, or NULL to leave unchanged.
+     * @param power The new power value, or NULL to leave unchanged.
+     * @param guts The new guts value, or NULL to leave unchanged.
+     * @param wit The new wit value, or NULL to leave unchanged.
+     */
     fun setTraineeStats(
         speed: Int? = null,
         stamina: Int? = null,
@@ -244,21 +282,38 @@ class Trainee {
         }
     }
 
+    /** Sets the trainee's aptitude for a specific running style.
+     *
+     * @param runningStyle The running style to set the aptitude for.
+     * @param aptitude The aptitude value to assign.
+     */
     fun setRunningStyleAptitude(runningStyle: RunningStyle, aptitude: Aptitude) {
         runningStyleAptitudes[runningStyle] = aptitude
     }
 
-    /** Returns the trainee's aptitude for a specified `TrackSurface`. */
+    /** Returns the trainee's aptitude for a specified `TrackSurface`.
+     *
+     * @param trackSurface The track surface to check the aptitude for.
+     * @return The aptitude value for the specified track surface.
+     */
     fun checkTrackSurfaceAptitude(trackSurface: TrackSurface): Aptitude {
         return trackSurfaceAptitudes[trackSurface] ?: Aptitude.G
     }
 
-    /** Returns the trainee's aptitude for a specified `TrackDistance`. */
+    /** Returns the trainee's aptitude for a specified `TrackDistance`.
+     *
+     * @param trackDistance The track distance to check the aptitude for.
+     * @return The aptitude value for the specified track distance.
+     */
     fun checkTrackDistanceAptitude(trackDistance: TrackDistance): Aptitude {
         return trackDistanceAptitudes[trackDistance] ?: Aptitude.G
     }
 
-    /** Returns the trainee's aptitude for a specified `RunningStyle`. */
+    /** Returns the trainee's aptitude for a specified `RunningStyle`.
+     *
+     * @param runningStyle The running style to check the aptitude for.
+     * @return The aptitude value for the specified running style.
+     */
     fun checkRunningStyleAptitude(runningStyle: RunningStyle): Aptitude {
         return runningStyleAptitudes[runningStyle] ?: Aptitude.G
     }
@@ -311,6 +366,10 @@ class Trainee {
         return result.toMap()
     }
 
+    /** Updates the trainee's track surface aptitudes from the current screen.
+     *
+     * @param imageUtils A reference to a CustomImageUtils instance.
+     */
     private fun updateTrackSurfaceAptitudes(imageUtils: CustomImageUtils) {
         val aptitudes = findAptitudesInBitmap<TrackSurface>(
             imageUtils = imageUtils,
@@ -326,6 +385,10 @@ class Trainee {
         }
     }
 
+    /** Updates the trainee's track distance aptitudes from the current screen.
+     *
+     * @param imageUtils A reference to a CustomImageUtils instance.
+     */
     private fun updateTrackDistanceAptitudes(imageUtils: CustomImageUtils) {
         val aptitudes = findAptitudesInBitmap<TrackDistance>(
             imageUtils = imageUtils,
@@ -341,6 +404,10 @@ class Trainee {
         }
     }
 
+    /** Updates the trainee's running style aptitudes from the current screen.
+     *
+     * @param imageUtils A reference to a CustomImageUtils instance.
+     */
     private fun updateRunningStyleAptitudes(imageUtils: CustomImageUtils) {
         val aptitudes = findAptitudesInBitmap<RunningStyle>(
             imageUtils = imageUtils,
@@ -357,9 +424,9 @@ class Trainee {
     }
 
     /** Updates all aptitudes for trainee.
-    *
-    *   Requires the Umamusume Details dialog to be opened.
-    */
+     *
+     * Requires the Umamusume Details dialog to be opened.
+     */
     fun updateAptitudes(imageUtils: CustomImageUtils) {
         updateTrackSurfaceAptitudes(imageUtils = imageUtils)
         updateTrackDistanceAptitudes(imageUtils = imageUtils)
@@ -370,6 +437,12 @@ class Trainee {
         MessageLog.i(TAG, "[TRAINEE] Aptitudes Updated:\n${this}")
     }
 
+    /** Updates the trainee's skill points from the current screen.
+     *
+     * @param imageUtils A reference to a CustomImageUtils instance.
+     * @param sourceBitmap Optional pre-captured bitmap to analyze.
+     * @param skillPointsLocation Optional pre-determined location of skill points on screen.
+     */
     fun updateSkillPoints(imageUtils: CustomImageUtils, sourceBitmap: Bitmap? = null, skillPointsLocation: Point? = null) {
         val res = imageUtils.determineSkillPoints(sourceBitmap, skillPointsLocation)
         if (res != -1) {
@@ -379,6 +452,16 @@ class Trainee {
         bHasUpdatedSkillPoints = skillPoints != -1
     }
 
+    /** Updates the trainee's stats from the current screen.
+     *
+     * When sourceBitmap and skillPointsLocation are provided, uses parallel threading
+     * for faster processing. Otherwise, falls back to sequential processing.
+     *
+     * @param imageUtils A reference to a CustomImageUtils instance.
+     * @param sourceBitmap Optional pre-captured bitmap to analyze.
+     * @param skillPointsLocation Optional pre-determined location of skill points on screen.
+     * @param externalLatch Optional external latch for synchronization with other threads.
+     */
     fun updateStats(imageUtils: CustomImageUtils, sourceBitmap: Bitmap? = null, skillPointsLocation: Point? = null, externalLatch: CountDownLatch? = null) {
         // If sourceBitmap and skillPointsLocation are provided, use threading for parallel processing.
         if (sourceBitmap != null && skillPointsLocation != null) {
@@ -445,6 +528,12 @@ class Trainee {
         }
     }
 
+    /** Detects the trainee's current mood from the screen.
+     *
+     * @param imageUtils A reference to a CustomImageUtils instance.
+     * @param sourceBitmap Optional pre-captured bitmap to analyze.
+     * @return The detected mood, or NULL if no mood could be determined.
+     */
     fun checkMood(imageUtils: CustomImageUtils, sourceBitmap: Bitmap? = null): Mood? {
         return if (sourceBitmap != null) {
             // Use findImageWithBitmap for thread-safe operations.
@@ -469,6 +558,13 @@ class Trainee {
         }
     }
 
+    /** Updates the trainee's mood state from the current screen.
+     *
+     * If no mood can be detected, the current mood state remains unchanged.
+     *
+     * @param imageUtils A reference to a CustomImageUtils instance.
+     * @param sourceBitmap Optional pre-captured bitmap to analyze.
+     */
     fun updateMood(imageUtils: CustomImageUtils, sourceBitmap: Bitmap? = null) {
         // If checkMood returns NULL, then make no change to the mood state.
         mood = checkMood(imageUtils, sourceBitmap) ?: mood
@@ -494,10 +590,18 @@ class Trainee {
         }
 	}
 
+    /** Returns a formatted string of the trainee's preferred aptitudes.
+     *
+     * @return A multi-line string containing track surface, distance, and running style.
+     */
     fun getAptitudesString(): String {
         return "TrackSurface: $trackSurface\nTrackDistance: $trackDistance\nRunningStyle: $runningStyle"
     }
 
+    /** Returns a formatted string of the trainee's current stats.
+     *
+     * @return A string representation of all stats.
+     */
     fun getStatsString(): String {
         return stats.toString()
     }
