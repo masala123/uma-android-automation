@@ -230,6 +230,8 @@ data class BoundingBox(val x: Int, val y: Int, val w: Int, val h: Int) {
      *
      * Mostly used for backward compatibility.
      * Does not include any of the center coordinates.
+     *
+     * @return An array containing x, y, w, h values.
      */
     fun toIntArray(): IntArray {
         return intArrayOf(x, y, w, h)

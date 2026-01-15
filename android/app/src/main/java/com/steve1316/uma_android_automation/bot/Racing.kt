@@ -405,10 +405,7 @@ class Racing (private val game: Game) {
             // In case we didn't get the dialog we still want to reset this flag.
             bIgnoreConsecutiveRaceWarning = false
             return handleMandatoryRace()
-        } else if (
-            !game.trainee.bHasCompletedMaidenRace &&
-            ButtonRaceSelectExtra.click(imageUtils = game.imageUtils)
-        ) {
+        } else if (!game.trainee.bHasCompletedMaidenRace && !isScheduledRace && ButtonRaceSelectExtra.click(imageUtils = game.imageUtils)) {
             // Winning a maiden race ASAP is extremely important. Ignore this warning.
             bIgnoreConsecutiveRaceWarning = true
 
@@ -418,7 +415,7 @@ class Racing (private val game: Game) {
             // In case we didn't get the we still want to reset this flag.
             bIgnoreConsecutiveRaceWarning = false
             return handleMaidenRace()
-        } else if (!game.currentDate.bIsPreDebut && ButtonRaceSelectExtra.click(imageUtils = game.imageUtils)) {
+        } else if ((!game.currentDate.bIsPreDebut && ButtonRaceSelectExtra.click(imageUtils = game.imageUtils)) || isScheduledRace) {
             game.wait(0.5, skipWaitingForLoading = true)
             // Check for the consecutive race dialog before proceeding.
             val (bWasDialogHandled, dialog) = handleDialogs()
@@ -708,7 +705,7 @@ class Racing (private val game: Game) {
      * @return True if the extra race was completed successfully, false otherwise.
      */
     private fun handleExtraRace(isScheduledRace: Boolean = false): Boolean {
-        MessageLog.i(TAG, "[RACE] Starting process for handling a extra race ${if (isScheduledRace) "(scheduled)" else ""}.")
+        MessageLog.i(TAG, "[RACE] Starting process for handling a extra race${if (isScheduledRace) " (scheduled)" else ""}.")
 
         // If there is a scheduled race pending, proceed to run it immediately.
         if (!isScheduledRace) {
@@ -821,12 +818,15 @@ class Racing (private val game: Game) {
             }
         } else if (isScheduledRace) {
             bIgnoreConsecutiveRaceWarning = true
-            handleDialogs()
+            MessageLog.i(TAG, "[RACE] Confirming the scheduled race dialog...")
+            ButtonRace.click(game.imageUtils, tries = 30)
+            game.waitForLoading()
         }
 
         // Confirm the selection and the resultant popup and then wait for the game to load.
-        ButtonRace.click(game.imageUtils, tries = 30)
-        ButtonRace.click(game.imageUtils, tries = 10)
+        game.findAndTapImage("race_confirm", tries = 30, region = game.imageUtils.regionBottomHalf)
+        game.wait(1.0)
+        game.findAndTapImage("race_confirm", tries = 10, region = game.imageUtils.regionBottomHalf)
         game.wait(2.0)
 
         // Handle race strategy override if enabled.
@@ -1397,6 +1397,7 @@ class Racing (private val game: Game) {
         game.waitForLoading()
         ButtonClose.click(game.imageUtils)
         game.waitForLoading()
+        game.wait(0.25)
 
         // Now back out of the race selection screen.
         ButtonBack.click(game.imageUtils)
@@ -1820,6 +1821,8 @@ class Racing (private val game: Game) {
                 game.wait(1.0)
 
                 // Now tap on the screen to get past the Race Result screen.
+                game.tap(350.0, 450.0, "ok", taps = 5)
+                game.wait(0.1)
                 game.tap(350.0, 450.0, "ok", taps = 5)
                 game.waitForLoading()
                 game.wait(1.0)

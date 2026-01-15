@@ -630,12 +630,17 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
         // Unique block for trainer supports.
         val thread = Thread {
-			blockMap["trainer"] = findAllWithBitmap(
-                "stat_trainer_block",
-                sourceBitmap,
-                region=customRegion,
-            )
-            latch.countDown()
+            try {
+                blockMap["trainer"] = findAllWithBitmap(
+                    "stat_trainer_block",
+                    sourceBitmap,
+                    region=customRegion,
+                )
+            } catch (_: InterruptedException) {
+                // Gracefully handle interruption when bot is stopped.
+            } finally {
+                latch.countDown()
+            }
 		}
         threads.add(thread)
         thread.start()
@@ -1792,7 +1797,8 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
     /** Detects the number of fans from the Umamusume Class dialog.
      *
-     * @return The number of fans if successful. Otherwise NULL.
+     * @param bitmap The source bitmap to analyze.
+     * @return The number of fans if successful, or NULL if detection failed.
      */
     fun getUmamusumeClassDialogFanCount(bitmap: Bitmap): Int? {
         val cvImage = Mat()

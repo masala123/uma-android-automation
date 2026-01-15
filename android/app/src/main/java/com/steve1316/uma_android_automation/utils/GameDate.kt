@@ -62,7 +62,13 @@ class GameDate {
     companion object {
         const val TAG: String = "[${MainActivity.loggerTag}]GameDate"
 
-        /** Converts a year/month/phase to a day number. */
+        /** Converts a year/month/phase to a day number.
+         *
+         * @param year The date's year.
+         * @param month The date's month.
+         * @param phase The date's phase.
+         * @return The calculated day number.
+         */
         fun toDay(year: DateYear, month: DateMonth, phase: DatePhase): Int {
             return ((year.ordinal * (DateMonth.entries.size * 2)) + (((month.ordinal + 1) * 2) + phase.ordinal)) - 1
         }
@@ -116,9 +122,10 @@ class GameDate {
         /**
          * Detects the date on the screen.
          *
-         * This is just a simple wrapper around `fromDateString`.
+         * This is just a simple wrapper around [fromDateString].
          *
-         * @return The detected GameDate object or NULL if nothing could be detected.
+         * @param imageUtils A reference to a CustomImageUtils instance.
+         * @return The detected GameDate object, or NULL if nothing could be detected.
          */
         fun detectDate(imageUtils: CustomImageUtils): GameDate? {
             return fromDateString(imageUtils = imageUtils)
@@ -252,7 +259,8 @@ class GameDate {
 
         /** Determines the day number in the finale season.
          *
-         * @return The day number if detection was successful. Otherwise NULL.
+         * @param imageUtils A reference to a CustomImageUtils instance.
+         * @return The day number if detection was successful, or NULL otherwise.
          */
         fun getFinalsDay(imageUtils: CustomImageUtils): Int? {
             val goalText = imageUtils.getGoalText().lowercase()
@@ -328,7 +336,10 @@ class GameDate {
         return "${this.year.longName} ${this.phase} ${this.month} (Turn ${this.day})"
     }
 
-    /** Updates class members to reflect the passed day. */
+    /** Updates class members to reflect the current day.
+     *
+     * @param day The day number to update to.
+     */
     fun updateDay(day: Int) {
         val tmpDate: GameDate = fromDay(day)
         this.year = tmpDate.year
@@ -343,7 +354,7 @@ class GameDate {
     /**
      * Returns the GameDate object for the next calendar day.
      *
-     * @return The next day's GameDate object, or null
+     * @return The next day's GameDate object.
      */
     fun getNextDate(): GameDate? {
         return fromDay(this.day + 1)
@@ -352,7 +363,8 @@ class GameDate {
     /**
      * Updates the current date by detecting it from the screen.
      *
-     * @return Whether the date was updated successfully.
+     * @param imageUtils A reference to a CustomImageUtils instance.
+     * @return True if the date was updated successfully, false otherwise.
      */
     fun update(imageUtils: CustomImageUtils): Boolean {
         val finalsDay: Int? = getFinalsDay(imageUtils)

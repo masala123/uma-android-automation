@@ -30,6 +30,8 @@ class SQLiteSettingsManager(private val context: Context) {
     /**
      * Initialize the database connection by opening the existing database file.
      * The database is created by expo-sqlite in the app's files directory.
+     *
+     * @return True if initialization was successful, false otherwise.
      */
     fun initialize(): Boolean {
         if (isInitialized) {
@@ -83,6 +85,8 @@ class SQLiteSettingsManager(private val context: Context) {
 
     /**
      * Create a new database if none exists.
+     *
+     * @return True if the database was created successfully, false otherwise.
      */
     private fun createNewDatabase(): Boolean {
         try {
@@ -132,6 +136,8 @@ class SQLiteSettingsManager(private val context: Context) {
 
     /**
      * Verify that the database has the expected table structure.
+     *
+     * @return True if the database has the expected structure, false otherwise.
      */
     private fun verifyDatabaseStructure(): Boolean {
         return try {
@@ -157,6 +163,8 @@ class SQLiteSettingsManager(private val context: Context) {
 
     /**
      * Check if the database is available and initialized.
+     *
+     * @return True if the database is initialized and open, false otherwise.
      */
     fun isAvailable(): Boolean {
         val available = isInitialized && database != null && database?.isOpen == true
@@ -204,7 +212,11 @@ class SQLiteSettingsManager(private val context: Context) {
 
     /**
      * Get a boolean setting value.
-     * Throws exception if setting doesn't exist.
+     *
+     * @param category The settings category.
+     * @param key The setting key.
+     * @return The boolean value of the setting.
+     * @throws RuntimeException if setting doesn't exist or cannot be parsed.
      */
     fun getBooleanSetting(category: String, key: String): Boolean {
         val value = loadSetting(category, key) 
@@ -218,7 +230,11 @@ class SQLiteSettingsManager(private val context: Context) {
 
     /**
      * Get an integer setting value.
-     * Throws exception if setting doesn't exist.
+     *
+     * @param category The settings category.
+     * @param key The setting key.
+     * @return The integer value of the setting.
+     * @throws RuntimeException if setting doesn't exist or cannot be parsed.
      */
     fun getIntSetting(category: String, key: String): Int {
         val value = loadSetting(category, key) 
@@ -232,7 +248,11 @@ class SQLiteSettingsManager(private val context: Context) {
 
     /**
      * Get a double setting value.
-     * Throws exception if setting doesn't exist.
+     *
+     * @param category The settings category.
+     * @param key The setting key.
+     * @return The double value of the setting.
+     * @throws RuntimeException if setting doesn't exist or cannot be parsed.
      */
     fun getDoubleSetting(category: String, key: String): Double {
         val value = loadSetting(category, key) 
@@ -246,7 +266,11 @@ class SQLiteSettingsManager(private val context: Context) {
 
     /**
      * Get a string setting value.
-     * Throws exception if setting doesn't exist.
+     *
+     * @param category The settings category.
+     * @param key The setting key.
+     * @return The string value of the setting.
+     * @throws RuntimeException if setting doesn't exist.
      */
     fun getStringSetting(category: String, key: String): String {
         return loadSetting(category, key) 
@@ -255,7 +279,11 @@ class SQLiteSettingsManager(private val context: Context) {
 
     /**
      * Get a JSON array setting value.
-     * Throws exception if setting doesn't exist.
+     *
+     * @param category The settings category.
+     * @param key The setting key.
+     * @return The list of strings parsed from the JSON array.
+     * @throws RuntimeException if setting doesn't exist or cannot be parsed.
      */
     fun getStringArraySetting(category: String, key: String): List<String> {
         val value = loadSetting(category, key) 
@@ -274,6 +302,8 @@ class SQLiteSettingsManager(private val context: Context) {
 
     /**
      * Check if the database file exists and is accessible.
+     *
+     * @return True if any of the expected database file paths exist and are readable.
      */
     fun isDatabaseAvailable(): Boolean {
         val possiblePaths = listOf(
@@ -289,6 +319,8 @@ class SQLiteSettingsManager(private val context: Context) {
     /**
      * Get the database instance for direct access.
      * This should only be used by classes that need direct database access.
+     *
+     * @return The SQLiteDatabase instance if available, or NULL otherwise.
      */
     fun getDatabase(): SQLiteDatabase? {
         return if (isAvailable()) database else null
