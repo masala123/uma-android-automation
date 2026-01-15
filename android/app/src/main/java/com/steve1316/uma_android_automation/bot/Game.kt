@@ -12,10 +12,26 @@ import com.steve1316.automation_library.data.SharedData
 import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.automation_library.utils.MyAccessibilityService
 import com.steve1316.uma_android_automation.utils.SettingsHelper
-import com.steve1316.uma_android_automation.utils.GameDateParser
+import com.steve1316.uma_android_automation.utils.GameDate
+import com.steve1316.uma_android_automation.bot.Trainee
+
+import com.steve1316.uma_android_automation.utils.types.BoundingBox
+import com.steve1316.uma_android_automation.utils.types.Aptitude
+import com.steve1316.uma_android_automation.utils.types.Mood
+
+import com.steve1316.uma_android_automation.components.DialogUtils
+import com.steve1316.uma_android_automation.components.DialogInterface
+import com.steve1316.uma_android_automation.components.ButtonHomeFullStats
+import com.steve1316.uma_android_automation.components.ButtonHomeFansInfo
 import com.steve1316.uma_android_automation.components.ButtonCraneGame
 import com.steve1316.uma_android_automation.components.ButtonCraneGameOk
 import com.steve1316.uma_android_automation.components.ButtonSkip
+import com.steve1316.uma_android_automation.components.IconTazuna
+import com.steve1316.uma_android_automation.components.IconRaceDayRibbon
+import com.steve1316.uma_android_automation.components.IconGoalRibbon
+import com.steve1316.uma_android_automation.components.ButtonBack
+import com.steve1316.uma_android_automation.components.ButtonUnityCupRace
+
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.opencv.core.Point
@@ -31,7 +47,6 @@ class Game(val myContext: Context) {
 
 	val imageUtils: CustomImageUtils = CustomImageUtils(myContext, this)
 	val gestureUtils: MyAccessibilityService = MyAccessibilityService.getInstance()
-	val gameDateParser: GameDateParser = GameDateParser()
 
 	val decimalFormat = DecimalFormat("#.##")
 
@@ -49,57 +64,82 @@ class Game(val myContext: Context) {
 
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
+    val trainee: Trainee = Trainee()
 	val training: Training = Training(this)
 	val racing: Racing = Racing(this)
 	val trainingEvent: TrainingEvent = TrainingEvent(this)
+    val campaign: Campaign = if (scenario == "Unity Cup") {
+        UnityCup(this)
+    } else {
+        Campaign(this)
+    }
 
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
+
+    // Tracks the number of connection error retries. After hitting max, bot stops.
+    private val maxConnectionErrorRetryAttempts: Int = 3
+    private var connectionErrorRetryAttempts: Int = 0
+    private var lastConnectionErrorRetryTimeMs: Long = 0
+    private val connectionErrorRetryCooldownTimeMs: Long = 10000 // 10 seconds
+
 	// Misc
-    var currentDate: Date = Date(1, "Early", 1, 1)
-	var aptitudes: Aptitudes = Aptitudes(
-		track = Track("B", "B"),
-		distance = Distance("B", "B", "B", "B"),
-		style = Style("B", "B", "B", "B")
-	)
-	private var inheritancesDone = 0
-    private var needToUpdateAptitudes: Boolean = true
+    var currentDate: GameDate = GameDate(day = 1)
+
     private var recreationDateCompleted: Boolean = false
     private var isFinals: Boolean = false
     private var stopBeforeFinalsInitialTurnNumber: Int = -1
     private var scenarioCheckPerformed: Boolean = false
 
-	data class Date(
-		val year: Int,
-		val phase: String,
-		val month: Int,
-		val turnNumber: Int
-	)
+    /**
+     * Detects and handles any dialog popups.
+     *
+     * To prevent the bot moving too fast, we add a 500ms delay to the
+     * exit of this function whenever we close the dialog.
+     * This gives the dialog time to close since there is a very short
+     * animation that plays when a dialog closes.
+     *
+     * @return A pair of a boolean and a nullable DialogInterface.
+     * The boolean is true when a dialog has been handled by this function.
+     * The DialogInterface is the detected dialog, or NULL if no dialogs were found.
+     */
+    fun handleDialogs(): Pair<Boolean, DialogInterface?> {
+        val dialog: DialogInterface? = DialogUtils.getDialog(imageUtils = imageUtils)
+        if (dialog == null) {
+            return Pair(false, null)
+        }
 
-	data class Track(
-		val turf: String,
-		val dirt: String
-	)
+        MessageLog.d(TAG, "[DIALOG] ${dialog.name}")
 
-	data class Distance(
-		val sprint: String,
-		val mile: String,
-		val medium: String,
-		val long: String
-	)
+        when (dialog.name) {
+            "connection_error" -> {
+                val currTime: Long = System.currentTimeMillis()
+                // If the cooldown period has lapsed, reset our count.
+                if (currTime - lastConnectionErrorRetryTimeMs > connectionErrorRetryCooldownTimeMs) {
+                    connectionErrorRetryAttempts = 0
+                    lastConnectionErrorRetryTimeMs = currTime
+                }
 
-	data class Style(
-		val front: String,
-		val pace: String,
-		val late: String,
-		val end: String
-	)
+                if (connectionErrorRetryAttempts >= maxConnectionErrorRetryAttempts) {
+                    throw InterruptedException("Max connection error retry attempts reached. Stopping bot...")
+                }
 
-	data class Aptitudes(
-		val track: Track,
-		val distance: Distance,
-		val style: Style
-	)
+                connectionErrorRetryAttempts++
+                dialog.ok(imageUtils = imageUtils)
+            }
+            "display_settings" -> dialog.close(imageUtils = imageUtils)
+            "help_and_glossary" -> dialog.close(imageUtils = imageUtils)
+            "session_error" -> {
+                throw InterruptedException("Session error. Stopping bot...")
+            }
+            else -> {
+                return Pair(false, dialog)
+            }
+        }
+
+        wait(0.5, skipWaitingForLoading = true)
+        return Pair(true, dialog)
+    }
 
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
@@ -191,7 +231,7 @@ class Game(val myContext: Context) {
 	 * @param taps The number of taps.
 	 * @param ignoreWaiting Flag to ignore checking if the game is busy loading.
 	 */
-	fun tap(x: Double, y: Double, imageName: String, taps: Int = 1, ignoreWaiting: Boolean = false) {
+	fun tap(x: Double, y: Double, imageName: String? = null, taps: Int = 1, ignoreWaiting: Boolean = false) {
 		// Perform the tap.
 		gestureUtils.tap(x, y, imageName, taps = taps)
 
@@ -200,47 +240,6 @@ class Game(val myContext: Context) {
 			wait(0.20)
 			waitForLoading()
 		}
-	}
-
-	/**
-	 * Prints the current date as a formatted string.
-	 *
-	 * @return Formatted date string.
-	 */
-	fun printFormattedDate(): String {
-		// Handle Finals dates (turns 73, 74, 75).
-		val finalsLabel = when (currentDate.turnNumber) {
-			73 -> "Finale Qualifier"
-			74 -> "Finale Semifinal"
-			75 -> "Finale Finals"
-			else -> null
-		}
-		if (finalsLabel != null) {
-			return "$finalsLabel / Turn Number ${currentDate.turnNumber}"
-		}
-
-		val formattedYear = when (currentDate.year) {
-			1 -> "Junior Year"
-			2 -> "Classic Year"
-			3 -> "Senior Year"
-            else -> "Null Year"
-		}
-		val formattedMonth = when (currentDate.month) {
-			1 -> "Jan"
-			2 -> "Feb"
-			3 -> "Mar"
-			4 -> "Apr"
-			5 -> "May"
-			6 -> "Jun"
-			7 -> "Jul"
-			8 -> "Aug"
-			9 -> "Sep"
-			10 -> "Oct"
-			11 -> "Nov"
-			12 -> "Dec"
-            else -> "Null Month"
-		}
-		return "$formattedYear ${currentDate.phase} $formattedMonth / Turn Number ${currentDate.turnNumber}"
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -297,7 +296,7 @@ class Game(val myContext: Context) {
 		}
 	}
 
-	/**
+    /**
 	 * Handles the test to perform OCR on the current date and elapsed turn number.
 	 */
 	fun startDateOCRTest() {
@@ -305,13 +304,6 @@ class Game(val myContext: Context) {
 		MessageLog.i(TAG, "[TEST] Note that this test is dependent on having the correct scale.")
         wait(5.0)
         updateDate()
-	}
-
-	fun startAptitudesDetectionTest() {
-		MessageLog.i(TAG, "\n[TEST] Now beginning the Aptitudes Detection test on the Main screen.")
-		MessageLog.i(TAG, "[TEST] Note that this test is dependent on having the correct scale.")
-        wait(3.0)
-		updateAptitudes()
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -325,31 +317,7 @@ class Game(val myContext: Context) {
 	 * @return True if the bot is at the Main screen. Otherwise false.
 	 */
 	fun checkMainScreen(): Boolean {
-		// Current date should be printed here to section off the tasks undertaken for this date.
-		MessageLog.i(TAG, "\nChecking if the bot is sitting at the Main screen.")
-        val sourceBitmap = imageUtils.getSourceBitmap()
-		return if (imageUtils.findImageWithBitmap("tazuna", sourceBitmap, region = imageUtils.regionTopHalf, suppressError = true) != null &&
-			imageUtils.findImageWithBitmap("race_select_mandatory", sourceBitmap, region = imageUtils.regionBottomHalf, suppressError = true) == null) {
-			MessageLog.i(TAG, "Bot is at the Main screen.")
-
-            // Perform first-time setup of loading the user's race agenda if needed.
-            racing.loadUserRaceAgenda()
-
-			// Perform updates here if necessary.
-            updateDate()
-            if (needToUpdateAptitudes) updateAptitudes()
-			true
-		} else if (!enablePopupCheck && imageUtils.findImageWithBitmap("cancel", sourceBitmap, region = imageUtils.regionBottomHalf) != null &&
-			imageUtils.findImageWithBitmap("race_confirm", sourceBitmap, region = imageUtils.regionBottomHalf) != null) {
-			// This popup is most likely the insufficient fans popup. Force an extra race to catch up on the required fans.
-			MessageLog.i(TAG, "There is a possible insufficient fans or maiden race popup.")
-			racing.encounteredRacingPopup = true
-			racing.skipRacing = false
-			true
-		} else {
-			MessageLog.i(TAG, "Bot is not at the Main screen.")
-			false
-		}
+        return ButtonHomeFullStats.check(imageUtils) && IconTazuna.check(imageUtils)
 	}
 
 	/**
@@ -376,19 +344,19 @@ class Game(val myContext: Context) {
 	fun checkMandatoryRacePrepScreen(): Boolean {
 		MessageLog.i(TAG, "\nChecking if the bot is sitting on the Race Preparation screen for a mandatory race.")
         val sourceBitmap = imageUtils.getSourceBitmap()
-		return if (imageUtils.findImageWithBitmap("race_select_mandatory", sourceBitmap, region = imageUtils.regionBottomHalf) != null) {
+		return if (IconRaceDayRibbon.check(imageUtils = imageUtils)) {
 			MessageLog.i(TAG, "Bot is at the preparation screen with a mandatory race ready to be completed.")
             if (scenario == "Unity Cup") wait(1.0)
 			true
-		} else if (imageUtils.findImageWithBitmap("race_select_mandatory_goal", sourceBitmap, region = imageUtils.regionMiddle) != null) {
+		} else if (IconGoalRibbon.check(imageUtils = imageUtils)) {
 			// Most likely the user started the bot here so a delay will need to be placed to allow the start banner of the Service to disappear.
 			wait(2.0)
 			MessageLog.i(TAG, "Bot is at the Race Selection screen with a mandatory race needing to be selected.")
 			// Walk back to the preparation screen.
-			findAndTapImage("back", tries = 1, region = imageUtils.regionBottomHalf)
+            ButtonBack.click(imageUtils = imageUtils)
 			wait(1.0)
 			true
-		} else if (scenario == "Unity Cup" && imageUtils.findImageWithBitmap("unitycup_race", sourceBitmap, region = imageUtils.regionBottomHalf) != null) {
+		} else if (scenario == "Unity Cup" && ButtonUnityCupRace.check(imageUtils = imageUtils)) {
             MessageLog.i(TAG, "Bot is awaiting opponent selection for a Unity Cup race.")
             true
         } else {
@@ -429,34 +397,6 @@ class Game(val myContext: Context) {
 	}
 
 	/**
-	 * Checks if the bot is currently at Finals.
-	 *
-	 * @return True if the bot is at Finals. Otherwise false.
-	 */
-	fun checkFinals(): Boolean {
-		MessageLog.i(TAG, "\nChecking if the bot is at the Finals.")
-        if (isFinals) {
-            return true
-        } else if (currentDate.turnNumber < 72) {
-            MessageLog.i(TAG, "It is not the Finals yet as the turn number is less than 72.")
-            return false
-        } else {
-            return if (
-                imageUtils.findImage("date_final_qualifier", tries = 1, suppressError = true, region = imageUtils.regionTopHalf).first != null ||
-                imageUtils.findImage("date_final_semifinal", tries = 1, suppressError = true, region = imageUtils.regionTopHalf).first != null ||
-                imageUtils.findImage("date_final_finals", tries = 1, suppressError = true, region = imageUtils.regionTopHalf).first != null
-            ) {
-                MessageLog.i(TAG, "It is currently the Finals.")
-                isFinals = true
-                true
-            } else {
-                MessageLog.i(TAG, "It is not the Finals yet as the date images for the Finals were not detected.")
-                false
-            }
-        }
-	}
-
-	/**
 	 * Checks if the bot should stop before the finals on turn 72.
 	 *
 	 * @return True if the bot should stop. Otherwise false.
@@ -464,7 +404,7 @@ class Game(val myContext: Context) {
 	fun checkFinalsStop(): Boolean {
 		if (!enableStopBeforeFinals) {
 			return false
-		} else if (currentDate.turnNumber > 72) {
+		} else if (currentDate.day > 72) {
             // If already past turn 72, skip the check to prevent re-checking.
 			return false
 		}
@@ -473,7 +413,7 @@ class Game(val myContext: Context) {
 		val sourceBitmap = imageUtils.getSourceBitmap()
 
 		// Check if turn is 72, but only stop if we progressed to turn 72 during this run.
-		if (currentDate.turnNumber == 72 && stopBeforeFinalsInitialTurnNumber != -1) {
+		if (currentDate.day == 72 && stopBeforeFinalsInitialTurnNumber != -1) {
 			MessageLog.i(TAG, "[FINALS] Detected turn 72. Stopping bot before the finals.")
 			notificationMessage = "Stopping bot before the finals on turn 72."
 			return true
@@ -481,7 +421,7 @@ class Game(val myContext: Context) {
 
         // Track initial turn number on first check to avoid stopping if bot starts on turn 72.
 		if (stopBeforeFinalsInitialTurnNumber == -1) {
-			stopBeforeFinalsInitialTurnNumber = currentDate.turnNumber
+			stopBeforeFinalsInitialTurnNumber = currentDate.day
 		}
 
 		return false
@@ -493,7 +433,7 @@ class Game(val myContext: Context) {
 	 * @return True if the bot has a injury. Otherwise false.
 	 */
 	fun checkInjury(): Boolean {
-		MessageLog.i(TAG, "\n[INJURY] Checking if there is an injury that needs healing on ${printFormattedDate()}.")
+		MessageLog.i(TAG, "\n[INJURY] Checking if there is an injury that needs healing on ${currentDate}.")
         val sourceBitmap = imageUtils.getSourceBitmap()
 		val recoverInjuryLocation = imageUtils.findImageWithBitmap("recover_injury", sourceBitmap, region = imageUtils.regionBottomHalf)
 		return if (recoverInjuryLocation != null && imageUtils.checkColorAtCoordinates(
@@ -546,76 +486,31 @@ class Game(val myContext: Context) {
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	// Helper functions to update game states.
 
-	fun updateAptitudes() {
-		MessageLog.i(TAG, "\n[STATS] Updating aptitudes for the current character.")
-		if (findAndTapImage("main_status", tries = 1, region = imageUtils.regionMiddle)) {
-			aptitudes = imageUtils.determineAptitudes(aptitudes)
-			findAndTapImage("close", tries = 1, region = imageUtils.regionBottomHalf)
-			MessageLog.i(
-                TAG,
-                """
-                [Aptitudes]
-                Track: Turf=${aptitudes.track.turf}, Dirt=${aptitudes.track.dirt}
-                Distance: Sprint=${aptitudes.distance.sprint}, Mile=${aptitudes.distance.mile}, Medium=${aptitudes.distance.medium}, Long=${aptitudes.distance.long}
-                Style: Front=${aptitudes.style.front}, Pace=${aptitudes.style.pace}, Late=${aptitudes.style.late}, End=${aptitudes.style.end}
-                """.trimIndent(),
-			)
-			
-			// Update preferred distance based on new aptitudes.
-			training.updatePreferredDistance()
-            needToUpdateAptitudes = false
-		}
-	}
+    /** Returns whether we are currently in the finale season. */
+    fun checkFinals(): Boolean {
+        return currentDate.bIsFinaleSeason ?: false
+    }
 
-	/**
-	 * Updates the current stat value mapping by reading the character's current stats from the Main screen.
-	 */
-	fun updateStatValueMapping() {
-		MessageLog.i(TAG, "\n[STATS] Updating stat value mapping.")
-		training.currentStatsMap = imageUtils.determineStatValues(training.currentStatsMap)
-		// Print the updated stat value mapping here.
-		training.currentStatsMap.forEach { it ->
-			MessageLog.i(TAG, "[STATS] ${it.key}: ${it.value}")
-		}
-	}
+    /**
+     * Updates the currentDate GameDate object by detecting the date on screen.
+     *
+     * @return Whether the date changed.
+     */
+	fun updateDate(): Boolean {
+		MessageLog.i(TAG, "[DATE] Attempting to update the current date.")
+        val prevDay: Int = currentDate.day
+        if (!currentDate.update(imageUtils = imageUtils)) {
+            MessageLog.e(TAG, "[DATE] currentDate.update() failed to update date.")
+            return false
+        }
 
-	/**
-	 * Updates the stored date in memory by keeping track of the current year, phase, month and current turn number.
-	 */
-	fun updateDate() {
-		MessageLog.i(TAG, "\n[DATE] Updating the current date.")
-		if (checkFinals()) {
-			// During Finals, check for Finals-specific date images.
-			// The Finals occur at turns 73, 74, and 75.
-			// Date will be kept at Senior Year Late Dec, only the turn number will be updated.
-            val sourceBitmap = imageUtils.getSourceBitmap()
-			val turnNumber = when {
-				imageUtils.findImageWithBitmap("date_final_qualifier", sourceBitmap, suppressError = true, region = imageUtils.regionTopHalf, customConfidence = 0.9) != null -> {
-					MessageLog.i(TAG, "[DATE] Detected Finals Qualifier (Turn 73).")
-					73
-				}
-				imageUtils.findImageWithBitmap("date_final_semifinal", sourceBitmap, suppressError = true, region = imageUtils.regionTopHalf, customConfidence = 0.9) != null -> {
-					MessageLog.i(TAG, "[DATE] Detected Finals Semifinal (Turn 74).")
-					74
-				}
-				imageUtils.findImageWithBitmap("date_final_finals", sourceBitmap, suppressError = true, region = imageUtils.regionTopHalf, customConfidence = 0.9) != null -> {
-					MessageLog.i(TAG, "[DATE] Detected Finals Finals (Turn 75).")
-					75
-				}
-				else -> {
-					MessageLog.w(TAG, "Could not determine Finals date. Defaulting to turn 73.")
-					73
-				}
-			}
-			// Keep the date at Senior Year Late Dec and only update the turn number.
-			currentDate = Date(3, "Late", 12, turnNumber)
-		} else {
-			val dateString = imageUtils.determineDayString()
-			currentDate = gameDateParser.parseDateString(dateString, imageUtils, this)
-		}
-		MessageLog.i(TAG, "[DATE] It is currently ${printFormattedDate()}.")
+        if (currentDate.day == prevDay) {
+            return false
+        } else {
+            MessageLog.i(TAG, "[DATE] New date: ${currentDate}")
+            return true
+        }
 	}
 
 	/**
@@ -624,11 +519,11 @@ class Game(val myContext: Context) {
 	 * @return True if the Inheritance event happened and was accepted. Otherwise false.
 	 */
 	fun handleInheritanceEvent(): Boolean {
-		return if (inheritancesDone < 2) {
+        // Stop checking after Senior Year Early Apr.
+		return if (currentDate.day <= 56) {
 			if (findAndTapImage("inheritance", tries = 1, region = imageUtils.regionBottomHalf)) {
-				MessageLog.i(TAG, "\nClaimed an inheritance on ${printFormattedDate()}.")
-				inheritancesDone++
-                needToUpdateAptitudes = true
+				MessageLog.i(TAG, "\nClaimed an inheritance on ${currentDate}.")
+                trainee.bHasUpdatedAptitudes = false
 				true
 			} else {
 				false
@@ -644,14 +539,13 @@ class Game(val myContext: Context) {
 	 * @return True if the bot successfully recovered energy. Otherwise false.
 	 */
     fun recoverEnergy(): Boolean {
-		MessageLog.i(TAG, "\n[ENERGY] Now starting attempt to recover energy on ${printFormattedDate()}.")
+		MessageLog.i(TAG, "\n[ENERGY] Now starting attempt to recover energy on ${currentDate}.")
         val sourceBitmap = imageUtils.getSourceBitmap()
 		
 		// First, try to handle recreation date which also recovers energy if a date is available.
 		// Skip recreation date if it's already completed (will only be used for mood recovery).
 		if (!recreationDateCompleted && imageUtils.findImage("recreation_date", tries = 1, region = imageUtils.regionBottomHalf).first != null && handleRecreationDate(recoverMoodIfCompleted = false)) {
 			MessageLog.i(TAG, "[ENERGY] Successfully recovered energy via recreation date.")
-			racing.raceRepeatWarningCheck = false
 			return true
 		}
 		
@@ -663,7 +557,6 @@ class Game(val myContext: Context) {
                 wait(0.25)
                 findAndTapImage("ok", tries = 1, region = imageUtils.regionMiddle, suppressError = true)
 				MessageLog.i(TAG, "[ENERGY] Successfully recovered energy.")
-				racing.raceRepeatWarningCheck = false
 				true
 			}
 			findAndTapImage("recover_energy_summer", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf) -> {
@@ -672,7 +565,6 @@ class Game(val myContext: Context) {
                 wait(0.25)
                 findAndTapImage("ok", tries = 1, region = imageUtils.regionMiddle, suppressError = true)
 				MessageLog.i(TAG, "[ENERGY] Successfully recovered energy for the Summer.")
-				racing.raceRepeatWarningCheck = false
 				true
 			}
 			else -> {
@@ -688,33 +580,21 @@ class Game(val myContext: Context) {
 	 * @return True if the bot successfully recovered mood. Otherwise false.
 	 */
 	fun recoverMood(): Boolean {
-		MessageLog.i(TAG, "\n[MOOD] Detecting current mood on ${printFormattedDate()}.")
+		MessageLog.i(TAG, "\n[MOOD] Detecting current mood on ${currentDate}.")
 
-		// Detect what Mood the bot is at.
         val sourceBitmap = imageUtils.getSourceBitmap()
-		val currentMood: String = when {
-			imageUtils.findImageWithBitmap("mood_normal", sourceBitmap, region = imageUtils.regionTopHalf, suppressError = true) != null -> {
-				"Normal"
-			}
-			imageUtils.findImageWithBitmap("mood_good", sourceBitmap, region = imageUtils.regionTopHalf, suppressError = true) != null -> {
-				"Good"
-			}
-			imageUtils.findImageWithBitmap("mood_great", sourceBitmap, region = imageUtils.regionTopHalf, suppressError = true) != null -> {
-				"Great"
-			}
-			else -> {
-				"Bad/Awful"
-			}
-		}
 
-		MessageLog.i(TAG, "[MOOD] Detected mood to be $currentMood.")
+        // Make sure the trainee's mood is up to date.
+        trainee.updateMood(imageUtils)
+
+		MessageLog.i(TAG, "[MOOD] Detected mood to be ${trainee.mood}.")
 
 		// Only recover mood if its below Good mood and its not Summer.
-		return if (training.firstTrainingCheck && currentMood == "Normal" && imageUtils.findImageWithBitmap("recover_energy_summer", sourceBitmap, region = imageUtils.regionBottomHalf, suppressError = true) == null) {
+		return if (training.firstTrainingCheck && trainee.mood == Mood.NORMAL && imageUtils.findImageWithBitmap("recover_energy_summer", sourceBitmap, region = imageUtils.regionBottomHalf, suppressError = true) == null) {
 			MessageLog.i(TAG, "[MOOD] Current mood is Normal. Not recovering mood due to firstTrainingCheck flag being active. Will need to complete a training first before being allowed to recover mood.")
 			false
-		} else if ((currentMood == "Bad/Awful" || currentMood == "Normal") && imageUtils.findImageWithBitmap("recover_energy_summer", sourceBitmap, region = imageUtils.regionBottomHalf, suppressError = true) == null) {
-			MessageLog.i(TAG, "[MOOD] Current mood is not good. Recovering mood now.")
+		} else if ((trainee.mood < Mood.GOOD) && imageUtils.findImageWithBitmap("recover_energy_summer", sourceBitmap, region = imageUtils.regionBottomHalf, suppressError = true) == null) {
+			MessageLog.i(TAG, "[MOOD] Current mood is not good (${trainee.mood}). Recovering mood now.")
 
             // Check if a date is available.
             if (!recreationDateCompleted && imageUtils.findImage("recreation_date", tries = 1, region = imageUtils.regionBottomHalf).first != null) {
@@ -740,8 +620,6 @@ class Game(val myContext: Context) {
                     findAndTapImage("ok", region = imageUtils.regionMiddle, suppressError = true)
                 }
             }
-
-            racing.raceRepeatWarningCheck = false
 			true
 		} else {
 			MessageLog.i(TAG, "[MOOD] Current mood is good enough or its the Summer event. Moving on...")
@@ -803,7 +681,7 @@ class Game(val myContext: Context) {
 			return false
 		}
 
-		val imageName = ButtonCraneGame.templates.first().name
+		val imageName = ButtonCraneGame.template.path
 		val pressDurations = listOf(1.90, 1.00, 0.65)
 
 		// Perform three attempts with different press durations.
@@ -884,9 +762,6 @@ class Game(val myContext: Context) {
         ) {
             ButtonCraneGameOk.click(imageUtils = imageUtils)
             MessageLog.i(TAG, "[CRANE GAME] Event exited.")
-		} else if (findAndTapImage("race_retry", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
-			MessageLog.i(TAG, "[MISC] There is a race retry popup.")
-			wait(5.0)
 		} else if (scenario != "Unity Cup" && findAndTapImage("close", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
 			MessageLog.i(TAG, "[MISC] There is a possible popup to accept a trophy.")
 			racing.finalizeRaceResults(true, isExtra = true)
@@ -964,21 +839,14 @@ class Game(val myContext: Context) {
 		} else if (SettingsHelper.getBooleanSetting("debug", "debugMode_startRaceListDetectionTest")) {
 			racing.startRaceListDetectionTest()
 		} else if (SettingsHelper.getBooleanSetting("debug", "debugMode_startAptitudesDetectionTest")) {
-			startAptitudesDetectionTest()
+			campaign.startAptitudesDetectionTest()
+		} else if (SettingsHelper.getBooleanSetting("debug", "debugMode_startMainScreenOCRTest")) {
+			campaign.startMainScreenOCRTest()
+		} else if (SettingsHelper.getBooleanSetting("debug", "debugMode_startTrainingScreenOCRTest")) {
+			campaign.startTrainingScreenOCRTest()
 		} else {
-			// Update the stat targets by distances and the preferred distance for training.
-			training.setStatTargetsByDistances()
-			training.updatePreferredDistance()
-
 			wait(5.0)
-
-			if (scenario == "Unity Cup") {
-				val unityCupCampaign = UnityCup(this)
-                unityCupCampaign.start()
-			} else {
-				val uraFinaleCampaign = Campaign(this)
-				uraFinaleCampaign.start()
-			}
+            campaign.start()
 		}
 
 		MessageLog.i(TAG, "Total runtime of ${MessageLog.formatElapsedTime(startTime, System.currentTimeMillis())} and stopped at ${MessageLog.getSystemTimeString()}.")

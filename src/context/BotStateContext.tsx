@@ -33,7 +33,6 @@ export interface Settings {
         preferredDistances: string[]
         lookAheadDays: number
         smartRacingCheckInterval: number
-        enableRaceStrategyOverride: boolean
         juniorYearRaceStrategy: string
         originalRaceStrategy: string
         minimumQualityThreshold: number
@@ -125,6 +124,8 @@ export interface Settings {
         debugMode_startDateOCRTest: boolean
         debugMode_startRaceListDetectionTest: boolean
         debugMode_startAptitudesDetectionTest: boolean
+        debugMode_startMainScreenOCRTest: boolean
+        debugMode_startTrainingScreenOCRTest: boolean
         enableHideOCRComparisonResults: boolean
     }
 }
@@ -164,9 +165,8 @@ export const defaultSettings: Settings = {
         preferredDistances: ["Short", "Mile", "Medium", "Long"],
         lookAheadDays: 10,
         smartRacingCheckInterval: 2,
-        enableRaceStrategyOverride: false,
-        juniorYearRaceStrategy: "Front",
-        originalRaceStrategy: "Pace",
+        juniorYearRaceStrategy: "Default",
+        originalRaceStrategy: "Default",
         minimumQualityThreshold: 70.0,
         timeDecayFactor: 0.8,
         improvementThreshold: 25.0,
@@ -278,6 +278,8 @@ export const defaultSettings: Settings = {
         debugMode_startDateOCRTest: false,
         debugMode_startRaceListDetectionTest: false,
         debugMode_startAptitudesDetectionTest: false,
+        debugMode_startMainScreenOCRTest: false,
+        debugMode_startTrainingScreenOCRTest: false,
         enableHideOCRComparisonResults: true,
     },
 }

@@ -16,6 +16,8 @@ object SettingsHelper {
     /**
      * Initialize the settings helper with a context.
      * This should be called once during app initialization.
+     *
+     * @param context The application context.
      */
     fun initialize(context: Context) {
         settingsManager = SQLiteSettingsManager(context)
@@ -28,7 +30,11 @@ object SettingsHelper {
 
     /**
      * Get a boolean setting value.
-     * Throws exception if setting doesn't exist.
+     *
+     * @param category The settings category.
+     * @param key The setting key.
+     * @return The boolean value of the setting.
+     * @throws RuntimeException if setting doesn't exist.
      */
     fun getBooleanSetting(category: String, key: String): Boolean {
         return settingsManager?.getBooleanSetting(category, key) 
@@ -37,7 +43,11 @@ object SettingsHelper {
 
     /**
      * Get an integer setting value.
-     * Throws exception if setting doesn't exist.
+     *
+     * @param category The settings category.
+     * @param key The setting key.
+     * @return The integer value of the setting.
+     * @throws RuntimeException if setting doesn't exist.
      */
     fun getIntSetting(category: String, key: String): Int {
         return settingsManager?.getIntSetting(category, key)
@@ -46,7 +56,11 @@ object SettingsHelper {
 
     /**
      * Get a double setting value.
-     * Throws exception if setting doesn't exist.
+     *
+     * @param category The settings category.
+     * @param key The setting key.
+     * @return The double value of the setting.
+     * @throws RuntimeException if setting doesn't exist.
      */
     fun getDoubleSetting(category: String, key: String): Double {
         return settingsManager?.getDoubleSetting(category, key)
@@ -55,7 +69,11 @@ object SettingsHelper {
 
     /**
      * Get a string setting value.
-     * Throws exception if setting doesn't exist.
+     *
+     * @param category The settings category.
+     * @param key The setting key.
+     * @return The string value of the setting.
+     * @throws RuntimeException if setting doesn't exist.
      */
     fun getStringSetting(category: String, key: String): String {
         return settingsManager?.getStringSetting(category, key)
@@ -64,7 +82,11 @@ object SettingsHelper {
 
     /**
      * Get a string array setting value.
-     * Throws exception if setting doesn't exist.
+     *
+     * @param category The settings category.
+     * @param key The setting key.
+     * @return The list of strings for the setting.
+     * @throws RuntimeException if setting doesn't exist.
      */
     fun getStringArraySetting(category: String, key: String): List<String> {
         return settingsManager?.getStringArraySetting(category, key)
@@ -73,6 +95,8 @@ object SettingsHelper {
 
     /**
      * Check if the settings manager is available.
+     *
+     * @return True if the settings manager is initialized and the database is available.
      */
     fun isAvailable(): Boolean {
         return settingsManager != null && settingsManager?.isDatabaseAvailable() == true

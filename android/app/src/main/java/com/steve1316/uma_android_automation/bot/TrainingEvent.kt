@@ -160,7 +160,7 @@ class TrainingEvent(private val game: Game) {
      */
     fun handleTrainingEvent() {
         MessageLog.i(TAG, "\n********************")
-        MessageLog.i(TAG, "[TRAINING_EVENT] Starting Training Event process on ${game.printFormattedDate()}.")
+        MessageLog.i(TAG, "[TRAINING_EVENT] Starting Training Event process on ${game.currentDate}.")
 
         // Double check if the bot is at the Main screen or not.
         if (game.checkMainScreen()) {
@@ -350,7 +350,7 @@ class TrainingEvent(private val game: Game) {
                             } else {
                                 // Apply inflated weights to the prioritized stats based on their order.
                                 game.training.statPrioritization.forEachIndexed { index, stat ->
-                                    if (line.contains(stat)) {
+                                    if (line.lowercase().contains(stat.name.lowercase())) {
                                         // Calculate weight bonus based on position (higher priority = higher bonus).
                                         val priorityBonus = when (index) {
                                             0 -> 50

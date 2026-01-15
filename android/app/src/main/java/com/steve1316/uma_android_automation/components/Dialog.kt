@@ -1,3 +1,46 @@
+/** Defines Dialog components.
+ *
+ * A dialog is just any pop-up window on the screen. These typically have
+ * one or two buttons.
+ *
+ * Adding a New Dialog:
+ *
+ * After creating your DialogInterface object, you must add this
+ * object to the [DialogObjects.items] list.
+ * Please add it in alphabetical order for readability.
+ * 
+ * Example usage:
+ * 
+ * import com.steve1316.uma_android_automation.components.DialogUtils
+ * import com.steve1316.uma_android_automation.components.DialogInterface
+ * 
+ * fun handleDialogs() {
+ *     val dialog: DialogInterface? = DialogUtils.getDialog(imageUtils=game.imageUtils)
+ *     if (dialog == null) {
+ *         MessageLog.i(TAG, "\n[DIALOG] No dialog found.")
+ *         return
+ *     }
+ * 
+ *     when (dialog.name) {
+ *         "open_soon" -> {
+ *             dialog.close(imageUtils=game.imageUtils)
+ *             game.notificationMessage = "open_soon"
+ *             MessageLog.i(TAG, "\n[DIALOG] Open Soon!")
+ *         }
+ *         "continue_career" -> {
+ *             dialog.close(imageUtils=game.imageUtils)
+ *             //ButtonClose.click(imageUtils=game.imageUtils)
+ *             MessageLog.i(TAG, "\n[DIALOG] Continue Career")
+ *         }
+ *         else -> {
+ *             MessageLog.i(TAG, "\n[DIALOG] ${dialog.name}")
+ *             game.notificationMessage = "${dialog.name}"
+ *             dialog.close(imageUtils=game.imageUtils)
+ *         }
+ *     }
+ * }
+ */
+
 package com.steve1316.uma_android_automation.components
 
 import android.graphics.Bitmap
@@ -5,41 +48,10 @@ import org.opencv.core.Point
 
 import com.steve1316.automation_library.data.SharedData
 import com.steve1316.automation_library.utils.ImageUtils
-//import com.steve1316.automation_library.utils.TextUtils
+import com.steve1316.automation_library.utils.TextUtils
+import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
 import com.steve1316.uma_android_automation.components.ComponentInterface
-
-/* Example usage:
-
-import com.steve1316.uma_android_automation.components.DialogUtils
-import com.steve1316.uma_android_automation.components.DialogInterface
-
-fun handleDialogs() {
-    val dialog: DialogInterface? = DialogUtils.getDialog(imageUtils=game.imageUtils)
-    if (dialog == null) {
-        MessageLog.i(TAG, "\n[DIALOG] No dialog found.")
-        return
-    }
-
-    when (dialog.name) {
-        "open_soon" -> {
-            dialog.close(imageUtils=game.imageUtils)
-            game.notificationMessage = "open_soon"
-            MessageLog.i(TAG, "\n[DIALOG] Open Soon!")
-        }
-        "continue_career" -> {
-            dialog.close(imageUtils=game.imageUtils)
-            //ButtonClose.click(imageUtils=game.imageUtils)
-            MessageLog.i(TAG, "\n[DIALOG] Continue Career")
-        }
-        else -> {
-            MessageLog.i(TAG, "\n[DIALOG] ${dialog.name}")
-            game.notificationMessage = "${dialog.name}"
-            dialog.close(imageUtils=game.imageUtils)
-        }
-    }
-}
-*/
 
 object DialogUtils {
     private val titleGradientTemplates: List<String> = listOf(
@@ -57,7 +69,7 @@ object DialogUtils {
     fun check(imageUtils: CustomImageUtils, tries: Int = 1): Boolean {
         var loc: Point? = null
         for (template in titleGradientTemplates) {
-            loc = imageUtils.findImage(template, tries = tries).first
+            loc = imageUtils.findImage(template, tries = tries, suppressError = true).first
             if (loc != null) {
                 break
             }
@@ -73,43 +85,37 @@ object DialogUtils {
     *
     * @return The text of the dialog's title bar if one was found, else NULL.
     */
-    fun getTitle(imageUtils: CustomImageUtils, titleLocation: Point? = null, tries: Int = 1): String? {
-        // If the title location isn't passed, try to find it.
-        val titleLocation: Point? = if (titleLocation == null) {
-            var loc: Point? = null
-            for (template in titleGradientTemplates) {
-                loc = imageUtils.findImage(template, tries = tries).first
-                if (loc != null) {
-                    break
-                }
-            }
-            loc
-        } else {
-            titleLocation
-        }
-
-        // If titleLocation is still null, then just return.
-        if (titleLocation == null) {
-            return null
-        }
-
-        val sourceBitmap = imageUtils.getSourceBitmap()
+    fun getTitle(imageUtils: CustomImageUtils, tries: Int = 1): String? {
         var templateBitmap: Bitmap? = null
+        var titleLocation: Point? = null
         for (template in titleGradientTemplates) {
-            templateBitmap = imageUtils.getBitmaps(template).second
-            if (templateBitmap != null) {
+            titleLocation = imageUtils.findImage(template, tries = tries, suppressError = true).first
+            if (titleLocation != null) {
+                templateBitmap = imageUtils.getTemplateBitmap(template.substringAfterLast('/'), "images/" + template.substringBeforeLast('/'))
                 break
             }
         }
 
-        // None of our templates could be loaded.
+        // If titleLocation is null, then just return.
+        if (titleLocation == null) {
+            return null
+        }
+
+        // If we failed to find the template bitmap, we can't do any calcs.
         if (templateBitmap == null) {
             return null
         }
 
+        val sourceBitmap = imageUtils.getSourceBitmap()
+
         // Get top left coordinates of the title.
         val x = titleLocation.x - (templateBitmap.width / 2.0)
         val y = titleLocation.y - (templateBitmap.height / 2.0)
+
+        val _x = imageUtils.relX(x, 0)
+        val _y = imageUtils.relY(y, 0)
+        val _w = imageUtils.relWidth((SharedData.displayWidth - (x * 2)).toInt())
+        val _h = imageUtils.relHeight(templateBitmap.height)
 
         val result: String = imageUtils.performOCROnRegion(
             sourceBitmap,
@@ -139,32 +145,44 @@ object DialogUtils {
     * @return The DialogInterface if one was found, else NULL.
     */
     fun getDialog(imageUtils: CustomImageUtils, tries: Int = 1): DialogInterface? {
-        var loc: Point? = null
-        for (template in titleGradientTemplates) {
-            loc = imageUtils.findImage(template, tries = tries).first
-            if (loc != null) {
-                break
-            }
-        }
-        if (loc == null) {
+        val title: String = getTitle(imageUtils = imageUtils) ?: return null
+
+        val match: String? = TextUtils.matchStringInList(title, DialogObjects.items.map { it.title })
+        if (match == null) {
             return null
         }
 
-        val title: String = getTitle(imageUtils = imageUtils, titleLocation=loc) ?: return null
+        // There may be multiple matches for titles since they are not unique.
+        val matches: List<DialogInterface> = DialogObjects.items.filter { it.title == match }
 
-        //val match = TextUtils.matchStringInList(title, DialogObjects.map.keys.toList())
-        return if (DialogObjects.map.keys.toList().contains(title)) {
-            DialogObjects.map[title]
-        } else {
-            null
+        if (matches.size == 1) {
+            return matches[0]
         }
+
+        // If we do have duplicates, then we need to check which dialog's
+        // set of buttons matches what is on screen.
+        if (matches.size > 1) {
+            for (dialog in matches) {
+                if (dialog.buttons.all { button -> button.check(imageUtils) }) {
+                    return dialog
+                }
+            }
+        }
+
+        return null
     }
 }
 
+/** Defines the key components and functions for interacting with Dialogs. */
 interface DialogInterface {
     val TAG: String
+    // This is a unique name used to identify this dialog.
     val name: String
+    // This is the on-screen title of the dialog. Multiple dialogs may have the same title.
     val title: String
+    // Defines all the button components within the dialog.
+    // If there is a button used to close the dialog, then it MUST be the first
+    // entry in this list.
     val buttons: List<ComponentInterface>
     // The close button is just which ever button is used primarily to close the dialog
     // If not specified, the first button in Buttons will be used.
@@ -177,6 +195,15 @@ interface DialogInterface {
     // If there is only one button in the dialog, then okButton will be set to that.
     val okButton: ComponentInterface?
 
+    /** Closes the dialog by clicking the Close button.
+     *
+     * If no Close button is specified, then the first button in the [buttons]
+     * list is treated as the close button and is clicked.
+     *
+     * @param imageUtils A reference to a CustomImageUtils instance.
+     * @param tries The number of attempts when searching for the button.
+     * @return True if the close button was found and clicked.
+     */
     fun close(imageUtils: CustomImageUtils, tries: Int = 1): Boolean {
         if (closeButton == null) {
             return buttons.getOrNull(0)?.click(imageUtils = imageUtils, tries = tries) ?: false
@@ -184,6 +211,15 @@ interface DialogInterface {
         return closeButton?.click(imageUtils = imageUtils, tries = tries) ?: false
     }
 
+    /** Closes the dialog by clicking the OK button.
+     *
+     * If no OK button is defined for this dialog,
+     * then the [close] function is called instead.
+     *
+     * @param imageUtils A reference to a CustomImageUtils instance.
+     * @param tries The number of attempts when searching for the button.
+     * @return True if the OK button was found and clicked.
+     */
     fun ok(imageUtils: CustomImageUtils, tries: Int = 1): Boolean {
         if (okButton == null) {
             return if (buttons.size == 1) {
@@ -196,16 +232,25 @@ interface DialogInterface {
     }
 }
 
-// Simple object used to store a list of all dialog objects.
-// This is used to easily iterate over all dialogs.
+/** Object used to store list of all dialog objects and a mapping of them.
+ *
+ * @property items A list of all Dialog interfaces.
+ * @property map A mapping of each DialogInterface's name to the interface object.
+ */
 object DialogObjects {
     val items: List<DialogInterface> = listOf(
+        DialogAgendaDetails,                // Career
+        DialogAutoFill,                     // Career (Unity Cup)
         DialogAutoSelect,                   // Career Selection
+        DialogAllRewardsEarned,             // Career (event only)
+        DialogBonusUmamusumeDetails,        // Career -> Career Profile dialog
         DialogBorrowCard,                   // Career Selection
         DialogBorrowCardConfirmation,       // Career Selection
         DialogCareer,                       // Career
         DialogCareerComplete,               // Career
-        DialogCareerOptions,                // Career
+        DialogCareerEventDetails,           // Card details
+        DialogCareerProfile,                // Career
+        DialogChoices,                      // Career (training event effects)
         DialogCompleteCareer,               // Career (yes this is different from above...)
         DialogConcertSkipConfirmation,      // Career
         DialogConfirmAutoSelect,            // Career Selection
@@ -218,45 +263,99 @@ object DialogObjects {
         DialogDateChanged,                  // Anywhere
         DialogDisplaySettings,              // Anywhere
         DialogEpithet,                      // Career End
+        DialogEpithets,                     // Career DialogMenu -> Epithets button
         DialogExternalLink,                 // Main Screen
+        DialogFans,                         // Career DialogGoals
+        DialogFeaturedCards,                // Career
         DialogFinalConfirmation,            // Career Selection
         DialogFollowTrainer,                // Career
+        DialogGiveUp,                       // Career
+        DialogGoalNotReached,               // Career
+        DialogGoals,                        // Career
+        DialogHelpAndGlossary,              // Anywhere (from options dialog)
         DialogInfirmary,                    // Career
         DialogInsufficientFans,             // Career
         DialogItemsSelected,                // Team Trials, Special Events, Daily Races
+        DialogLog,                          // Career
         DialogMenu,                         // Career
+        DialogMoodEffect,                   // Career
+        DialogMyAgendas,                    // Career
+        DialogNoRetries,                    // Career
         DialogNotices,                      // Main Screen
         DialogOpenSoon,                     // Shop (only when clicking inactive daily sales button)
+        DialogOptions,                      // Anywhere
+        DialogPerks,                        // Career -> Career Profile dialog
+        DialogPlacing,                      // Career -> DialogTryAgain
         DialogPresents,                     // Main Screen (i think?)
+        DialogPurchaseAlarmClock,           // Career
         DialogPurchaseDailyRaceTicket,      // Daily Races
         DialogQuickModeSettings,            // Career
         DialogRaceDetails,                  // Daily Races, Special Events, and Career
         DialogRacePlayback,                 // Career
         DialogRaceRecommendations,          // Career
         DialogRecreation,                   // Career
+        DialogRequestFulfilled,             // Transfer Requests
         DialogRest,                         // Career
         DialogRestAndRecreation,            // Career
         DialogRewardsCollected,             // Main Screen, Special Events
+        DialogRunners,                      // Career -> Race screens
+        DialogScheduledRaceAvailable,       // Career
+        DialogScheduledRaces,               // Career
+        DialogScheduleSettings,             // Career
         DialogSessionError,                 // Anywhere
+        DialogSkillDetails,                 // Anywhere
         DialogSkillListConfirmation,        // Career
         DialogSkillsLearned,                // Career
         DialogSongAcquired,                 // Career
+        DialogSparkDetails,                 // Career (legacy uma details)
+        DialogSparks,                       // Career -> Career Profile dialog
         DialogSpecialMissions,              // Main Screen, Special Events
         DialogStrategy,                     // Race Screen
         DialogStoryUnlocked,                // Main Screen, end of career
+        DialogTeamInfo,                     // Career (Unity Cup)
         DialogTrophyWon,                    // Career
         DialogTryAgain,                     // Career
         DialogUmamusumeClass,               // Career
         DialogUmamusumeDetails,             // Career
+        DialogUnityCupAvailable,            // Career (Unity Cup)
+        DialogUnityCupConfirmation,         // Career (Unity Cup)
+        DialogUnlockRequirements,           // Race Screen
         DialogUnmetRequirements,
         DialogViewStory,                    // Main Screen, end of career
     )
 
-    val map: Map<String, DialogInterface> = items.associateBy { it.title }
+    val map: Map<String, DialogInterface> = items.associateBy { it.name }
+}
+
+// =========================
+//      DIALOG OBJECTS
+// =========================
+
+object DialogAgendaDetails : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogAgendaDetails"
+    override val name: String = "agenda_details"
+    override val title: String = "Agenda Details"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
+object DialogAutoFill : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogAutoFill"
+    override val name: String = "auto_fill"
+    override val title: String = "Auto-Fill"
+    override val closeButton = null
+    override val okButton: ComponentInterface = ButtonEditTeam
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+        ButtonEditTeam,
+    )
 }
 
 object DialogAutoSelect : DialogInterface {
-    override val TAG: String = "DialogAutoSelect"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogAutoSelect"
     override val name: String = "auto_select"
     override val title: String = "Auto-Select"
     override val closeButton = null
@@ -268,8 +367,30 @@ object DialogAutoSelect : DialogInterface {
     )
 }
 
+object DialogAllRewardsEarned : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogAllRewardsEarned"
+    override val name: String = "all_rewards_earned"
+    override val title: String = "ALL REWARDS EARNED!"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
+object DialogBonusUmamusumeDetails : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogBonusUmamusumeDetails"
+    override val name: String = "bonus_umamusume_details"
+    override val title: String = "Bonus Umamusume Details"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
 object DialogBorrowCard : DialogInterface {
-    override val TAG: String = "DialogBorrowCard"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogBorrowCard"
     override val name: String = "borrow_card"
     override val title: String = "Borrow Card"
     override val closeButton = null
@@ -280,7 +401,7 @@ object DialogBorrowCard : DialogInterface {
 }
 
 object DialogBorrowCardConfirmation : DialogInterface {
-    override val TAG: String = "DialogBorrowCardConfirmation"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogBorrowCardConfirmation"
     override val name: String = "borrow_card_confirmation"
     override val title: String = "Confirmation"
     override val closeButton = null
@@ -292,7 +413,7 @@ object DialogBorrowCardConfirmation : DialogInterface {
 }
 
 object DialogCareer : DialogInterface {
-    override val TAG: String = "DialogCareer"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogCareer"
     override val name: String = "career"
     override val title: String = "Career"
     override val closeButton = null
@@ -303,19 +424,42 @@ object DialogCareer : DialogInterface {
 }
 
 object DialogCareerComplete : DialogInterface {
-    override val TAG: String = "DialogCareerComplete"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogCareerComplete"
     override val name: String = "career_complete"
     override val title: String = "Career Complete"
     override val closeButton = null
     override val okButton: ComponentInterface = ButtonEditTeam
     override val buttons: List<ComponentInterface> = listOf(
         ButtonToHome,
+        ButtonClose,
         ButtonEditTeam,
+    )
+
+    // This dialog is unique in that there are two versions of it.
+    // The dialog's close button can be one of two different buttons:
+    // "To Home" and "Close"
+    override fun close(imageUtils: CustomImageUtils, tries: Int): Boolean {
+        if (ButtonToHome.click(imageUtils = imageUtils, tries = tries)) {
+            return true
+        }
+        
+        return ButtonClose.click(imageUtils = imageUtils, tries = tries)
+    }
+}
+
+object DialogChoices : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogChoices"
+    override val name: String = "choices"
+    override val title: String = "Choices"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
     )
 }
 
 object DialogCompleteCareer : DialogInterface {
-    override val TAG: String = "DialogCompleteCareer"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogCompleteCareer"
     override val name: String = "complete_career"
     override val title: String = "Complete Career"
     override val closeButton = null
@@ -327,7 +471,7 @@ object DialogCompleteCareer : DialogInterface {
 }
 
 object DialogConcertSkipConfirmation : DialogInterface {
-    override val TAG: String = "DialogConcertSkipConfirmation"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogConcertSkipConfirmation"
     override val name: String = "concert_skip_confirmation"
     override val title: String = "Confirmation"
     override val closeButton = null
@@ -340,7 +484,7 @@ object DialogConcertSkipConfirmation : DialogInterface {
 }
 
 object DialogConfirmAutoSelect : DialogInterface {
-    override val TAG: String = "DialogConfirmAutoSelect"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogConfirmAutoSelect"
     override val name: String = "confirm_auto_select"
     override val title: String = "Confirm Auto-Select"
     override val closeButton = null
@@ -353,7 +497,7 @@ object DialogConfirmAutoSelect : DialogInterface {
 }
 
 object DialogConfirmExchange : DialogInterface {
-    override val TAG: String = "DialogConfirmExchange"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogConfirmExchange"
     override val name: String = "confirm_exchange"
     override val title: String = "Confirm Exchange"
     override val closeButton = null
@@ -364,7 +508,7 @@ object DialogConfirmExchange : DialogInterface {
 }
 
 object DialogConnectionError : DialogInterface {
-    override val TAG: String = "DialogConnectionError"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogConnectionError"
     override val name: String = "connection_error"
     override val title: String = "Connection Error"
     override val closeButton = null
@@ -387,7 +531,7 @@ object DialogConnectionError : DialogInterface {
 }
 
 object DialogConsecutiveRaceWarning : DialogInterface {
-    override val TAG: String = "DialogConsecutiveRaceWarning"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogConsecutiveRaceWarning"
     override val name: String = "consecutive_race_warning"
     override val title: String = "Warning"
     override val closeButton = null
@@ -399,7 +543,7 @@ object DialogConsecutiveRaceWarning : DialogInterface {
 }
 
 object DialogContinueCareer : DialogInterface {
-    override val TAG: String = "DialogContinueCareer"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogContinueCareer"
     override val name: String = "continue_career"
     override val title: String = "Continue Career"
     override val closeButton = null
@@ -411,7 +555,7 @@ object DialogContinueCareer : DialogInterface {
 }
 
 object DialogConfirmRestoreRP : DialogInterface {
-    override val TAG: String = "DialogConfirmRestoreRP"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogConfirmRestoreRP"
     override val name: String = "confirm_restore_rp"
     override val title: String = "Confirm"
     override val closeButton = null
@@ -423,7 +567,7 @@ object DialogConfirmRestoreRP : DialogInterface {
 }
 
 object DialogDailySale : DialogInterface {
-    override val TAG: String = "DialogDailySale"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogDailySale"
     override val name: String = "daily_sale"
     override val title: String = "Daily Sale"
     override val closeButton = null
@@ -435,7 +579,7 @@ object DialogDailySale : DialogInterface {
 }
 
 object DialogDateChanged : DialogInterface {
-    override val TAG: String = "DialogDateChanged"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogDateChanged"
     override val name: String = "date_changed"
     override val title: String = "Date Changed"
     override val closeButton = null
@@ -446,7 +590,7 @@ object DialogDateChanged : DialogInterface {
 }
 
 object DialogDisplaySettings : DialogInterface {
-    override val TAG: String = "DialogDisplaySettings"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogDisplaySettings"
     override val name: String = "display_settings"
     override val title: String = "Display Settings"
     override val closeButton = null
@@ -458,7 +602,7 @@ object DialogDisplaySettings : DialogInterface {
 }
 
 object DialogEpithet : DialogInterface {
-    override val TAG: String = "DialogEpithet"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogEpithet"
     override val name: String = "epithet"
     override val title: String = "Epithet"
     override val closeButton = null
@@ -469,8 +613,20 @@ object DialogEpithet : DialogInterface {
     )
 }
 
+// This is the dialog opened from the Epithets button in DialogMenu.
+object DialogEpithets : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogEpithets"
+    override val name: String = "epithets"
+    override val title: String = "Epithets"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
 object DialogExternalLink : DialogInterface {
-    override val TAG: String = "DialogExternalLink"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogExternalLink"
     override val name: String = "external_link"
     override val title: String = "External Link"
     override val closeButton = null
@@ -481,8 +637,30 @@ object DialogExternalLink : DialogInterface {
     )
 }
 
+object DialogFans : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogFans"
+    override val name: String = "fans"
+    override val title: String = "Fans"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
+object DialogFeaturedCards : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogFeaturedCards"
+    override val name: String = "featured_cards"
+    override val title: String = "Featured Cards"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
 object DialogFinalConfirmation : DialogInterface {
-    override val TAG: String = "DialogFinalConfirmation"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogFinalConfirmation"
     override val name: String = "final_confirmation"
     override val title: String = "Final Confirmation"
     override val closeButton = null
@@ -494,7 +672,7 @@ object DialogFinalConfirmation : DialogInterface {
 }
 
 object DialogFollowTrainer : DialogInterface {
-    override val TAG: String = "DialogFollowTrainer"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogFollowTrainer"
     override val name: String = "follow_trainer"
     override val title: String = "Follow Trainer"
     override val closeButton = null
@@ -505,8 +683,54 @@ object DialogFollowTrainer : DialogInterface {
     )
 }
 
+object DialogGiveUp : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogGiveUp"
+    override val name: String = "give_up"
+    override val title: String = "Give Up"
+    override val closeButton = null
+    override val okButton: ComponentInterface = ButtonGiveUp
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonCancel,
+        ButtonGiveUp,
+    )
+}
+
+object DialogGoalNotReached : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogGoalNotReached"
+    override val name: String = "goal_not_reached"
+    override val title: String = "Goal Not Reached"
+    override val closeButton = null
+    override val okButton: ComponentInterface = ButtonRace
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonCancel,
+        ButtonRace,
+    )
+}
+
+object DialogGoals : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogGoals"
+    override val name: String = "goals"
+    override val title: String = "Goals"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
+object DialogHelpAndGlossary : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogHelpAndGlossary"
+    override val name: String = "help_and_glossary"
+    override val title: String = "Help & Glossary"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
 object DialogInfirmary : DialogInterface {
-    override val TAG: String = "DialogInfirmary"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogInfirmary"
     override val name: String = "infirmary"
     override val title: String = "Infirmary"
     override val closeButton = null
@@ -519,7 +743,7 @@ object DialogInfirmary : DialogInterface {
 }
 
 object DialogInsufficientFans : DialogInterface {
-    override val TAG: String = "DialogInsufficientFans"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogInsufficientFans"
     override val name: String = "insufficient_fans"
     override val title: String = "Insufficient Fans"
     override val closeButton = null
@@ -531,7 +755,7 @@ object DialogInsufficientFans : DialogInterface {
 }
 
 object DialogItemsSelected : DialogInterface {
-    override val TAG: String = "DialogItemsSelected"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogItemsSelected"
     override val name: String = "items_selected"
     override val title: String = "Items Selected"
     override val closeButton = null
@@ -542,8 +766,19 @@ object DialogItemsSelected : DialogInterface {
     )
 }
 
+object DialogLog : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogLog"
+    override val name: String = "log"
+    override val title: String = "Log"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
 object DialogMenu : DialogInterface {
-    override val TAG: String = "DialogMenu"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogMenu"
     override val name: String = "menu"
     override val title: String = "Menu"
     override val closeButton = null
@@ -556,8 +791,41 @@ object DialogMenu : DialogInterface {
     )
 }
 
+object DialogMoodEffect : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogMoodEffect"
+    override val name: String = "mood_effect"
+    override val title: String = "Mood Effect"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
+object DialogMyAgendas : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogMyAgendas"
+    override val name: String = "my_agendas"
+    override val title: String = "My Agendas"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
+object DialogNoRetries : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogNoRetries"
+    override val name: String = "no_retries"
+    override val title: String = "No Retries"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonEndCareer,
+    )
+}
+
 object DialogNotices : DialogInterface {
-    override val TAG: String = "DialogNotices"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogNotices"
     override val name: String = "notices"
     override val title: String = "Notices"
     override val closeButton = null
@@ -568,7 +836,7 @@ object DialogNotices : DialogInterface {
 }
 
 object DialogOpenSoon : DialogInterface {
-    override val TAG: String = "DialogOpenSoon"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogOpenSoon"
     override val name: String = "open_soon"
     override val title: String = "Open Soon!"
     override val closeButton = null
@@ -578,8 +846,30 @@ object DialogOpenSoon : DialogInterface {
     )
 }
 
-object DialogCareerOptions : DialogInterface {
-    override val TAG: String = "DialogCareerOptions"
+object DialogCareerEventDetails : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogCareerEventDetails"
+    override val name: String = "career_event_details"
+    override val title: String = "Career Event Details"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
+object DialogCareerProfile : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogCareerProfile"
+    override val name: String = "career_profile"
+    override val title: String = "Career Profile"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
+object DialogOptions : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogOptions"
     override val name: String = "options"
     override val title: String = "Options"
     override val closeButton = null
@@ -590,8 +880,30 @@ object DialogCareerOptions : DialogInterface {
     )
 }
 
+object DialogPerks : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogPerks"
+    override val name: String = "perks"
+    override val title: String = "Perks"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
+object DialogPlacing : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogPlacing"
+    override val name: String = "placing"
+    override val title: String = "Placing"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
 object DialogPresents : DialogInterface {
-    override val TAG: String = "DialogPresents"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogPresents"
     override val name: String = "presents"
     override val title: String = "Presents"
     override val closeButton = null
@@ -602,8 +914,20 @@ object DialogPresents : DialogInterface {
     )
 }
 
+object DialogPurchaseAlarmClock : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogPurchaseAlarmClock"
+    override val name: String = "purchase_alarm_clock"
+    override val title: String = "Purchase Alarm Clock"
+    override val closeButton = null
+    override val okButton: ComponentInterface = ButtonOk
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonCancel,
+        ButtonOk,
+    )
+}
+
 object DialogPurchaseDailyRaceTicket : DialogInterface {
-    override val TAG: String = "DialogPurchaseDailyRaceTicket"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogPurchaseDailyRaceTicket"
     override val name: String = "purchase_daily_race_ticket"
     override val title: String = "Purchase Daily Race Ticket"
     override val closeButton = null
@@ -615,7 +939,7 @@ object DialogPurchaseDailyRaceTicket : DialogInterface {
 }
 
 object DialogQuickModeSettings : DialogInterface {
-    override val TAG: String = "DialogQuickModeSettings"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogQuickModeSettings"
     override val name: String = "quick_mode_settings"
     override val title: String = "Quick Mode Settings"
     override val closeButton = null
@@ -628,7 +952,7 @@ object DialogQuickModeSettings : DialogInterface {
 }
 
 object DialogRaceDetails : DialogInterface {
-    override val TAG: String = "DialogRaceDetails"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogRaceDetails"
     override val name: String = "race_details"
     override val title: String = "Race Details"
     override val closeButton = null
@@ -639,20 +963,25 @@ object DialogRaceDetails : DialogInterface {
         ButtonRaceExclamation,
     )
 
-    // This dialog is unique in that there are two versions of it.
+    // This dialog is unique in that there are three variants of it.
     // The normal race details dialog has a "Race!" button whereas
-    // the career version just has a "Race" button.
+    // the career version just has a "Race" button. There is also
+    // an informational version that only has a "Close" button.
     override fun ok(imageUtils: CustomImageUtils, tries: Int): Boolean {
         if (ButtonRaceExclamation.click(imageUtils = imageUtils, tries = tries)) {
             return true
         }
         
-        return ButtonRace.click(imageUtils = imageUtils, tries = tries)
+        if (ButtonRace.click(imageUtils = imageUtils, tries = tries)) {
+            return true
+        }
+
+        return ButtonClose.click(imageUtils = imageUtils, tries = tries)
     }
 }
 
 object DialogRacePlayback : DialogInterface {
-    override val TAG: String = "DialogRacePlayback"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogRacePlayback"
     override val name: String = "race_playback"
     override val title: String = "Race Playback"
     override val closeButton = null
@@ -667,7 +996,7 @@ object DialogRacePlayback : DialogInterface {
 }
 
 object DialogRaceRecommendations : DialogInterface {
-    override val TAG: String = "DialogRaceRecommendations"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogRaceRecommendations"
     override val name: String = "race_recommendations"
     override val title: String = "Race Recommendations"
     override val closeButton = null
@@ -682,7 +1011,7 @@ object DialogRaceRecommendations : DialogInterface {
 }
 
 object DialogRecreation : DialogInterface {
-    override val TAG: String = "DialogRecreation"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogRecreation"
     override val name: String = "recreation"
     override val title: String = "Recreation"
     override val closeButton = null
@@ -694,8 +1023,19 @@ object DialogRecreation : DialogInterface {
     )
 }
 
+object DialogRequestFulfilled : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogRequestFulfilled"
+    override val name: String = "request_fulfilled"
+    override val title: String = "REQUEST FULFILLED"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
 object DialogRest : DialogInterface {
-    override val TAG: String = "DialogRest"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogRest"
     override val name: String = "rest"
     override val title: String = "Rest"
     override val closeButton = null
@@ -709,7 +1049,7 @@ object DialogRest : DialogInterface {
 
 object DialogRestAndRecreation : DialogInterface {
     // This one doesn't have a checkbox to not ask again for some reason.
-    override val TAG: String = "DialogRestAndRecreation"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogRestAndRecreation"
     override val name: String = "rest_and_recreation"
     override val title: String = "Rest & Recreation"
     override val closeButton = null
@@ -721,7 +1061,7 @@ object DialogRestAndRecreation : DialogInterface {
 }
 
 object DialogRewardsCollected : DialogInterface {
-    override val TAG: String = "DialogRewardsCollected"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogRewardsCollected"
     override val name: String = "rewards_collected"
     override val title: String = "Rewards Collected"
     override val closeButton = null
@@ -731,8 +1071,54 @@ object DialogRewardsCollected : DialogInterface {
     )
 }
 
+object DialogRunners : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogRunners"
+    override val name: String = "runners"
+    override val title: String = "Runners"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
+object DialogScheduledRaceAvailable : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogScheduledRaceAvailable"
+    override val name: String = "scheduled_race_available"
+    override val title: String = "Scheduled Race Available"
+    override val closeButton = null
+    override val okButton: ComponentInterface = ButtonRace
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+        ButtonRace,
+    )
+}
+
+object DialogScheduledRaces : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogScheduledRaces"
+    override val name: String = "scheduled_races"
+    override val title: String = "Scheduled Races"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
+object DialogScheduleSettings : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogScheduleSettings"
+    override val name: String = "schedule_settings"
+    override val title: String = "Schedule Settings"
+    override val closeButton = null
+    override val okButton: ComponentInterface = ButtonSaveSchedule
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonCancel,
+        ButtonSaveSchedule,
+    )
+}
+
 object DialogSessionError : DialogInterface {
-    override val TAG: String = "DialogSessionError"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogSessionError"
     override val name: String = "session_error"
     override val title: String = "Session Error"
     override val closeButton = null
@@ -742,8 +1128,19 @@ object DialogSessionError : DialogInterface {
     )
 }
 
+object DialogSkillDetails : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogSkillDetails"
+    override val name: String = "skill_details"
+    override val title: String = "Skill Details"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
 object DialogSkillListConfirmation : DialogInterface {
-    override val TAG: String = "DialogSkillListConfirmation"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogSkillListConfirmation"
     override val name: String = "skill_list_confirmation"
     override val title: String = "Confirmation"
     override val closeButton = null
@@ -755,7 +1152,7 @@ object DialogSkillListConfirmation : DialogInterface {
 }
 
 object DialogSkillsLearned : DialogInterface {
-    override val TAG: String = "DialogSkillsLearned"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogSkillsLearned"
     override val name: String = "skills_learned"
     override val title: String = "Skills Learned"
     override val closeButton = null
@@ -766,7 +1163,7 @@ object DialogSkillsLearned : DialogInterface {
 }
 
 object DialogSongAcquired : DialogInterface {
-    override val TAG: String = "DialogSongAcquired"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogSongAcquired"
     override val name: String = "song_acquired"
     override val title: String = "Song Acquired"
     override val closeButton = null
@@ -776,8 +1173,30 @@ object DialogSongAcquired : DialogInterface {
     )
 }
 
+object DialogSparkDetails : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogSparkDetails"
+    override val name: String = "spark_details"
+    override val title: String = "Spark Details"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
+object DialogSparks : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogSparks"
+    override val name: String = "sparks"
+    override val title: String = "Sparks"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
 object DialogSpecialMissions : DialogInterface {
-    override val TAG: String = "DialogSpecialMissions"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogSpecialMissions"
     override val name: String = "special_missions"
     override val title: String = "Special Missions"
     override val closeButton = null
@@ -789,7 +1208,7 @@ object DialogSpecialMissions : DialogInterface {
 }
 
 object DialogStrategy : DialogInterface {
-    override val TAG: String = "DialogStrategy"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogStrategy"
     override val name: String = "strategy"
     override val title: String = "Strategy"
     override val closeButton = null
@@ -805,7 +1224,7 @@ object DialogStrategy : DialogInterface {
 }
 
 object DialogStoryUnlocked : DialogInterface {
-    override val TAG: String = "DialogStoryUnlocked"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogStoryUnlocked"
     override val name: String = "story_unlocked"
     override val title: String = "Story Unlocked"
     override val closeButton = null
@@ -815,8 +1234,20 @@ object DialogStoryUnlocked : DialogInterface {
     )
 }
 
+object DialogTeamInfo : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogTeamInfo"
+    override val name: String = "team_info"
+    override val title: String = "Team Info"
+    override val closeButton = null
+    override val okButton: ComponentInterface = ButtonEditTeam
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+        ButtonEditTeam,
+    )
+}
+
 object DialogTrophyWon : DialogInterface {
-    override val TAG: String = "DialogTrophyWon"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogTrophyWon"
     override val name: String = "trophy_won"
     override val title: String = "TROPHY WON!"
     override val closeButton = null
@@ -827,19 +1258,19 @@ object DialogTrophyWon : DialogInterface {
 }
 
 object DialogTryAgain : DialogInterface {
-    override val TAG: String = "DialogTryAgain"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogTryAgain"
     override val name: String = "try_again"
     override val title: String = "Try Again"
     override val closeButton = null
     override val okButton: ComponentInterface = ButtonTryAgain
     override val buttons: List<ComponentInterface> = listOf(
-        ButtonEndCareer,
+        ButtonCancel,
         ButtonTryAgain,
     )
 }
 
 object DialogUmamusumeClass : DialogInterface {
-    override val TAG: String = "DialogUmamusumeClass"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogUmamusumeClass"
     override val name: String = "umamusume_class"
     override val title: String = "Umamusume Class"
     override val closeButton = null
@@ -850,7 +1281,7 @@ object DialogUmamusumeClass : DialogInterface {
 }
 
 object DialogUmamusumeDetails : DialogInterface {
-    override val TAG: String = "DialogUmamusumeDetails"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogUmamusumeDetails"
     override val name: String = "umamusume_details"
     override val title: String = "Umamusume Details"
     override val closeButton = null
@@ -860,8 +1291,42 @@ object DialogUmamusumeDetails : DialogInterface {
     )
 }
 
+object DialogUnityCupAvailable : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogUnityCupAvailable"
+    override val name: String = "unity_cup_available"
+    override val title: String = "Unity Cup Available"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
+object DialogUnityCupConfirmation : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogUnityCupConfirmation"
+    override val name: String = "unity_cup_confirmation"
+    override val title: String = "Confirmation"
+    override val closeButton = null
+    override val okButton: ComponentInterface = ButtonBeginShowdown
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonCancel,
+        ButtonBeginShowdown,
+    )
+}
+
+object DialogUnlockRequirements : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogUnlockRequirements"
+    override val name: String = "unlock_requirements"
+    override val title: String = "Unlock Requirements"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
+    )
+}
+
 object DialogUnmetRequirements : DialogInterface {
-    override val TAG: String = "DialogUnmetRequirements"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogUnmetRequirements"
     override val name: String = "unmet_requirements"
     override val title: String = "Unmet Requirements"
     override val closeButton = null
@@ -873,7 +1338,7 @@ object DialogUnmetRequirements : DialogInterface {
 }
 
 object DialogViewStory : DialogInterface {
-    override val TAG: String = "DialogViewStory"
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogViewStory"
     override val name: String = "view_story"
     override val title: String = "View Story"
     override val closeButton = null

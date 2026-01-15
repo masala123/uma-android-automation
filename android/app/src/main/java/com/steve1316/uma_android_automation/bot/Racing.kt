@@ -11,22 +11,33 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.opencv.core.Point
 import android.util.Log
+import android.graphics.Bitmap
+
+import com.steve1316.uma_android_automation.utils.types.Aptitude
+import com.steve1316.uma_android_automation.utils.types.TrackSurface
+import com.steve1316.uma_android_automation.utils.types.TrackDistance
+import com.steve1316.uma_android_automation.utils.types.RunningStyle
+import com.steve1316.uma_android_automation.utils.types.RaceGrade
+import com.steve1316.uma_android_automation.utils.types.DateYear
+import com.steve1316.uma_android_automation.utils.types.BoundingBox
+
+import com.steve1316.uma_android_automation.components.*
 
 class Racing (private val game: Game) {
     private val TAG: String = "[${MainActivity.loggerTag}]Racing"
 
     private val enableFarmingFans = SettingsHelper.getBooleanSetting("racing", "enableFarmingFans")
     private val daysToRunExtraRaces: Int = SettingsHelper.getIntSetting("racing", "daysToRunExtraRaces")
-    private val disableRaceRetries: Boolean = SettingsHelper.getBooleanSetting("racing", "disableRaceRetries")
+    val disableRaceRetries: Boolean = SettingsHelper.getBooleanSetting("racing", "disableRaceRetries")
     val enableForceRacing = SettingsHelper.getBooleanSetting("racing", "enableForceRacing")
 
     private val enableRacingPlan = SettingsHelper.getBooleanSetting("racing", "enableRacingPlan")
     private val lookAheadDays = SettingsHelper.getIntSetting("racing", "lookAheadDays")
     private val smartRacingCheckInterval = SettingsHelper.getIntSetting("racing", "smartRacingCheckInterval")
     private val minFansThreshold = SettingsHelper.getIntSetting("racing", "minFansThreshold")
-    private val preferredTerrain = SettingsHelper.getStringSetting("racing", "preferredTerrain")
+    private val preferredTrackSurfaceString = SettingsHelper.getStringSetting("racing", "preferredTerrain")
     private val preferredGradesString = SettingsHelper.getStringSetting("racing", "preferredGrades")
-    private val preferredDistancesString = SettingsHelper.getStringSetting("racing", "preferredDistances")
+    private val preferredTrackDistanceString = SettingsHelper.getStringSetting("racing", "preferredDistances")
     private val racingPlanJson = SettingsHelper.getStringSetting("racing", "racingPlan")
     private val minimumQualityThreshold = SettingsHelper.getDoubleSetting("racing", "minimumQualityThreshold")
     private val timeDecayFactor = SettingsHelper.getDoubleSetting("racing", "timeDecayFactor")
@@ -38,18 +49,21 @@ class Racing (private val game: Game) {
     private var raceRetries = 3
     var raceRepeatWarningCheck = false
     var encounteredRacingPopup = false
-    var skipRacing = false
     var firstTimeRacing = true
     var hasFanRequirement = false  // Indicates that a fan requirement has been detected on the main screen.
     var hasTrophyRequirement = false  // Indicates that a trophy requirement has been detected on the main screen.
     private var nextSmartRaceDay: Int? = null  // Tracks the specific day to race based on opportunity cost analysis.
     private var hasLoadedUserRaceAgenda = false  // Tracks if the user's race agenda has been loaded this career.
 
+    // Used to tell the dialog handler to ignore the consecutive race warning.
+    // This is a single-use flag, so whenever the "consecutive_race_warning" dialog is
+    // handled, it will be reset back to False.
+    private var bIgnoreConsecutiveRaceWarning: Boolean = false
+
     private val enableStopOnMandatoryRace: Boolean = SettingsHelper.getBooleanSetting("racing", "enableStopOnMandatoryRaces")
     var detectedMandatoryRaceCheck = false
 
     // Race strategy override settings.
-    private val enableRaceStrategyOverride = SettingsHelper.getBooleanSetting("racing", "enableRaceStrategyOverride")
     private val juniorYearRaceStrategy = SettingsHelper.getStringSetting("racing", "juniorYearRaceStrategy")
     private val userSelectedOriginalStrategy = SettingsHelper.getStringSetting("racing", "originalRaceStrategy")
     private var detectedOriginalStrategy: String? = null
@@ -66,20 +80,40 @@ class Racing (private val game: Game) {
         private const val RACES_COLUMN_FANS = "fans"
         private const val RACES_COLUMN_TURN_NUMBER = "turnNumber"
         private const val RACES_COLUMN_NAME_FORMATTED = "nameFormatted"
-        private const val RACES_COLUMN_TERRAIN = "terrain"
-        private const val RACES_COLUMN_DISTANCE_TYPE = "distanceType"
+        private const val RACES_COLUMN_TRACK_SURFACE = "terrain"
+        private const val RACES_COLUMN_TRACK_DISTANCE = "distanceType"
         private const val SIMILARITY_THRESHOLD = 0.7
     }
 
     data class RaceData(
         val name: String,
-        val grade: String,
+        val grade: RaceGrade,
         val fans: Int,
         val nameFormatted: String,
-        val terrain: String,
-        val distanceType: String,
+        val trackSurface: TrackSurface,
+        val trackDistance: TrackDistance,
         val turnNumber: Int
-    )
+    ) {
+        constructor(
+            name: String,
+            grade: String,
+            fans: Int,
+            nameFormatted: String,
+            trackSurface: String,
+            trackDistance: String,
+            turnNumber: Int,
+        ) : this(
+            name,
+            // Scraper source uses "Pre-Op" but we need "PRE_OP" for our enum.
+            RaceGrade.fromName(grade.lowercase().replace("pre-op", "pre_op"))!!,
+            fans,
+            nameFormatted,
+            TrackSurface.fromName(trackSurface)!!,
+            // Scraper source uses "Short" instead of "Sprint" which is expected by our enum.
+            TrackDistance.fromName(trackDistance.lowercase().replace("short", "sprint"))!!,
+            turnNumber,
+        )
+    }
 
     data class ScoredRace(
         val raceData: RaceData,
@@ -95,6 +129,117 @@ class Racing (private val game: Game) {
         val priority: Int,
         val turnNumber: Int
     )
+
+    /**
+     * Detects and handles any dialog popups.
+     *
+     * To prevent the bot moving too fast, we add a 500ms delay to the
+     * exit of this function whenever we close the dialog.
+     * This gives the dialog time to close since there is a very short
+     * animation that plays when a dialog closes.
+     *
+     * @return A pair of a boolean and a nullable DialogInterface.
+     * The boolean is true when a dialog has been handled by this function.
+     * The DialogInterface is the detected dialog, or NULL if no dialogs were found.
+     */
+    fun handleDialogs(): Pair<Boolean, DialogInterface?> {
+        val dialog: DialogInterface? = DialogUtils.getDialog(imageUtils = game.imageUtils)
+        if (dialog == null) {
+            return Pair(false, null)
+        }
+
+        when (dialog.name) {
+            "consecutive_race_warning" -> {
+                raceRepeatWarningCheck = true
+                if (bIgnoreConsecutiveRaceWarning || enableForceRacing) {
+                    MessageLog.i(TAG, "[RACE] Consective race warning! Racing anyway...")
+                    dialog.ok(imageUtils = game.imageUtils)
+                    // This dialog requires a little extra delay since it loads the
+                    // race list instead of just closing the dialog.
+                    game.wait(1.0, skipWaitingForLoading = true)
+                } else {
+                    MessageLog.i(TAG, "[RACE] Consecutive race warning! Aborting racing...")
+                    hasFanRequirement = false
+                    hasTrophyRequirement = false
+                    dialog.close(imageUtils = game.imageUtils)
+                }
+                // Always reset this flag after handling this dialog.
+                bIgnoreConsecutiveRaceWarning = false
+            }
+            "race_details" -> dialog.ok(imageUtils = game.imageUtils)
+            "runners" -> dialog.close(imageUtils = game.imageUtils)
+            "strategy" -> {
+                if (!game.trainee.bHasUpdatedAptitudes) {
+                    game.trainee.bTemporaryRunningStyleAptitudesUpdated = updateRaceScreenRunningStyleAptitudes()
+                }
+
+                var runningStyle: RunningStyle? = null
+                val runningStyleString: String = when {
+                    // Special case for when the bot has not been able to check the date
+                    // i.e. when the bot starts at the race screen.
+                    game.currentDate.day == 1 -> userSelectedOriginalStrategy
+                    game.currentDate.year == DateYear.JUNIOR -> juniorYearRaceStrategy
+                    else -> userSelectedOriginalStrategy
+                }
+                when (runningStyleString.uppercase()) {
+                    // Do not select a strategy. Use what is already selected.
+                    "DEFAULT" -> {
+                        MessageLog.i(TAG, "[DIALOG] strategy:: Using the default running style.")
+                        dialog.ok(imageUtils = game.imageUtils)
+                        game.trainee.bHasSetRunningStyle = true
+                        game.wait(0.5, skipWaitingForLoading = true)
+                        return Pair(true, dialog)
+                    }
+                    // Auto-select the optimal running style based on trainee aptitudes.
+                    "AUTO" -> {
+                        MessageLog.i(TAG, "[DIALOG] strategy:: Auto-selecting the trainee's optimal running style.")
+                        runningStyle = game.trainee.runningStyle
+                    }
+                    else -> {
+                        MessageLog.i(TAG, "[DIALOG] strategy:: Using user-specified running style: $runningStyleString")
+                        runningStyle = RunningStyle.fromShortName(runningStyleString)
+                    }
+                }
+
+                when (runningStyle) {
+                    RunningStyle.FRONT_RUNNER -> ButtonRaceStrategyFront.click(imageUtils = game.imageUtils)
+                    RunningStyle.PACE_CHASER -> ButtonRaceStrategyPace.click(imageUtils = game.imageUtils)
+                    RunningStyle.LATE_SURGER -> ButtonRaceStrategyLate.click(imageUtils = game.imageUtils)
+                    RunningStyle.END_CLOSER -> ButtonRaceStrategyEnd.click(imageUtils = game.imageUtils)
+                    null -> {
+                        // This indicates programmer error.
+                        MessageLog.e(TAG, "[DIALOG] strategy:: Invalid running style: $runningStyle")
+                        dialog.close(imageUtils = game.imageUtils)
+                        game.trainee.bHasSetRunningStyle = false
+                        game.wait(0.5, skipWaitingForLoading = true)
+                        return Pair(true, dialog)
+                    }
+                }
+
+                // We only want to set this flag if the date has been checked.
+                // Otherwise, if the day is still 1, that means we probably started
+                // the bot at the racing screen. In this case, we still want to set
+                // the running style the next time we get back to the race
+                // selection screen after verifying the date.
+                if (game.currentDate.day != 1) {
+                    game.trainee.bHasSetRunningStyle = true
+                }
+                dialog.ok(imageUtils = game.imageUtils)
+            }
+            "unlock_requirements" -> dialog.close(imageUtils = game.imageUtils)
+            // This dialog shows runner details other than our own.
+            // We have to make sure we're handling this before handling dialogs
+            // in the Campaign class since this dialog has the same name as
+            // the one in Campaign.
+            "umamusume_details" -> dialog.close(imageUtils = game.imageUtils)
+            else -> {
+                return Pair(false, dialog)
+            }
+        }
+
+        game.wait(0.5, skipWaitingForLoading = true)
+        return Pair(true, dialog)
+    }
 
     /**
      * Retrieves the user's planned races from saved settings.
@@ -157,13 +302,13 @@ class Racing (private val game: Game) {
                 val raceObj = jsonObject.getJSONObject(key)
 
                 val raceData = RaceData(
-                    name = raceObj.getString("name"),
-                    grade = raceObj.getString("grade"),
-                    terrain = raceObj.getString("terrain"),
-                    distanceType = raceObj.getString("distanceType"),
-                    fans = raceObj.getInt("fans"),
-                    turnNumber = raceObj.getInt("turnNumber"),
-                    nameFormatted = raceObj.getString("nameFormatted")
+                    name = raceObj.getString(RACES_COLUMN_NAME),
+                    grade = raceObj.getString(RACES_COLUMN_GRADE),
+                    trackSurface = raceObj.getString(RACES_COLUMN_TRACK_SURFACE),
+                    trackDistance = raceObj.getString(RACES_COLUMN_TRACK_DISTANCE),
+                    fans = raceObj.getInt(RACES_COLUMN_FANS),
+                    turnNumber = raceObj.getInt(RACES_COLUMN_TURN_NUMBER),
+                    nameFormatted = raceObj.getString(RACES_COLUMN_NAME_FORMATTED)
                 )
 
                 raceDataMap[raceData.name] = raceData
@@ -202,7 +347,7 @@ class Racing (private val game: Game) {
             MessageLog.i(TAG, "[TEST] Race #${index + 1} - Detected name: \"$raceName\".")
             
             // Query database for race details (may return multiple matches with different fan counts).
-            val raceDataList = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
+            val raceDataList = lookupRaceInDatabase(game.currentDate.day, raceName)
             
             if (raceDataList.isNotEmpty()) {
                 MessageLog.i(TAG, "[TEST] Race #${index + 1} - Found ${raceDataList.size} match(es):")
@@ -213,7 +358,7 @@ class Racing (private val game: Game) {
                     MessageLog.i(TAG, "[TEST]     Formatted: ${raceData.nameFormatted}")
                 }
             } else {
-                MessageLog.i(TAG, "[TEST] Race #${index + 1} - No match found for turn ${game.currentDate.turnNumber}")
+                MessageLog.i(TAG, "[TEST] Race #${index + 1} - No match found for turn ${game.currentDate.day}")
             }
         }
     }
@@ -232,35 +377,51 @@ class Racing (private val game: Game) {
      */
     fun handleRaceEvents(isScheduledRace: Boolean = false): Boolean {
         MessageLog.i(TAG, "\n********************")
-        MessageLog.i(TAG, "[RACE] Starting Racing process on ${game.printFormattedDate()}.")
-        if (encounteredRacingPopup) {
-            // Dismiss the insufficient fans popup here and head to the Race Selection screen.
-            game.findAndTapImage("race_confirm", tries = 1, region = game.imageUtils.regionBottomHalf)
-            encounteredRacingPopup = false
-            game.wait(1.0)
-            
-            // Now check if there is a racing requirement.
-            checkRacingRequirements()
-        }
+        MessageLog.i(TAG, "[RACE] Starting Racing process on ${game.currentDate}.")
 
         // If there are no races available, cancel the racing process.
         if (game.imageUtils.findImage("race_none_available", tries = 1, region = game.imageUtils.regionMiddle, suppressError = true).first != null) {
             MessageLog.i(TAG, "[RACE] There are no races to compete in. Canceling the racing process and doing something else.")
+            MessageLog.i(TAG, "********************")
             // Clear requirement flags since we cannot proceed with racing.
             hasFanRequirement = false
             hasTrophyRequirement = false
-            MessageLog.i(TAG, "********************")
             return false
         }
-
-        skipRacing = false
 
         // First, check if there is a mandatory or a extra race available. If so, head into the Race Selection screen.
         // Note: If there is a mandatory race, the bot would be on the Home screen.
         // Otherwise, it would have found itself at the Race Selection screen already (by way of the insufficient fans popup).
-        if (game.findAndTapImage("race_select_mandatory", tries = 1, region = game.imageUtils.regionBottomHalf)) {
+        val loc: Point? = IconRaceDayRibbon.find(imageUtils = game.imageUtils).first
+        if (loc != null) {
+            // We are forced to race, so we need to ignore this warning dialog.
+            bIgnoreConsecutiveRaceWarning = true
+
+            // Offset 100px down from the ribbon since the ribbon isn't clickable.
+            game.tap(loc.x, loc.y + 100, IconRaceDayRibbon.template.path, ignoreWaiting = true)
+            game.wait(0.5, skipWaitingForLoading = true)
+            // Check for the consecutive race dialog before proceeding.
+            handleDialogs()
+            // In case we didn't get the dialog we still want to reset this flag.
+            bIgnoreConsecutiveRaceWarning = false
             return handleMandatoryRace()
-        } else if (game.currentDate.phase != "Pre-Debut" && game.findAndTapImage("race_select_extra", tries = 1, region = game.imageUtils.regionBottomHalf)) {
+        } else if (!game.trainee.bHasCompletedMaidenRace && !isScheduledRace && ButtonRaceSelectExtra.click(imageUtils = game.imageUtils)) {
+            // Winning a maiden race ASAP is extremely important. Ignore this warning.
+            bIgnoreConsecutiveRaceWarning = true
+
+            game.wait(1.0, skipWaitingForLoading = true)
+            // Check for the consecutive race dialog before proceeding.
+            handleDialogs()
+            // In case we didn't get the we still want to reset this flag.
+            bIgnoreConsecutiveRaceWarning = false
+            return handleMaidenRace()
+        } else if ((!game.currentDate.bIsPreDebut && ButtonRaceSelectExtra.click(imageUtils = game.imageUtils)) || isScheduledRace) {
+            game.wait(0.5, skipWaitingForLoading = true)
+            // Check for the consecutive race dialog before proceeding.
+            val (bWasDialogHandled, dialog) = handleDialogs()
+            if (dialog != null && dialog.name == "consecutive_race_warning") {
+                return false
+            }
             return handleExtraRace(isScheduledRace = isScheduledRace)
         } else if (game.imageUtils.findImage("race_change_strategy", tries = 1, region = game.imageUtils.regionMiddle).first != null) {
             MessageLog.i(TAG, "[RACE] The bot is currently sitting on the race screen. Most likely here for a scheduled race.")
@@ -326,12 +487,213 @@ class Racing (private val game: Game) {
 
         // Handle race strategy override if enabled.
         selectRaceStrategy()
+        game.wait(1.0)
 
         // Skip the race if possible, otherwise run it manually.
         val resultCheck = runRaceWithRetries()
         finalizeRaceResults(resultCheck)
 
         MessageLog.i(TAG, "[RACE] Racing process for Mandatory Race is completed.")
+        MessageLog.i(TAG, "********************")
+        return true
+    }
+
+    private fun selectMaidenRace(): Boolean {
+        // Get the bounding region of the race list.
+        val raceListTopLeftBitmap: Bitmap? = IconRaceListTopLeft.template.getBitmap(game.imageUtils)
+        if (raceListTopLeftBitmap == null) {
+            MessageLog.e(TAG, "[RACE] Failed to load IconRaceListTopLeft bitmap.")
+            return false
+        }
+
+        val raceListBottomRightBitmap: Bitmap? = IconRaceListBottomRight.template.getBitmap(game.imageUtils)
+        if (raceListBottomRightBitmap == null) {
+            MessageLog.e(TAG, "[RACE] Failed to load IconRaceListBottomRight bitmap.")
+            return false
+        }
+
+        val raceListTopLeft: Point? = IconRaceListTopLeft.find(game.imageUtils).first
+        if (raceListTopLeft == null) {
+            MessageLog.e(TAG, "[RACE] Failed to find top left corner of race list.")
+            return false
+        }
+        val raceListBottomRight: Point? = IconRaceListBottomRight.find(game.imageUtils).first
+        if (raceListBottomRight == null) {
+            MessageLog.e(TAG, "[RACE] Failed to find bottom right corner of race list.")
+            return false
+        }
+        val x0 = (raceListTopLeft.x - (raceListTopLeftBitmap.width / 2)).toInt()
+        val y0 = (raceListTopLeft.y - (raceListTopLeftBitmap.height / 2)).toInt()
+        val x1 = (raceListBottomRight.x + (raceListBottomRightBitmap.width / 2)).toInt()
+        val y1 = (raceListBottomRight.y + (raceListBottomRightBitmap.height / 2)).toInt()
+        val bboxRaceList = BoundingBox(
+            x = x0,
+            y = y0,
+            w = x1 - x0,
+            h = y1 - y0,
+        )
+
+        // Smaller region used to detect double star icons in the race list.
+        val bboxRaceListDoubleStars = BoundingBox(
+            x = game.imageUtils.relX(bboxRaceList.x.toDouble(), 845),
+            y = bboxRaceList.y,
+            w = game.imageUtils.relWidth(45),
+            h = bboxRaceList.h,
+        )
+
+        val bboxScrollBar = BoundingBox(
+            x = game.imageUtils.relX(bboxRaceList.x.toDouble(), 1034),
+            y = bboxRaceList.y,
+            w = 10,
+            h = bboxRaceList.h,
+        )
+
+        // The selected race in the race list has green brackets that overlap the
+        // scroll bar a bit. Thus we are really only interested in a single column
+        // of pixels on the right side of the scroll bar when checking for changes.
+        val bboxScrollBarSingleColumn = BoundingBox(
+            // give ourselves a few pixels of buffer
+            x = bboxScrollBar.x + bboxScrollBar.w - 3,
+            y = bboxScrollBar.y,
+            w = 1,
+            h = bboxScrollBar.h,
+        )
+
+        // Scroll to top of list.
+        game.gestureUtils.swipe(
+            (bboxRaceList.x + (bboxRaceList.w / 2)).toFloat(),
+            (bboxRaceList.y + (bboxRaceList.h / 2)).toFloat(),
+            (bboxRaceList.x + (bboxRaceList.w / 2)).toFloat(),
+            // high value here ensures we go all the way to top of list
+            (bboxRaceList.y + (bboxRaceList.h * 10)).toFloat(),
+        )
+        game.wait(0.1, skipWaitingForLoading = true)
+        // Tap to prevent overscrolling. This location shouldn't select any races.
+        game.tap(
+            game.imageUtils.relX(bboxRaceList.x.toDouble(), 15).toDouble(),
+            game.imageUtils.relY(bboxRaceList.y.toDouble(), 15).toDouble(),
+            ignoreWaiting = true,
+        )
+        // Small delay for scrolling to stop.
+        game.wait(0.1, skipWaitingForLoading = true)
+
+        var bitmap = game.imageUtils.getSourceBitmap()
+        var prevScrollBarBitmap: Bitmap? = null
+
+        // Max time limit for the while loop to search for a valid race.
+        val startTime: Long = System.currentTimeMillis()
+        val maxTimeMs: Long = 10000
+
+        while (System.currentTimeMillis() - startTime < maxTimeMs) {
+            bitmap = game.imageUtils.getSourceBitmap()
+            val scrollBarBitmap: Bitmap? = game.imageUtils.createSafeBitmap(
+                bitmap,
+                bboxScrollBarSingleColumn.x,
+                bboxScrollBarSingleColumn.y,
+                bboxScrollBarSingleColumn.w,
+                bboxScrollBarSingleColumn.h,
+                "race list scrollbar right half bitmap",
+            )
+            if (scrollBarBitmap == null) {
+                MessageLog.e(TAG, "[RACE] Failed to createSafeBitmap for scrollbar.")
+                return false
+            }
+
+            // If after scrolling the scrollbar hasn't changed, that means
+            // we've reached the end of the list.
+            if (prevScrollBarBitmap != null && scrollBarBitmap.sameAs(prevScrollBarBitmap)) {
+                return false
+            }
+
+            prevScrollBarBitmap = scrollBarBitmap
+
+            val locs: ArrayList<Point> = IconRaceListPredictionDoubleStar.findAll(
+                imageUtils = game.imageUtils,
+                region = bboxRaceListDoubleStars.toIntArray(),
+                confidence = 0.0,
+            )
+
+            if (!locs.isEmpty()) {
+                game.tap(
+                    locs.first().x,
+                    locs.first().y,
+                    IconRaceListPredictionDoubleStar.template.path,
+                    ignoreWaiting = true,
+                )
+                return true
+            }
+
+            // Longer swipe duration prevents overscrolling.
+            // Swipe up approximately one entry in list.
+            // Each entry is roughly 200px tall and there is a 30px gap between entries.
+            // I find that a 500px swipe with 1500ms duration is a good balance.
+            // For some reason with shorter durations, it overscrolls too much. Also
+            // with longer durations, the amount scrolled is less than the pixel amount
+            // specified so we use 500px to counter this.
+            game.gestureUtils.swipe(
+                (bboxRaceList.x + (bboxRaceList.w / 2)).toFloat(),
+                (bboxRaceList.y + (bboxRaceList.h / 2)).toFloat(),
+                (bboxRaceList.x + (bboxRaceList.w / 2)).toFloat(),
+                ((bboxRaceList.y + (bboxRaceList.h / 2)) - 500).toFloat(),
+                duration=500,
+            )
+            game.wait(0.1, skipWaitingForLoading = true)
+            // Tap to prevent overscrolling. This location shouldn't select any races.
+            game.tap(
+                game.imageUtils.relX(bboxRaceList.x.toDouble(), 15).toDouble(),
+                game.imageUtils.relY(bboxRaceList.y.toDouble(), 15).toDouble(),
+                ignoreWaiting = true,
+            )
+            game.wait(0.5, skipWaitingForLoading = true)
+        }
+
+        return false
+    }
+
+    private fun handleMaidenRace(): Boolean {
+        MessageLog.i(TAG, "[RACE] Starting process for handling a maiden race.")
+
+        if (!ButtonRaceListFullStats.check(imageUtils = game.imageUtils, tries = 30)) {
+            MessageLog.e(TAG, "[RACE] Not at race list screen. Aborting racing...")
+            // Clear requirement flags since we cannot proceed with racing.
+            hasFanRequirement = false
+            hasTrophyRequirement = false
+            return false
+        }
+
+        game.campaign.bHasCheckedForMaidenRaceToday = true
+        if (IconRaceListMaidenPill.check(imageUtils = game.imageUtils)) {
+            MessageLog.d(TAG, "[RACE] Detected maiden races in race list.")
+            if (selectMaidenRace()) {
+                MessageLog.i(TAG, "[RACE] Found maiden race with good aptitudes. Racing...")
+            } else {
+                MessageLog.i(TAG, "[RACE] Could not find any maiden races with good aptitudes. Aborting racing...")
+                ButtonBack.click(imageUtils = game.imageUtils)
+                return false
+            }
+        }
+
+        // Confirm the selection and the resultant popup and then wait for the game to load.
+        ButtonRace.click(imageUtils = game.imageUtils)
+        game.wait(0.5, skipWaitingForLoading = true)
+        val (bWasDialogHandled, dialog) = handleDialogs()
+        if (!bWasDialogHandled || (dialog != null && dialog.name != "race_details")) {
+            return false
+        }
+        game.wait(2.0)
+
+        // Handle race strategy override if enabled.
+        selectRaceStrategy()
+        game.wait(1.0)
+
+        // Skip the race if possible, otherwise run it manually.
+        val resultCheck = runRaceWithRetries()
+        finalizeRaceResults(resultCheck, isExtra = true)
+
+        // Clear the next smart race day tracker since we just completed a race.
+        nextSmartRaceDay = null
+
+        MessageLog.i(TAG, "[RACE] Racing process for Maiden Race is completed.")
         MessageLog.i(TAG, "********************")
         return true
     }
@@ -343,29 +705,20 @@ class Racing (private val game: Game) {
      * @return True if the extra race was completed successfully, false otherwise.
      */
     private fun handleExtraRace(isScheduledRace: Boolean = false): Boolean {
-        MessageLog.i(TAG, "[RACE] Starting process for handling a extra race ${if (isScheduledRace) "(scheduled)" else ""}.")
+        MessageLog.i(TAG, "[RACE] Starting process for handling a extra race${if (isScheduledRace) " (scheduled)" else ""}.")
 
         // If there is a scheduled race pending, proceed to run it immediately.
         if (!isScheduledRace) {
             // Check for mandatory racing plan mode before any screen detection.
             val (_, mandatoryExtraRaceData) = findMandatoryExtraRaceForCurrentTurn()
             if (mandatoryExtraRaceData != null) {
-                // Check if aptitudes match (both terrain and distance must be B or greater) for double predictions.
+                // Check if aptitudes match (both track surface and distance must be B or greater) for double predictions.
                 val aptitudesMatch = checkRaceAptitudeMatch(mandatoryExtraRaceData)
                 if (!aptitudesMatch) {
-                    val terrainAptitude = when (mandatoryExtraRaceData.terrain) {
-                        "Turf" -> game.aptitudes.track.turf
-                        "Dirt" -> game.aptitudes.track.dirt
-                        else -> "X"
-                    }
-                    val distanceAptitude = when (mandatoryExtraRaceData.distanceType) {
-                        "Short" -> game.aptitudes.distance.sprint
-                        "Mile" -> game.aptitudes.distance.mile
-                        "Medium" -> game.aptitudes.distance.medium
-                        "Long" -> game.aptitudes.distance.long
-                        else -> "X"
-                    }
-                    MessageLog.i(TAG, "[RACE] Mandatory extra race \"${mandatoryExtraRaceData.name}\" aptitudes don't match requirements (Terrain: $terrainAptitude, Distance: $distanceAptitude). Both must be B or greater.")
+                    // Get the trainee's aptitude for this race's track surface/distance.
+                    val trackSurfaceAptitude: Aptitude = game.trainee.checkTrackSurfaceAptitude(mandatoryExtraRaceData.trackSurface)
+                    val trackDistanceAptitude: Aptitude = game.trainee.checkTrackDistanceAptitude(mandatoryExtraRaceData.trackDistance)
+                    MessageLog.i(TAG, "[RACE] Mandatory extra race \"${mandatoryExtraRaceData.name}\" aptitudes don't match requirements (TrackSurface: $trackSurfaceAptitude, TrackDistance: $trackDistanceAptitude). Both must be B or greater.")
                     return false
                 } else {
                     MessageLog.i(TAG, "[RACE] Mandatory extra race \"${mandatoryExtraRaceData.name}\" aptitudes match requirements. Proceeding to navigate to the Extra Races screen.")
@@ -390,8 +743,8 @@ class Racing (private val game: Game) {
                 }
             }
 
-            // There is a extra race.
-            val statusLocation = game.imageUtils.findImage("race_status").first
+            // There is an extra race.
+            val statusLocation = ButtonRaceListFullStats.find(imageUtils = game.imageUtils, tries = 30).first
             if (statusLocation == null) {
                 MessageLog.e(TAG, "[ERROR] Unable to determine existence of list of extra races. Canceling the racing process and doing something else.")
                 // Clear requirement flags since we cannot proceed with racing.
@@ -428,15 +781,15 @@ class Racing (private val game: Game) {
             } else if (hasTrophyRequirement) {
                 // Trophy requirement can use smart racing as it filters to G1 races internally.
                 // Use smart racing for all years except Year 1 (Junior Year).
-                game.currentDate.year != 1
-            } else if (enableRacingPlan && game.currentDate.year != 1) {
+                game.currentDate.year != DateYear.JUNIOR
+            } else if (enableRacingPlan && game.currentDate.year != DateYear.JUNIOR) {
                 // Year 2 and 3: Use smart racing if conditions are met.
                 enableFarmingFans && !enableForceRacing
             } else {
                 false
             }
 
-            val success = if (useSmartRacing && game.currentDate.year != 1) {
+            val success = if (useSmartRacing && game.currentDate.year != DateYear.JUNIOR) {
                 // Use the smart racing logic.
                 MessageLog.i(TAG, "[RACE] Using smart racing for Year ${game.currentDate.year}.")
                 processSmartRacing(mandatoryExtraRaceData)
@@ -446,7 +799,7 @@ class Racing (private val game: Game) {
                 if (enableRacingPlan && !hasFanRequirement && !hasTrophyRequirement) {
                     MessageLog.i(TAG, "[RACE] Smart racing conditions not met due to current settings, using traditional racing logic...")
                     MessageLog.i(TAG, "[RACE] Reason: One or more conditions failed:")
-                    if (game.currentDate.year != 1) {
+                    if (game.currentDate.year != DateYear.JUNIOR) {
                         if (!enableFarmingFans) MessageLog.i(TAG, "[RACE]   - enableFarmingFans is false")
                         if (enableForceRacing) MessageLog.i(TAG, "[RACE]   - enableForceRacing is true")
                     } else {
@@ -463,18 +816,22 @@ class Racing (private val game: Game) {
                 hasTrophyRequirement = false
                 return false
             }
-        } else if (isScheduledRace && game.imageUtils.findImage("race_repeat_warning").first != null) {
-            game.findAndTapImage("ok", tries = 1, region = game.imageUtils.regionMiddle)
-            game.wait(1.0)
+        } else if (isScheduledRace) {
+            bIgnoreConsecutiveRaceWarning = true
+            MessageLog.i(TAG, "[RACE] Confirming the scheduled race dialog...")
+            ButtonRace.click(game.imageUtils, tries = 30)
+            game.waitForLoading()
         }
 
         // Confirm the selection and the resultant popup and then wait for the game to load.
         game.findAndTapImage("race_confirm", tries = 30, region = game.imageUtils.regionBottomHalf)
+        game.wait(1.0)
         game.findAndTapImage("race_confirm", tries = 10, region = game.imageUtils.regionBottomHalf)
         game.wait(2.0)
 
         // Handle race strategy override if enabled.
         selectRaceStrategy()
+        game.wait(1.0)
 
         // Skip the race if possible, otherwise run it manually.
         val resultCheck = runRaceWithRetries()
@@ -499,7 +856,6 @@ class Racing (private val game: Game) {
 
         // Updates the current date and aptitudes for accurate scoring.
         game.updateDate()
-        game.updateAptitudes()
 
         // Use cached user planned races and race plan data.
         MessageLog.i(TAG, "[RACE] Loaded ${userPlannedRaces.size} user-selected races and ${raceData.size} race entries.")
@@ -516,10 +872,10 @@ class Racing (private val game: Game) {
         MessageLog.i(TAG, "[RACE] Extracting race names and matching with database...")
         val currentRaces = doublePredictionLocations.flatMap { location ->
             val raceName = game.imageUtils.extractRaceName(location)
-            val raceDataList = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
+            val raceDataList = lookupRaceInDatabase(game.currentDate.day, raceName)
             if (raceDataList.isNotEmpty()) {
                 raceDataList.forEach { raceData ->
-                    MessageLog.i(TAG, "[RACE] ✓ Matched in database: ${raceData.name} (Grade: ${raceData.grade}, Fans: ${raceData.fans}, Terrain: ${raceData.terrain}).")
+                    MessageLog.i(TAG, "[RACE] ✓ Matched in database: ${raceData.name} (Grade: ${raceData.grade}, Fans: ${raceData.fans}, Track Surface: ${raceData.trackSurface}).")
                 }
                 raceDataList
             } else {
@@ -530,7 +886,7 @@ class Racing (private val game: Game) {
 
         // If mandatory extra race data is provided, immediately find and select it on screen.
         if (mandatoryExtraRaceData != null) {
-            MessageLog.i(TAG, "[RACE] Mandatory mode for extra races enabled. Looking for planned race \"${mandatoryExtraRaceData.name}\" on screen for turn ${game.currentDate.turnNumber}.")
+            MessageLog.i(TAG, "[RACE] Mandatory mode for extra races enabled. Looking for planned race \"${mandatoryExtraRaceData.name}\" on screen for turn ${game.currentDate.day}.")
 
             // Check if there are multiple races with the same formatted name but different fan counts.
             val raceVariants = currentRaces.filter { it.nameFormatted == mandatoryExtraRaceData.nameFormatted }
@@ -620,7 +976,7 @@ class Racing (private val game: Game) {
         // If trophy requirement is active, filter to only G1 races.
         // Trophy requirement is independent of racing plan and farming fans settings.
         val racesForSelection = if (hasTrophyRequirement) {
-            val g1Races = currentRaces.filter { it.grade == "G1" }
+            val g1Races = currentRaces.filter { it.grade == RaceGrade.G1 }
             if (g1Races.isEmpty()) {
                 // No G1 races available. Cancel since trophy requirement specifically needs G1 races.
                 MessageLog.i(TAG, "[RACE] Trophy requirement active but no G1 races available. Canceling racing process (independent of racing plan/farming fans).")
@@ -788,9 +1144,9 @@ class Racing (private val game: Game) {
             if (hasTrophyRequirement) {
                 game.updateDate()
                 val raceName = game.imageUtils.extractRaceName(doublePredictionLocations[0])
-                val raceDataList = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
+                val raceDataList = lookupRaceInDatabase(game.currentDate.day, raceName)
                 // Check if any matched race is G1.
-                if (raceDataList.any { it.grade == "G1" }) {
+                if (raceDataList.any { it.grade == RaceGrade.G1 }) {
                     MessageLog.i(TAG, "[RACE] Only one race with double predictions and it's G1. Selecting it.")
                     game.tap(doublePredictionLocations[0].x, doublePredictionLocations[0].y, "race_extra_double_prediction", ignoreWaiting = true)
                     return true
@@ -838,9 +1194,9 @@ class Racing (private val game: Game) {
         val (filteredRaces, filteredLocations, _) = if (hasTrophyRequirement) {
             game.updateDate()
             val g1Indices = raceNamesList.mapIndexedNotNull { index, raceName ->
-                val raceDataList = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
+                val raceDataList = lookupRaceInDatabase(game.currentDate.day, raceName)
                 // Check if any matched race is G1.
-                if (raceDataList.any { it.grade == "G1" }) index else null
+                if (raceDataList.any { it.grade == RaceGrade.G1 }) index else null
             }
 
             if (g1Indices.isEmpty()) {
@@ -874,7 +1230,12 @@ class Racing (private val game: Game) {
         // Selects the determined race on screen.
         MessageLog.i(TAG, "[RACE] Selecting extra race at option #${index + 1}.")
         val target = filteredLocations[index]
-        game.tap(target.x - game.imageUtils.relWidth((100 * 1.36).toInt()), target.y - game.imageUtils.relHeight(70), "race_extra_selection", ignoreWaiting = true)
+        game.tap(
+            target.x - game.imageUtils.relWidth((100 * 1.36).toInt()),
+            target.y - game.imageUtils.relHeight(70),
+            "race_extra_selection",
+            ignoreWaiting = true,
+        )
 
         return true
     }
@@ -893,7 +1254,7 @@ class Racing (private val game: Game) {
      */
     fun loadUserRaceAgenda() {
         // Only load the agenda once per career.
-        if (!enableUserInGameRaceAgenda || hasLoadedUserRaceAgenda || game.currentDate.turnNumber >= 72) {
+        if (!enableUserInGameRaceAgenda || hasLoadedUserRaceAgenda || game.currentDate.bIsFinaleSeason) {
             return
         } else if (game.imageUtils.findImage("race_maiden_criteria", tries = 1, region = game.imageUtils.regionTopHalf).first != null) {
             MessageLog.i(TAG, "[RACE] A maiden race needs to be won first before applying the user's race agenda.")
@@ -901,19 +1262,23 @@ class Racing (private val game: Game) {
         }
 
         // Navigate to the race selection screen.
-        if (!game.findAndTapImage("race_select_extra", tries = 1, region = game.imageUtils.regionBottomHalf)) {
+        if (!ButtonRaceSelectExtra.click(game.imageUtils)) {
             MessageLog.w(TAG, "[RACE] Could not find the Race Selection button. Skipping loading the user's race agenda.")
             return
         }
+
         game.waitForLoading()
 
-        if (game.imageUtils.findImage("race_repeat_warning", tries = 1, region = game.imageUtils.regionTopHalf).first != null) {
-            MessageLog.i(TAG, "[RACE] Consecutive race warning detected. Confirming the popup in order to proceed with loading the user race agenda.")
-            game.findAndTapImage("ok", tries = 1, region = game.imageUtils.regionMiddle)
-            game.waitForLoading()
-            game.wait(0.5)
-        }
-        
+        // We are forced to race, so we need to ignore this warning dialog.
+        bIgnoreConsecutiveRaceWarning = true
+
+        handleDialogs()
+
+        // In case we didn't get the dialog we still want to reset this flag.
+        bIgnoreConsecutiveRaceWarning = false
+
+        game.waitForLoading()
+
         MessageLog.i(TAG, "[RACE] Loading user's in-game race agenda: $selectedUserAgenda")
         
         // It is assumed that the user is already at the screen with the list of selectable races.
@@ -927,7 +1292,7 @@ class Racing (private val game: Game) {
         // Now tap on the My Agenda button.
         if (!game.findAndTapImage("race_my_agenda", tries = 1, region = game.imageUtils.regionBottomHalf)) {
             MessageLog.w(TAG, "[RACE] Could not find the My Agenda button. Closing and skipping agenda loading.")
-            game.findAndTapImage("close", tries = 1, region = game.imageUtils.regionBottomHalf)
+            ButtonClose.click(game.imageUtils)
             game.waitForLoading()
             game.wait(0.5)
             return
@@ -940,14 +1305,13 @@ class Racing (private val game: Game) {
 
             // Mark as loaded so we don't try again this run and close the popup.
             hasLoadedUserRaceAgenda = true
-            game.findAndTapImage("close", tries = 1, region = game.imageUtils.regionBottomHalf)
-            game.waitForLoading()
-            game.findAndTapImage("close", tries = 1, region = game.imageUtils.regionBottomHalf)
-            game.waitForLoading()
+            ButtonClose.click(game.imageUtils)
+            game.wait(0.5)
+            ButtonClose.click(game.imageUtils)
+            game.wait(0.5)
             
             // Now back out of the race selection screen.
-            game.findAndTapImage("back", tries = 1, region = game.imageUtils.regionBottomHalf)
-            game.waitForLoading()
+            ButtonBack.click(game.imageUtils)
             game.wait(0.5)
             return
         }
@@ -1000,7 +1364,7 @@ class Racing (private val game: Game) {
             if (!foundAgenda && swipeCount < maxSwipes - 1) {
                 // Swipe up to reveal more buttons.
                 // Use the Close button location as a reference point for swiping.
-                val closeButtonLocation = game.imageUtils.findImage("close", tries = 1, region = game.imageUtils.regionBottomHalf).first
+                val closeButtonLocation = ButtonClose.find(game.imageUtils).first
                 if (closeButtonLocation != null) {
                     val swipeX = closeButtonLocation.x.toFloat()
                     val swipeY = closeButtonLocation.y.toFloat()
@@ -1029,13 +1393,14 @@ class Racing (private val game: Game) {
         
         // Mark as loaded so we don't try again this run and close the popup.
         hasLoadedUserRaceAgenda = true
-        game.findAndTapImage("close", tries = 1, region = game.imageUtils.regionBottomHalf)
+        ButtonClose.click(game.imageUtils)
         game.waitForLoading()
-        game.findAndTapImage("close", tries = 1, region = game.imageUtils.regionBottomHalf)
+        ButtonClose.click(game.imageUtils)
         game.waitForLoading()
+        game.wait(0.25)
 
         // Now back out of the race selection screen.
-        game.findAndTapImage("back", tries = 1, region = game.imageUtils.regionBottomHalf)
+        ButtonBack.click(game.imageUtils)
         game.waitForLoading()
     }
 
@@ -1050,7 +1415,7 @@ class Racing (private val game: Game) {
     private fun findRaceLocationByName(predictionLocations: ArrayList<Point>, targetRaceName: String, logMatch: Boolean = false): Point? {
         return predictionLocations.find { location ->
             val raceName = game.imageUtils.extractRaceName(location)
-            val raceDataList = lookupRaceInDatabase(game.currentDate.turnNumber, raceName)
+            val raceDataList = lookupRaceInDatabase(game.currentDate.day, raceName)
             val match = raceDataList.any { it.name == targetRaceName }
             if (match && logMatch) {
                 MessageLog.i(TAG, "[RACE] ✓ Found target race at location (${location.x}, ${location.y}).")
@@ -1066,9 +1431,9 @@ class Racing (private val game: Game) {
      * @return The updated list of double-prediction locations after scrolling, or null if scroll failed.
      */
     private fun scrollRaceListAndRedetect(scrollDown: Boolean = true): ArrayList<Point>? {
-        val confirmButtonLocation = game.imageUtils.findImage("race_confirm", region = game.imageUtils.regionBottomHalf).first
+        val confirmButtonLocation = ButtonRace.find(game.imageUtils).first
         if (confirmButtonLocation == null) {
-            MessageLog.i(TAG, "[RACE] Could not find \"race_confirm\" button for scroll reference.")
+            MessageLog.i(TAG, "[RACE] Could not find \"Race\" button for scroll reference.")
             return null
         }
 
@@ -1083,47 +1448,23 @@ class Racing (private val game: Game) {
         }
         game.wait(2.0)
 
-        return game.imageUtils.findAll("race_extra_double_prediction")
-    }
-
-    /**
-     * Checks if an aptitude value meets the minimum requirement (B or greater).
-     *
-     * @param aptitude The aptitude value to check (S, A, B, etc.).
-     * @return True if the aptitude is S, A or B; false otherwise.
-     */
-    private fun hasMinimumAptitude(aptitude: String): Boolean {
-        return aptitude == "S" || aptitude == "A" || aptitude == "B"
+        return IconRaceListPredictionDoubleStar.findAll(game.imageUtils)
     }
 
     /**
      * Checks if the racer's aptitudes match the race requirements (both terrain and distance must be B or greater).
      *
      * @param raceData The race data to check aptitudes against.
-     * @return True if both terrain and distance aptitudes are B or greater; false otherwise.
+     * @return True if both track surface and distance aptitudes are B or greater; false otherwise.
      */
     private fun checkRaceAptitudeMatch(raceData: RaceData): Boolean {
-        // Get terrain aptitude.
-        val terrainAptitude = when (raceData.terrain) {
-            "Turf" -> game.aptitudes.track.turf
-            "Dirt" -> game.aptitudes.track.dirt
-            else -> "X"
-        }
+        val trackSurfaceAptitude: Aptitude = game.trainee.checkTrackSurfaceAptitude(raceData.trackSurface)
+        val trackDistanceAptitude: Aptitude = game.trainee.checkTrackDistanceAptitude(raceData.trackDistance)
 
-        // Get distance aptitude.
-        val distanceAptitude = when (raceData.distanceType) {
-            "Short" -> game.aptitudes.distance.sprint
-            "Mile" -> game.aptitudes.distance.mile
-            "Medium" -> game.aptitudes.distance.medium
-            "Long" -> game.aptitudes.distance.long
-            else -> "X"
-        }
+        val trackSurfaceMatch: Boolean = trackSurfaceAptitude >= Aptitude.B
+        val trackDistanceMatch: Boolean = trackDistanceAptitude >= Aptitude.B
 
-        // Both aptitudes must be B or greater for double predictions.
-        val terrainMatch = hasMinimumAptitude(terrainAptitude)
-        val distanceMatch = hasMinimumAptitude(distanceAptitude)
-
-        return terrainMatch && distanceMatch
+        return trackSurfaceMatch && trackDistanceMatch
     }
 
     /**
@@ -1136,7 +1477,7 @@ class Racing (private val game: Game) {
             return Pair(null, null)
         }
 
-        val currentTurnNumber = game.currentDate.turnNumber
+        val currentTurnNumber = game.currentDate.day
 
         // Find planned race matching current turn number.
         val matchingPlannedRace = userPlannedRaces.find { it.turnNumber == currentTurnNumber }
@@ -1157,9 +1498,9 @@ class Racing (private val game: Game) {
     /**
      * Check if there are fan or trophy requirements that need to be satisfied.
      */
-    fun checkRacingRequirements() {
+    fun checkRacingRequirements(sourceBitmap: Bitmap? = null) {
         // Check for fan requirement on the main screen.
-        val sourceBitmap = game.imageUtils.getSourceBitmap()
+        val sourceBitmap = sourceBitmap ?: game.imageUtils.getSourceBitmap()
         val needsFanRequirement = game.imageUtils.findImageWithBitmap("race_fans_criteria", sourceBitmap, region = game.imageUtils.regionTopHalf, customConfidence = 0.90) != null
         if (needsFanRequirement) {
             hasFanRequirement = true
@@ -1214,7 +1555,7 @@ class Racing (private val game: Game) {
 
         // Check for mandatory racing plan mode (before opportunity cost analysis and while still on the main screen).
         if (enableRacingPlan && enableMandatoryRacingPlan) {
-            val currentTurnNumber = game.currentDate.turnNumber
+            val currentTurnNumber = game.currentDate.day
 
             // Find planned race matching current turn number.
             val matchingPlannedRace = userPlannedRaces.find { it.turnNumber == currentTurnNumber }
@@ -1225,11 +1566,11 @@ class Racing (private val game: Game) {
             } else {
                 MessageLog.i(TAG, "[RACE] No planned race matches current turn $currentTurnNumber and mandatory mode for extra races is enabled. Continuing with normal eligibility checks.")
             }
-        } else if (enableFarmingFans && enableRacingPlan && game.currentDate.year != 1) {
+        } else if (enableFarmingFans && enableRacingPlan && game.currentDate.year != DateYear.JUNIOR) {
             // For Classic and Senior Year, check if planned races are coming up in the look-ahead window and are eligible for racing.
             // Handle the user-selected planned races here.
             if (userPlannedRaces.isNotEmpty()) {
-                val currentTurnNumber = game.currentDate.turnNumber
+                val currentTurnNumber = game.currentDate.day
 
                 // Check each planned race for eligibility.
                 val eligiblePlannedRaces = userPlannedRaces.filter { plannedRace ->
@@ -1252,7 +1593,7 @@ class Racing (private val game: Game) {
                             false
                         } else {
                             // For Classic Year, check if it's an eligible racing day.
-                            if (game.currentDate.year == 2 && !enableRacingPlan) {
+                            if (game.currentDate.year == DateYear.CLASSIC && !enableRacingPlan) {
                                 val isEligible = turnsRemaining % daysToRunExtraRaces == 0
                                 if (!isEligible) {
                                     MessageLog.i(TAG, "[RACE] Planned race \"${plannedRace.raceName}\" is not on an eligible racing day (day $turnsRemaining, interval $daysToRunExtraRaces).")
@@ -1283,41 +1624,41 @@ class Racing (private val game: Game) {
         } else if (hasTrophyRequirement) {
             // Check if G1 races exist at current turn before proceeding.
             // If no G1 races are available, it will still allow regular racing if it's a regular race day or smart racing day.
-            if (!hasG1RacesAtTurn(game.currentDate.turnNumber)) {
+            if (!hasG1RacesAtTurn(game.currentDate.day)) {
                 // Skip interval check if Racing Plan is enabled.
                 val isRegularRacingDay = enableFarmingFans && !enableRacingPlan && (turnsRemaining % daysToRunExtraRaces == 0)
                 val isSmartRacingDay = enableRacingPlan && enableFarmingFans && nextSmartRaceDay == turnsRemaining
 
                 if (isRegularRacingDay || isSmartRacingDay) {
-                    MessageLog.i(TAG, "[RACE] Trophy requirement detected but no G1 races at turn ${game.currentDate.turnNumber}. Allowing regular racing on eligible day.")
+                    MessageLog.i(TAG, "[RACE] Trophy requirement detected but no G1 races at turn ${game.currentDate.day}. Allowing regular racing on eligible day.")
                 } else {
-                    MessageLog.i(TAG, "[RACE] Trophy requirement detected but no G1 races available at turn ${game.currentDate.turnNumber} and not a regular/smart racing day. Skipping racing.")
+                    MessageLog.i(TAG, "[RACE] Trophy requirement detected but no G1 races available at turn ${game.currentDate.day} and not a regular/smart racing day. Skipping racing.")
                     return false
                 }
             } else {
-                MessageLog.i(TAG, "[RACE] Trophy requirement detected. G1 races available at turn ${game.currentDate.turnNumber}. Proceeding to racing screen.")
+                MessageLog.i(TAG, "[RACE] Trophy requirement detected. G1 races available at turn ${game.currentDate.day}. Proceeding to racing screen.")
             }
 
             return !raceRepeatWarningCheck
         } else if (enableRacingPlan && !enableMandatoryRacingPlan && enableFarmingFans) {
             // Smart racing: Check turn-based eligibility before screen checks.
             // Only run opportunity cost analysis with smartRacingCheckInterval.
-            val isCheckInterval = game.currentDate.turnNumber % smartRacingCheckInterval == 0
+            val isCheckInterval = game.currentDate.day % smartRacingCheckInterval == 0
 
             if (isCheckInterval) {
-                MessageLog.i(TAG, "[RACE] Running opportunity cost analysis at turn ${game.currentDate.turnNumber} (smartRacingCheckInterval: every $smartRacingCheckInterval turns)...")
+                MessageLog.i(TAG, "[RACE] Running opportunity cost analysis at turn ${game.currentDate.day} (smartRacingCheckInterval: every $smartRacingCheckInterval turns)...")
 
                 // Check if there are any races available at the current turn.
-                val currentTurnRaces = queryRacesFromDatabase(game.currentDate.turnNumber, 0)
+                val currentTurnRaces = queryRacesFromDatabase(game.currentDate.day, 0)
                 if (currentTurnRaces.isEmpty()) {
-                    MessageLog.i(TAG, "[RACE] No races available at turn ${game.currentDate.turnNumber}.")
+                    MessageLog.i(TAG, "[RACE] No races available at turn ${game.currentDate.day}.")
                     return false
                 }
 
-                MessageLog.i(TAG, "[RACE] Found ${currentTurnRaces.size} race(s) at the current turn ${game.currentDate.turnNumber}.")
+                MessageLog.i(TAG, "[RACE] Found ${currentTurnRaces.size} race(s) at the current turn ${game.currentDate.day}.")
 
                 // Query upcoming races in the look-ahead window for opportunity cost analysis.
-                val upcomingRaces = queryRacesFromDatabase(game.currentDate.turnNumber + 1, lookAheadDays)
+                val upcomingRaces = queryRacesFromDatabase(game.currentDate.day + 1, lookAheadDays)
                 MessageLog.i(TAG, "[RACE] Found ${upcomingRaces.size} upcoming races in look-ahead window.")
 
                 // Apply filters to both current and upcoming races.
@@ -1340,7 +1681,7 @@ class Racing (private val game: Game) {
                     // Use opportunity cost logic to determine if we should race now or wait.
                     val shouldRace = evaluateOpportunityCost(filteredCurrentRaces, lookAheadDays)
                     if (!shouldRace) {
-                        MessageLog.i(TAG, "[RACE] No suitable races at turn ${game.currentDate.turnNumber} based on opportunity cost analysis.")
+                        MessageLog.i(TAG, "[RACE] No suitable races at turn ${game.currentDate.day} based on opportunity cost analysis.")
                         return false
                     }
 
@@ -1350,7 +1691,7 @@ class Racing (private val game: Game) {
 
                 MessageLog.i(TAG, "[RACE] Opportunity cost analysis completed, proceeding with screen checks...")
             } else {
-                MessageLog.i(TAG, "[RACE] Skipping opportunity cost analysis (turn ${game.currentDate.turnNumber} does not match smartRacingCheckInterval). Using cached optimal race day.")
+                MessageLog.i(TAG, "[RACE] Skipping opportunity cost analysis (turn ${game.currentDate.day} does not match smartRacingCheckInterval). Using cached optimal race day.")
             }
 
             // Check if current day matches the optimal race day or falls on the interval.
@@ -1378,130 +1719,84 @@ class Racing (private val game: Game) {
         return enableFarmingFans && !enableRacingPlan && (turnsRemaining % daysToRunExtraRaces == 0) && !raceRepeatWarningCheck
     }
 
+    fun updateRaceScreenRunningStyleAptitudes(): Boolean {
+        val bitmap = game.imageUtils.getSourceBitmap()
+        val bbox = BoundingBox(
+            x = game.imageUtils.relX(0.0, 125),
+            y = game.imageUtils.relY(0.0, 1140),
+            w = game.imageUtils.relWidth(825),
+            h = game.imageUtils.relHeight(45),
+        )
+        var text: String = game.imageUtils.performOCROnRegion(
+            bitmap,
+            bbox.x,
+            bbox.y,
+            bbox.w,
+            bbox.h,
+            useThreshold=false,
+            useGrayscale=false,
+            debugName="updateRaceScreenRunningStyleAptitudes",
+        )
+        if (text == "") {
+            MessageLog.w(TAG, "performOCROnRegion did not detect any text.")
+            return false
+        }
+        text = text.replace("[^A-Za-z]".toRegex(), "").lowercase()
+        val substrings = listOf("end", "late", "pace", "front")
+        val parts = text.split(*substrings.toTypedArray()).filter { it.isNotBlank() }
+        if (parts.size != 4) {
+            MessageLog.w(TAG, "performOCROnRegion returned a malformed string: $text")
+            return false
+        }
+        val styleMap: Map<String, String> = substrings.zip(parts).toMap()
+        for ((styleString, aptitudeString) in styleMap) {
+            val style: RunningStyle? = RunningStyle.fromShortName(styleString)
+            if (style == null) {
+                MessageLog.w(TAG, "performOCROnRegion returned invalid running style: $styleString")
+                return false
+            }
+            val aptitude: Aptitude? = Aptitude.fromName(aptitudeString)
+            if (aptitude == null) {
+                MessageLog.w(TAG, "performOCROnRegion returned invalid aptitude for running style: $style -> $aptitudeString")
+                return false
+            }
+            game.trainee.setRunningStyleAptitude(style, aptitude)
+        }
+
+        MessageLog.d(TAG, "Set temporary running style aptitudes: ${game.trainee.runningStyleAptitudes}")
+        return true
+    }
+
     /**
      * Handles race strategy override for Junior Year races.
      *
      * During Junior Year: Applies the user-selected strategy and stores the original.
      * After Junior Year: Restores the original strategy and disables the feature.
      */
-    private fun selectRaceStrategy() {
-        if (!enableRaceStrategyOverride) {
-            return
-        } else if ((!firstTimeRacing && !hasAppliedStrategyOverride && game.currentDate.year != 1) || game.checkFinals()) {
-            return
-        }
-
-        val currentYear = game.currentDate.year
-        MessageLog.i(TAG, "[RACE] Handling race strategy override for Year $currentYear.")
-
-        // Check if we're on the racing screen by looking for the Change Strategy button.
-        if (!game.findAndTapImage("race_change_strategy", tries = 1, region = game.imageUtils.regionBottomHalf)) {
-            MessageLog.i(TAG, "[RACE] Change Strategy button not found. Skipping strategy override.")
-            return
-        }
-
-        // Wait for the strategy selection popup to appear.
-        game.wait(2.0)
-
-        // Find the confirm button to use as reference point for strategy coordinates.
-        val confirmLocation = game.imageUtils.findImage("confirm", region = game.imageUtils.regionBottomHalf).first
-        if (confirmLocation == null) {
-            MessageLog.e(TAG, "[ERROR] Could not find confirm button for strategy selection. Skipping strategy override.")
-            game.findAndTapImage("cancel", region = game.imageUtils.regionMiddle)
-            return
-        }
-
-        val baseX = confirmLocation.x.toInt()
-        val baseY = confirmLocation.y.toInt()
-
-        if (currentYear == 1) {
-            // Junior Year: Apply user's selected strategy and detect the original.
-            if (!hasAppliedStrategyOverride) {
-                // Detect and store the original strategy.
-                val strategyImages = listOf(
-                    "race_strategy_end" to "End",
-                    "race_strategy_late" to "Late", 
-                    "race_strategy_pace" to "Pace",
-                    "race_strategy_front" to "Front"
-                )
-
-                var originalStrategy: String? = null
-                for ((imageName, strategyName) in strategyImages) {
-                    if (game.imageUtils.findImage(imageName).first != null) {
-                        originalStrategy = strategyName
-                        break
-                    }
-                }
-
-                if (originalStrategy != null) {
-                    detectedOriginalStrategy = originalStrategy
-                    MessageLog.i(TAG, "[RACE] Detected original race strategy: $originalStrategy")
-                }
-
-                // Apply the user's selected strategy.
-                MessageLog.i(TAG, "[RACE] Applying user-selected strategy: $juniorYearRaceStrategy")
-
-                val strategyOffsets = mapOf(
-                    "end" to Pair(-585, -210),
-                    "late" to Pair(-355, -210),
-                    "pace" to Pair(-125, -210),
-                    "front" to Pair(105, -210)
-                )
-
-                val offset = strategyOffsets[juniorYearRaceStrategy.lowercase()]
-                if (offset != null) {
-                    val targetX = (baseX + offset.first).toDouble()
-                    val targetY = (baseY + offset.second).toDouble()
-                    MessageLog.i(TAG, "[RACE] Clicking strategy button at ($targetX, $targetY) for strategy: $juniorYearRaceStrategy")
-                    if (game.gestureUtils.tap(targetX, targetY)) {
-                        hasAppliedStrategyOverride = true
-                        MessageLog.i(TAG, "[RACE] Successfully applied strategy override for Junior Year.")
-                    } else {
-                        MessageLog.e(TAG, "[ERROR] Failed to apply strategy override.")
-                    }
-                } else {
-                    MessageLog.e(TAG, "[ERROR] Unknown strategy: $juniorYearRaceStrategy")
-                }
+    fun selectRaceStrategy() {
+        if (
+            !game.trainee.bHasUpdatedAptitudes &&
+            !game.trainee.bTemporaryRunningStyleAptitudesUpdated
+        ) {
+            // If trainee aptitudes are unknown, this means we probably started the bot
+            // at the race screen. We need to open the race strategy dialog and
+            // read the aptitudes in from there.
+            MessageLog.i(TAG, "Setting running style and performing temporary initial aptitude check.")
+            ButtonChangeRunningStyle.click(imageUtils = game.imageUtils, tries = 10)
+            game.wait(0.5, skipWaitingForLoading = true)
+            var tries = 10
+            while (tries > 0 && !handleDialogs().first) {
+                tries--
             }
-        } else {
-            // Year 2+: Apply the detected original strategy if available, otherwise use user-selected strategy.
-            val strategyToApply = if (detectedOriginalStrategy != null) {
-                detectedOriginalStrategy!!
-            } else {
-                userSelectedOriginalStrategy
+        } else if (!game.trainee.bHasSetRunningStyle) {
+            // If we haven't set the trainee's running style yet, open the dialog.
+            MessageLog.i(TAG, "Setting running style for the first time.")
+            ButtonChangeRunningStyle.click(imageUtils = game.imageUtils, tries = 10)
+            game.wait(0.5, skipWaitingForLoading = true)
+            var tries = 10
+            while (tries > 0 && !handleDialogs().first) {
+                tries--
             }
-            
-            MessageLog.i(TAG, "[RACE] Applying original race strategy: $strategyToApply")
-            
-            val strategyOffsets = mapOf(
-                "end" to Pair(-585, -210),
-                "late" to Pair(-355, -210),
-                "pace" to Pair(-125, -210),
-                "front" to Pair(105, -210)
-            )
-
-            val offset = strategyOffsets[strategyToApply.lowercase()]
-            if (offset != null) {
-                val targetX = (baseX + offset.first).toDouble()
-                val targetY = (baseY + offset.second).toDouble()
-                MessageLog.i(TAG, "[RACE] Clicking strategy button at ($targetX, $targetY) for strategy: $strategyToApply")
-                if (game.gestureUtils.tap(targetX, targetY)) {
-                    hasAppliedStrategyOverride = false
-                    MessageLog.i(TAG, "[RACE] Successfully applied original strategy. Strategy override disabled for rest of run.")
-                } else {
-                    MessageLog.e(TAG, "[ERROR] Failed to apply original strategy.")
-                }
-            } else {
-                MessageLog.e(TAG, "[ERROR] Unknown strategy: $strategyToApply")
-            }
-        }
-
-        // Click confirm to apply the strategy change.
-        if (game.findAndTapImage("confirm", tries = 3, region = game.imageUtils.regionBottomHalf)) {
-            game.wait(2.0)
-            MessageLog.i(TAG, "[RACE] Strategy change confirmed.")
-        } else {
-            MessageLog.e(TAG, "[ERROR] Failed to confirm strategy change.")
         }
     }
 
@@ -1511,21 +1806,26 @@ class Racing (private val game: Game) {
      * @return True if the bot completed the race with retry attempts remaining. Otherwise false.
      */
     fun runRaceWithRetries(): Boolean {
-        val canSkip = game.imageUtils.findImage("race_skip_locked", tries = 5, region = game.imageUtils.regionBottomHalf).first == null
+        val canSkip = !ButtonViewResultsLocked.check(game.imageUtils, tries = 5)
         
         while (raceRetries >= 0) {
             if (canSkip) {
                 MessageLog.i(TAG, "[RACE] Skipping race...")
 
                 // Press the skip button and then wait for your result of the race to show.
-                if (game.findAndTapImage("race_skip", tries = 30, region = game.imageUtils.regionBottomHalf)) {
+                if (ButtonViewResults.click(game.imageUtils, tries = 30)) {
                     MessageLog.i(TAG, "[RACE] Race was able to be skipped.")
                 }
-                game.wait(2.0)
+
+                game.waitForLoading()
+                game.wait(1.0)
 
                 // Now tap on the screen to get past the Race Result screen.
                 game.tap(350.0, 450.0, "ok", taps = 5)
-                game.wait(2.0)
+                game.wait(0.1)
+                game.tap(350.0, 450.0, "ok", taps = 5)
+                game.waitForLoading()
+                game.wait(1.0)
 
                 // Check if the race needed to be retried.
                 if (game.imageUtils.findImage("race_retry", tries = 5, region = game.imageUtils.regionBottomHalf, suppressError = true).first != null) {
@@ -1566,32 +1866,32 @@ class Racing (private val game: Game) {
                 }
                 game.wait(1.0)
                 // Skip the part where it reveals the name of the race.
-                if (game.findAndTapImage("race_skip_manual", tries = 30, region = game.imageUtils.regionBottomHalf)) {
+                if (ButtonSkip.click(game.imageUtils, tries = 30)) {
                     MessageLog.i(TAG, "[RACE] Skipped the name reveal of the race.")
                 }
                 game.wait(1.0)
                 // Skip the walkthrough of the starting gate.
-                if (game.findAndTapImage("race_skip_manual", tries = 30, region = game.imageUtils.regionBottomHalf)) {
+                if (ButtonSkip.click(game.imageUtils, tries = 30)) {
                     MessageLog.i(TAG, "[RACE] Skipped the walkthrough of the starting gate.")
                 }
                 game.wait(1.0)
                 // Skip the start of the race.
-                if (game.findAndTapImage("race_skip_manual", tries = 30, region = game.imageUtils.regionBottomHalf)) {
+                if (ButtonSkip.click(game.imageUtils, tries = 30)) {
                     MessageLog.i(TAG, "[RACE] Skipped the start of the race.")
                 }
                 game.wait(1.0)
                 // Skip the lead up to the finish line.
-                if (game.findAndTapImage("race_skip_manual", tries = 30, region = game.imageUtils.regionBottomHalf)) {
+                if (ButtonSkip.click(game.imageUtils, tries = 30)) {
                     MessageLog.i(TAG, "[RACE] Skipped the lead up to the finish line.")
                 }
                 game.wait(1.0)
                 // Skip crossing the finish line.
-                if (game.findAndTapImage("race_skip_manual", tries = 30, region = game.imageUtils.regionBottomHalf)) {
+                if (ButtonSkip.click(game.imageUtils, tries = 30)) {
                     MessageLog.i(TAG, "[RACE] Skipped crossing the finish line.")
                 }
                 game.wait(2.0)
                 // Skip the result screen.
-                if (game.findAndTapImage("race_skip_manual", tries = 30, region = game.imageUtils.regionBottomHalf)) {
+                if (ButtonSkip.click(game.imageUtils, tries = 30)) {
                     MessageLog.i(TAG, "[RACE] Skipped the results screen.")
                 }
 
@@ -1714,8 +2014,8 @@ class Racing (private val game: Game) {
                     RACES_COLUMN_GRADE,
                     RACES_COLUMN_FANS,
                     RACES_COLUMN_NAME_FORMATTED,
-                    RACES_COLUMN_TERRAIN,
-                    RACES_COLUMN_DISTANCE_TYPE,
+                    RACES_COLUMN_TRACK_SURFACE,
+                    RACES_COLUMN_TRACK_DISTANCE,
                     RACES_COLUMN_TURN_NUMBER
                 ),
                 "$RACES_COLUMN_TURN_NUMBER = ? AND $RACES_COLUMN_NAME_FORMATTED = ?",
@@ -1731,8 +2031,8 @@ class Racing (private val game: Game) {
                         grade = exactCursor.getString(1),
                         fans = exactCursor.getInt(2),
                         nameFormatted = exactCursor.getString(3),
-                        terrain = exactCursor.getString(4),
-                        distanceType = exactCursor.getString(5),
+                        trackSurface = exactCursor.getString(4),
+                        trackDistance = exactCursor.getString(5),
                         turnNumber = exactCursor.getInt(6)
                     )
                     matches.add(race)
@@ -1761,8 +2061,8 @@ class Racing (private val game: Game) {
                     RACES_COLUMN_GRADE,
                     RACES_COLUMN_FANS,
                     RACES_COLUMN_NAME_FORMATTED,
-                    RACES_COLUMN_TERRAIN,
-                    RACES_COLUMN_DISTANCE_TYPE,
+                    RACES_COLUMN_TRACK_SURFACE,
+                    RACES_COLUMN_TRACK_DISTANCE,
                     RACES_COLUMN_TURN_NUMBER
                 ),
                 "$RACES_COLUMN_TURN_NUMBER = ?",
@@ -1791,8 +2091,8 @@ class Racing (private val game: Game) {
                         grade = fuzzyCursor.getString(1),
                         fans = fuzzyCursor.getInt(2),
                         nameFormatted = nameFormatted,
-                        terrain = fuzzyCursor.getString(4),
-                        distanceType = fuzzyCursor.getString(5),
+                        trackSurface = fuzzyCursor.getString(4),
+                        trackDistance = fuzzyCursor.getString(5),
                         turnNumber = fuzzyCursor.getInt(6)
                     )
                     fuzzyMatches.add(Pair(race, similarity))
@@ -1835,7 +2135,7 @@ class Racing (private val game: Game) {
      * The score is derived from three weighted factors:
      * - **Fans:** Normalized to a 0–100 scale.
      * - **Grade:** Weighted to a map of values based on grade.
-     * - **Aptitude:** Adds a bonus if both terrain and distance aptitudes are A or S.
+     * - **Aptitude:** Adds a bonus if both track surface and distance aptitudes are A or S.
      *
      * The final score is the average of these three components.
      *
@@ -1848,30 +2148,21 @@ class Racing (private val game: Game) {
         
         // Grade scoring: G1 = 75, G2 = 50, G3 = 25.
         val gradeScore = when (race.grade) {
-            "G1" -> 75.0
-            "G2" -> 50.0
-            "G3" -> 25.0
+            RaceGrade.G1 -> 75.0
+            RaceGrade.G2 -> 50.0
+            RaceGrade.G3 -> 25.0
             else -> 0.0
         }
         
-        // Map distance/terrain types to their current aptitudes.
-        val terrainAptitude = when (race.terrain) {
-            "Turf" -> game.aptitudes.track.turf
-            "Dirt" -> game.aptitudes.track.dirt
-            else -> "X"
-        }
-        val distanceAptitude = when (race.distanceType) {
-            "Short" -> game.aptitudes.distance.sprint
-            "Mile" -> game.aptitudes.distance.mile
-            "Medium" -> game.aptitudes.distance.medium
-            "Long" -> game.aptitudes.distance.long
-            else -> "X"
-        }
+        // Get the trainee's aptitude for this race's track surface/distance.
+        val trackSurfaceAptitude: Aptitude = game.trainee.checkTrackSurfaceAptitude(race.trackSurface)
+        val trackDistanceAptitude: Aptitude = game.trainee.checkTrackDistanceAptitude(race.trackDistance)
         
-        // Aptitude bonus: 100 if both terrain and distance match A/S, else 0.
-        val terrainMatch = terrainAptitude == "A" || terrainAptitude == "S"
-        val distanceMatch = distanceAptitude == "A" || distanceAptitude == "S"
-        val aptitudeBonus = if (terrainMatch && distanceMatch) 100.0 else 0.0
+        // Aptitude bonus: 100 if both track surface and distance are >= B aptitude, else 0.
+        val trackSurfaceMatch: Boolean = trackSurfaceAptitude >= Aptitude.B
+        val trackDistanceMatch: Boolean = trackDistanceAptitude >= Aptitude.B
+
+        val aptitudeBonus = if (trackSurfaceMatch && trackDistanceMatch) 100.0 else 0.0
         
         // Calculate final score with equal weights.
         val finalScore = (fansScore + gradeScore + aptitudeBonus) / 3.0
@@ -1881,12 +2172,12 @@ class Racing (private val game: Game) {
             TAG,
             """
             [DEBUG] Scoring ${race.name}:
-            Fans        = ${race.fans} (${game.decimalFormat.format(fansScore)})
-            Grade       = ${race.grade} (${game.decimalFormat.format(gradeScore)})
-            Terrain     = ${race.terrain} ($terrainAptitude)
-            Distance    = ${race.distanceType} ($distanceAptitude)
-            Aptitude    = ${game.decimalFormat.format(aptitudeBonus)}
-            Final       = ${game.decimalFormat.format(finalScore)}
+            Fans            = ${race.fans} (${game.decimalFormat.format(fansScore)})
+            Grade           = ${race.grade} (${game.decimalFormat.format(gradeScore)})
+            Track Surface   = ${race.trackSurface} ($trackSurfaceAptitude)
+            Track Distance  = ${race.trackDistance} ($trackDistanceAptitude)
+            Aptitude        = ${game.decimalFormat.format(aptitudeBonus)}
+            Final           = ${game.decimalFormat.format(finalScore)}
             """.trimIndent()
         )
         
@@ -1928,8 +2219,8 @@ class Racing (private val game: Game) {
                     RACES_COLUMN_GRADE,
                     RACES_COLUMN_FANS,
                     RACES_COLUMN_NAME_FORMATTED,
-                    RACES_COLUMN_TERRAIN,
-                    RACES_COLUMN_DISTANCE_TYPE,
+                    RACES_COLUMN_TRACK_SURFACE,
+                    RACES_COLUMN_TRACK_DISTANCE,
                     RACES_COLUMN_TURN_NUMBER
                 ),
                 "$RACES_COLUMN_TURN_NUMBER >= ? AND $RACES_COLUMN_TURN_NUMBER <= ?",
@@ -1945,8 +2236,8 @@ class Racing (private val game: Game) {
                         grade = cursor.getString(1),
                         fans = cursor.getInt(2),
                         nameFormatted = cursor.getString(3),
-                        terrain = cursor.getString(4),
-                        distanceType = cursor.getString(5),
+                        trackSurface = cursor.getString(4),
+                        trackDistance = cursor.getString(5),
                         turnNumber = cursor.getInt(6)
                     )
                     races.add(race)
@@ -2016,12 +2307,12 @@ class Racing (private val game: Game) {
         val preferredGrades = try {
             // Parse as JSON array.
             val jsonArray = JSONArray(preferredGradesString)
-            val parsed = (0 until jsonArray.length()).map { jsonArray.getString(it) }
+            val parsed = (0 until jsonArray.length()).map { jsonArray.getString(it).uppercase() }
             MessageLog.i(TAG, "[RACE] Parsed preferred grades as JSON array: $parsed.")
             parsed
         } catch (e: Exception) {
             MessageLog.i(TAG, "[RACE] Error parsing preferred grades: ${e.message}, using fallback.")
-            val parsed = preferredGradesString.split(",").map { it.trim() }
+            val parsed = preferredGradesString.split(",").map { it.trim().uppercase() }
             MessageLog.i(TAG, "[RACE] Fallback parsing result: $parsed")
             parsed
         }
@@ -2029,40 +2320,40 @@ class Racing (private val game: Game) {
         // Parse preferred distances.
         val preferredDistances = try {
             // Parse as JSON array.
-            val jsonArray = JSONArray(preferredDistancesString)
-            val parsed = (0 until jsonArray.length()).map { jsonArray.getString(it) }
+            val jsonArray = JSONArray(preferredTrackDistanceString)
+            val parsed = (0 until jsonArray.length()).map { jsonArray.getString(it).uppercase() }
             MessageLog.i(TAG, "[RACE] Parsed preferred distances as JSON array: $parsed.")
             parsed
         } catch (e: Exception) {
             MessageLog.i(TAG, "[RACE] Error parsing preferred distances: ${e.message}, using fallback.")
-            val parsed = preferredDistancesString.split(",").map { it.trim() }
+            val parsed = preferredTrackDistanceString.split(",").map { it.trim().uppercase() }
             MessageLog.i(TAG, "[RACE] Fallback parsing result: $parsed")
             parsed
         }
 
-        if (game.debugMode) MessageLog.d(TAG, "[DEBUG] Filter criteria: Min fans: $minFansThreshold, terrain: $preferredTerrain, grades: $preferredGrades, distances: $preferredDistances")
-        else Log.d(TAG, "[DEBUG] Filter criteria: Min fans: $minFansThreshold, terrain: $preferredTerrain, grades: $preferredGrades, distances: $preferredDistances")
-        
+        if (game.debugMode) MessageLog.d(TAG, "[DEBUG] Filter criteria: Min fans: $minFansThreshold, trackSurface: $preferredTrackSurfaceString, grades: $preferredGrades, distances: $preferredDistances")
+        else Log.d(TAG, "[DEBUG] Filter criteria: Min fans: $minFansThreshold, trackSurface: $preferredTrackSurfaceString, grades: $preferredGrades, distances: $preferredDistances")
+
         val filteredRaces = races.filter { race ->
             val meetsFansThreshold = bypassMinFans || race.fans >= minFansThreshold
-            val meetsTerrainPreference = preferredTerrain == "Any" || race.terrain == preferredTerrain
-            val meetsGradePreference = preferredGrades.isEmpty() || preferredGrades.contains(race.grade)
-            val meetsDistancePreference = preferredDistances.isEmpty() || preferredDistances.contains(race.distanceType)
-            
-            val passes = meetsFansThreshold && meetsTerrainPreference && meetsGradePreference && meetsDistancePreference
+            val meetsTrackSurfacePreference = preferredTrackSurfaceString == "Any" || race.trackSurface == TrackSurface.fromName(preferredTrackSurfaceString)
+            val meetsGradePreference = preferredGrades.isEmpty() || preferredGrades.contains(race.grade.name)
+            val meetsTrackDistancePreference = preferredDistances.isEmpty() || preferredDistances.contains(race.trackDistance.name)
+
+            val passes = meetsFansThreshold && meetsTrackSurfacePreference && meetsGradePreference && meetsTrackDistancePreference
 
             // If the race did not pass any of the filters, print the reason why.
             if (!passes) {
                 val reasons = mutableListOf<String>()
                 if (!meetsFansThreshold) reasons.add("fans ${race.fans} < $minFansThreshold")
-                if (!meetsTerrainPreference) reasons.add("terrain ${race.terrain} != $preferredTerrain")
+                if (!meetsTrackSurfacePreference) reasons.add("trackSurface ${race.trackSurface} != $preferredTrackSurfaceString")
                 if (!meetsGradePreference) reasons.add("grade ${race.grade} not in $preferredGrades")
-                if (!meetsDistancePreference) reasons.add("distance ${race.distanceType} not in $preferredDistances")
+                if (!meetsTrackDistancePreference) reasons.add("distance ${race.trackDistance} not in $preferredDistances")
                 if (game.debugMode) MessageLog.d(TAG, "[DEBUG] ✗ Filtered out ${race.name}: ${reasons.joinToString(", ")}")
                 else Log.d(TAG, "[DEBUG] ✗ Filtered out ${race.name}: ${reasons.joinToString(", ")}")
             } else {
-                if (game.debugMode) MessageLog.d(TAG, "[DEBUG] ✓ Passed filter: ${race.name} (fans: ${race.fans}, terrain: ${race.terrain}, grade: ${race.grade}, distance: ${race.distanceType})")
-                else Log.d(TAG, "[DEBUG] ✓ Passed filter: ${race.name} (fans: ${race.fans}, terrain: ${race.terrain}, grade: ${race.grade}, distance: ${race.distanceType})")
+                if (game.debugMode) MessageLog.d(TAG, "[DEBUG] ✓ Passed filter: ${race.name} (fans: ${race.fans}, trackSurface: ${race.trackSurface}, grade: ${race.grade}, distance: ${race.trackDistance})")
+                else Log.d(TAG, "[DEBUG] ✓ Passed filter: ${race.name} (fans: ${race.fans}, trackSurface: ${race.trackSurface}, grade: ${race.grade}, distance: ${race.trackDistance})")
             }
             
             passes
@@ -2103,7 +2394,7 @@ class Racing (private val game: Game) {
         
         // Get and score upcoming races.
         MessageLog.i(TAG, "[RACE] Looking ahead $lookAheadDays days for upcoming races...")
-        val upcomingRaces = queryRacesFromDatabase(game.currentDate.turnNumber + 1, lookAheadDays)
+        val upcomingRaces = queryRacesFromDatabase(game.currentDate.day + 1, lookAheadDays)
         MessageLog.i(TAG, "[RACE] Found ${upcomingRaces.size} upcoming races in database.")
         
         val filteredUpcomingRaces = filterRacesByCriteria(upcomingRaces)

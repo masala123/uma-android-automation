@@ -10,6 +10,9 @@ import com.steve1316.automation_library.utils.ImageUtils
 import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.bot.Game
+import com.steve1316.uma_android_automation.utils.types.StatName
+import com.steve1316.uma_android_automation.utils.types.Aptitude
+import com.steve1316.uma_android_automation.utils.types.BoundingBox
 import org.opencv.android.Utils
 import org.opencv.core.*
 import org.opencv.imgcodecs.Imgcodecs
@@ -25,6 +28,7 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.math.sqrt
 import kotlin.text.replace
+import java.util.concurrent.ConcurrentHashMap
 
 
 /**
@@ -40,6 +44,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	override var debugMode: Boolean = SettingsHelper.getBooleanSetting("debug", "enableDebugMode")
 	override var confidence: Double = SettingsHelper.getStringSetting("debug", "templateMatchConfidence").toDouble()
 	override var customScale: Double = SettingsHelper.getStringSetting("debug", "templateMatchCustomScale").toDouble()
+    private val manualStatCap: Int = SettingsHelper.getIntSetting("training", "manualStatCap")
 
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
@@ -48,6 +53,11 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		val fans: Int,
 		val hasDoublePredictions: Boolean
 	)
+
+    data class StatBlock(
+        val name: String,
+        val point: Point,
+    )
 
 	data class StatGainRowConfig(
 		val startX: Int,
@@ -59,10 +69,15 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	)
 
 	data class BarFillResult(
+        val statName: StatName,
 		val fillPercent: Double,
 		val filledSegments: Int,
-		val dominantColor: String
-	)
+		val dominantColor: String,
+        val statBlock: StatBlock,
+	) {
+        val isRainbow: Boolean
+            get() = statBlock.name == statName.name && dominantColor == "orange"
+    }
 
 	data class SpiritGaugeResult(
 		val numGaugesCanFill: Int,
@@ -70,8 +85,8 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	)
 
 	data class StatGainResult(
-		val statGains: IntArray,
-		val rowValuesMap: Map<Int, List<Int>>
+		val statGains: Map<StatName, Int>,
+		val rowValuesMap: Map<StatName, List<Int>>
 	)
 
 	////////////////////////////////////////////////////////////////////
@@ -226,53 +241,72 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	 *
 	 * @param sourceBitmap Bitmap of the source image separately taken. Defaults to null.
 	 * @param trainingSelectionLocation Point location of the template image separately taken. Defaults to null.
+     * @param tries The number of retry attempts to make when detecting failure chance.
+     *              Only applies when sourceBitmap and trainingSelectionLocation are NULL.
 	 *
-	 * @return Integer representing the percentage.
+	 * @return Integer representing the percentage. On failed detection, returns -1.
 	 */
-	fun findTrainingFailureChance(sourceBitmap: Bitmap? = null, trainingSelectionLocation: Point? = null): Int {
-		// Crop the source screenshot to hold the success percentage only.
-		val (trainingSelectionLocation, sourceBitmap) = if (sourceBitmap == null && trainingSelectionLocation == null) {
-			findImage("training_failure_chance")
-		} else {
-			Pair(trainingSelectionLocation, sourceBitmap)
-		}
+	fun findTrainingFailureChance(sourceBitmap: Bitmap? = null, trainingSelectionLocation: Point? = null, tries: Int = 1): Int {
+        fun detectTrainingFailureChance(sourceBitmap: Bitmap? = null, trainingSelectionLocation: Point? = null): Int {
+            // Crop the source screenshot to hold the success percentage only.
+            val (trainingSelectionLocation, sourceBitmap) = if (sourceBitmap == null && trainingSelectionLocation == null) {
+                findImage("training_failure_chance")
+            } else {
+                Pair(trainingSelectionLocation, sourceBitmap)
+            }
 
-		if (trainingSelectionLocation == null) {
-			return -1
-		}
+            if (trainingSelectionLocation == null) {
+                return -1
+            }
 
 		// Determine crop region.
 		val (offsetX, offsetY, width, height) = listOf(-45, 15, relWidth(100), relHeight(37))
 
-		// Perform OCR with 2x scaling and no thresholding.
-		val detectedText = performOCROnRegion(
-			sourceBitmap!!,
-			relX(trainingSelectionLocation.x, offsetX),
-			relY(trainingSelectionLocation.y, offsetY),
-			width,
-			height,
-			useThreshold = false,
-			useGrayscale = true,
-			scale = 2.0,
-			ocrEngine = "mlkit",
-			debugName = "TrainingFailureChance"
-		)
+            // Perform OCR with 2x scaling and no thresholding.
+            val detectedText = performOCROnRegion(
+                sourceBitmap!!,
+                relX(trainingSelectionLocation.x, offsetX),
+                relY(trainingSelectionLocation.y, offsetY),
+                width,
+                height,
+                useThreshold = false,
+                useGrayscale = true,
+                scale = 2.0,
+                ocrEngine = "mlkit",
+                debugName = "TrainingFailureChance"
+            )
 
-		// Parse the result.
-		val result = try {
-			val cleanedResult = detectedText.replace("%", "").replace(Regex("[^0-9]"), "").trim()
-			cleanedResult.toInt()
-		} catch (_: NumberFormatException) {
-			MessageLog.e(TAG, "Could not convert \"$detectedText\" to integer for training failure chance.")
-			-1
-		}
+            // Parse the result.
+            return try {
+                val cleanedResult = detectedText.replace("%", "").replace(Regex("[^0-9]"), "").trim()
+                cleanedResult.toInt()
+            } catch (_: NumberFormatException) {
+                MessageLog.e(TAG, "Could not convert \"$detectedText\" to integer for training failure chance.")
+                -1
+            }
+        }
 
-		if (debugMode) {
-			MessageLog.d(TAG, "Failure chance detected to be at $result%.")
-		} else {
-			Log.d(TAG, "Failure chance detected to be at $result%.")
-		}
+        val tries: Int = maxOf(1, tries)
+        var result: Int = -1
+        for (i in 1..tries) {
+            // We only use the passed parameters on the first iteration since if
+            // we have to retry, then we want a new source bitmap.
+            if (i == 1) {
+                result = detectTrainingFailureChance(sourceBitmap, trainingSelectionLocation)
+            } else {
+                result = detectTrainingFailureChance()
+            }
 
+            if (result == -1) {
+                MessageLog.w(TAG, "Failed to detect training failure chance (attempt $i of $tries)")
+            }
+        }
+
+        if (debugMode) {
+            MessageLog.d(TAG, "Failure chance detected to be at $result%.")
+        } else {
+            Log.d(TAG, "Failure chance detected to be at $result%.")
+        }
 		return result
 	}
 
@@ -501,44 +535,57 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	}
 
 	/**
-	 * Determine the number of skill points.
+	 * Determine the number of skill points. Parameters are optional to allow for thread-safe operations.
 	 *
+	 * @param sourceBitmap Bitmap of the source image separately taken. Defaults to null.
+	 * @param skillPointsLocation Point location of the skill points template image separately taken. Defaults to null.
 	 * @return Number of skill points or -1 if not found.
 	 */
-	fun determineSkillPoints(): Int {
-		val (skillPointLocation, sourceBitmap) = findImage("skill_points", tries = 1)
-
-		return if (skillPointLocation != null) {
-			// Determine crop region.
-			val (offsetX, offsetY, width, height) = listOf(-70, 28, relWidth(135), relHeight(70))
-
-			// Perform OCR with thresholding.
-			val detectedText = performOCROnRegion(
-				sourceBitmap,
-				relX(skillPointLocation.x, offsetX),
-				relY(skillPointLocation.y, offsetY),
-				width,
-				height,
-				useThreshold = true,
-				useGrayscale = true,
-				scale = 1.0,
-				ocrEngine = "mlkit",
-				debugName = "SkillPoints"
-			)
-
-			// Parse the result.
-			MessageLog.i(TAG, "Detected number of skill points before formatting: $detectedText")
-			try {
-				Log.d(TAG, "Converting $detectedText to integer for skill points")
-				val cleanedResult = detectedText.replace(Regex("[^0-9]"), "")
-				cleanedResult.toInt()
-			} catch (_: NumberFormatException) {
-				-1
-			}
-		} else {
-			MessageLog.e(TAG, "Could not start the process of detecting skill points.")
-			-1
+	fun determineSkillPoints(sourceBitmap: Bitmap? = null, skillPointsLocation: Point? = null): Int {
+		val (skillPointsLocation, sourceBitmap) = if (skillPointsLocation == null) {
+			findImage("skill_points", tries = 1)
+        } else if (sourceBitmap == null) {
+            Pair(skillPointsLocation, getSourceBitmap())
+        } else {
+			Pair(skillPointsLocation, sourceBitmap)
 		}
+
+        if (sourceBitmap == null) {
+            MessageLog.e(TAG, "determineSkillPoints: sourceBitmap is NULL.")
+            return -1
+        }
+
+        if (skillPointsLocation == null) {
+            MessageLog.e(TAG, "determineSkillPoints: skillPointsLocation is NULL.")
+            return -1
+        }
+
+        // Determine crop region.
+        val (offsetX, offsetY, width, height) = listOf(-70, 28, relWidth(135), relHeight(70))
+
+        // Perform OCR with thresholding.
+        val detectedText = performOCROnRegion(
+            sourceBitmap,
+            relX(skillPointsLocation.x, offsetX),
+            relY(skillPointsLocation.y, offsetY),
+            width,
+            height,
+            useThreshold = true,
+            useGrayscale = true,
+            scale = 1.0,
+            ocrEngine = "mlkit",
+            debugName = "SkillPoints"
+        )
+
+        // Parse the result.
+        Log.d(TAG, "Detected number of skill points before formatting: $detectedText")
+        return try {
+            Log.d(TAG, "Converting $detectedText to integer for skill points")
+            val cleanedResult = detectedText.replace(Regex("[^0-9]"), "")
+            cleanedResult.toInt()
+        } catch (_: NumberFormatException) {
+            -1
+        }
 	}
 
 	/**
@@ -548,78 +595,51 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	 *
 	 * @return A list of the results for each relationship bar.
 	 */
-	fun analyzeRelationshipBars(sourceBitmap: Bitmap? = null): ArrayList<BarFillResult> {
+	fun analyzeRelationshipBars(sourceBitmap: Bitmap? = null, statName: StatName): ArrayList<BarFillResult> {
 		val customRegion = intArrayOf(displayWidth - (displayWidth / 3), 0, (displayWidth / 3), displayHeight - (displayHeight / 3))
 
 		// Take a single screenshot first to avoid buffer overflow.
 		val sourceBitmap = sourceBitmap ?: getSourceBitmap()
 
-		var allStatBlocks = mutableListOf<Point>()
-
 		val latch = CountDownLatch(6)
 
-		// Create arrays to store results from each thread.
-		val speedBlocks = arrayListOf<Point>()
-		val staminaBlocks = arrayListOf<Point>()
-		val powerBlocks = arrayListOf<Point>()
-		val gutsBlocks = arrayListOf<Point>()
-		val witBlocks = arrayListOf<Point>()
-		val friendshipBlocks = arrayListOf<Point>()
+        var allStatBlocks: MutableList<StatBlock> = mutableListOf()
+        val blockMap = ConcurrentHashMap<String, ArrayList<Point>>()
+        val threads = mutableListOf<Thread>()
 
-		// Start parallel threads for each findAll call, passing the same source bitmap.
-		Thread {
-			try {
-				speedBlocks.addAll(findAllWithBitmap("stat_speed_block", sourceBitmap, region = customRegion))
-			} catch (_: InterruptedException) {
-			} finally {
-				latch.countDown()
-			}
-		}.apply { isDaemon = true }.start()
+        for (name in StatName.entries) {
+            val thread = Thread {
+                try {
+                    blockMap[name.name] = findAllWithBitmap(
+                        "stat_${name.name.lowercase()}_block",
+                        sourceBitmap,
+                        region=customRegion,
+                    )
+                } catch (_: InterruptedException) {
+                } finally {
+                    latch.countDown()
+                }
+            }.apply { isDaemon = true }
+            threads.add(thread)
+            thread.start()
+        }
 
-		Thread {
-			try {
-				staminaBlocks.addAll(findAllWithBitmap("stat_stamina_block", sourceBitmap, region = customRegion))
-			} catch (_: InterruptedException) {
-			} finally {
-				latch.countDown()
-			}
-		}.apply { isDaemon = true }.start()
-
-		Thread {
-			try {
-				powerBlocks.addAll(findAllWithBitmap("stat_power_block", sourceBitmap, region = customRegion))
-			} catch (_: InterruptedException) {
-			} finally {
-				latch.countDown()
-			}
-		}.apply { isDaemon = true }.start()
-
-		Thread {
-			try {
-				gutsBlocks.addAll(findAllWithBitmap("stat_guts_block", sourceBitmap, region = customRegion))
-			} catch (_: InterruptedException) {
-			} finally {
-				latch.countDown()
-			}
-		}.apply { isDaemon = true }.start()
-
-		Thread {
-			try {
-				witBlocks.addAll(findAllWithBitmap("stat_wit_block", sourceBitmap, region = customRegion))
-			} catch (_: InterruptedException) {
-			} finally {
-				latch.countDown()
-			}
-		}.apply { isDaemon = true }.start()
-
-		Thread {
-			try {
-				friendshipBlocks.addAll(findAllWithBitmap("stat_friendship_block", sourceBitmap, region = customRegion))
-			} catch (_: InterruptedException) {
-			} finally {
-				latch.countDown()
-			}
-		}.apply { isDaemon = true }.start()
+        // Unique block for trainer supports.
+        val thread = Thread {
+            try {
+                blockMap["trainer"] = findAllWithBitmap(
+                    "stat_trainer_block",
+                    sourceBitmap,
+                    region=customRegion,
+                )
+            } catch (_: InterruptedException) {
+                // Gracefully handle interruption when bot is stopped.
+            } finally {
+                latch.countDown()
+            }
+		}
+        threads.add(thread)
+        thread.start()
 
 		// Wait for all threads to complete.
 		try {
@@ -628,19 +648,22 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			MessageLog.e(TAG, "Parallel findAll operations timed out.")
 		}
 
-		// Combine all results.
-		allStatBlocks.addAll(speedBlocks)
-		allStatBlocks.addAll(staminaBlocks)
-		allStatBlocks.addAll(powerBlocks)
-		allStatBlocks.addAll(gutsBlocks)
-		allStatBlocks.addAll(witBlocks)
-		allStatBlocks.addAll(friendshipBlocks)
+        threads.forEach { it.join() }
 
-		// Filter out duplicates based on exact coordinate matches.
-		allStatBlocks = allStatBlocks.distinctBy { "${it.x},${it.y}" }.toMutableList()
+        // Combine all results.
+		for ((blockName, blocks) in blockMap) {
+            blocks.forEach { block ->
+                allStatBlocks.add(StatBlock(blockName, block))
+            }
+        }
+
+        // Filter out duplicates based on exact coordinate matches.
+		allStatBlocks = allStatBlocks.distinctBy {
+            "${it.point.x},${it.point.y}"
+        }.toMutableList()
 
 		// Sort the combined stat blocks by ascending y-coordinate.
-		allStatBlocks.sortBy { it.y }
+		allStatBlocks.sortBy { it.point.y }
 
 		// Define HSV color ranges.
 		val blueLower = Scalar(10.0, 150.0, 150.0)
@@ -654,9 +677,9 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		val results = arrayListOf<BarFillResult>()
 
 		for ((index, statBlock) in allStatBlocks.withIndex()) {
-			if (debugMode) MessageLog.d(TAG, "Processing stat block #${index + 1} at position: (${statBlock.x}, ${statBlock.y})")
+			if (debugMode) MessageLog.d(TAG, "Processing stat block #${index + 1} at position: (${statBlock.point.x}, ${statBlock.point.y})")
 
-			val croppedBitmap = createSafeBitmap(sourceBitmap, relX(statBlock.x, -9), relY(statBlock.y, 107), 111, 13, "analyzeRelationshipBars stat block ${index + 1}")
+			val croppedBitmap = createSafeBitmap(sourceBitmap, relX(statBlock.point.x, -9), relY(statBlock.point.y, 107), 111, 13, "analyzeRelationshipBars stat block ${index + 1}")
 			if (croppedBitmap == null) {
 				MessageLog.e(TAG, "Failed to create cropped bitmap for stat block #${index + 1}.")
 				continue
@@ -665,8 +688,10 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			val (isMaxed, _) = match(croppedBitmap, maxedTemplateBitmap!!, "stat_maxed")
 			if (isMaxed) {
 				// Skip if the relationship bar is already maxed.
-				if (debugMode) MessageLog.d(TAG, "Relationship bar #${index + 1} is full.")
-				results.add(BarFillResult(100.0, 5, "orange"))
+				if (debugMode) {
+                    MessageLog.d(TAG, "Relationship bar #${index + 1} is full.")
+                }
+				results.add(BarFillResult(statName, 100.0, 5, "orange", statBlock))
 				continue
 			}
 
@@ -717,8 +742,10 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			hsvMat.release()
 			barMat.release()
 
-			if (debugMode) MessageLog.d(TAG, "Relationship bar #${index + 1} is ${decimalFormat.format(fillPercent)}% filled with $filledSegments filled segments and the dominant color is $dominantColor")
-			results.add(BarFillResult(fillPercent, filledSegments, dominantColor))
+			if (debugMode) {
+                MessageLog.d(TAG, "Relationship bar #${index + 1} is ${decimalFormat.format(fillPercent)}% filled with $filledSegments filled segments and the dominant color is $dominantColor")
+            }
+			results.add(BarFillResult(statName, fillPercent, filledSegments, dominantColor, statBlock))
 		}
 
 		return results
@@ -836,101 +863,86 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	}
 
 	/**
-	 * Determines the aptitudes of the current character based on the levels (S, A, B) on the Full Stats popup. The priority order of the aptitude levels is S > A > B.
+	 * Reads a single stat value on the Main screen. Parameters are optional to allow for thread-safe operations.
 	 *
-	 * @return The aptitudes of the current character.
+	 * @param statName The stat to read.
+	 * @param sourceBitmap Bitmap of the source image separately taken. Defaults to null.
+	 * @param skillPointsLocation Point location of the skill points template image separately taken. Defaults to null.
+	 * @return The integer value of the stat, or -1 if not found.
 	 */
-	fun determineAptitudes(currentAptitudes: Game.Aptitudes): Game.Aptitudes {
-		val (_, statAptitudeSTemplate) = getBitmaps("stat_aptitude_S")
-		val (_, statAptitudeATemplate) = getBitmaps("stat_aptitude_A")
-		val (_, statAptitudeBTemplate) = getBitmaps("stat_aptitude_B")
-
-        // Use the Close button as the reference point for the aptitude locations.
-		val (closeButtonLocation, sourceBitmap) = findImage("close", region = regionBottomHalf)
-		if (closeButtonLocation == null) {
-			MessageLog.e(TAG, "Could not find close button. Keeping previous aptitude values.")
-			return currentAptitudes
+	fun determineSingleStatValue(statName: StatName, sourceBitmap: Bitmap? = null, skillPointsLocation: Point? = null): Int {
+		val (finalSkillPointsLocation, finalSourceBitmap) = if (sourceBitmap == null && skillPointsLocation == null) {
+			findImage("skill_points")
+		} else {
+			Pair(skillPointsLocation, sourceBitmap)
 		}
 
-		val aptitudes = mutableMapOf(
-			"track" to mutableMapOf("turf" to "", "dirt" to ""),
-			"distance" to mutableMapOf("sprint" to "", "mile" to "", "medium" to "", "long" to ""),
-			"style" to mutableMapOf("front" to "", "pace" to "", "late" to "", "end" to "")
+		if (finalSkillPointsLocation == null || finalSourceBitmap == null) {
+			MessageLog.e(TAG, "Could not start the process of detecting stat value for $statName.")
+			return -1
+		}
+
+		// Each stat is evenly spaced at 170 pixel intervals starting at offset -862.
+		val index = statName.ordinal
+		val offsetX = -862 + (index * 170)
+
+		// Perform OCR with no thresholding (stats are on solid background).
+		val text = performOCROnRegion(
+			finalSourceBitmap,
+			relX(finalSkillPointsLocation.x, offsetX),
+			relY(finalSkillPointsLocation.y, 25),
+			relWidth(98),
+			relHeight(42),
+			useThreshold = false,
+			useGrayscale = true,
+			scale = 1.0,
+			ocrEngine = "tesseract_digits",
+			debugName = "${statName}StatValue"
 		)
 
-		aptitudes.entries.toList().forEachIndexed { rowIndex, (aptitudeName, keys) ->
-            // Calculate Y offset for each row.
-			val yOffset = -1165 + (rowIndex * 60)
-			keys.keys.forEachIndexed { i, key ->
-				// Only two aptitudes for Track: Turf and Dirt.
-				if (aptitudeName == "track" && i > 1) return@forEachIndexed
-
-				val croppedBitmap = createSafeBitmap(
-					sourceBitmap,
-					relX(closeButtonLocation.x, -280 + (i * 190)),
-					relY(closeButtonLocation.y, yOffset),
-					176,
-					52,
-					"determineAptitudes $aptitudeName $key"
-				)
-
-				if (croppedBitmap == null) {
-					MessageLog.e(TAG, "Failed to crop bitmap for $aptitudeName $key.")
-					return@forEachIndexed
-				}
-
-				// Determine level by priority: S > A > B.
-				val level = when {
-					match(croppedBitmap, statAptitudeSTemplate!!, "stat_aptitude_S", customConfidence = 0.90).first -> "S"
-					match(croppedBitmap, statAptitudeATemplate!!, "stat_aptitude_A", customConfidence = 0.90).first -> "A"
-					match(croppedBitmap, statAptitudeBTemplate!!, "stat_aptitude_B", customConfidence = 0.90).first -> "B"
-					else -> "X"
-				}
-
-				aptitudes[aptitudeName]?.set(key, level)
+		// Parse the text.
+		Log.d(TAG, "Detected number of stats for $statName from Tesseract before formatting: $text")
+		if (text.lowercase().contains("max") || text.lowercase().contains("ax")) {
+			Log.d(TAG, "$statName seems to be maxed out. Setting it to ${manualStatCap}.")
+			return manualStatCap
+		} else {
+			try {
+				Log.d(TAG, "Converting $text to integer for $statName stat value")
+				val cleanedText = text.replace(Regex("[^0-9]"), "")
+				return cleanedText.toInt().coerceIn(0, manualStatCap)
+			} catch (_: NumberFormatException) {
+				return -1
 			}
 		}
-
-		// Build updated Aptitudes object
-		return Game.Aptitudes(
-			track = Game.Track(
-				turf = aptitudes["track"]?.get("turf") ?: currentAptitudes.track.turf,
-				dirt = aptitudes["track"]?.get("dirt") ?: currentAptitudes.track.dirt
-			),
-			distance = Game.Distance(
-				sprint = aptitudes["distance"]?.get("sprint") ?: currentAptitudes.distance.sprint,
-				mile = aptitudes["distance"]?.get("mile") ?: currentAptitudes.distance.mile,
-				medium = aptitudes["distance"]?.get("medium") ?: currentAptitudes.distance.medium,
-				long = aptitudes["distance"]?.get("long") ?: currentAptitudes.distance.long
-			),
-			style = Game.Style(
-				front = aptitudes["style"]?.get("front") ?: currentAptitudes.style.front,
-				pace = aptitudes["style"]?.get("pace") ?: currentAptitudes.style.pace,
-				late = aptitudes["style"]?.get("late") ?: currentAptitudes.style.late,
-				end = aptitudes["style"]?.get("end") ?: currentAptitudes.style.end
-			)
-		)
 	}
 
 	/**
-	 * Reads the 5 stat values on the Main screen.
+	 * Reads the 5 stat values on the Main screen. Parameters are optional to allow for thread-safe operations.
 	 *
+	 * @param sourceBitmap Bitmap of the source image separately taken. Defaults to null.
+	 * @param skillPointsLocation Point location of the skill points template image separately taken. Defaults to null.
 	 * @return The mapping of all 5 stats names to their respective integer values.
 	 */
-	fun determineStatValues(statValueMapping: MutableMap<String, Int>): MutableMap<String, Int> {
-		val (skillPointsLocation, sourceBitmap) = findImage("skill_points")
+	fun determineStatValues(sourceBitmap: Bitmap? = null, skillPointsLocation: Point? = null): Map<StatName, Int> {
+		val (finalSkillPointsLocation, finalSourceBitmap) = if (sourceBitmap == null && skillPointsLocation == null) {
+			findImage("skill_points")
+		} else {
+			Pair(skillPointsLocation, sourceBitmap)
+		}
+    
+        val result: MutableMap<StatName, Int> = mutableMapOf()
 
-		if (skillPointsLocation != null) {
+		if (finalSkillPointsLocation != null && finalSourceBitmap != null) {
 			// Process all stats at once using the mapping.
-			statValueMapping.keys.forEachIndexed { index, statName ->
+			StatName.values().forEachIndexed { index, statName ->
 				// Each stat is evenly spaced at 170 pixel intervals starting at offset -862.
 				val offsetX = -862 + (index * 170)
 
 				// Perform OCR with no thresholding (stats are on solid background).
-				val result = performOCROnRegion(
-					sourceBitmap,
-					relX(skillPointsLocation.x, offsetX),
-					relY(skillPointsLocation.y, 25),
+				val text = performOCROnRegion(
+					finalSourceBitmap,
+					relX(finalSkillPointsLocation.x, offsetX),
+					relY(finalSkillPointsLocation.y, 25),
 					relWidth(98),
 					relHeight(42),
 					useThreshold = false,
@@ -940,18 +952,18 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 					debugName = "${statName}StatValue"
 				)
 
-				// Parse the result.
-				MessageLog.i(TAG, "Detected number of stats for $statName from Tesseract before formatting: $result")
-				if (result.lowercase().contains("max") || result.lowercase().contains("ax")) {
-					MessageLog.i(TAG, "$statName seems to be maxed out. Setting it to 1200.")
-					statValueMapping[statName] = 1200
+				// Parse the text.
+				Log.d(TAG, "Detected number of stats for $statName from Tesseract before formatting: $text")
+				if (text.lowercase().contains("max") || text.lowercase().contains("ax")) {
+					Log.d(TAG, "$statName seems to be maxed out. Setting it to ${manualStatCap}.")
+					result[statName] = manualStatCap
 				} else {
 					try {
-						Log.d(TAG, "Converting $result to integer for $statName stat value")
-						val cleanedResult = result.replace(Regex("[^0-9]"), "")
-						statValueMapping[statName] = cleanedResult.toInt()
+						Log.d(TAG, "Converting $text to integer for $statName stat value")
+						val cleanedText = text.replace(Regex("[^0-9]"), "")
+						result[statName] = cleanedText.toInt().coerceIn(0, manualStatCap)
 					} catch (_: NumberFormatException) {
-						statValueMapping[statName] = -1
+						result[statName] = -1
 					}
 				}
 			}
@@ -959,7 +971,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			MessageLog.e(TAG, "Could not start the process of detecting stat values.")
 		}
 
-		return statValueMapping
+		return result.toMap()
 	}
 
 	/**
@@ -1042,7 +1054,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	 *
 	 * @return StatGainResult containing the stat gains array and row values map for logging.
 	 */
-	fun determineStatGainFromTraining(trainingName: String, sourceBitmap: Bitmap? = null, skillPointsLocation: Point? = null): StatGainResult {
+	fun determineStatGainFromTraining(trainingName: StatName, sourceBitmap: Bitmap? = null, skillPointsLocation: Point? = null): StatGainResult {
         // Scenario-specific checks.
 		val isUnityCup = game.scenario == "Unity Cup"
 
@@ -1053,14 +1065,13 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			listOf("")
 		}
 		val baseTemplates = listOf("+", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9")
-		val statNames = listOf("Speed", "Stamina", "Power", "Guts", "Wit")
 		// Define a mapping of training types to their stat indices
-		val trainingToStatIndices = mapOf(
-			"Speed" to listOf(0, 2),
-			"Stamina" to listOf(1, 3),
-			"Power" to listOf(1, 2),
-			"Guts" to listOf(0, 2, 3),
-			"Wit" to listOf(0, 4)
+		val trainingStatMap = mapOf(
+			StatName.SPEED to listOf(StatName.SPEED, StatName.POWER),
+			StatName.STAMINA to listOf(StatName.STAMINA, StatName.GUTS),
+			StatName.POWER to listOf(StatName.STAMINA, StatName.POWER),
+			StatName.GUTS to listOf(StatName.SPEED, StatName.POWER, StatName.GUTS),
+			StatName.WIT to listOf(StatName.SPEED, StatName.WIT),
 		)
 
 		val (skillPointsLocation, sourceBitmap) = if (sourceBitmap == null && skillPointsLocation == null) {
@@ -1069,9 +1080,13 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			Pair(skillPointsLocation, sourceBitmap)
 		}
 
-		val threadSafeResults = IntArray(5)
+		val threadSafeResults = ConcurrentHashMap<StatName, Int>()
+		// Initialize all stat keys with default value 0 to ensure map completeness even if threads return early.
+		StatName.entries.forEach { statName ->
+			threadSafeResults[statName] = 0
+		}
 		// Store row values to log them sequentially after threads complete.
-		val rowValuesMap = Collections.synchronizedMap(mutableMapOf<Int, List<Int>>())
+		val rowValuesMap = Collections.synchronizedMap(mutableMapOf<StatName, List<Int>>())
 
 		if (skillPointsLocation != null) {
 			// Pre-load all template bitmaps for all suffixes to avoid thread contention.
@@ -1087,7 +1102,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
 			// Process all stats in parallel using threads.
 			val statLatch = CountDownLatch(5)
-			for (i in 0 until 5) {
+			for (statName in StatName.entries) {
 				Thread {
 					var sourceMat: Mat? = null
 					var sourceGray: Mat? = null
@@ -1099,16 +1114,18 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 						// Power gives Stamina and Power
 						// Guts gives Speed, Power and Guts
 						// Wits gives Speed and Wits
-						val validIndices = trainingToStatIndices[trainingName] ?: return@Thread
-						if (i !in validIndices) return@Thread
+                        val validStatNames: List<StatName> = trainingStatMap[statName] ?: return@Thread
+                        if (statName !in validStatNames) {
+                            return@Thread
+                        }
 
 						// Check if bot is still running before starting work.
 						if (!BotService.isRunning) {
 							return@Thread
 						}
 
-						val statName = statNames[i]
-						val xOffset = i * 180 // All stats are evenly spaced at 180 pixel intervals.
+                        // All stats are evenly spaced at 180 pixel intervals.
+						val xOffset = statName.ordinal * 180
 
 						// Determine crop regions based on campaign.
 						val firstRowStartX = relX(skillPointsLocation.x, -934 + xOffset)
@@ -1156,7 +1173,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 								val rowBitmap = createSafeBitmap(sourceBitmap!!, row.startX, row.startY, row.width, row.height, "determineStatGainFromTraining $statName ${row.rowName}".trim())
 								if (rowBitmap == null) {
 									Log.e(TAG, "[ERROR] Failed to create cropped bitmap for $statName stat gain detection from $trainingName training ${row.rowName}.")
-									threadSafeResults[i] = 0
+									threadSafeResults[statName] = 0
 									processingFailed = true
 									return@Thread
 								}
@@ -1195,7 +1212,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
 								// Check again before starting template processing loop.
 								if (!BotService.isRunning) {
-									threadSafeResults[i] = 0
+									threadSafeResults[statName] = 0
 									processingFailed = true
 									return@Thread
 								}
@@ -1240,13 +1257,13 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 								constructIntegerFromMatches(rowInfo.matches)
 							}
                             // Store row values for sequential logging after threads complete.
-                            rowValuesMap[i] = rowValues
+                            rowValuesMap[statName] = rowValues
 							rowValues.sum()
 						} else {
 							// For single row scenarios, use the existing behavior.
 							constructIntegerFromMatches(rowDebugInfo[0].matches)
 						}
-						threadSafeResults[i] = finalValue
+						threadSafeResults[statName] = finalValue
 
 						// Draw final visualization with all matches for this region.
 						if (debugMode) {
@@ -1290,14 +1307,14 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 								} else {
 									""
 								}
-								Imgcodecs.imwrite("$matchFilePath/debug_${trainingName}TrainingStatGain_${statNames[i]}${rowSuffix}.png", resultMat)
+								Imgcodecs.imwrite("$matchFilePath/debug_${trainingName}TrainingStatGain_${statName}${rowSuffix}.png", resultMat)
 								resultMat.release()
 							}
 						}
 					} catch (_: InterruptedException) {
 					} catch (e: Exception) {
-						Log.e(TAG, "[ERROR] Error processing stat ${statNames[i]} for $trainingName training: ${e.stackTraceToString()}")
-						threadSafeResults[i] = 0
+						Log.e(TAG, "[ERROR] Error processing stat $statName for $trainingName training: ${e.stackTraceToString()}")
+						threadSafeResults[statName] = 0
 					} finally {
 						// Always clean up resources, even if interrupted.
 						sourceMat?.release()
@@ -1315,71 +1332,65 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 				MessageLog.e(TAG, "Stat processing timed out for $trainingName training.")
 			}
 
+			// Check if bot is still running before applying boost.
+			if (!BotService.isRunning) {
+				return StatGainResult(threadSafeResults.toMap(), rowValuesMap.toMap())
+			}
+
 			// Apply artificial boost to main stat gains if they appear lower than side-effect stats.
-			val boostedResults = applyStatGainBoost(trainingName, threadSafeResults, statNames, trainingToStatIndices)
+			val boostedResults = applyStatGainBoost(trainingName, threadSafeResults, trainingStatMap)
 			// Return results with row values map for logging in Training.kt after threads complete.
 			return StatGainResult(boostedResults, rowValuesMap.toMap())
 		} else {
 			MessageLog.e(TAG, "Could not find the skill points location to start determining stat gains for $trainingName training.")
 		}
 
-		return StatGainResult(threadSafeResults, emptyMap())
+		return StatGainResult(threadSafeResults.toMap(), emptyMap())
 	}
 
 	/**
 	 * Applies artificial boost to main stat gains when they appear lower than side-effect stats due to OCR failure.
 	 * 
 	 * @param trainingName Name of the training type (Speed, Stamina, Power, Guts, Wit).
-	 * @param statGains Array of 5 stat gains.
-	 * @param statNames List of stat names in order.
-	 * @param trainingToStatIndices Mapping of training types to their affected stat indices.
-	 * @return Array of stat gains with potential artificial boost applied to main stat.
+	 * @param statGains Mapping of stat name to their stat gain.
+	 * @param trainingToStatIndices Mapping of training types to their affected stats.
+	 * @return Mapping of stat names to their gains with potential artificial boost applied to main stat.
 	 */
-	private fun applyStatGainBoost(trainingName: String, statGains: IntArray, statNames: List<String>, trainingToStatIndices: Map<String, List<Int>>): IntArray {
-		val boostedResults = statGains.clone()
-		
-		// Define the main stat index for each training type.
-		val mainStatIndex = when (trainingName) {
-			"Speed" -> 0
-			"Stamina" -> 1
-			"Power" -> 2
-			"Guts" -> 3
-			"Wit" -> 4
-			else -> return boostedResults
-		}
+	private fun applyStatGainBoost(trainingName: StatName, statGains: Map<StatName, Int>, trainingToAffectedStatNames: Map<StatName, List<StatName>>): Map<StatName, Int> {
+		val boostedResults: MutableMap<StatName, Int> = statGains.toMutableMap()
 		
 		// Get the stat indices affected by this training type and filter out the main stat to get side-effects.
-		val affectedIndices = trainingToStatIndices[trainingName] ?: return boostedResults
-		val sideEffectIndices = affectedIndices.filter { it != mainStatIndex }
+		val affectedStats: List<StatName> = trainingToAffectedStatNames[trainingName] ?: return boostedResults
+		val sideEffectStats: List<StatName> = affectedStats.filter { it != trainingName }
+        val sideEffectStatGains: Map<StatName, Int> = boostedResults.filterKeys { it !in sideEffectStats }
 		
-		val mainStatGain = boostedResults[mainStatIndex]
-		val mainStatName = statNames[mainStatIndex]
+		val mainStatGain = boostedResults[trainingName] ?: 0
 		
 		// Check if any side-effect stat has a higher gain than the main stat.
-		val maxSideEffectGain = sideEffectIndices.maxOfOrNull { boostedResults[it] } ?: 0
+		val maxSideEffectGain: Int = sideEffectStatGains.maxOfOrNull { it.value } ?: 0
 		
 		if (mainStatGain > 0 && maxSideEffectGain > mainStatGain) {
 			// Set main stat to be 10 points higher than the highest side-effect stat.
-			val originalGain = boostedResults[mainStatIndex]
-			boostedResults[mainStatIndex] = maxSideEffectGain + 10
+			val originalGain = boostedResults[trainingName]
+			boostedResults[trainingName] = maxSideEffectGain + 10
 			Log.d(TAG,
-				"[DEBUG] Artificially increased $mainStatName stat gain from $originalGain to ${boostedResults[mainStatIndex]} due to possible OCR failure. " +
-				"Side-effect stats had higher gains: ${sideEffectIndices.joinToString(", ") { "${statNames[it]} = ${boostedResults[it]}" }}"
+				"[DEBUG] Artificially increased $trainingName stat gain from $originalGain to ${boostedResults[trainingName]} due to possible OCR failure. " +
+				"Side-effect stats had higher gains: $sideEffectStats"
 			)
 		}
 
 		// If the side-effect stat gains were zeroes, boost them to half of the main stat gain.
-		val boostedMainStatGain = boostedResults[mainStatIndex]
-		sideEffectIndices.forEach { idx ->
-			if (boostedResults[idx] == 0 && boostedMainStatGain > 0) {
-				boostedResults[idx] = boostedMainStatGain / 2
-				Log.d(TAG, "[DEBUG] Artificially increased ${statNames[idx]} side-effect stat gain to ${boostedResults[idx]} because it was 0 due to possible OCR failure. " +
-						"Based on half of boosted $mainStatName = $boostedMainStatGain."
+		val boostedMainStatGain = boostedResults[trainingName] ?: 0
+        for (statName in sideEffectStats) {
+			if ((boostedResults[statName] ?: 0) == 0 && boostedMainStatGain > 0) {
+				boostedResults[statName] = boostedMainStatGain / 2
+				Log.d(TAG, "[DEBUG] Artificially increased $statName side-effect stat gain to ${boostedResults[statName]} because it was 0 due to possible OCR failure. " +
+						"Based on half of boosted $trainingName = $boostedMainStatGain."
 				)
 			}
 		}
 		
-		return boostedResults
+		return boostedResults.toMap()
 	}
 
 	/**
@@ -1780,6 +1791,67 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		)
 	}
 
+    /** Detects the number of fans from the Umamusume Class dialog.
+     *
+     * @param bitmap The source bitmap to analyze.
+     * @return The number of fans if successful, or NULL if detection failed.
+     */
+    fun getUmamusumeClassDialogFanCount(bitmap: Bitmap): Int? {
+        val cvImage = Mat()
+		Utils.bitmapToMat(bitmap, cvImage)
+        // Convert to grayscale.
+        Utils.bitmapToMat(bitmap, cvImage)
+        Imgproc.cvtColor(cvImage, cvImage, Imgproc.COLOR_BGR2GRAY)
+        if (debugMode) Imgcodecs.imwrite("$matchFilePath/debugGetUmamusumeClassDialogFanCount_afterCrop.png", cvImage)
+
+        // Convert the Mat directly to Bitmap and then pass it to the text reader.
+        var resultBitmap = createBitmap(cvImage.cols(), cvImage.rows())
+        Utils.matToBitmap(cvImage, resultBitmap)
+
+        // Thresh the grayscale cropped image to make it black and white.
+        val bwImage = Mat()
+        Imgproc.threshold(cvImage, bwImage, threshold.toDouble(), 255.0, Imgproc.THRESH_BINARY)
+        if (debugMode) Imgcodecs.imwrite("$matchFilePath/debugGetUmamusumeClassDialogFanCount_afterThreshold.png", bwImage)
+
+        resultBitmap = createBitmap(bwImage.cols(), bwImage.rows())
+        Utils.matToBitmap(bwImage, resultBitmap)
+        tessDigitsBaseAPI.setImage(resultBitmap)
+
+        var result = "empty!"
+        try {
+            // Finally, detect text on the cropped region.
+            result = tessDigitsBaseAPI.utF8Text
+        } catch (e: Exception) {
+            MessageLog.e(TAG, "Cannot perform OCR with Tesseract: ${e.stackTraceToString()}")
+        }
+
+        tessDigitsBaseAPI.clear()
+        cvImage.release()
+        bwImage.release()
+
+        // Format the string to be converted to an integer.
+        MessageLog.i(TAG, "Detected number of fans from Tesseract before formatting: $result")
+        result = result
+            .replace(",", "")
+            .replace(".", "")
+            .replace("+", "")
+            .replace("-", "")
+            .replace(">", "")
+            .replace("<", "")
+            .replace("(", "")
+            .replace("人", "")
+            .replace("ォ", "")
+            .replace("fans", "").trim()
+
+        try {
+            Log.d(TAG, "Converting $result to integer for fans")
+            val cleanedResult = result.replace(Regex("[^0-9]"), "").toInt()
+            return cleanedResult
+        } catch (_: NumberFormatException) {
+            return null
+        }
+    }
+
     /**
     * Gets the filled percentage of the energy bar.
     *
@@ -1798,10 +1870,10 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         }
 
         // Get top right of energyText.
-        var x: Int = (energyTextLocation.x + (templateBitmap.width / 2)).toInt()
-        var y: Int = (energyTextLocation.y - (templateBitmap.height / 2)).toInt()
-        var w: Int = 700
-        var h: Int = 75
+        var x: Int = relX(energyTextLocation.x, templateBitmap.width / 2)
+        var y: Int = relY(energyTextLocation.y, -(templateBitmap.height / 2))
+        var w: Int = relWidth(700)
+        var h: Int = relHeight(75)
 
         // Crop just the energy bar in the image.
         // This crop extends to the right beyond the energy bar a bit
@@ -1851,11 +1923,11 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         // we can measure the length of the bar.
         // This crop is just a single pixel high line at the center of the
         // bounding region.
-        val left: Int = (leftPartLocation.x + (energyBarLeftPartTemplateBitmap.width / 2)).toInt()
-        val right: Int = (rightPartLocation.x - (energyBarRightPartTemplateBitmap.width / 2)).toInt()
+        val left: Int = relX(leftPartLocation.x, energyBarLeftPartTemplateBitmap.width / 2)
+        val right: Int = relX(rightPartLocation.x, -(energyBarRightPartTemplateBitmap.width / 2))
         x = left
-        y = (croppedBitmap.height / 2).toInt()
-        w = (right - left).toInt()
+        y = relHeight(croppedBitmap.height / 2)
+        w = relWidth(right - left)
         h = 1
 
         croppedBitmap = createSafeBitmap(croppedBitmap, x, y, w, h, "analyzeEnergyBar:: Refine cropped energy bar.")
@@ -1900,5 +1972,45 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
         Log.d(TAG, "[DEBUG] Results of energy bar analysis: Gray pixels=$grayPixels, Color pixels=$colorPixels, Energy=$result")
         return result
+    }
+
+    fun getGoalText(): String {
+        val bbox = BoundingBox(
+            x = relX(0.0, 365),
+            y = relY(0.0, 110),
+            w = relWidth(550),
+            h = relHeight(40), //relHeight(90),
+        )
+        val sourceBitmap = getSourceBitmap()
+
+		// Perform OCR with 2x scaling and no thresholding.
+		val result = performOCROnRegion(
+			sourceBitmap!!,
+			bbox.x,
+            bbox.y,
+            bbox.w,
+            bbox.h,
+			useThreshold = false,
+			useGrayscale = true,
+			scale = 1.0,
+			ocrEngine = "mlkit",
+			debugName = "GoalText",
+		)
+
+		if (debugMode) {
+			MessageLog.d(TAG, "getGoalText:: Detected text: $result")
+		} else {
+			Log.d(TAG, "getGoalText:: Detected text: $result")
+		}
+
+		return result
+    }
+
+    fun saveBitmap(bitmap: Bitmap, filename: String) {
+        val externalFilesPath = context.getExternalFilesDir(null)?.absolutePath
+        val mat = Mat()
+		Utils.bitmapToMat(bitmap, mat)
+		Imgcodecs.imwrite("$externalFilesPath/temp/${filename}.png", mat)
+        mat.release()
     }
 }

@@ -254,7 +254,7 @@ const MessageLog = () => {
         }
 🔄 Disable Training on Maxed Stat: ${settings.training.disableTrainingOnMaxedStat ? "✅" : "❌"}
 ✨ Focus on Sparks for Stat Targets: ${settings.training.focusOnSparkStatTarget.length === 0 ? "None" : settings.training.focusOnSparkStatTarget.join(", ")}
-📏 Preferred Distance Override: ${settings.training.preferredDistanceOverride === "Auto" ? "Auto" : settings.training.preferredDistanceOverride}
+📏 Preferred Distance Override: ${settings.training.preferredDistanceOverride === "Default" ? "Default" : settings.training.preferredDistanceOverride}
 🌈 Enable Rainbow Training Bonus: ${settings.training.enableRainbowTrainingBonus ? "✅" : "❌"}
 💡 Prioritize Skill Hints: ${settings.training.enablePrioritizeSkillHints ? "✅" : "❌"}
 ☀️ Must Rest Before Summer: ${settings.training.mustRestBeforeSummer ? "✅" : "❌"}
@@ -290,7 +290,8 @@ ${longTargetsString}
 🏃 Preferred Distances: ${settings.racing.preferredDistances.join(", ")}
 📅 Look Ahead Days: ${settings.racing.lookAheadDays} days
 ⏰ Smart Racing Check Interval: ${settings.racing.smartRacingCheckInterval} days
-🎯 Race Strategy Override: ${settings.racing.enableRaceStrategyOverride ? `✅ (From ${settings.racing.originalRaceStrategy} to ${settings.racing.juniorYearRaceStrategy})` : "❌"}
+🎯 Junior Year Race Strategy: ${settings.racing.juniorYearRaceStrategy}
+🎯 Classic/Senior Year Race Strategy: ${settings.racing.originalRaceStrategy}
 📊 Minimum Quality Threshold: ${settings.racing.minimumQualityThreshold}
 ⏱️ Time Decay Factor: ${settings.racing.timeDecayFactor}
 📈 Improvement Threshold: ${settings.racing.improvementThreshold}
@@ -312,6 +313,8 @@ ${longTargetsString}
 🔍 Start Date OCR Test: ${settings.debug.debugMode_startDateOCRTest ? "✅" : "❌"}
 🔍 Start Race List Detection Test: ${settings.debug.debugMode_startRaceListDetectionTest ? "✅" : "❌"}
 🔍 Start Aptitudes Detection Test: ${settings.debug.debugMode_startAptitudesDetectionTest ? "✅" : "❌"}
+🔍 Start Main Screen OCR Test: ${settings.debug.debugMode_startMainScreenOCRTest ? "✅" : "❌"}
+🔍 Start Training Screen OCR Test: ${settings.debug.debugMode_startTrainingScreenOCRTest ? "✅" : "❌"}
 🔍 Hide String Comparison Results: ${settings.debug.enableHideOCRComparisonResults ? "✅" : "❌"}
 
 ****************************************`
