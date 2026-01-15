@@ -1,14 +1,29 @@
 <AppUpdater>
   <update>
-    <latestVersion>4.3.3</latestVersion>
+    <latestVersion>4.3.4</latestVersion>
     <url>https://github.com/steve1316/uma-android-automation/releases</url>
     <releaseNotes>
-v4.3.3 - Changelog
+v4.3.4 - Changelog
+
+New
+---
+- Add a tooltip next to the Home page button to indicate that a scenario needs to be selected first before starting. Only appears if no scenario is currently selected.
+- App will now require disabling Android's battery optimization.
 
 Adjustments
 ---
-- Add more handling logic for scheduled races to resolve first-time setup issues and to run the schedule races without needing to go through all the checks.
+- Update game data up to Oguri Cap (Christmas) 2026-01-04.
+- Bump Automation Library to 2.3.5.
+- Adjust guidance regions to not cover the top right corner or the center middle bottom of the screen.
+- Move skill hint detection to be in a Thread during parallel processing.
+- Updated the drawer to allow Back navigation via gesture and/or hardware button.
+- Clamp the input for daysToRunExtraRaces to be 1 at a minimum to avoid possible division by zero.
+- Persist the message log font size into SQLite.
+- Apply manual corrections to main stat gains that go over +100.
 
+Fixed
+---
+- Fix bug where importing settings via the JSON file failed to show any available changes.
     </releaseNotes>
   </update>
 </AppUpdater>
