@@ -354,71 +354,28 @@ class SkillScraper(BaseScraper):
         super().__init__("https://gametora.com/umamusume/skills", "skills.json")
 
     def scrape_additional_data(self):
-        with open("skills_additional_data.html", "r", encoding="utf8") as f_in:
-            html_content = f_in.read()
-
+        url = "https://umamusu.wiki/Game:List_of_Skills"
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, "html.parser")
         data = {}
-        modifier_map = {
-            "[Season]": ["Spring", "Summer", "Fall", "Winter"],
-            "[Rotation]": ["Left", "Right"],
-            "[Location]": [
-                "Sapporo", "Hakodate", "Niigata", "Fukushima", "Nakayama",
-                "Tokyo", "Chukyo", "Kyoto", "Hanshin", "Kokura", "Ooi",
-                "Kawasaki", "Funabashi", "Morioka",
-            ],
-            "[Ground Condition]": ["Firm", "Wet"],
-            "[Run Style]": ["Front Runner", "Pace Chaser", "Late Surger", "End Closer"],
-            "[Distance]": ["Sprint", "Mile", "Medium", "Long"],
-            "[Weather]": ["Sunny", "Cloudy", "Rainy", "Snowy"],
-        }
-        
-        # Replaces rows with modifier tags with each of the tag's replacement values.
-        # So ["[Ground Condition] Conditions ○", 1.5] becomes:
-        # {"Firm Conditions ○": 1.5, "Wet Conditions ○": 1.5}
-        def apply_modifiers(row):
-            for k, v in modifier_map.items():
-                if row[0].startswith(k):
-                    return {row[0].replace(k, x, 1): row[1] for x in v}
 
-            return {row[0]: row[1]}
-
-        soup = BeautifulSoup(html_content, "html.parser")
-        tbody = soup.find("tbody")
-
-        if tbody:
-            rows = []
-            header = []
-            for i, row in enumerate(tbody.find_all("tr")):
-                # First 3 rows are useless to us. Skip them.
-                # Row 4 is header.
-                if i < 3:
+        for table in soup.find_all("table"):
+            for row in table.tbody.find_all("tr"):
+                if row.find("th"):
                     continue
-                
-                cols = row.find_all("td")
-                cols = [ele.text.strip() for ele in cols]
-                
-                if cols:
-                    if i == 3:
-                        header = cols
-                    else:
-                        rows.append(cols)
-
-            # Filter the results by columns.
-            cols_to_keep = ["Skill Name", "Score/SP"]
-            col_idxs_to_keep = [i for i, x in enumerate(header) if x in cols_to_keep]
-            # There are two tables side by side. We only want the left table.
-            col_idxs_to_keep = col_idxs_to_keep[:len(cols_to_keep)]
-
-            for row in rows:
-                row = [x for i, x in enumerate(row) if i in col_idxs_to_keep]
-                # This table uses slightly different special characters from gametora.
-                # Replace to match with what gametora uses.
-                row[0] = row[0].replace("◯", "○")
-                row[0] = row[0].replace("◎", "◎")
-                # Convert the second column to a float.
-                row[1] = float(row[1])
-                data |= apply_modifiers(row)
-            
+                cells = row.find_all("td")
+                skill_id = cells[1].find("a")["title"]
+                skill_id = int("".join(filter(str.isdigit, skill_id)))
+                skill_points = int(cells[3].get_text(strip=True))
+                if skill_points == 0:
+                    continue
+                skill_evaluation_points = int(cells[4].get_text(strip=True))
+                skill_point_ratio = float(cells[5].get_text(strip=True))
+                data[skill_id] = {
+                    "evaluation_points": skill_evaluation_points,
+                    "point_ratio": skill_point_ratio,
+                }
+        
         return data
 
     def start(self):
@@ -516,14 +473,27 @@ class SkillScraper(BaseScraper):
                 # If name_en doesnt exist, then the skill isn't in global yet.
                 if "name_en" not in skill:
                     continue
+                
+                skill_id = skill["id"]
+                # For inherited unique skills, we actually want the
+                # gene version's ID since the primary ID isn't the one that
+                # we can purchase through inheritance.
+                if "gene_version" in skill:
+                    skill_id = skill["gene_version"]["id"]
+
+                extra_data = additional_data.get(
+                    skill_id,
+                    {"evaluation_points": 0, "point_ratio": 0.0},
+                )
 
                 tmp = {
-                    "id": skill["id"],
+                    "id": skill_id,
                     "name_en": skill["name_en"],
                     "desc_en": skill["desc_en"],
                     "icon_id": skill["iconid"],
                     "cost": skill.get("cost", None),
-                    "score_per_sp": additional_data.get(skill["name_en"], None),
+                    "eval_pt": extra_data["evaluation_points"],
+                    "pt_ratio": extra_data["point_ratio"],
                     "rarity": skill["rarity"],
                     "versions": sorted(skill.get("versions", [])),
                     "upgrade": None,
@@ -801,7 +771,7 @@ if __name__ == "__main__":
     skill_scraper = SkillScraper()
     #skill_scraper.start()
     skill_scraper.start_webpack_method()
-
+    """
     character_scraper = CharacterScraper()
     character_scraper.start()
 
@@ -810,6 +780,6 @@ if __name__ == "__main__":
 
     race_scraper = RaceScraper()
     race_scraper.start()
-
+    """
     end_time = round(time.time() - start_time, 2)
     logging.info(f"Total time for processing all applications: {end_time} seconds or {round(end_time / 60, 2)} minutes.")

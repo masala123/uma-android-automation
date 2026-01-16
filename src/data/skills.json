@@ -1,11 +1,12 @@
 {
     "#LookatCurren": {
-        "id": 100381,
+        "id": 900381,
         "name_en": "#LookatCurren",
         "desc_en": "Gain momentum and begin to advance when passing another runner while well-positioned around halfway through the race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -17,7 +18,8 @@
         "desc_en": "Slightly increase velocity on an uphill. (Late Surger)",
         "icon_id": 20011,
         "cost": 120,
-        "score_per_sp": 4.17,
+        "eval_pt": 217,
+        "pt_ratio": 1.81,
         "rarity": 1,
         "versions": [
             201411
@@ -26,12 +28,13 @@
         "downgrade": null
     },
     "114th Time's the Charm": {
-        "id": 110521,
+        "id": 910521,
         "name_en": "114th Time's the Charm",
         "desc_en": "Give max effort when far from the lead on the final corner, moderately increasing velocity steadily for a duration proportional to distance from the lead.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -43,7 +46,8 @@
         "desc_en": "Increase velocity on an uphill. (Late Surger)",
         "icon_id": 20012,
         "cost": 120,
-        "score_per_sp": 5.0,
+        "eval_pt": 334,
+        "pt_ratio": 1.39,
         "rarity": 2,
         "versions": [
             201412
@@ -52,12 +56,13 @@
         "downgrade": 201412
     },
     "1st Place Kiss☆": {
-        "id": 10241,
+        "id": 900241,
         "name_en": "1st Place Kiss☆",
         "desc_en": "Slightly increase ability to break out of the pack on the straight after engaging in a challenge toward the front on the final corner or later.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 3,
         "versions": [],
         "upgrade": null,
@@ -69,43 +74,47 @@
         "desc_en": "Get overwhelmed by powerful opponents, moderately decreasing Guts and Wit.",
         "icon_id": 10044,
         "cost": 0,
-        "score_per_sp": null,
+        "eval_pt": 0,
+        "pt_ratio": 0.0,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "A Kiss for Courage": {
-        "id": 110041,
+        "id": 910041,
         "name_en": "A Kiss for Courage",
         "desc_en": "Increase velocity enthusiastically when positioned toward the front in the second half of the race after recovering endurance with a skill.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "A Lifelong Dream, A Moment's Flight": {
-        "id": 100711,
+        "id": 900711,
         "name_en": "A Lifelong Dream, A Moment's Flight",
         "desc_en": "Seize the moment when close to the runner behind on the final straight, slightly consuming endurance to greatly increase velocity for a moderate duration.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "A Princess Must Seize Victory!": {
-        "id": 100391,
+        "id": 900391,
         "name_en": "A Princess Must Seize Victory!",
         "desc_en": "Increase velocity with pretty princess power when engaged in a challenge on the final straight.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -117,7 +126,8 @@
         "desc_en": "Slightly recover endurance late-race. (Late Surger)",
         "icon_id": 20021,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             201421
@@ -131,7 +141,8 @@
         "desc_en": "Slightly increase acceleration when passing another runner mid-race. (Mile)",
         "icon_id": 20041,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             201061
@@ -145,7 +156,8 @@
         "desc_en": "Intimidate runners behind when positioned toward the front early-race. (Sprint)",
         "icon_id": 30012,
         "cost": 170,
-        "score_per_sp": 3.53,
+        "eval_pt": 508,
+        "pt_ratio": 1.49,
         "rarity": 2,
         "versions": [
             201012
@@ -159,7 +171,8 @@
         "desc_en": "Regain the energy to run when close to exhausting strength. (Long)",
         "icon_id": 20022,
         "cost": 160,
-        "score_per_sp": 3.75,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             200762
@@ -173,7 +186,8 @@
         "desc_en": "Slightly reduce fatigue on a downhill. (End Closer)",
         "icon_id": 20021,
         "cost": 170,
-        "score_per_sp": 2.94,
+        "eval_pt": 217,
+        "pt_ratio": 1.28,
         "rarity": 1,
         "versions": [
             201481
@@ -182,12 +196,13 @@
         "downgrade": null
     },
     "All Charged! It's Go Time!": {
-        "id": 100311,
+        "id": 900311,
         "name_en": "All Charged! It's Go Time!",
         "desc_en": "Moderately increase velocity when positioned toward the front with about 300m remaining. If coming out of an uphill, greatly increase velocity instead.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -199,7 +214,8 @@
         "desc_en": "Slightly increase velocity when well-positioned on a straight in the last spurt. (Medium)",
         "icon_id": 20011,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             201701
@@ -213,7 +229,8 @@
         "desc_en": "Startle other runners late-race. (Late Surger)",
         "icon_id": 30052,
         "cost": 180,
-        "score_per_sp": 3.33,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             201442
@@ -222,48 +239,52 @@
         "downgrade": 201442
     },
     "Ambition to Surpass the Sakura": {
-        "id": 100691,
+        "id": 900691,
         "name_en": "Ambition to Surpass the Sakura",
         "desc_en": "Increase velocity with blossoming ambition when well-positioned and close to the runner ahead with 300m or less remaining.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Anchors Aweigh!": {
-        "id": 100071,
+        "id": 900071,
         "name_en": "Anchors Aweigh!",
         "desc_en": "Moderately increase velocity steadily with a long spurt starting halfway through the race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 4,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Angling and Scheming": {
-        "id": 100201,
+        "id": 900201,
         "name_en": "Angling and Scheming",
         "desc_en": "Increase acceleration at an opportune moment when in the lead on a corner late-race.",
         "icon_id": 20043,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Arrows Whistle, Shadows Disperse": {
-        "id": 110171,
+        "id": 910171,
         "name_en": "Arrows Whistle, Shadows Disperse",
         "desc_en": "Increase velocity with a blazing spirit when pressured by another runner in the front part of the pack on the final corner or later.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -275,19 +296,21 @@
         "desc_en": "Moderately increase Silence Suzuka's performance through the happiness felt seeing a friend find their running style.",
         "icon_id": 10031,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 0,
+        "pt_ratio": 0.0,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Barcarole of Blessings": {
-        "id": 110151,
+        "id": 910151,
         "name_en": "Barcarole of Blessings",
         "desc_en": "Increase velocity for a moderate duration when in the front part of the pack with 400m remaining. If at least 7 skills have been activated, greatly increase velocity for a moderate duration instead.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -299,7 +322,8 @@
         "desc_en": "Dull movement for runners ahead when positioned toward the back early-race. (Mile)",
         "icon_id": 30022,
         "cost": 160,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             201092
@@ -313,7 +337,8 @@
         "desc_en": "Slightly recover endurance when positioned toward the back upon approaching mid-race. (Late Surger)",
         "icon_id": 20021,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             201691
@@ -327,7 +352,8 @@
         "desc_en": "Increase velocity on a straight.",
         "icon_id": 20012,
         "cost": 170,
-        "score_per_sp": 3.53,
+        "eval_pt": 508,
+        "pt_ratio": 1.49,
         "rarity": 2,
         "versions": [
             200362
@@ -336,24 +362,26 @@
         "downgrade": 200362
     },
     "Behold Thine Emperor's Divine Might": {
-        "id": 100171,
+        "id": 900171,
         "name_en": "Behold Thine Emperor's Divine Might",
         "desc_en": "Greatly increase velocity on the final straight after passing another runner 3 times late-race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Best Day Ever": {
-        "id": 110221,
+        "id": 910221,
         "name_en": "Best Day Ever",
         "desc_en": "If well-positioned late-race on the final corner or later, increase velocity. If there's a large distance left to the finish, also increase acceleration very slightly with perfect form.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -365,7 +393,8 @@
         "desc_en": "Everyone's expectations strongly inspire the skill user, increasing velocity on the final corner. (Long)",
         "icon_id": 2010010,
         "cost": 360,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [],
         "upgrade": null,
@@ -377,7 +406,8 @@
         "desc_en": "Increase passing ability. (Mile)",
         "icon_id": 20012,
         "cost": 120,
-        "score_per_sp": 5.0,
+        "eval_pt": 334,
+        "pt_ratio": 1.39,
         "rarity": 2,
         "versions": [
             201072
@@ -391,7 +421,8 @@
         "desc_en": "Increase velocity on a straight. (Long)",
         "icon_id": 20012,
         "cost": 150,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             201171,
@@ -406,19 +437,21 @@
         "desc_en": "Greatly decrease velocity on a corner in the second half of the race due to Trainer's obvious anxiety.",
         "icon_id": 20015,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 0,
+        "pt_ratio": 0.0,
         "rarity": 2,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Blazing Pride": {
-        "id": 100181,
+        "id": 900181,
         "name_en": "Blazing Pride",
         "desc_en": "Increase velocity with the stride of an empress when passing another runner from midpack or further back on the final corner.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 4,
         "versions": [],
         "upgrade": null,
@@ -430,7 +463,8 @@
         "desc_en": "Increase spurting ability when positioned toward the back late-race. (Sprint)",
         "icon_id": 20012,
         "cost": 160,
-        "score_per_sp": 3.75,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             200672
@@ -439,36 +473,39 @@
         "downgrade": 200672
     },
     "Blue Rose Closer": {
-        "id": 100301,
+        "id": 900301,
         "name_en": "Blue Rose Closer",
         "desc_en": "Increase velocity with strong willpower on the final straight after passing another runner in the front part of the pack on the final corner or later.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Bountiful Harvest": {
-        "id": 110561,
+        "id": 910561,
         "name_en": "Bountiful Harvest",
         "desc_en": "Increase velocity with a surge of great fortune when pressured by another runner toward the back in the second half of the race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Break It Down!": {
-        "id": 110201,
+        "id": 910201,
         "name_en": "Break It Down!",
         "desc_en": "If positioned toward the front on a straight late-race, increase velocity with high spirits. If the straight is on the backstretch, also increase acceleration very slightly.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -480,7 +517,8 @@
         "desc_en": "Recover endurance on a straight.",
         "icon_id": 20022,
         "cost": 170,
-        "score_per_sp": 3.53,
+        "eval_pt": 508,
+        "pt_ratio": 1.49,
         "rarity": 2,
         "versions": [
             200382
@@ -489,12 +527,13 @@
         "downgrade": 200382
     },
     "Budding Blossom": {
-        "id": 100511,
+        "id": 900511,
         "name_en": "Budding Blossom",
         "desc_en": "If the skill user engaged in a challenge on a mid-race corner, increase acceleration when well-positioned late-race at least halfway through the final corner.",
         "icon_id": 20043,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -506,7 +545,8 @@
         "desc_en": "When engaged in a challenge midpack mid-race, moderately recover endurance and moderately increase velocity. (Medium)",
         "icon_id": 20012,
         "cost": 160,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             202092
@@ -520,7 +560,8 @@
         "desc_en": "Burn bright with team spirit, increasing vigor in proportion to the total Guts of racing team members late-race.",
         "icon_id": 20102,
         "cost": 200,
-        "score_per_sp": 3.0,
+        "eval_pt": 633,
+        "pt_ratio": 1.58,
         "rarity": 2,
         "versions": [
             210042
@@ -534,7 +575,8 @@
         "desc_en": "Burn bright with team spirit, increasing acceleration in proportion to the total Power of racing team members late-race.",
         "icon_id": 20122,
         "cost": 200,
-        "score_per_sp": 3.0,
+        "eval_pt": 633,
+        "pt_ratio": 1.58,
         "rarity": 2,
         "versions": [
             210032
@@ -548,7 +590,8 @@
         "desc_en": "Burn bright with team spirit, increasing velocity in proportion to the total Speed of racing team members mid-race.",
         "icon_id": 20102,
         "cost": 200,
-        "score_per_sp": 3.0,
+        "eval_pt": 633,
+        "pt_ratio": 1.58,
         "rarity": 2,
         "versions": [
             210012
@@ -562,7 +605,8 @@
         "desc_en": "Burn bright with team spirit, recovering endurance in proportion to the total Stamina of racing team members mid-race.",
         "icon_id": 20112,
         "cost": 200,
-        "score_per_sp": 3.0,
+        "eval_pt": 633,
+        "pt_ratio": 1.58,
         "rarity": 2,
         "versions": [
             210022
@@ -576,7 +620,8 @@
         "desc_en": "Burn bright with team spirit, increasing strategic navigation for a medium duration in proportion to the total Wit of racing team members early-race.",
         "icon_id": 20132,
         "cost": 200,
-        "score_per_sp": 3.0,
+        "eval_pt": 633,
+        "pt_ratio": 1.58,
         "rarity": 2,
         "versions": [
             210052
@@ -585,12 +630,13 @@
         "downgrade": 210052
     },
     "Call Me King": {
-        "id": 10611,
+        "id": 900611,
         "name_en": "Call Me King",
         "desc_en": "Increase velocity in a true display of skill with 200m remaining after racing calmly.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 3,
         "versions": [],
         "upgrade": null,
@@ -602,7 +648,8 @@
         "desc_en": "Decrease fatigue upon approaching mid-race. (Pace Chaser)",
         "icon_id": 20022,
         "cost": 180,
-        "score_per_sp": 3.33,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             200562
@@ -616,7 +663,8 @@
         "desc_en": "Slightly recover endurance when surrounded mid-race.",
         "icon_id": 20021,
         "cost": 170,
-        "score_per_sp": 2.94,
+        "eval_pt": 217,
+        "pt_ratio": 1.28,
         "rarity": 1,
         "versions": [
             200481
@@ -630,7 +678,8 @@
         "desc_en": "Increase attributes by +{0}％ in the Racing Carnival. {1}％ chance to also raise runner's mood to Great. This skill will disappear when the event ends.",
         "icon_id": 1010011,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 0,
+        "pt_ratio": 0.0,
         "rarity": 1,
         "versions": [
             1000011,
@@ -649,7 +698,8 @@
         "desc_en": "Greatly increase navigation early-race.",
         "icon_id": 20052,
         "cost": 120,
-        "score_per_sp": 5.0,
+        "eval_pt": 334,
+        "pt_ratio": 1.39,
         "rarity": 2,
         "versions": [
             200452
@@ -658,12 +708,13 @@
         "downgrade": 200452
     },
     "Certain Victory": {
-        "id": 110031,
+        "id": 910031,
         "name_en": "Certain Victory",
         "desc_en": "Greatly increase velocity with an indomitable fighting spirit on the final straight after being on the heels of another runner toward the front on the final corner or later.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -675,7 +726,8 @@
         "desc_en": "Increase passing ability when positioned toward the front mid-race. (Mile)",
         "icon_id": 20012,
         "cost": 160,
-        "score_per_sp": 3.75,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             201052
@@ -684,12 +736,13 @@
         "downgrade": 201052
     },
     "Chasing After You": {
-        "id": 100251,
+        "id": 900251,
         "name_en": "Chasing After You",
         "desc_en": "Chase after an unseen friend when in midpack in the second half of the race, moderately increasing velocity steadily and very slightly intimidating runners ahead.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -701,7 +754,8 @@
         "desc_en": "Recover Silence Suzuka's endurance on a corner in the second half of the race through a friend's cheers of support.",
         "icon_id": 20022,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 0,
+        "pt_ratio": 0.0,
         "rarity": 2,
         "versions": [],
         "upgrade": null,
@@ -713,7 +767,8 @@
         "desc_en": "Feel closer to being Japan's top racer, moderately increasing performance.",
         "icon_id": 10011,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 0,
+        "pt_ratio": 0.0,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -725,7 +780,8 @@
         "desc_en": "Moderately decrease performance at Chukyo Racecourse.",
         "icon_id": 10024,
         "cost": 50,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.52,
         "rarity": 1,
         "versions": [
             200071,
@@ -740,7 +796,8 @@
         "desc_en": "Moderately increase performance at Chukyo Racecourse.",
         "icon_id": 10021,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200071,
@@ -755,7 +812,8 @@
         "desc_en": "Increase performance at Chukyo Racecourse.",
         "icon_id": 10021,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200072,
@@ -770,7 +828,8 @@
         "desc_en": "Widen field of view with heightened observation early-race. (Medium)",
         "icon_id": 20092,
         "cost": 110,
-        "score_per_sp": 5.45,
+        "eval_pt": 334,
+        "pt_ratio": 1.52,
         "rarity": 2,
         "versions": [
             201122
@@ -779,24 +838,26 @@
         "downgrade": 201122
     },
     "Class Rep + Speed = Bakushin": {
-        "id": 10411,
+        "id": 900411,
         "name_en": "Class Rep + Speed = Bakushin",
         "desc_en": "Moderately increase velocity with BAKUSHIN power when engaged in a challenge toward the front in the second half of the race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 3,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Clear Heart": {
-        "id": 10451,
+        "id": 900451,
         "name_en": "Clear Heart",
         "desc_en": "Recover endurance when well-positioned mid-race.",
         "icon_id": 20023,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 3,
         "versions": [],
         "upgrade": null,
@@ -808,7 +869,8 @@
         "desc_en": "Moderately increase performance in cloudy weather.",
         "icon_id": 10041,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200221
@@ -822,7 +884,8 @@
         "desc_en": "Increase performance in cloudy weather.",
         "icon_id": 10041,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200222
@@ -836,7 +899,8 @@
         "desc_en": "Increase velocity when well-positioned on a straight in the last spurt. (Medium)",
         "icon_id": 20012,
         "cost": 160,
-        "score_per_sp": 3.75,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             201702
@@ -850,7 +914,8 @@
         "desc_en": "Moderately increase performance when many other runners are using the same strategy.",
         "icon_id": 10031,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200281,
@@ -865,7 +930,8 @@
         "desc_en": "Increase performance when many other runners are using the same strategy.",
         "icon_id": 10031,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200282,
@@ -880,7 +946,8 @@
         "desc_en": "Decrease time lost to slow starts.",
         "icon_id": 20062,
         "cost": 140,
-        "score_per_sp": 4.29,
+        "eval_pt": 394,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             200432,
@@ -890,12 +957,13 @@
         "downgrade": 200432
     },
     "Condor's Fury": {
-        "id": 110141,
+        "id": 910141,
         "name_en": "Condor's Fury",
         "desc_en": "Increase acceleration with blazing passion when aiming for the front from midpack on the final corner.",
         "icon_id": 20043,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -907,7 +975,8 @@
         "desc_en": "Decrease fatigue by taking a breather upon entering a straight. (Long)",
         "icon_id": 20022,
         "cost": 160,
-        "score_per_sp": 3.75,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             200742
@@ -916,12 +985,13 @@
         "downgrade": 200742
     },
     "Corazón ☆ Ardiente": {
-        "id": 10141,
+        "id": 900141,
         "name_en": "Corazón ☆ Ardiente",
         "desc_en": "Slightly hang on to the advantage when positioned toward the front with energy to spare on the final straight.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 3,
         "versions": [],
         "upgrade": null,
@@ -933,7 +1003,8 @@
         "desc_en": "Moderately decrease acceleration on a corner with awkward turning.",
         "icon_id": 20044,
         "cost": 100,
-        "score_per_sp": null,
+        "eval_pt": -262,
+        "pt_ratio": -0.57,
         "rarity": 1,
         "versions": [
             200341,
@@ -948,7 +1019,8 @@
         "desc_en": "Slightly increase acceleration on a corner with masterful turning.",
         "icon_id": 20041,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             200341,
@@ -963,7 +1035,8 @@
         "desc_en": "Moderately decrease velocity on a corner with clumsy turning.",
         "icon_id": 20014,
         "cost": 100,
-        "score_per_sp": null,
+        "eval_pt": -262,
+        "pt_ratio": -0.57,
         "rarity": 1,
         "versions": [
             200331,
@@ -978,7 +1051,8 @@
         "desc_en": "Slightly increase velocity on a corner with skilled turning.",
         "icon_id": 20011,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             200331,
@@ -993,7 +1067,8 @@
         "desc_en": "Increase acceleration on a corner with masterful turning.",
         "icon_id": 20042,
         "cost": 180,
-        "score_per_sp": 3.33,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             200342,
@@ -1008,7 +1083,8 @@
         "desc_en": "Moderately lose endurance on a corner with inefficient turning.",
         "icon_id": 20024,
         "cost": 100,
-        "score_per_sp": null,
+        "eval_pt": -262,
+        "pt_ratio": -0.6,
         "rarity": 1,
         "versions": [
             200351,
@@ -1023,7 +1099,8 @@
         "desc_en": "Slightly recover endurance on a corner with efficient turning.",
         "icon_id": 20021,
         "cost": 170,
-        "score_per_sp": 2.94,
+        "eval_pt": 217,
+        "pt_ratio": 1.28,
         "rarity": 1,
         "versions": [
             200351,
@@ -1038,7 +1115,8 @@
         "desc_en": "Slightly increase passing ability when positioned toward the front upon approaching late-race. (Sprint)",
         "icon_id": 20041,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             200991
@@ -1052,7 +1130,8 @@
         "desc_en": "Moderately decrease performance due to Trainer's anxiety.",
         "icon_id": 10014,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 0,
+        "pt_ratio": 0.0,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -1064,7 +1143,8 @@
         "desc_en": "Widen field of view when positioned toward the back late-race. (End Closer)",
         "icon_id": 20092,
         "cost": 110,
-        "score_per_sp": 5.45,
+        "eval_pt": 334,
+        "pt_ratio": 1.52,
         "rarity": 2,
         "versions": [
             201502
@@ -1073,24 +1153,26 @@
         "downgrade": 201502
     },
     "Cut and Drive!": {
-        "id": 100081,
+        "id": 900081,
         "name_en": "Cut and Drive!",
         "desc_en": "Become stronger at challenging rivals and increase velocity when positioned toward the front with 200m or less remaining.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 4,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Dancing in the Leaves": {
-        "id": 110401,
+        "id": 910401,
         "name_en": "Dancing in the Leaves",
         "desc_en": "Increase ability to break out of the pack when engaged in a challenge in midpack on the final corner.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -1102,7 +1184,8 @@
         "desc_en": "Moderately increase velocity for a medium duration when positioned toward the back mid-race. (End Closer)",
         "icon_id": 20012,
         "cost": 180,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             202022
@@ -1116,7 +1199,8 @@
         "desc_en": "When positioned in the midpack during the second half of the race, increase velocity and very slightly increase acceleration. (Late Surger)",
         "icon_id": 20012,
         "cost": 180,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             202122
@@ -1125,12 +1209,13 @@
         "downgrade": 202122
     },
     "Dazzl'n ♪ Diver": {
-        "id": 110011,
+        "id": 910011,
         "name_en": "Dazzl'n ♪ Diver",
         "desc_en": "Recover endurance by relaxing after activating 2 skills when positioned midpack mid-race.",
         "icon_id": 20023,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -1142,7 +1227,8 @@
         "desc_en": "Moderately narrow the field of view for runners behind when positioned toward the front late-race. (Pace Chaser)",
         "icon_id": 30072,
         "cost": 110,
-        "score_per_sp": 5.45,
+        "eval_pt": 334,
+        "pt_ratio": 1.52,
         "rarity": 2,
         "versions": [
             201372
@@ -1156,7 +1242,8 @@
         "desc_en": "Slightly decrease fatigue by taking a breather upon entering a straight. (Long)",
         "icon_id": 20021,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             200741
@@ -1170,7 +1257,8 @@
         "desc_en": "Moderately increase urge to give up when positioned around the very back on the final straight.",
         "icon_id": 20014,
         "cost": 100,
-        "score_per_sp": null,
+        "eval_pt": -262,
+        "pt_ratio": -2.62,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -1182,7 +1270,8 @@
         "desc_en": "Moderately improve running on a downhill. (Pace Chaser)",
         "icon_id": 20042,
         "cost": 120,
-        "score_per_sp": 5.0,
+        "eval_pt": 334,
+        "pt_ratio": 1.39,
         "rarity": 2,
         "versions": [
             201342
@@ -1196,7 +1285,8 @@
         "desc_en": "Slightly narrow the field of view for runners behind when positioned toward the front late-race. (Pace Chaser)",
         "icon_id": 30071,
         "cost": 110,
-        "score_per_sp": 4.55,
+        "eval_pt": 85,
+        "pt_ratio": 0.77,
         "rarity": 1,
         "versions": [
             201371
@@ -1210,7 +1300,8 @@
         "desc_en": "Moderately avoid becoming surrounded early-race. (Front Runner)",
         "icon_id": 20051,
         "cost": 110,
-        "score_per_sp": 4.55,
+        "eval_pt": 129,
+        "pt_ratio": 1.17,
         "rarity": 1,
         "versions": [
             201261
@@ -1224,7 +1315,8 @@
         "desc_en": "Decrease velocity of runners ahead when positioned toward the back late-race. (Medium)",
         "icon_id": 30012,
         "cost": 160,
-        "score_per_sp": 3.75,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             201152
@@ -1238,7 +1330,8 @@
         "desc_en": "Slightly increase velocity on downhills.",
         "icon_id": 20011,
         "cost": 170,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.28,
         "rarity": 1,
         "versions": [
             202171
@@ -1252,19 +1345,21 @@
         "desc_en": "Increase velocity on the final straight due to a strong desire to cross the finish line carrying everyone's hopes and dreams.",
         "icon_id": 20012,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 0,
+        "pt_ratio": 0.0,
         "rarity": 2,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Dreams Donned with Pride!": {
-        "id": 120011,
+        "id": 920011,
         "name_en": "Dreams Donned with Pride!",
         "desc_en": "If the skill user activates another skill on the final corner late-race, take the crowd's cheers to heart and moderately increase velocity. If racing at Nakayama Racecourse, greatly increase velocity instead.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -1276,7 +1371,8 @@
         "desc_en": "When positioned toward the back mid-race, slightly increase velocity. (Medium)",
         "icon_id": 20011,
         "cost": 160,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             202101
@@ -1290,7 +1386,8 @@
         "desc_en": "Slightly increase ability to go to the front early-race. (Front Runner)",
         "icon_id": 20041,
         "cost": 120,
-        "score_per_sp": 4.17,
+        "eval_pt": 217,
+        "pt_ratio": 1.81,
         "rarity": 1,
         "versions": [
             200531
@@ -1304,7 +1401,8 @@
         "desc_en": "Very slightly increase velocity for a medium duration when positioned toward the back mid-race. (End Closer)",
         "icon_id": 20011,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             202021
@@ -1318,7 +1416,8 @@
         "desc_en": "When positioned toward the back mid-race, increase velocity. (Medium)",
         "icon_id": 20012,
         "cost": 160,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             202102
@@ -1327,12 +1426,13 @@
         "downgrade": 202102
     },
     "Empress's Pride": {
-        "id": 10181,
+        "id": 900181,
         "name_en": "Empress's Pride",
         "desc_en": "Moderately increase velocity with the stride of an empress when passing another runner from midpack or further back on the final corner.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 3,
         "versions": [],
         "upgrade": null,
@@ -1344,7 +1444,8 @@
         "desc_en": "Increase acceleration on a straight in the last spurt. (End Closer)",
         "icon_id": 20042,
         "cost": 180,
-        "score_per_sp": 3.33,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             200642
@@ -1358,7 +1459,8 @@
         "desc_en": "Slightly increase velocity on a corner. (End Closer)",
         "icon_id": 20011,
         "cost": 130,
-        "score_per_sp": 3.85,
+        "eval_pt": 217,
+        "pt_ratio": 1.67,
         "rarity": 1,
         "versions": [
             201461,
@@ -1373,7 +1475,8 @@
         "desc_en": "Moderately increase velocity on a corner. (End Closer)",
         "icon_id": 20011,
         "cost": 140,
-        "score_per_sp": 1.85,
+        "eval_pt": 262,
+        "pt_ratio": 0.97,
         "rarity": 1,
         "versions": [
             201462,
@@ -1388,7 +1491,8 @@
         "desc_en": "Moderately increase ability to get into a good position. (End Closer)",
         "icon_id": 10051,
         "cost": 110,
-        "score_per_sp": 4.55,
+        "eval_pt": 174,
+        "pt_ratio": 1.58,
         "rarity": 1,
         "versions": [
             201551
@@ -1402,7 +1506,8 @@
         "desc_en": "Increase ability to get into a good position. (End Closer)",
         "icon_id": 10051,
         "cost": 130,
-        "score_per_sp": 2.08,
+        "eval_pt": 217,
+        "pt_ratio": 0.9,
         "rarity": 1,
         "versions": [
             201552
@@ -1416,7 +1521,8 @@
         "desc_en": "Slightly increase velocity on a straight. (End Closer)",
         "icon_id": 20011,
         "cost": 130,
-        "score_per_sp": 3.85,
+        "eval_pt": 217,
+        "pt_ratio": 1.67,
         "rarity": 1,
         "versions": [
             201451,
@@ -1431,7 +1537,8 @@
         "desc_en": "Moderately increase velocity on a straight. (End Closer)",
         "icon_id": 20011,
         "cost": 140,
-        "score_per_sp": 1.85,
+        "eval_pt": 262,
+        "pt_ratio": 0.97,
         "rarity": 1,
         "versions": [
             201452,
@@ -1446,7 +1553,8 @@
         "desc_en": "Increase ability to go to the front mid-race. (Front Runner)",
         "icon_id": 20012,
         "cost": 180,
-        "score_per_sp": 3.33,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             200542
@@ -1455,36 +1563,39 @@
         "downgrade": 200542
     },
     "Eternal Encompassing Shine": {
-        "id": 100671,
+        "id": 900671,
         "name_en": "Eternal Encompassing Shine",
         "desc_en": "If well-positioned at the start of the final straight, her strong willpower to win increases velocity. If positioned near the front, greatly increase velocity instead.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Eternal Moments": {
-        "id": 110181,
+        "id": 910181,
         "name_en": "Eternal Moments",
         "desc_en": "Increase velocity when starting to make a move from a position toward the front mid-race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Every Rose Has Its Fangs": {
-        "id": 110301,
+        "id": 910301,
         "name_en": "Every Rose Has Its Fangs",
         "desc_en": "Suck endurance from runners ahead when well-positioned and pressured by another runner mid-race.",
         "icon_id": 20023,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -1496,7 +1607,8 @@
         "desc_en": "Slightly regain the energy to run when close to exhausting strength. (Long)",
         "icon_id": 20021,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             200761
@@ -1505,12 +1617,13 @@
         "downgrade": null
     },
     "Fairy Tale": {
-        "id": 100221,
+        "id": 900221,
         "name_en": "Fairy Tale",
         "desc_en": "Increase velocity with the excitement of running when engaged in a challenge while well-positioned in the second half of the race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -1522,7 +1635,8 @@
         "desc_en": "Increase performance in fall, boosting Speed and Power.",
         "icon_id": 10012,
         "cost": 130,
-        "score_per_sp": null,
+        "eval_pt": 461,
+        "pt_ratio": 1.4,
         "rarity": 2,
         "versions": [
             200191,
@@ -1538,7 +1652,8 @@
         "desc_en": "Moderately decrease performance in fall.",
         "icon_id": 10014,
         "cost": 50,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.34,
         "rarity": 1,
         "versions": [
             200191,
@@ -1554,7 +1669,8 @@
         "desc_en": "Moderately increase performance in fall.",
         "icon_id": 10011,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200191,
@@ -1570,7 +1686,8 @@
         "desc_en": "Increase performance in fall.",
         "icon_id": 10011,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200192,
@@ -1586,7 +1703,8 @@
         "desc_en": "Slightly recover endurance when positioned toward the back mid-race. (Dirt)",
         "icon_id": 20021,
         "cost": 180,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             202001
@@ -1600,7 +1718,8 @@
         "desc_en": "Increase velocity mid-race. (Late Surger)",
         "icon_id": 20012,
         "cost": 180,
-        "score_per_sp": 3.33,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             200592
@@ -1614,7 +1733,8 @@
         "desc_en": "Slightly increase ability to go to the front mid-race. (Front Runner)",
         "icon_id": 20011,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             200541
@@ -1628,7 +1748,8 @@
         "desc_en": "When positioned in the midpack during the second half of the race, slightly increase velocity and very minimally increase acceleration. (Late Surger)",
         "icon_id": 20011,
         "cost": 180,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             202121
@@ -1642,7 +1763,8 @@
         "desc_en": "Slightly increase velocity when positioned toward the front upon approaching late-race. (Long)",
         "icon_id": 20011,
         "cost": 160,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             202011
@@ -1651,12 +1773,13 @@
         "downgrade": null
     },
     "Feel the Burn!": {
-        "id": 10271,
+        "id": 900271,
         "name_en": "Feel the Burn!",
         "desc_en": "Moderately increase acceleration in an attempt to move up on a corner late-race.",
         "icon_id": 20043,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 3,
         "versions": [],
         "upgrade": null,
@@ -1668,19 +1791,21 @@
         "desc_en": "Greatly decrease the racer's proficiency in starting races. Effects include slow starts and reduced starting acceleration. Removed at the end of the Career playthrough.",
         "icon_id": 20064,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 0,
+        "pt_ratio": 0.0,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Festive Miracle": {
-        "id": 110061,
+        "id": 910061,
         "name_en": "Festive Miracle",
         "desc_en": "Control breathing and kick forward hard toward victory in the second half of the race after recovering endurance with skills at least 3 times.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -1692,7 +1817,8 @@
         "desc_en": "Slightly increase acceleration for a medium duration when trying to pass another runner. (Late Surger)",
         "icon_id": 20041,
         "cost": 120,
-        "score_per_sp": 4.17,
+        "eval_pt": 217,
+        "pt_ratio": 1.81,
         "rarity": 1,
         "versions": [
             201401
@@ -1706,7 +1832,8 @@
         "desc_en": "When engaged in a challenge midpack mid-race, very slightly recover endurance and slightly increase velocity. (Medium)",
         "icon_id": 20011,
         "cost": 160,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             202091
@@ -1720,7 +1847,8 @@
         "desc_en": "Slightly increase ability to keep the lead on the final corner. (Front Runner)",
         "icon_id": 20041,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             200551
@@ -1734,7 +1862,8 @@
         "desc_en": "Moderately decrease performance on firm ground.",
         "icon_id": 10034,
         "cost": 50,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.34,
         "rarity": 1,
         "versions": [
             200151,
@@ -1750,7 +1879,8 @@
         "desc_en": "Moderately increase performance on firm ground.",
         "icon_id": 10031,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200151,
@@ -1766,7 +1896,8 @@
         "desc_en": "Increase performance on firm ground.",
         "icon_id": 10031,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200152,
@@ -1782,7 +1913,8 @@
         "desc_en": "Increase performance on firm ground, boosting Power and Speed.",
         "icon_id": 10032,
         "cost": 130,
-        "score_per_sp": null,
+        "eval_pt": 461,
+        "pt_ratio": 1.4,
         "rarity": 2,
         "versions": [
             200151,
@@ -1798,7 +1930,8 @@
         "desc_en": "Increase velocity on a straight. (Medium)",
         "icon_id": 20012,
         "cost": 150,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             201101,
@@ -1808,24 +1941,26 @@
         "downgrade": null
     },
     "Flashy☆Landing": {
-        "id": 100241,
+        "id": 900241,
         "name_en": "Flashy☆Landing",
         "desc_en": "Increase ability to break out of the pack on the straight after engaging in a challenge toward the front on the final corner or later.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 4,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Flowery☆Maneuver": {
-        "id": 110241,
+        "id": 910241,
         "name_en": "Flowery☆Maneuver",
         "desc_en": "Increase velocity when passing another runner toward the front on the final corner. If passing toward the back, increase acceleration instead.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -1837,7 +1972,8 @@
         "desc_en": "Slightly increase fatigue for end closers mid-race.",
         "icon_id": 30051,
         "cost": 130,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.67,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -1849,7 +1985,8 @@
         "desc_en": "Slightly increase fatigue for front runners mid-race.",
         "icon_id": 30051,
         "cost": 130,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.67,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -1861,7 +1998,8 @@
         "desc_en": "Slightly increase fatigue for late surgers mid-race.",
         "icon_id": 30051,
         "cost": 130,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.67,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -1873,7 +2011,8 @@
         "desc_en": "Slightly increase fatigue for pace chasers mid-race.",
         "icon_id": 30051,
         "cost": 130,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.67,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -1885,7 +2024,8 @@
         "desc_en": "Slightly decrease time lost to slow starts.",
         "icon_id": 20061,
         "cost": 140,
-        "score_per_sp": 3.57,
+        "eval_pt": 129,
+        "pt_ratio": 0.92,
         "rarity": 1,
         "versions": [
             200431,
@@ -1895,12 +2035,13 @@
         "downgrade": 200433
     },
     "Focused Mind": {
-        "id": 10111,
+        "id": 900111,
         "name_en": "Focused Mind",
         "desc_en": "Moderately increase velocity with a strong turn of foot when passing another runner toward the back on the final straight.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 3,
         "versions": [],
         "upgrade": null,
@@ -1912,7 +2053,8 @@
         "desc_en": "The whole team feels super determined to win this special race, greatly increasing performance.",
         "icon_id": 10022,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 0,
+        "pt_ratio": 0.0,
         "rarity": 2,
         "versions": [],
         "upgrade": null,
@@ -1924,7 +2066,8 @@
         "desc_en": "Moderately prepare to aim for the front late-race. (Dirt)",
         "icon_id": 20051,
         "cost": 140,
-        "score_per_sp": 3.57,
+        "eval_pt": 174,
+        "pt_ratio": 1.24,
         "rarity": 1,
         "versions": [
             201681
@@ -1938,7 +2081,8 @@
         "desc_en": "If positioned in the midpack around when the mid-race starts, slightly decrease velocity and moderately recover endurance. (Long)",
         "icon_id": 20021,
         "cost": 170,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.28,
         "rarity": 1,
         "versions": [
             202071
@@ -1952,7 +2096,8 @@
         "desc_en": "Increase time needed for end closers to calm down when they become rushed.",
         "icon_id": 30041,
         "cost": 130,
-        "score_per_sp": null,
+        "eval_pt": 174,
+        "pt_ratio": 1.34,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -1964,7 +2109,8 @@
         "desc_en": "Increase time needed for front runners to calm down when they become rushed.",
         "icon_id": 30041,
         "cost": 130,
-        "score_per_sp": null,
+        "eval_pt": 174,
+        "pt_ratio": 1.34,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -1976,7 +2122,8 @@
         "desc_en": "Increase time needed for late surgers to calm down when they become rushed.",
         "icon_id": 30041,
         "cost": 130,
-        "score_per_sp": null,
+        "eval_pt": 174,
+        "pt_ratio": 1.34,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -1988,7 +2135,8 @@
         "desc_en": "Increase time needed for pace chasers to calm down when they become rushed.",
         "icon_id": 30041,
         "cost": 130,
-        "score_per_sp": null,
+        "eval_pt": 174,
+        "pt_ratio": 1.34,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -2000,7 +2148,8 @@
         "desc_en": "If positioned toward the back late-race, increase acceleration. (Medium)",
         "icon_id": 20042,
         "cost": 160,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             202082
@@ -2014,7 +2163,8 @@
         "desc_en": "Slightly increase velocity on a corner. (Front Runner)",
         "icon_id": 20011,
         "cost": 130,
-        "score_per_sp": 3.85,
+        "eval_pt": 217,
+        "pt_ratio": 1.67,
         "rarity": 1,
         "versions": [
             201251,
@@ -2029,7 +2179,8 @@
         "desc_en": "Moderately increase velocity on a corner. (Front Runner)",
         "icon_id": 20011,
         "cost": 140,
-        "score_per_sp": 1.85,
+        "eval_pt": 262,
+        "pt_ratio": 0.97,
         "rarity": 1,
         "versions": [
             201252,
@@ -2044,7 +2195,8 @@
         "desc_en": "Moderately increase ability to get into a good position. (Front Runner)",
         "icon_id": 10051,
         "cost": 110,
-        "score_per_sp": 4.55,
+        "eval_pt": 174,
+        "pt_ratio": 1.58,
         "rarity": 1,
         "versions": [
             201521
@@ -2058,7 +2210,8 @@
         "desc_en": "Increase ability to get into a good position. (Front Runner)",
         "icon_id": 10051,
         "cost": 130,
-        "score_per_sp": 2.08,
+        "eval_pt": 217,
+        "pt_ratio": 0.9,
         "rarity": 1,
         "versions": [
             201522
@@ -2072,7 +2225,8 @@
         "desc_en": "Slightly increase velocity on a straight. (Front Runner)",
         "icon_id": 20011,
         "cost": 130,
-        "score_per_sp": 3.85,
+        "eval_pt": 217,
+        "pt_ratio": 1.67,
         "rarity": 1,
         "versions": [
             201241,
@@ -2087,7 +2241,8 @@
         "desc_en": "Moderately increase velocity on a straight. (Front Runner)",
         "icon_id": 20011,
         "cost": 140,
-        "score_per_sp": 1.85,
+        "eval_pt": 262,
+        "pt_ratio": 0.97,
         "rarity": 1,
         "versions": [
             201242,
@@ -2102,7 +2257,8 @@
         "desc_en": "Moderately decrease performance at Fukushima Racecourse.",
         "icon_id": 10024,
         "cost": 40,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.65,
         "rarity": 1,
         "versions": [
             200101,
@@ -2117,7 +2273,8 @@
         "desc_en": "Moderately increase performance at Fukushima Racecourse.",
         "icon_id": 10021,
         "cost": 70,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.84,
         "rarity": 1,
         "versions": [
             200101,
@@ -2132,7 +2289,8 @@
         "desc_en": "Increase performance at Fukushima Racecourse.",
         "icon_id": 10021,
         "cost": 90,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 1.09,
         "rarity": 1,
         "versions": [
             200102,
@@ -2147,7 +2305,8 @@
         "desc_en": "Greatly consume endurance mid-race and moderately increase velocity. (Late Surger)",
         "icon_id": 20011,
         "cost": 160,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             202151
@@ -2161,7 +2320,8 @@
         "desc_en": "When positioned toward the back on the final corner, increase velocity. (Mile)",
         "icon_id": 20012,
         "cost": 160,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             202112
@@ -2175,7 +2335,8 @@
         "desc_en": "Increase passing ability when positioned toward the back late-race. (Mile)",
         "icon_id": 20042,
         "cost": 160,
-        "score_per_sp": 3.75,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             200702
@@ -2184,12 +2345,13 @@
         "downgrade": 200702
     },
     "G00 1st. F∞;": {
-        "id": 100261,
+        "id": 900261,
         "name_en": "G00 1st. F∞;",
         "desc_en": "Increase velocity when positioned toward the front after making it to the final straight without faltering.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -2201,7 +2363,8 @@
         "desc_en": "Moderately decrease performance in G1 or otherwise important races.",
         "icon_id": 10014,
         "cost": 50,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -2.58,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -2213,7 +2376,8 @@
         "desc_en": "Slightly increase spurting ability when positioned toward the back late-race. (Sprint)",
         "icon_id": 20011,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             200671
@@ -2227,7 +2391,8 @@
         "desc_en": "Moderately increase time lost to slow starts.",
         "icon_id": 20064,
         "cost": 70,
-        "score_per_sp": null,
+        "eval_pt": -174,
+        "pt_ratio": -0.5,
         "rarity": 1,
         "versions": [
             200431,
@@ -2237,24 +2402,26 @@
         "downgrade": null
     },
     "Genius x Bakushin = Victory": {
-        "id": 100411,
+        "id": 900411,
         "name_en": "Genius x Bakushin = Victory",
         "desc_en": "Increase velocity with BAKUSHIN power when engaged in a challenge toward the front in the second half of the race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 4,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Give Mummy a Hug ♡": {
-        "id": 110451,
+        "id": 910451,
         "name_en": "Give Mummy a Hug ♡",
         "desc_en": "Increase ability to break out of the pack when well-positioned and close to the runner ahead on the final straight.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -2266,7 +2433,8 @@
         "desc_en": "Very slightly control breathing and kick forward in the second half of the race. Effect is increased in proportion to number of career wins.",
         "icon_id": 20141,
         "cost": 200,
-        "score_per_sp": null,
+        "eval_pt": 263,
+        "pt_ratio": 1.31,
         "rarity": 1,
         "versions": [
             210061
@@ -2280,7 +2448,8 @@
         "desc_en": "Moderately increase navigation late-race.",
         "icon_id": 20051,
         "cost": 120,
-        "score_per_sp": 4.17,
+        "eval_pt": 129,
+        "pt_ratio": 1.07,
         "rarity": 1,
         "versions": [
             200501
@@ -2289,12 +2458,13 @@
         "downgrade": null
     },
     "Go, Go, Mun!": {
-        "id": 100621,
+        "id": 900621,
         "name_en": "Go, Go, Mun!",
         "desc_en": "Recover endurance and moderately increase velocity with newfound resolve when in midpack around halfway through the race.",
         "icon_id": 20023,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 4,
         "versions": [],
         "upgrade": null,
@@ -2306,7 +2476,8 @@
         "desc_en": "Reduce fatigue on a downhill. (End Closer)",
         "icon_id": 20022,
         "cost": 170,
-        "score_per_sp": 3.53,
+        "eval_pt": 508,
+        "pt_ratio": 1.49,
         "rarity": 2,
         "versions": [
             201482
@@ -2320,7 +2491,8 @@
         "desc_en": "Recover endurance mid-race. (Pace Chaser)",
         "icon_id": 20022,
         "cost": 180,
-        "score_per_sp": 3.33,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             201352
@@ -2329,12 +2501,13 @@
         "downgrade": 201352
     },
     "Go☆Go☆Goal!": {
-        "id": 110601,
+        "id": 910601,
         "name_en": "Go☆Go☆Goal!",
         "desc_en": "If the skill user passes another runner on the final corner or later, increase velocity from the midpack onward on the final straight. If the skill user isn't one of the top favorites, muster resolve to keep steadily increasing velocity.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -2346,7 +2519,8 @@
         "desc_en": "Moderately steal velocity from runners behind when positioned toward the front mid-race. (Mile)",
         "icon_id": 30012,
         "cost": 160,
-        "score_per_sp": null,
+        "eval_pt": 461,
+        "pt_ratio": 1.44,
         "rarity": 2,
         "versions": [
             201082
@@ -2360,7 +2534,8 @@
         "desc_en": "Slightly increase acceleration after activating many skills early-race.",
         "icon_id": 20041,
         "cost": 100,
-        "score_per_sp": 5.0,
+        "eval_pt": 217,
+        "pt_ratio": 2.17,
         "rarity": 1,
         "versions": [
             201602
@@ -2369,12 +2544,13 @@
         "downgrade": null
     },
     "Guten Appetit ♪": {
-        "id": 110371,
+        "id": 910371,
         "name_en": "Guten Appetit ♪",
         "desc_en": "Increase velocity continuously with a patissiere's pride on the final straight after passing another runner 3 times on the final corner or later.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -2386,7 +2562,8 @@
         "desc_en": "Moderately decrease performance at Hakodate Racecourse.",
         "icon_id": 10024,
         "cost": 40,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.65,
         "rarity": 1,
         "versions": [
             200091,
@@ -2401,7 +2578,8 @@
         "desc_en": "Moderately increase performance at Hakodate Racecourse.",
         "icon_id": 10021,
         "cost": 70,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.84,
         "rarity": 1,
         "versions": [
             200091,
@@ -2416,7 +2594,8 @@
         "desc_en": "Increase performance at Hakodate Racecourse.",
         "icon_id": 10021,
         "cost": 90,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 1.09,
         "rarity": 1,
         "versions": [
             200092,
@@ -2431,7 +2610,8 @@
         "desc_en": "Moderately decrease performance at Hanshin Racecourse.",
         "icon_id": 10024,
         "cost": 50,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.52,
         "rarity": 1,
         "versions": [
             200051,
@@ -2446,7 +2626,8 @@
         "desc_en": "Moderately increase performance at Hanshin Racecourse.",
         "icon_id": 10021,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200051,
@@ -2461,7 +2642,8 @@
         "desc_en": "Increase performance at Hanshin Racecourse.",
         "icon_id": 10021,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200052,
@@ -2476,7 +2658,8 @@
         "desc_en": "Moderately increase acceleration for a medium duration when trying to pass another runner. (Late Surger)",
         "icon_id": 20042,
         "cost": 120,
-        "score_per_sp": 5.0,
+        "eval_pt": 334,
+        "pt_ratio": 1.39,
         "rarity": 2,
         "versions": [
             201402
@@ -2490,7 +2673,8 @@
         "desc_en": "Moderately widen field of view with heightened observation early-race. (Medium)",
         "icon_id": 20091,
         "cost": 110,
-        "score_per_sp": 4.55,
+        "eval_pt": 129,
+        "pt_ratio": 1.17,
         "rarity": 1,
         "versions": [
             201121
@@ -2504,7 +2688,8 @@
         "desc_en": "Slightly increase acceleration when positioned toward the front late-race. (Pace Chaser)",
         "icon_id": 20041,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             201901
@@ -2518,7 +2703,8 @@
         "desc_en": "Increase velocity when positioned toward the front upon approaching late-race. (Long)",
         "icon_id": 20012,
         "cost": 160,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             202012
@@ -2532,7 +2718,8 @@
         "desc_en": "Slightly decrease velocity of end closers late-race.",
         "icon_id": 30011,
         "cost": 130,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.67,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -2544,7 +2731,8 @@
         "desc_en": "Slightly decrease velocity of front runners late-race.",
         "icon_id": 30011,
         "cost": 130,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.67,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -2556,7 +2744,8 @@
         "desc_en": "Slightly decrease velocity of late surgers late-race.",
         "icon_id": 30011,
         "cost": 130,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.67,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -2568,7 +2757,8 @@
         "desc_en": "Slightly decrease velocity of pace chasers late-race.",
         "icon_id": 30011,
         "cost": 130,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.67,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -2580,7 +2770,8 @@
         "desc_en": "Slightly improve running on an uphill.",
         "icon_id": 20041,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             201582
@@ -2594,7 +2785,8 @@
         "desc_en": "Moderately increase Silence Suzuka's performance thanks to a charm that guarantees a satisfying run.",
         "icon_id": 10021,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 0,
+        "pt_ratio": 0.0,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -2606,7 +2798,8 @@
         "desc_en": "Slightly increase velocity in the last spurt.",
         "icon_id": 20011,
         "cost": 170,
-        "score_per_sp": 2.94,
+        "eval_pt": 217,
+        "pt_ratio": 1.28,
         "rarity": 1,
         "versions": [
             200511
@@ -2620,7 +2813,8 @@
         "desc_en": "Slightly increase ability to maintain the lead when leading by a large margin mid-race. (Sprint)",
         "icon_id": 20011,
         "cost": 170,
-        "score_per_sp": 2.94,
+        "eval_pt": 262,
+        "pt_ratio": 1.54,
         "rarity": 1,
         "versions": [
             200981
@@ -2634,7 +2828,8 @@
         "desc_en": "Slightly recover endurance mid-race. (Pace Chaser)",
         "icon_id": 20021,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             201351
@@ -2648,7 +2843,8 @@
         "desc_en": "Slightly widen field of view with situational awareness when moving sideways. (End Closer)",
         "icon_id": 20091,
         "cost": 110,
-        "score_per_sp": 4.55,
+        "eval_pt": 85,
+        "pt_ratio": 0.77,
         "rarity": 1,
         "versions": [
             201471
@@ -2657,36 +2853,39 @@
         "downgrade": null
     },
     "I Can Win Sometimes, Right?": {
-        "id": 10601,
+        "id": 900601,
         "name_en": "I Can Win Sometimes, Right?",
         "desc_en": "Moderately increase velocity with an arousal of fighting spirit when positioned 3rd and about to lose late-race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 3,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "I Never Goof Up!": {
-        "id": 100581,
+        "id": 900581,
         "name_en": "I Never Goof Up!",
         "desc_en": "Aim for the front with unwavering determination when passing another runner from midpack or further back on a corner late-race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "I See Victory in My Future!": {
-        "id": 100561,
+        "id": 900561,
         "name_en": "I See Victory in My Future!",
         "desc_en": "Clear a path forward with the power of divination when the way ahead is jammed late-race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 4,
         "versions": [],
         "upgrade": null,
@@ -2698,7 +2897,8 @@
         "desc_en": "Burn bright with team spirit, very slightly increasing vigor in proportion to the total Guts of racing team members late-race.",
         "icon_id": 20101,
         "cost": 200,
-        "score_per_sp": 2.5,
+        "eval_pt": 263,
+        "pt_ratio": 1.31,
         "rarity": 1,
         "versions": [
             210041
@@ -2712,7 +2912,8 @@
         "desc_en": "Burn bright with team spirit, slightly increasing acceleration in proportion to the total Power of racing team members late-race.",
         "icon_id": 20121,
         "cost": 200,
-        "score_per_sp": 2.5,
+        "eval_pt": 263,
+        "pt_ratio": 1.31,
         "rarity": 1,
         "versions": [
             210031
@@ -2726,7 +2927,8 @@
         "desc_en": "Burn bright with team spirit, slightly increasing velocity in proportion to the total Speed of racing team members mid-race.",
         "icon_id": 20101,
         "cost": 200,
-        "score_per_sp": 2.5,
+        "eval_pt": 263,
+        "pt_ratio": 1.31,
         "rarity": 1,
         "versions": [
             210011
@@ -2740,7 +2942,8 @@
         "desc_en": "Burn bright with team spirit, slightly recovering endurance in proportion to the total Stamina of racing team members mid-race.",
         "icon_id": 20111,
         "cost": 200,
-        "score_per_sp": 2.5,
+        "eval_pt": 263,
+        "pt_ratio": 1.31,
         "rarity": 1,
         "versions": [
             210021
@@ -2754,7 +2957,8 @@
         "desc_en": "Burn bright with team spirit, slightly increasing strategic navigation for a medium duration in proportion to the total Wit of racing team members early-race.",
         "icon_id": 20131,
         "cost": 200,
-        "score_per_sp": 2.5,
+        "eval_pt": 263,
+        "pt_ratio": 1.31,
         "rarity": 1,
         "versions": [
             210051
@@ -2768,7 +2972,8 @@
         "desc_en": "Narrow the field of view for runners ahead late-race. (Long)",
         "icon_id": 30072,
         "cost": 110,
-        "score_per_sp": 5.45,
+        "eval_pt": 334,
+        "pt_ratio": 1.52,
         "rarity": 2,
         "versions": [
             201232
@@ -2782,7 +2987,8 @@
         "desc_en": "Increase velocity in the last spurt.",
         "icon_id": 20012,
         "cost": 170,
-        "score_per_sp": 3.53,
+        "eval_pt": 508,
+        "pt_ratio": 1.49,
         "rarity": 2,
         "versions": [
             200512
@@ -2796,7 +3002,8 @@
         "desc_en": "Increase velocity when positioned toward the front upon approaching late-race. (Sprint)",
         "icon_id": 20012,
         "cost": 160,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             202042
@@ -2810,7 +3017,8 @@
         "desc_en": "I'll rise up to the challenge!",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 3.53,
+        "eval_pt": 0,
+        "pt_ratio": 0.0,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -2822,7 +3030,8 @@
         "desc_en": "Increase velocity when near the inner rail on the final corner. (Long)",
         "icon_id": 20012,
         "cost": 160,
-        "score_per_sp": 3.75,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             200752
@@ -2836,7 +3045,8 @@
         "desc_en": "Moderately decrease performance in brackets 1–3.",
         "icon_id": 10054,
         "cost": 50,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.52,
         "rarity": 1,
         "versions": [
             200251,
@@ -2851,7 +3061,8 @@
         "desc_en": "Moderately increase performance in brackets 1–3.",
         "icon_id": 10051,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200251,
@@ -2866,7 +3077,8 @@
         "desc_en": "Increase performance in brackets 1–3.",
         "icon_id": 10051,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200252,
@@ -2881,7 +3093,8 @@
         "desc_en": "Slightly increase velocity when near the inner rail on the final corner. (Long)",
         "icon_id": 20011,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             200751
@@ -2895,7 +3108,8 @@
         "desc_en": "Slightly unnerve runners in focus late-race. (End Closer)",
         "icon_id": 30011,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             201511
@@ -2909,7 +3123,8 @@
         "desc_en": "Moderately intimidate runners behind when positioned toward the front early-race. (Sprint)",
         "icon_id": 30011,
         "cost": 170,
-        "score_per_sp": 2.94,
+        "eval_pt": 262,
+        "pt_ratio": 1.54,
         "rarity": 1,
         "versions": [
             201011
@@ -2918,12 +3133,13 @@
         "downgrade": null
     },
     "Introduction to Physiology": {
-        "id": 10321,
+        "id": 900321,
         "name_en": "Introduction to Physiology",
         "desc_en": "Moderately recover endurance and slightly increase velocity for a moderate duration when sitting off the pace on a corner in the second half of the race.",
         "icon_id": 20023,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 3,
         "versions": [],
         "upgrade": null,
@@ -2935,7 +3151,8 @@
         "desc_en": "Recover endurance when the way ahead is jammed early-race or mid-race.",
         "icon_id": 20022,
         "cost": 160,
-        "score_per_sp": 3.75,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             200442
@@ -2949,7 +3166,8 @@
         "desc_en": "Increase velocity when passing another runner mid-race.",
         "icon_id": 20012,
         "cost": 170,
-        "score_per_sp": 3.53,
+        "eval_pt": 508,
+        "pt_ratio": 1.49,
         "rarity": 2,
         "versions": [
             200462
@@ -2958,36 +3176,39 @@
         "downgrade": 200462
     },
     "Joyful Voyage!": {
-        "id": 110101,
+        "id": 910101,
         "name_en": "Joyful Voyage!",
         "desc_en": "If positioned toward the front with 200m remaining, increase velocity. Then, if also positioned near the leading Umamusume, gather strength to move slightly forward.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Just a Little Farther!": {
-        "id": 100601,
+        "id": 900601,
         "name_en": "Just a Little Farther!",
         "desc_en": "Increase velocity with flaring fighting spirit when positioned 3rd and about to lose late-race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 4,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "KEEP IT REAL.": {
-        "id": 100401,
+        "id": 900401,
         "name_en": "KEEP IT REAL.",
         "desc_en": "Moderately increase acceleration steadily with a wink when starting to make a move from midpack in the second half of the race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -2999,7 +3220,8 @@
         "desc_en": "Decrease fatigue, then moderately decrease velocity of runners ahead when positioned toward the back upon approaching mid-race. (Mile)",
         "icon_id": 20022,
         "cost": 160,
-        "score_per_sp": 3.75,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             200692
@@ -3013,7 +3235,8 @@
         "desc_en": "Greatly consume endurance mid-race and greatly increase velocity. (Late Surger)",
         "icon_id": 20012,
         "cost": 160,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             202152
@@ -3022,12 +3245,13 @@
         "downgrade": 202152
     },
     "Keep Pushing Ahead": {
-        "id": 100641,
+        "id": 900641,
         "name_en": "Keep Pushing Ahead",
         "desc_en": "If positioned toward the front from the start of the race until the second half of the race, good vibes recover endurance and moderately increase velocity steadily.",
         "icon_id": 20023,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -3039,7 +3263,8 @@
         "desc_en": "Slightly increase ability to maintain the lead when leading by a fair margin mid-race. (Long)",
         "icon_id": 20011,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             201191
@@ -3053,7 +3278,8 @@
         "desc_en": "Increase positioning ability when positioned toward the front mid-race. (Medium)",
         "icon_id": 20012,
         "cost": 160,
-        "score_per_sp": 3.75,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             200722
@@ -3067,7 +3293,8 @@
         "desc_en": "Moderately decrease performance at Kokura Racecourse.",
         "icon_id": 10024,
         "cost": 40,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.65,
         "rarity": 1,
         "versions": [
             200121,
@@ -3082,7 +3309,8 @@
         "desc_en": "Moderately increase performance at Kokura Racecourse.",
         "icon_id": 10021,
         "cost": 70,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.84,
         "rarity": 1,
         "versions": [
             200121,
@@ -3097,7 +3325,8 @@
         "desc_en": "Increase performance at Kokura Racecourse.",
         "icon_id": 10021,
         "cost": 90,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 1.09,
         "rarity": 1,
         "versions": [
             200122,
@@ -3112,7 +3341,8 @@
         "desc_en": "Moderately decrease performance at Kyoto Racecourse.",
         "icon_id": 10024,
         "cost": 50,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.34,
         "rarity": 1,
         "versions": [
             200061,
@@ -3128,7 +3358,8 @@
         "desc_en": "Moderately increase performance at Kyoto Racecourse.",
         "icon_id": 10021,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200061,
@@ -3144,7 +3375,8 @@
         "desc_en": "Increase performance at Kyoto Racecourse.",
         "icon_id": 10021,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200062,
@@ -3160,7 +3392,8 @@
         "desc_en": "Increase navigation late-race.",
         "icon_id": 20052,
         "cost": 120,
-        "score_per_sp": 5.0,
+        "eval_pt": 334,
+        "pt_ratio": 1.39,
         "rarity": 2,
         "versions": [
             200502
@@ -3174,7 +3407,8 @@
         "desc_en": "Slightly increase velocity on a corner. (Late Surger)",
         "icon_id": 20011,
         "cost": 130,
-        "score_per_sp": 3.85,
+        "eval_pt": 217,
+        "pt_ratio": 1.67,
         "rarity": 1,
         "versions": [
             201391,
@@ -3189,7 +3423,8 @@
         "desc_en": "Moderately increase velocity on a corner. (Late Surger)",
         "icon_id": 20011,
         "cost": 140,
-        "score_per_sp": 1.85,
+        "eval_pt": 262,
+        "pt_ratio": 0.97,
         "rarity": 1,
         "versions": [
             201392,
@@ -3204,7 +3439,8 @@
         "desc_en": "Moderately increase ability to get into a good position. (Late Surger)",
         "icon_id": 10051,
         "cost": 110,
-        "score_per_sp": 4.55,
+        "eval_pt": 174,
+        "pt_ratio": 1.58,
         "rarity": 1,
         "versions": [
             201541
@@ -3218,7 +3454,8 @@
         "desc_en": "Increase ability to get into a good position. (Late Surger)",
         "icon_id": 10051,
         "cost": 130,
-        "score_per_sp": 2.08,
+        "eval_pt": 217,
+        "pt_ratio": 0.9,
         "rarity": 1,
         "versions": [
             201542
@@ -3232,7 +3469,8 @@
         "desc_en": "Slightly increase velocity on a straight. (Late Surger)",
         "icon_id": 20011,
         "cost": 130,
-        "score_per_sp": 3.85,
+        "eval_pt": 217,
+        "pt_ratio": 1.67,
         "rarity": 1,
         "versions": [
             201381,
@@ -3247,7 +3485,8 @@
         "desc_en": "Moderately increase velocity on a straight. (Late Surger)",
         "icon_id": 20011,
         "cost": 140,
-        "score_per_sp": 1.85,
+        "eval_pt": 262,
+        "pt_ratio": 0.97,
         "rarity": 1,
         "versions": [
             201382,
@@ -3262,7 +3501,8 @@
         "desc_en": "Slightly recover endurance when the way ahead is jammed early-race or mid-race.",
         "icon_id": 20021,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             200441
@@ -3276,7 +3516,8 @@
         "desc_en": "Prepare to aim for the front late-race. (Dirt)",
         "icon_id": 20052,
         "cost": 140,
-        "score_per_sp": 4.29,
+        "eval_pt": 394,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             201682
@@ -3290,7 +3531,8 @@
         "desc_en": "Slightly increase ability to pass or challenge another runner early-race or mid-race. (Front Runner)",
         "icon_id": 20011,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             201271
@@ -3304,7 +3546,8 @@
         "desc_en": "Moderately decrease performance on left-handed tracks.",
         "icon_id": 10014,
         "cost": 50,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.34,
         "rarity": 1,
         "versions": [
             200021,
@@ -3320,7 +3563,8 @@
         "desc_en": "Moderately increase performance on left-handed tracks.",
         "icon_id": 10011,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200021,
@@ -3336,7 +3580,8 @@
         "desc_en": "Increase performance on left-handed tracks.",
         "icon_id": 10011,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200022,
@@ -3347,24 +3592,26 @@
         "downgrade": 200022
     },
     "Legacy of the Strong": {
-        "id": 110131,
+        "id": 910131,
         "name_en": "Legacy of the Strong",
         "desc_en": "Increase velocity continuously when pressured by another runner and running out of energy toward the front on the final corner or later.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Let's Pump Some Iron!": {
-        "id": 100271,
+        "id": 900271,
         "name_en": "Let's Pump Some Iron!",
         "desc_en": "Increase acceleration in an attempt to move up on a corner late-race.",
         "icon_id": 20043,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 4,
         "versions": [],
         "upgrade": null,
@@ -3376,7 +3623,8 @@
         "desc_en": "Slightly regain composure by calming down when the way ahead is jammed. (End Closer)",
         "icon_id": 20021,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             201491
@@ -3390,7 +3638,8 @@
         "desc_en": "Recover endurance when positioned toward the back upon approaching mid-race. (Late Surger)",
         "icon_id": 20022,
         "cost": 180,
-        "score_per_sp": 3.33,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             201692
@@ -3404,7 +3653,8 @@
         "desc_en": "Slightly increase velocity when positioned toward the front upon approaching late-race. (Sprint)",
         "icon_id": 20011,
         "cost": 160,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             202041
@@ -3418,7 +3668,8 @@
         "desc_en": "Avoid becoming surrounded for a medium duration when positioned toward the back mid-race. (Medium)",
         "icon_id": 20052,
         "cost": 140,
-        "score_per_sp": 4.29,
+        "eval_pt": 394,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             201132
@@ -3427,12 +3678,13 @@
         "downgrade": 201132
     },
     "Lights of Vaudeville": {
-        "id": 100051,
+        "id": 900051,
         "name_en": "Lights of Vaudeville",
         "desc_en": "Greatly increase velocity with a dazzling display when just breaking out of the pack toward the front on the final straight.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -3444,7 +3696,8 @@
         "desc_en": "Moderately increase performance when no other runners have the heart of a lone wolf.",
         "icon_id": 10011,
         "cost": 70,
-        "score_per_sp": 7.14,
+        "eval_pt": 129,
+        "pt_ratio": 1.84,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -3456,7 +3709,8 @@
         "desc_en": "Slightly increase velocity on a corner. (Long)",
         "icon_id": 20011,
         "cost": 100,
-        "score_per_sp": 5.0,
+        "eval_pt": 217,
+        "pt_ratio": 2.17,
         "rarity": 1,
         "versions": [
             201181,
@@ -3471,7 +3725,8 @@
         "desc_en": "Moderately increase velocity on a corner. (Long)",
         "icon_id": 20011,
         "cost": 110,
-        "score_per_sp": 2.38,
+        "eval_pt": 262,
+        "pt_ratio": 1.25,
         "rarity": 1,
         "versions": [
             201182,
@@ -3486,7 +3741,8 @@
         "desc_en": "Increase proficiency in Long Turf races. This skill is exclusive to the event.",
         "icon_id": 10021,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 0,
+        "pt_ratio": 0.0,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -3498,7 +3754,8 @@
         "desc_en": "Moderately increase performance when 4th favorite or below.",
         "icon_id": 10011,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200301
@@ -3512,7 +3769,8 @@
         "desc_en": "Increase performance when 4th favorite or below.",
         "icon_id": 10011,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200302
@@ -3526,7 +3784,8 @@
         "desc_en": "Slightly increase velocity on a straight. (Long)",
         "icon_id": 20011,
         "cost": 100,
-        "score_per_sp": 5.0,
+        "eval_pt": 217,
+        "pt_ratio": 2.17,
         "rarity": 1,
         "versions": [
             201171,
@@ -3541,7 +3800,8 @@
         "desc_en": "Moderately increase velocity on a straight. (Long)",
         "icon_id": 20011,
         "cost": 110,
-        "score_per_sp": 2.38,
+        "eval_pt": 262,
+        "pt_ratio": 1.25,
         "rarity": 1,
         "versions": [
             201172,
@@ -3551,36 +3811,39 @@
         "downgrade": 201172
     },
     "Louder! Tracen Cheer!": {
-        "id": 110611,
+        "id": 910611,
         "name_en": "Louder! Tracen Cheer!",
         "desc_en": "If the skill user stays toward the very back during the first half of the race without being rushed, unleash fighting spirit to increase acceleration on the final straight.",
         "icon_id": 20043,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Lovely Spring Breeze": {
-        "id": 100741,
+        "id": 900741,
         "name_en": "Lovely Spring Breeze",
         "desc_en": "From the midpack in the second half of the race, slightly increase velocity steadily for a duration based on remaining endurance.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Luck Be with Me!": {
-        "id": 10561,
+        "id": 900561,
         "name_en": "Luck Be with Me!",
         "desc_en": "Moderately clear a path forward with the power of divination when the way ahead is jammed late-race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 3,
         "versions": [],
         "upgrade": null,
@@ -3592,7 +3855,8 @@
         "desc_en": "Moderately good things may happen when in bracket 7.",
         "icon_id": 10061,
         "cost": 110,
-        "score_per_sp": 4.55,
+        "eval_pt": 174,
+        "pt_ratio": 1.58,
         "rarity": 1,
         "versions": [
             201561
@@ -3606,7 +3870,8 @@
         "desc_en": "Recover endurance and increase velocity when positioned toward the back mid-race. (Dirt)",
         "icon_id": 20022,
         "cost": 200,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.34,
         "rarity": 2,
         "versions": [
             202002
@@ -3620,7 +3885,8 @@
         "desc_en": "Slightly move up in preparation to close the gap when positioned toward the back late-race. (End Closer)",
         "icon_id": 20011,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             200631
@@ -3634,7 +3900,8 @@
         "desc_en": "Increase performance when no other runners are using the same strategy.",
         "icon_id": 10011,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200271
@@ -3648,7 +3915,8 @@
         "desc_en": "Greatly increase performance when no other runners are using the same strategy.",
         "icon_id": 10011,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200272
@@ -3662,7 +3930,8 @@
         "desc_en": "Slightly increase velocity on a corner. (Medium)",
         "icon_id": 20011,
         "cost": 100,
-        "score_per_sp": 5.0,
+        "eval_pt": 217,
+        "pt_ratio": 2.17,
         "rarity": 1,
         "versions": [
             201111,
@@ -3677,7 +3946,8 @@
         "desc_en": "Moderately increase velocity on a corner. (Medium)",
         "icon_id": 20011,
         "cost": 110,
-        "score_per_sp": 2.38,
+        "eval_pt": 262,
+        "pt_ratio": 1.25,
         "rarity": 1,
         "versions": [
             201112,
@@ -3692,7 +3962,8 @@
         "desc_en": "Increase proficiency in Medium Turf races. This skill is exclusive to the event.",
         "icon_id": 10051,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 0,
+        "pt_ratio": 0.0,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -3704,7 +3975,8 @@
         "desc_en": "Slightly increase velocity on a straight. (Medium)",
         "icon_id": 20011,
         "cost": 100,
-        "score_per_sp": 5.0,
+        "eval_pt": 217,
+        "pt_ratio": 2.17,
         "rarity": 1,
         "versions": [
             201101,
@@ -3719,7 +3991,8 @@
         "desc_en": "Moderately increase velocity on a straight. (Medium)",
         "icon_id": 20011,
         "cost": 110,
-        "score_per_sp": 2.38,
+        "eval_pt": 262,
+        "pt_ratio": 1.25,
         "rarity": 1,
         "versions": [
             201102,
@@ -3734,7 +4007,8 @@
         "desc_en": "Moderately prepare to make for the finish line for a medium duration mid-race. (Sprint)",
         "icon_id": 20051,
         "cost": 140,
-        "score_per_sp": 3.57,
+        "eval_pt": 174,
+        "pt_ratio": 1.24,
         "rarity": 1,
         "versions": [
             201001
@@ -3748,7 +4022,8 @@
         "desc_en": "Slightly increase velocity on a corner. (Mile)",
         "icon_id": 20011,
         "cost": 100,
-        "score_per_sp": 5.0,
+        "eval_pt": 217,
+        "pt_ratio": 2.17,
         "rarity": 1,
         "versions": [
             201041,
@@ -3763,7 +4038,8 @@
         "desc_en": "Moderately increase velocity on a corner. (Mile)",
         "icon_id": 20011,
         "cost": 110,
-        "score_per_sp": 2.38,
+        "eval_pt": 262,
+        "pt_ratio": 1.25,
         "rarity": 1,
         "versions": [
             201042,
@@ -3778,7 +4054,8 @@
         "desc_en": "Widen the margin when positioned toward the front early-race. (Mile)",
         "icon_id": 20012,
         "cost": 160,
-        "score_per_sp": 3.75,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             200682
@@ -3792,7 +4069,8 @@
         "desc_en": "Increase proficiency in Mile Turf races. This skill is exclusive to the event.",
         "icon_id": 10031,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 0,
+        "pt_ratio": 0.0,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -3804,7 +4082,8 @@
         "desc_en": "Slightly increase velocity on a straight. (Mile)",
         "icon_id": 20011,
         "cost": 100,
-        "score_per_sp": 5.0,
+        "eval_pt": 217,
+        "pt_ratio": 2.17,
         "rarity": 1,
         "versions": [
             201031,
@@ -3819,7 +4098,8 @@
         "desc_en": "Moderately increase velocity on a straight. (Mile)",
         "icon_id": 20011,
         "cost": 110,
-        "score_per_sp": 2.38,
+        "eval_pt": 262,
+        "pt_ratio": 1.25,
         "rarity": 1,
         "versions": [
             201032,
@@ -3834,7 +4114,8 @@
         "desc_en": "Decrease fatigue when moving sideways. (Medium)",
         "icon_id": 20022,
         "cost": 160,
-        "score_per_sp": 3.75,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             201142
@@ -3848,7 +4129,8 @@
         "desc_en": "Increase velocity on straights. (End Closer)",
         "icon_id": 20012,
         "cost": 150,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.21,
         "rarity": 2,
         "versions": [
             201451,
@@ -3858,12 +4140,13 @@
         "downgrade": null
     },
     "Moving Past, and Beyond": {
-        "id": 100591,
+        "id": 900591,
         "name_en": "Moving Past, and Beyond",
         "desc_en": "Having run the race calmly, increase acceleration with hardened determination when making a move mid-race, or on a crucial corner late-race whilst in midpack.",
         "icon_id": 20043,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -3875,7 +4158,8 @@
         "desc_en": "Slightly reduce fatigue on an uphill. (Front Runner)",
         "icon_id": 20021,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             201281
@@ -3889,7 +4173,8 @@
         "desc_en": "Slightly disturb runners directly ahead mid-race. (Medium)",
         "icon_id": 30051,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             201161
@@ -3903,7 +4188,8 @@
         "desc_en": "Disturb runners directly ahead mid-race. (Medium)",
         "icon_id": 30052,
         "cost": 160,
-        "score_per_sp": 3.75,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             201162
@@ -3917,7 +4203,8 @@
         "desc_en": "Moderately decrease performance at Nakayama Racecourse.",
         "icon_id": 10024,
         "cost": 50,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.52,
         "rarity": 1,
         "versions": [
             200041,
@@ -3932,7 +4219,8 @@
         "desc_en": "Moderately increase performance at Nakayama Racecourse.",
         "icon_id": 10021,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200041,
@@ -3947,7 +4235,8 @@
         "desc_en": "Increase performance at Nakayama Racecourse.",
         "icon_id": 10021,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200042,
@@ -3962,7 +4251,8 @@
         "desc_en": "Increase acceleration when positioned toward the front late-race. (Pace Chaser)",
         "icon_id": 20042,
         "cost": 180,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             201902
@@ -3971,12 +4261,13 @@
         "downgrade": 201902
     },
     "Nemesis": {
-        "id": 100501,
+        "id": 900501,
         "name_en": "Nemesis",
         "desc_en": "Increase velocity with smoldering ambition when moving up from midpack on the final corner or later.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -3988,7 +4279,8 @@
         "desc_en": "Moderately decrease performance at Niigata Racecourse.",
         "icon_id": 10024,
         "cost": 40,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.65,
         "rarity": 1,
         "versions": [
             200111,
@@ -4003,7 +4295,8 @@
         "desc_en": "Moderately increase performance at Niigata Racecourse.",
         "icon_id": 10021,
         "cost": 70,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.84,
         "rarity": 1,
         "versions": [
             200111,
@@ -4018,7 +4311,8 @@
         "desc_en": "Increase performance at Niigata Racecourse.",
         "icon_id": 10021,
         "cost": 90,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 1.09,
         "rarity": 1,
         "versions": [
             200112,
@@ -4033,7 +4327,8 @@
         "desc_en": "Slightly increase maneuverability when the way ahead is blocked in the last spurt.",
         "icon_id": 20041,
         "cost": 150,
-        "score_per_sp": 3.33,
+        "eval_pt": 174,
+        "pt_ratio": 1.16,
         "rarity": 1,
         "versions": [
             200491
@@ -4047,7 +4342,8 @@
         "desc_en": "Increase maneuverability when the way ahead is blocked in the last spurt.",
         "icon_id": 20042,
         "cost": 150,
-        "score_per_sp": 4.0,
+        "eval_pt": 394,
+        "pt_ratio": 1.31,
         "rarity": 2,
         "versions": [
             200492
@@ -4061,7 +4357,8 @@
         "desc_en": "Moderately decrease performance over non-standard distances (non-multiples of 400m).",
         "icon_id": 10024,
         "cost": 50,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.52,
         "rarity": 1,
         "versions": [
             200141,
@@ -4076,7 +4373,8 @@
         "desc_en": "Moderately increase performance over non-standard distances (non-multiples of 400m).",
         "icon_id": 10021,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200141,
@@ -4091,7 +4389,8 @@
         "desc_en": "Increase performance over non-standard distances (non-multiples of 400m).",
         "icon_id": 10021,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200142,
@@ -4106,7 +4405,8 @@
         "desc_en": "Greatly increase velocity in the second half of the race, but also greatly increase fatigue sometimes.",
         "icon_id": 20012,
         "cost": 120,
-        "score_per_sp": null,
+        "eval_pt": 334,
+        "pt_ratio": 1.39,
         "rarity": 2,
         "versions": [
             202032
@@ -4115,24 +4415,26 @@
         "downgrade": 202032
     },
     "Now We're Cruisin'!": {
-        "id": 100341,
+        "id": 900341,
         "name_en": "Now We're Cruisin'!",
         "desc_en": "When competing for the lead if positioned in the midpack or further for the first half of the race, show off some Edo spirit and greatly increase velocity.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "OMG! (ﾟ∀ﾟ)  The Final Sprint! ☆": {
-        "id": 100191,
+        "id": 900191,
         "name_en": "OMG! (ﾟ∀ﾟ)  The Final Sprint! ☆",
         "desc_en": "Increase velocity and navigation with the pure euphoria of being within breathing distance of precious waifus after passing another runner 2 times late-race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -4144,7 +4446,8 @@
         "desc_en": "If positioned in the midpack around when the mid-race starts, slightly decrease velocity and greatly recover endurance. (Long)",
         "icon_id": 20022,
         "cost": 170,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.49,
         "rarity": 2,
         "versions": [
             202072
@@ -4158,7 +4461,8 @@
         "desc_en": "Moderately decrease performance at Oi Racecourse.",
         "icon_id": 10024,
         "cost": 50,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.52,
         "rarity": 1,
         "versions": [
             200951,
@@ -4173,7 +4477,8 @@
         "desc_en": "Moderately increase performance at Oi Racecourse.",
         "icon_id": 10021,
         "cost": 90,
-        "score_per_sp": null,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200951,
@@ -4188,7 +4493,8 @@
         "desc_en": "Increase performance at Oi Racecourse.",
         "icon_id": 10021,
         "cost": 110,
-        "score_per_sp": null,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200952,
@@ -4203,7 +4509,8 @@
         "desc_en": "Increase acceleration late-race. (Late Surger)",
         "icon_id": 20042,
         "cost": 180,
-        "score_per_sp": 3.33,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             200602
@@ -4212,12 +4519,13 @@
         "downgrade": 200602
     },
     "One True Color": {
-        "id": 110381,
+        "id": 910381,
         "name_en": "One True Color",
         "desc_en": "If positioned toward the front with 350m remaining and there is another Umamusume close behind, the determination to stay ahead makes it easier to break out of the pack.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -4229,7 +4537,8 @@
         "desc_en": "Slightly dull movement for runners ahead when positioned toward the back early-race. (Mile)",
         "icon_id": 30021,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             201091
@@ -4238,24 +4547,26 @@
         "downgrade": null
     },
     "Operation Cacao": {
-        "id": 110261,
+        "id": 910261,
         "name_en": "Operation Cacao",
         "desc_en": "Take a slight breather and increase velocity when in the front part of the pack and detecting another runner coming from behind on a corner mid-race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Our Ticket to Win!": {
-        "id": 100351,
+        "id": 900351,
         "name_en": "Our Ticket to Win!",
         "desc_en": "Increase velocity with winning ambition when positioned toward the front on the final straight after engaging in a challenge on the final corner or later.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 4,
         "versions": [],
         "upgrade": null,
@@ -4267,7 +4578,8 @@
         "desc_en": "Moderately decrease performance in brackets 6–8.",
         "icon_id": 10014,
         "cost": 50,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.52,
         "rarity": 1,
         "versions": [
             200261,
@@ -4282,7 +4594,8 @@
         "desc_en": "Moderately increase performance in brackets 6–8.",
         "icon_id": 10011,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200261,
@@ -4297,7 +4610,8 @@
         "desc_en": "Increase performance in brackets 6–8.",
         "icon_id": 10011,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200262,
@@ -4312,7 +4626,8 @@
         "desc_en": "Slightly increase velocity when passing another runner on the outside on the final corner. (Late Surger)",
         "icon_id": 20011,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             200611
@@ -4326,7 +4641,8 @@
         "desc_en": "Increase velocity when passing another runner late-race. (Long)",
         "icon_id": 20012,
         "cost": 160,
-        "score_per_sp": 3.75,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             201212
@@ -4340,7 +4656,8 @@
         "desc_en": "Slightly increase velocity on a corner. (Pace Chaser)",
         "icon_id": 20011,
         "cost": 130,
-        "score_per_sp": 3.85,
+        "eval_pt": 217,
+        "pt_ratio": 1.67,
         "rarity": 1,
         "versions": [
             201321,
@@ -4355,7 +4672,8 @@
         "desc_en": "Moderately increase velocity on a corner. (Pace Chaser)",
         "icon_id": 20011,
         "cost": 140,
-        "score_per_sp": 1.85,
+        "eval_pt": 262,
+        "pt_ratio": 0.97,
         "rarity": 1,
         "versions": [
             201322,
@@ -4370,7 +4688,8 @@
         "desc_en": "Moderately increase ability to get into a good position. (Pace Chaser)",
         "icon_id": 10051,
         "cost": 110,
-        "score_per_sp": 4.55,
+        "eval_pt": 174,
+        "pt_ratio": 1.58,
         "rarity": 1,
         "versions": [
             201531
@@ -4384,7 +4703,8 @@
         "desc_en": "Increase ability to get into a good position. (Pace Chaser)",
         "icon_id": 10051,
         "cost": 130,
-        "score_per_sp": 2.08,
+        "eval_pt": 217,
+        "pt_ratio": 0.9,
         "rarity": 1,
         "versions": [
             201532
@@ -4398,7 +4718,8 @@
         "desc_en": "Slightly increase velocity on a straight. (Pace Chaser)",
         "icon_id": 20011,
         "cost": 130,
-        "score_per_sp": 3.85,
+        "eval_pt": 217,
+        "pt_ratio": 1.67,
         "rarity": 1,
         "versions": [
             201311,
@@ -4413,7 +4734,8 @@
         "desc_en": "Moderately increase velocity on a straight. (Pace Chaser)",
         "icon_id": 20011,
         "cost": 140,
-        "score_per_sp": 1.85,
+        "eval_pt": 262,
+        "pt_ratio": 0.97,
         "rarity": 1,
         "versions": [
             201312,
@@ -4428,7 +4750,8 @@
         "desc_en": "Slightly recover endurance when passed by another runner mid-race.",
         "icon_id": 20021,
         "cost": 170,
-        "score_per_sp": 2.94,
+        "eval_pt": 217,
+        "pt_ratio": 1.28,
         "rarity": 1,
         "versions": [
             200471
@@ -4442,7 +4765,8 @@
         "desc_en": "Moderately lose endurance when surrounded.",
         "icon_id": 20024,
         "cost": 100,
-        "score_per_sp": null,
+        "eval_pt": -262,
+        "pt_ratio": -2.62,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -4454,7 +4778,8 @@
         "desc_en": "Moderately decrease performance when the favorite.",
         "icon_id": 10024,
         "cost": 50,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -2.58,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -4466,7 +4791,8 @@
         "desc_en": "Slightly decrease fatigue when determined to pass another runner. (Long)",
         "icon_id": 20021,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             201201
@@ -4475,12 +4801,13 @@
         "downgrade": null
     },
     "Peerless Dance of Flowering Flames": {
-        "id": 100721,
+        "id": 900721,
         "name_en": "Peerless Dance of Flowering Flames",
         "desc_en": "If the skill user passes another runner on the final corner or later, increase velocity with fiery fighting spirit when in the front part of the pack with 300m remaining.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -4492,7 +4819,8 @@
         "desc_en": "Prepare to make for the finish line for a medium duration mid-race. (Sprint)",
         "icon_id": 20052,
         "cost": 140,
-        "score_per_sp": 4.29,
+        "eval_pt": 394,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             201002
@@ -4506,7 +4834,8 @@
         "desc_en": "Unnerve runners in focus late-race. (End Closer)",
         "icon_id": 30012,
         "cost": 180,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             201512
@@ -4520,7 +4849,8 @@
         "desc_en": "Increase passing ability when positioned toward the front upon approaching late-race. (Sprint)",
         "icon_id": 20042,
         "cost": 160,
-        "score_per_sp": 3.75,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             200992
@@ -4534,7 +4864,8 @@
         "desc_en": "Slightly increase velocity when followed by another runner directly behind for a long time.",
         "icon_id": 20011,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             201662
@@ -4543,12 +4874,13 @@
         "downgrade": 201662
     },
     "Pop & Polish": {
-        "id": 100481,
+        "id": 900481,
         "name_en": "Pop & Polish",
         "desc_en": "Get hyped and increase velocity when pressured by or passing another runner while well-positioned on the final straight.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -4560,7 +4892,8 @@
         "desc_en": "Slightly increase velocity mid-race. (Late Surger)",
         "icon_id": 20011,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             200591
@@ -4574,7 +4907,8 @@
         "desc_en": "Slightly decrease fatigue mid-race. (Pace Chaser)",
         "icon_id": 20021,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             200571
@@ -4588,7 +4922,8 @@
         "desc_en": "Slightly increase ability to break out of the pack on the final corner. (Pace Chaser)",
         "icon_id": 20011,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             200581
@@ -4597,12 +4932,13 @@
         "downgrade": null
     },
     "Presents from X": {
-        "id": 110231,
+        "id": 910231,
         "name_en": "Presents from X",
         "desc_en": "Increase velocity by deriving a path to victory mid-race after staying well-positioned from the start of the race up until the second half.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -4614,7 +4950,8 @@
         "desc_en": "Slightly increase velocity when passing another runner late-race. (Long)",
         "icon_id": 20011,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             201211
@@ -4623,12 +4960,13 @@
         "downgrade": null
     },
     "Prideful King": {
-        "id": 100611,
+        "id": 900611,
         "name_en": "Prideful King",
         "desc_en": "Greatly increase velocity in a true display of skill with 200m remaining after racing calmly.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 4,
         "versions": [],
         "upgrade": null,
@@ -4640,7 +4978,8 @@
         "desc_en": "Slightly widen the margin when positioned toward the front early-race. (Mile)",
         "icon_id": 20011,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             200681
@@ -4654,7 +4993,8 @@
         "desc_en": "Increase velocity on a corner with skilled turning.",
         "icon_id": 20012,
         "cost": 180,
-        "score_per_sp": 3.33,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             200332,
@@ -4669,7 +5009,8 @@
         "desc_en": "Increase navigation early-race.",
         "icon_id": 20051,
         "cost": 120,
-        "score_per_sp": 4.17,
+        "eval_pt": 129,
+        "pt_ratio": 1.07,
         "rarity": 1,
         "versions": [
             200451
@@ -4683,7 +5024,8 @@
         "desc_en": "When positioned toward the back on the final corner, slightly increase velocity. (Mile)",
         "icon_id": 20011,
         "cost": 160,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             202111
@@ -4692,12 +5034,13 @@
         "downgrade": null
     },
     "Pure Heart": {
-        "id": 100451,
+        "id": 900451,
         "name_en": "Pure Heart",
         "desc_en": "Greatly recover endurance when well-positioned mid-race.",
         "icon_id": 20023,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 4,
         "versions": [],
         "upgrade": null,
@@ -4709,7 +5052,8 @@
         "desc_en": "Decrease fatigue mid-race. (Pace Chaser)",
         "icon_id": 20022,
         "cost": 180,
-        "score_per_sp": 3.33,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             200572
@@ -4723,7 +5067,8 @@
         "desc_en": "Control breathing and kick forward in the second half of the race. Effect is increased in proportion to number of career wins.",
         "icon_id": 20142,
         "cost": 200,
-        "score_per_sp": null,
+        "eval_pt": 633,
+        "pt_ratio": 1.58,
         "rarity": 2,
         "versions": [
             210062
@@ -4737,7 +5082,8 @@
         "desc_en": "Moderately decrease performance in rainy weather.",
         "icon_id": 10044,
         "cost": 50,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.52,
         "rarity": 1,
         "versions": [
             200231,
@@ -4752,7 +5098,8 @@
         "desc_en": "Moderately increase performance in rainy weather.",
         "icon_id": 10041,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200231,
@@ -4767,7 +5114,8 @@
         "desc_en": "Increase performance in rainy weather.",
         "icon_id": 10041,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200232,
@@ -4782,7 +5130,8 @@
         "desc_en": "Moderately increase fatigue on an uphill.",
         "icon_id": 20024,
         "cost": 100,
-        "score_per_sp": null,
+        "eval_pt": -262,
+        "pt_ratio": -2.62,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -4794,7 +5143,8 @@
         "desc_en": "Slightly increase velocity when passing another runner mid-race.",
         "icon_id": 20011,
         "cost": 170,
-        "score_per_sp": 2.94,
+        "eval_pt": 217,
+        "pt_ratio": 1.28,
         "rarity": 1,
         "versions": [
             200461
@@ -4803,24 +5153,26 @@
         "downgrade": null
     },
     "Ravissant": {
-        "id": 110051,
+        "id": 910051,
         "name_en": "Ravissant",
         "desc_en": "When passing another racer at the front part of the pack on the final corner or later, perform a dazzling display that greatly increases velocity for a moderate duration.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Ready, Go!": {
-        "id": 10621,
+        "id": 900621,
         "name_en": "Ready, Go!",
         "desc_en": "Moderately recover endurance and slightly increase velocity with newfound resolve when in midpack around halfway through the race.",
         "icon_id": 20023,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 3,
         "versions": [],
         "upgrade": null,
@@ -4832,31 +5184,34 @@
         "desc_en": "Moderately increase carelessness when in the lead with around 200m remaining.",
         "icon_id": 20014,
         "cost": 100,
-        "score_per_sp": null,
+        "eval_pt": -262,
+        "pt_ratio": -2.62,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Red Ace": {
-        "id": 10091,
+        "id": 900091,
         "name_en": "Red Ace",
         "desc_en": "Slightly swell with the determination to be number one when positioned toward the front in the second half of the race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 3,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Red Shift/LP1211-M": {
-        "id": 100041,
+        "id": 900041,
         "name_en": "Red Shift/LP1211-M",
         "desc_en": "Increase acceleration by shifting gears when positioned toward the front on the final corner or later.",
         "icon_id": 20043,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -4868,7 +5223,8 @@
         "desc_en": "Increase velocity on corners. (Medium)",
         "icon_id": 20012,
         "cost": 150,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             201111,
@@ -4883,7 +5239,8 @@
         "desc_en": "Increase acceleration when not in the lead mid-race. (Front Runner)",
         "icon_id": 20042,
         "cost": 180,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             201292
@@ -4897,7 +5254,8 @@
         "desc_en": "Recover endurance late-race. (Late Surger)",
         "icon_id": 20022,
         "cost": 180,
-        "score_per_sp": 3.33,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             201422
@@ -4906,12 +5264,13 @@
         "downgrade": 201422
     },
     "Resplendent Red Ace": {
-        "id": 100091,
+        "id": 900091,
         "name_en": "Resplendent Red Ace",
         "desc_en": "Swell with the determination to be number one when positioned toward the front in the second half of the race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 4,
         "versions": [],
         "upgrade": null,
@@ -4923,7 +5282,8 @@
         "desc_en": "Slightly dull movement for runners ahead when not in the lead early-race. (Front Runner)",
         "icon_id": 30021,
         "cost": 130,
-        "score_per_sp": 3.85,
+        "eval_pt": 217,
+        "pt_ratio": 1.67,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -4935,7 +5295,8 @@
         "desc_en": "Reduce fatigue on an uphill. (Front Runner)",
         "icon_id": 20022,
         "cost": 180,
-        "score_per_sp": 3.33,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             201282
@@ -4949,7 +5310,8 @@
         "desc_en": "Increase Wit and moderately decrease the chance of being Rushed.",
         "icon_id": 10051,
         "cost": 160,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -4961,7 +5323,8 @@
         "desc_en": "Increase proficiency in right-handed tracks, increasing Speed and Power.",
         "icon_id": 10012,
         "cost": 130,
-        "score_per_sp": null,
+        "eval_pt": 461,
+        "pt_ratio": 1.4,
         "rarity": 2,
         "versions": [
             200011,
@@ -4977,7 +5340,8 @@
         "desc_en": "Moderately decrease performance on right-handed tracks.",
         "icon_id": 10014,
         "cost": 50,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.34,
         "rarity": 1,
         "versions": [
             200011,
@@ -4993,7 +5357,8 @@
         "desc_en": "Moderately increase performance on right-handed tracks.",
         "icon_id": 10011,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200011,
@@ -5009,7 +5374,8 @@
         "desc_en": "Increase performance on right-handed tracks.",
         "icon_id": 10011,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200012,
@@ -5025,7 +5391,8 @@
         "desc_en": "Increase velocity when passing another runner on the outside on the final corner. (Late Surger)",
         "icon_id": 20012,
         "cost": 180,
-        "score_per_sp": 3.33,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             200612
@@ -5039,7 +5406,8 @@
         "desc_en": "Moderately increase velocity in the second half of the race, but also greatly increase fatigue sometimes.",
         "icon_id": 20011,
         "cost": 120,
-        "score_per_sp": 4.17,
+        "eval_pt": 129,
+        "pt_ratio": 1.07,
         "rarity": 1,
         "versions": [
             202031
@@ -5053,7 +5421,8 @@
         "desc_en": "Slightly decrease fatigue when positioned toward the front mid-race. (Medium)",
         "icon_id": 20021,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             200711
@@ -5067,7 +5436,8 @@
         "desc_en": "I'll tackle this with everything I've got!",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 0,
+        "pt_ratio": 0.0,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -5079,7 +5449,8 @@
         "desc_en": "Attempt to gain an especially large lead and keep it until the finish. (Front Runner)",
         "icon_id": 40012,
         "cost": 200,
-        "score_per_sp": 6.0,
+        "eval_pt": 370,
+        "pt_ratio": 1.85,
         "rarity": 2,
         "versions": [],
         "upgrade": null,
@@ -5091,7 +5462,8 @@
         "desc_en": "Moderately increase fatigue when in the lead by too large of a margin.",
         "icon_id": 20024,
         "cost": 100,
-        "score_per_sp": null,
+        "eval_pt": -262,
+        "pt_ratio": -2.62,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -5103,7 +5475,8 @@
         "desc_en": "Increase acceleration on a straight.",
         "icon_id": 20042,
         "cost": 170,
-        "score_per_sp": 3.53,
+        "eval_pt": 508,
+        "pt_ratio": 1.49,
         "rarity": 2,
         "versions": [
             200372
@@ -5112,12 +5485,13 @@
         "downgrade": 200372
     },
     "SPARKLY☆STARDOM": {
-        "id": 100461,
+        "id": 900461,
         "name_en": "SPARKLY☆STARDOM",
         "desc_en": "Become empowered to keep the spotlight when positioned toward the front and close to the runner behind on a straight mid-race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -5129,7 +5503,8 @@
         "desc_en": "Moderately decrease performance at Sapporo Racecourse.",
         "icon_id": 10024,
         "cost": 40,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.65,
         "rarity": 1,
         "versions": [
             200081,
@@ -5144,7 +5519,8 @@
         "desc_en": "Moderately increase performance at Sapporo Racecourse.",
         "icon_id": 10021,
         "cost": 70,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.84,
         "rarity": 1,
         "versions": [
             200081,
@@ -5159,7 +5535,8 @@
         "desc_en": "Increase performance at Sapporo Racecourse.",
         "icon_id": 10021,
         "cost": 90,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 1.09,
         "rarity": 1,
         "versions": [
             200082,
@@ -5169,12 +5546,13 @@
         "downgrade": 200082
     },
     "Schwarzes Schwert": {
-        "id": 100371,
+        "id": 900371,
         "name_en": "Schwarzes Schwert",
         "desc_en": "Increase velocity in a dash for the lead after running calmly and according to plan up until the final straight.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -5186,7 +5564,8 @@
         "desc_en": "Slightly increase acceleration when not in the lead mid-race. (Front Runner)",
         "icon_id": 20041,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             201291
@@ -5200,7 +5579,8 @@
         "desc_en": "Increase velocity when followed by another runner directly behind for a long time.",
         "icon_id": 20012,
         "cost": 160,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             201661
@@ -5214,7 +5594,8 @@
         "desc_en": "Regain composure by calming down when the way ahead is jammed. (End Closer)",
         "icon_id": 20022,
         "cost": 180,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             201492
@@ -5223,12 +5604,13 @@
         "downgrade": 201492
     },
     "Shadow Break": {
-        "id": 100161,
+        "id": 900161,
         "name_en": "Shadow Break",
         "desc_en": "Increase velocity with beastly strength when passing another runner on the outside on the final corner or later. If the skill user engaged in a challenge mid-race, greatly increase velocity instead.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -5240,7 +5622,8 @@
         "desc_en": "Slightly recover endurance after activating many skills late-race.",
         "icon_id": 20021,
         "cost": 100,
-        "score_per_sp": 5.0,
+        "eval_pt": 217,
+        "pt_ratio": 2.17,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -5252,7 +5635,8 @@
         "desc_en": "Slightly startle other runners late-race. (Late Surger)",
         "icon_id": 30051,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             201441
@@ -5266,7 +5650,8 @@
         "desc_en": "Moderately increase acceleration when positioned toward the back mid-race. (Pace Chaser)",
         "icon_id": 20042,
         "cost": 120,
-        "score_per_sp": 5.0,
+        "eval_pt": 334,
+        "pt_ratio": 1.39,
         "rarity": 2,
         "versions": [
             201362
@@ -5280,7 +5665,8 @@
         "desc_en": "Slightly increase passing ability when positioned toward the front mid-race. (Mile)",
         "icon_id": 20011,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             201051
@@ -5289,36 +5675,39 @@
         "downgrade": null
     },
     "Shooting Star": {
-        "id": 100011,
+        "id": 900011,
         "name_en": "Shooting Star",
         "desc_en": "Ride the momentum to increase velocity and very slightly increase acceleration after passing another runner toward the front late-race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Shooting Star of Dioskouroi": {
-        "id": 100331,
+        "id": 900331,
         "name_en": "Shooting Star of Dioskouroi",
         "desc_en": "Increase velocity with guidance from the stars when far from the lead on the final straight. If positioned around the very back, greatly increase velocity instead.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Shooting for Victory!": {
-        "id": 100101,
+        "id": 900101,
         "name_en": "Shooting for Victory!",
         "desc_en": "Increase acceleration with a pow, a wow, and a bang when well-positioned upon approaching the final straight.",
         "icon_id": 20043,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -5330,7 +5719,8 @@
         "desc_en": "Moderately increase Silence Suzuka's performance thanks to the desire to see her running reach new heights.",
         "icon_id": 10011,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 0,
+        "pt_ratio": 0.0,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -5342,7 +5732,8 @@
         "desc_en": "Slightly increase ability to navigate smoothly. (Pace Chaser)",
         "icon_id": 20041,
         "cost": 120,
-        "score_per_sp": 4.17,
+        "eval_pt": 217,
+        "pt_ratio": 1.81,
         "rarity": 1,
         "versions": [
             201331
@@ -5356,7 +5747,8 @@
         "desc_en": "Avoid becoming surrounded early-race. (Front Runner)",
         "icon_id": 20052,
         "cost": 110,
-        "score_per_sp": 5.45,
+        "eval_pt": 334,
+        "pt_ratio": 1.52,
         "rarity": 2,
         "versions": [
             201262
@@ -5365,12 +5757,13 @@
         "downgrade": 201262
     },
     "Sky-High Teio Step": {
-        "id": 100031,
+        "id": 900031,
         "name_en": "Sky-High Teio Step",
         "desc_en": "Greatly increase velocity with flashy footwork when closing the gap to runners ahead on the final straight.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -5382,7 +5775,8 @@
         "desc_en": "Decrease fatigue mid-race. (End Closer)",
         "icon_id": 20022,
         "cost": 180,
-        "score_per_sp": 3.33,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             200622
@@ -5396,7 +5790,8 @@
         "desc_en": "Slightly increase acceleration late-race. (Late Surger)",
         "icon_id": 20041,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             200601
@@ -5410,7 +5805,8 @@
         "desc_en": "Slightly decrease wind resistance when following directly behind another runner.",
         "icon_id": 20011,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             201652
@@ -5424,7 +5820,8 @@
         "desc_en": "Moderately narrow the field of view for runners ahead late-race. (Long)",
         "icon_id": 30071,
         "cost": 110,
-        "score_per_sp": 4.55,
+        "eval_pt": 129,
+        "pt_ratio": 1.17,
         "rarity": 1,
         "versions": [
             201231
@@ -5438,7 +5835,8 @@
         "desc_en": "Moderately increase performance in snowy weather.",
         "icon_id": 10041,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200241
@@ -5452,7 +5850,8 @@
         "desc_en": "Increase performance in snowy weather.",
         "icon_id": 10041,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200242
@@ -5466,7 +5865,8 @@
         "desc_en": "Slightly decrease fatigue when moving sideways. (Medium)",
         "icon_id": 20021,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             201141
@@ -5480,7 +5880,8 @@
         "desc_en": "Slightly steal velocity from runners behind when positioned toward the front mid-race. (Mile)",
         "icon_id": 30011,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             201081
@@ -5494,7 +5895,8 @@
         "desc_en": "Increase ability to break out of the pack on the final corner. (Pace Chaser)",
         "icon_id": 20012,
         "cost": 180,
-        "score_per_sp": 3.33,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             200582
@@ -5508,7 +5910,8 @@
         "desc_en": "Moderately decrease performance in spring.",
         "icon_id": 10014,
         "cost": 50,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.34,
         "rarity": 1,
         "versions": [
             200171,
@@ -5524,7 +5927,8 @@
         "desc_en": "Moderately increase performance in spring.",
         "icon_id": 10011,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200171,
@@ -5540,7 +5944,8 @@
         "desc_en": "Increase performance in spring.",
         "icon_id": 10011,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200172,
@@ -5556,7 +5961,8 @@
         "desc_en": "Increase performance in spring, boosting Speed and Power.",
         "icon_id": 10012,
         "cost": 130,
-        "score_per_sp": null,
+        "eval_pt": 461,
+        "pt_ratio": 1.4,
         "rarity": 2,
         "versions": [
             200171,
@@ -5572,7 +5978,8 @@
         "desc_en": "Slightly increase velocity on a corner. (Sprint)",
         "icon_id": 20011,
         "cost": 100,
-        "score_per_sp": 5.0,
+        "eval_pt": 217,
+        "pt_ratio": 2.17,
         "rarity": 1,
         "versions": [
             200971,
@@ -5587,7 +5994,8 @@
         "desc_en": "Moderately increase velocity on a corner. (Sprint)",
         "icon_id": 20011,
         "cost": 110,
-        "score_per_sp": 2.38,
+        "eval_pt": 262,
+        "pt_ratio": 1.25,
         "rarity": 1,
         "versions": [
             200972,
@@ -5602,7 +6010,8 @@
         "desc_en": "Slightly increase velocity on a straight. (Sprint)",
         "icon_id": 20011,
         "cost": 100,
-        "score_per_sp": 5.0,
+        "eval_pt": 217,
+        "pt_ratio": 2.17,
         "rarity": 1,
         "versions": [
             200961,
@@ -5617,7 +6026,8 @@
         "desc_en": "Moderately increase velocity on a straight. (Sprint)",
         "icon_id": 20011,
         "cost": 110,
-        "score_per_sp": 2.38,
+        "eval_pt": 262,
+        "pt_ratio": 1.25,
         "rarity": 1,
         "versions": [
             200962,
@@ -5632,7 +6042,8 @@
         "desc_en": "Slightly increase acceleration on a straight. (Sprint)",
         "icon_id": 20041,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             200651
@@ -5646,7 +6057,8 @@
         "desc_en": "Increase ability to maintain the lead when leading by a large margin mid-race. (Sprint)",
         "icon_id": 20012,
         "cost": 170,
-        "score_per_sp": 3.53,
+        "eval_pt": 508,
+        "pt_ratio": 1.49,
         "rarity": 2,
         "versions": [
             200982
@@ -5660,7 +6072,8 @@
         "desc_en": "Very slightly steal endurance from runners ahead when positioned toward the back mid-race. (Long)",
         "icon_id": 30051,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             201221
@@ -5674,7 +6087,8 @@
         "desc_en": "Slightly steal endurance from runners ahead when positioned toward the back mid-race. (Long)",
         "icon_id": 30052,
         "cost": 160,
-        "score_per_sp": 3.75,
+        "eval_pt": 461,
+        "pt_ratio": 1.44,
         "rarity": 2,
         "versions": [
             201222
@@ -5688,7 +6102,8 @@
         "desc_en": "Slightly decrease fatigue upon approaching mid-race. (Pace Chaser)",
         "icon_id": 20021,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             200561
@@ -5702,7 +6117,8 @@
         "desc_en": "Moderately decrease performance over standard distances (multiples of 400m).",
         "icon_id": 10024,
         "cost": 50,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.52,
         "rarity": 1,
         "versions": [
             200131,
@@ -5717,7 +6133,8 @@
         "desc_en": "Moderately increase performance over standard distances (multiples of 400m).",
         "icon_id": 10021,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200131,
@@ -5732,7 +6149,8 @@
         "desc_en": "Increase performance over standard distances (multiples of 400m).",
         "icon_id": 10021,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200132,
@@ -5747,7 +6165,8 @@
         "desc_en": "Slightly decrease fatigue mid-race. (End Closer)",
         "icon_id": 20021,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             200621
@@ -5761,7 +6180,8 @@
         "desc_en": "Slightly increase ability to fight back when passed by another runner on the final corner. (Medium)",
         "icon_id": 20011,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             200731
@@ -5775,7 +6195,8 @@
         "desc_en": "Increase acceleration when passing another runner mid-race. (Mile)",
         "icon_id": 20042,
         "cost": 160,
-        "score_per_sp": 3.75,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             201062
@@ -5789,7 +6210,8 @@
         "desc_en": "Slightly cause panic in and very slightly dull movement for runners ahead when positioned toward the back early-race. (Sprint)",
         "icon_id": 30051,
         "cost": 170,
-        "score_per_sp": 2.94,
+        "eval_pt": 262,
+        "pt_ratio": 1.54,
         "rarity": 1,
         "versions": [
             201021
@@ -5803,7 +6225,8 @@
         "desc_en": "Slightly improve running on a downhill. (Pace Chaser)",
         "icon_id": 20041,
         "cost": 120,
-        "score_per_sp": 4.17,
+        "eval_pt": 217,
+        "pt_ratio": 1.81,
         "rarity": 1,
         "versions": [
             201341
@@ -5817,7 +6240,8 @@
         "desc_en": "Slightly increase acceleration on a straight.",
         "icon_id": 20041,
         "cost": 170,
-        "score_per_sp": 2.94,
+        "eval_pt": 217,
+        "pt_ratio": 1.28,
         "rarity": 1,
         "versions": [
             200371
@@ -5831,7 +6255,8 @@
         "desc_en": "Slightly increase velocity on a straight.",
         "icon_id": 20011,
         "cost": 170,
-        "score_per_sp": 2.94,
+        "eval_pt": 217,
+        "pt_ratio": 1.28,
         "rarity": 1,
         "versions": [
             200361
@@ -5845,7 +6270,8 @@
         "desc_en": "Slightly recover endurance on a straight.",
         "icon_id": 20021,
         "cost": 170,
-        "score_per_sp": 2.94,
+        "eval_pt": 217,
+        "pt_ratio": 1.28,
         "rarity": 1,
         "versions": [
             200381
@@ -5859,7 +6285,8 @@
         "desc_en": "Slightly increase acceleration on a straight in the last spurt. (End Closer)",
         "icon_id": 20041,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             200641
@@ -5873,7 +6300,8 @@
         "desc_en": "Slightly widen field of view when positioned toward the back late-race. (End Closer)",
         "icon_id": 20091,
         "cost": 110,
-        "score_per_sp": 4.55,
+        "eval_pt": 85,
+        "pt_ratio": 0.77,
         "rarity": 1,
         "versions": [
             201501
@@ -5887,7 +6315,8 @@
         "desc_en": "Slightly widen field of view with heightened observation mid-race. (Late Surger)",
         "icon_id": 20091,
         "cost": 120,
-        "score_per_sp": 4.17,
+        "eval_pt": 85,
+        "pt_ratio": 0.71,
         "rarity": 1,
         "versions": [
             201431
@@ -5901,7 +6330,8 @@
         "desc_en": "Move up in preparation to close the gap when positioned toward the back late-race. (End Closer)",
         "icon_id": 20012,
         "cost": 180,
-        "score_per_sp": 3.33,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             200632
@@ -5915,7 +6345,8 @@
         "desc_en": "Slightly increase fatigue for end closers early-race.",
         "icon_id": 30051,
         "cost": 130,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.67,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -5927,7 +6358,8 @@
         "desc_en": "Slightly increase fatigue for front runners early-race.",
         "icon_id": 30051,
         "cost": 130,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.67,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -5939,7 +6371,8 @@
         "desc_en": "Slightly increase fatigue for late surgers early-race.",
         "icon_id": 30051,
         "cost": 130,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.67,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -5951,7 +6384,8 @@
         "desc_en": "Slightly increase fatigue for pace chasers early-race.",
         "icon_id": 30051,
         "cost": 130,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.67,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -5963,7 +6397,8 @@
         "desc_en": "Moderately decrease performance in summer.",
         "icon_id": 10014,
         "cost": 50,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.34,
         "rarity": 1,
         "versions": [
             200181,
@@ -5979,7 +6414,8 @@
         "desc_en": "Moderately increase performance in summer.",
         "icon_id": 10011,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200181,
@@ -5995,7 +6431,8 @@
         "desc_en": "Increase performance in summer.",
         "icon_id": 10011,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200182,
@@ -6011,7 +6448,8 @@
         "desc_en": "Moderately increase performance in sunny weather.",
         "icon_id": 10041,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200211
@@ -6025,7 +6463,8 @@
         "desc_en": "Increase performance in sunny weather.",
         "icon_id": 10041,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200212
@@ -6039,7 +6478,8 @@
         "desc_en": "Good things may happen when in bracket 7.",
         "icon_id": 10062,
         "cost": 110,
-        "score_per_sp": 5.45,
+        "eval_pt": 334,
+        "pt_ratio": 1.52,
         "rarity": 2,
         "versions": [
             201562
@@ -6048,36 +6488,39 @@
         "downgrade": 201562
     },
     "Super-Duper Climax": {
-        "id": 100521,
+        "id": 900521,
         "name_en": "Super-Duper Climax",
         "desc_en": "Recover endurance with a glance at nearby runners when positioned toward the back on the final corner.",
         "icon_id": 20023,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 4,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Super-Duper Stoked": {
-        "id": 10521,
+        "id": 900521,
         "name_en": "Super-Duper Stoked",
         "desc_en": "Moderately recover endurance with a glance at nearby runners when positioned toward the back on the final corner.",
         "icon_id": 20023,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 3,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Superior Heal": {
-        "id": 110111,
+        "id": 910111,
         "name_en": "Superior Heal",
         "desc_en": "Greatly recover endurance with a gentle light when overtaken toward the back mid-race.",
         "icon_id": 20023,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -6089,7 +6532,8 @@
         "desc_en": "Increase velocity when close to many runners.",
         "icon_id": 20012,
         "cost": 160,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             201591
@@ -6103,7 +6547,8 @@
         "desc_en": "Recover endurance on a corner with efficient turning.",
         "icon_id": 20022,
         "cost": 170,
-        "score_per_sp": 3.53,
+        "eval_pt": 508,
+        "pt_ratio": 1.49,
         "rarity": 2,
         "versions": [
             200352,
@@ -6118,7 +6563,8 @@
         "desc_en": "Moderately increase performance when many runners share a sympathetic heart.",
         "icon_id": 10011,
         "cost": 70,
-        "score_per_sp": 7.14,
+        "eval_pt": 129,
+        "pt_ratio": 1.84,
         "rarity": 1,
         "versions": [
             201632
@@ -6132,7 +6578,8 @@
         "desc_en": "Slightly increase acceleration when positioned toward the back mid-race. (Pace Chaser)",
         "icon_id": 20041,
         "cost": 120,
-        "score_per_sp": 4.17,
+        "eval_pt": 217,
+        "pt_ratio": 1.81,
         "rarity": 1,
         "versions": [
             201361
@@ -6146,7 +6593,8 @@
         "desc_en": "Slightly increase velocity after activating many skills mid-race.",
         "icon_id": 20011,
         "cost": 100,
-        "score_per_sp": 5.0,
+        "eval_pt": 217,
+        "pt_ratio": 2.17,
         "rarity": 1,
         "versions": [
             201612
@@ -6160,7 +6608,8 @@
         "desc_en": "Increase velocity after activating many skills mid-race.",
         "icon_id": 20012,
         "cost": 180,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.81,
         "rarity": 2,
         "versions": [
             201611
@@ -6174,7 +6623,8 @@
         "desc_en": "If positioned toward the back late-race, slightly increase acceleration. (Medium)",
         "icon_id": 20041,
         "cost": 160,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             202081
@@ -6188,7 +6638,8 @@
         "desc_en": "Increase ability to go to the front early-race. (Front Runner)",
         "icon_id": 20042,
         "cost": 120,
-        "score_per_sp": 5.0,
+        "eval_pt": 334,
+        "pt_ratio": 1.39,
         "rarity": 2,
         "versions": [
             200532
@@ -6202,7 +6653,8 @@
         "desc_en": "Increase fatigue for rushed runners behind when positioned toward the front mid-race.",
         "icon_id": 30052,
         "cost": 140,
-        "score_per_sp": 4.29,
+        "eval_pt": 508,
+        "pt_ratio": 1.81,
         "rarity": 2,
         "versions": [
             200771
@@ -6216,7 +6668,8 @@
         "desc_en": "Moderately increase performance when the favorite is using the same strategy.",
         "icon_id": 10041,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200291
@@ -6230,7 +6683,8 @@
         "desc_en": "Increase performance when the favorite is using the same strategy.",
         "icon_id": 10041,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200292
@@ -6244,7 +6698,8 @@
         "desc_en": "Moderately increase ability to navigate smoothly. (Pace Chaser)",
         "icon_id": 20042,
         "cost": 120,
-        "score_per_sp": 5.0,
+        "eval_pt": 334,
+        "pt_ratio": 1.39,
         "rarity": 2,
         "versions": [
             201332
@@ -6258,7 +6713,8 @@
         "desc_en": "Slightly decrease velocity of runners ahead when positioned toward the back late-race. (Medium)",
         "icon_id": 30011,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             201151
@@ -6272,7 +6728,8 @@
         "desc_en": "Widen field of view with heightened observation mid-race. (Late Surger)",
         "icon_id": 20092,
         "cost": 120,
-        "score_per_sp": 5.0,
+        "eval_pt": 334,
+        "pt_ratio": 1.39,
         "rarity": 2,
         "versions": [
             201432
@@ -6286,7 +6743,8 @@
         "desc_en": "Moderately widen field of view with situational awareness when moving sideways. (End Closer)",
         "icon_id": 20092,
         "cost": 110,
-        "score_per_sp": 5.45,
+        "eval_pt": 334,
+        "pt_ratio": 1.52,
         "rarity": 2,
         "versions": [
             201472
@@ -6295,36 +6753,39 @@
         "downgrade": 201472
     },
     "The Duty of Dignity Calls": {
-        "id": 100131,
+        "id": 900131,
         "name_en": "The Duty of Dignity Calls",
         "desc_en": "Increase velocity with the determination to not be overtaken when positioned toward the front on the final corner.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "The View from the Lead Is Mine!": {
-        "id": 100021,
+        "id": 900021,
         "name_en": "The View from the Lead Is Mine!",
         "desc_en": "Increase velocity by drawing on all remaining strength when in the lead by a fair margin in the second half of the race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "This Dance Is for Vittoria!": {
-        "id": 100151,
+        "id": 900151,
         "name_en": "This Dance Is for Vittoria!",
         "desc_en": "Increase velocity with royal brilliance when positioned toward the front and close to the runner ahead or behind on the final corner or later.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -6336,7 +6797,8 @@
         "desc_en": "Moderately avoid becoming surrounded for a medium duration when positioned toward the back mid-race. (Medium)",
         "icon_id": 20051,
         "cost": 140,
-        "score_per_sp": 3.57,
+        "eval_pt": 174,
+        "pt_ratio": 1.24,
         "rarity": 1,
         "versions": [
             201131
@@ -6350,7 +6812,8 @@
         "desc_en": "Moderately decrease performance at Tokyo Racecourse.",
         "icon_id": 10024,
         "cost": 50,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.34,
         "rarity": 1,
         "versions": [
             200031,
@@ -6366,7 +6829,8 @@
         "desc_en": "Moderately increase performance at Tokyo Racecourse.",
         "icon_id": 10021,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200031,
@@ -6382,7 +6846,8 @@
         "desc_en": "Increase performance at Tokyo Racecourse.",
         "icon_id": 10021,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200032,
@@ -6398,7 +6863,8 @@
         "desc_en": "Slightly increase velocity when engaged in a challenge mid-race. (Dirt)",
         "icon_id": 20011,
         "cost": 180,
-        "score_per_sp": 2.78,
+        "eval_pt": 217,
+        "pt_ratio": 1.21,
         "rarity": 1,
         "versions": [
             201671
@@ -6412,7 +6878,8 @@
         "desc_en": "Increase ability to pass or challenge another runner early-race or mid-race. (Front Runner)",
         "icon_id": 20012,
         "cost": 180,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             201272
@@ -6426,7 +6893,8 @@
         "desc_en": "Moderately increase performance in pursuit of that long sought-after scenery.",
         "icon_id": 10011,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 0,
+        "pt_ratio": 0.0,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -6438,7 +6906,8 @@
         "desc_en": "Decrease fatigue when positioned toward the front mid-race. (Medium)",
         "icon_id": 20022,
         "cost": 160,
-        "score_per_sp": 3.75,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             200712
@@ -6452,7 +6921,8 @@
         "desc_en": "Increase velocity when engaged in a challenge mid-race. (Dirt)",
         "icon_id": 20012,
         "cost": 180,
-        "score_per_sp": 3.33,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             201672
@@ -6466,7 +6936,8 @@
         "desc_en": "Slightly increase fatigue for rushed runners behind when positioned toward the front mid-race.",
         "icon_id": 30051,
         "cost": 140,
-        "score_per_sp": 140.0,
+        "eval_pt": 217,
+        "pt_ratio": 1.55,
         "rarity": 1,
         "versions": [
             200772
@@ -6480,7 +6951,8 @@
         "desc_en": "Slightly increase fatigue for rushed runners ahead when positioned toward the back mid-race.",
         "icon_id": 30051,
         "cost": 140,
-        "score_per_sp": 3.57,
+        "eval_pt": 217,
+        "pt_ratio": 1.55,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -6492,19 +6964,21 @@
         "desc_en": "Slightly gain energy with 777m remaining.",
         "icon_id": 20021,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Triumphant Pulse": {
-        "id": 100061,
+        "id": 900061,
         "name_en": "Triumphant Pulse",
         "desc_en": "Greatly increase ability to break out of the pack by opening up a path when positioned toward the front with 200m remaining.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -6516,7 +6990,8 @@
         "desc_en": "Increase acceleration on a straight. (Sprint)",
         "icon_id": 20042,
         "cost": 160,
-        "score_per_sp": 3.75,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             200652
@@ -6525,12 +7000,13 @@
         "downgrade": 200652
     },
     "U=ma2": {
-        "id": 100321,
+        "id": 900321,
         "name_en": "U=ma2",
         "desc_en": "Recover endurance and moderately increase velocity for a moderate duration when sitting off the pace on a corner in the second half of the race.",
         "icon_id": 20023,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 4,
         "versions": [],
         "upgrade": null,
@@ -6542,7 +7018,8 @@
         "desc_en": "Slightly increase velocity when close to many runners.",
         "icon_id": 20011,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             201592
@@ -6556,7 +7033,8 @@
         "desc_en": "Greatly increase performance with the same ambition of days past.",
         "icon_id": 10012,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 0,
+        "pt_ratio": 0.0,
         "rarity": 2,
         "versions": [],
         "upgrade": null,
@@ -6568,7 +7046,8 @@
         "desc_en": "Moderately increase performance with the desire to race.",
         "icon_id": 10021,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 0,
+        "pt_ratio": 0.0,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -6580,7 +7059,8 @@
         "desc_en": "Increase ability to keep the lead on the final corner. (Front Runner)",
         "icon_id": 20042,
         "cost": 180,
-        "score_per_sp": 3.33,
+        "eval_pt": 508,
+        "pt_ratio": 1.41,
         "rarity": 2,
         "versions": [
             200552
@@ -6594,7 +7074,8 @@
         "desc_en": "Recover endurance when surrounded mid-race.",
         "icon_id": 20022,
         "cost": 170,
-        "score_per_sp": 3.53,
+        "eval_pt": 508,
+        "pt_ratio": 1.49,
         "rarity": 2,
         "versions": [
             200482
@@ -6608,7 +7089,8 @@
         "desc_en": "Increase ability to fight back when passed by another runner on the final corner. (Medium)",
         "icon_id": 20012,
         "cost": 160,
-        "score_per_sp": 3.75,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             200732
@@ -6622,7 +7104,8 @@
         "desc_en": "Slightly increase passing ability. (Mile)",
         "icon_id": 20011,
         "cost": 120,
-        "score_per_sp": 4.17,
+        "eval_pt": 217,
+        "pt_ratio": 1.81,
         "rarity": 1,
         "versions": [
             201071
@@ -6636,7 +7119,8 @@
         "desc_en": "Slightly increase positioning ability when positioned toward the front mid-race. (Medium)",
         "icon_id": 20011,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             200721
@@ -6650,7 +7134,8 @@
         "desc_en": "Slightly increase passing ability when positioned toward the back late-race. (Mile)",
         "icon_id": 20041,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             200701
@@ -6659,12 +7144,13 @@
         "downgrade": null
     },
     "V Is for Victory!": {
-        "id": 10351,
+        "id": 900351,
         "name_en": "V Is for Victory!",
         "desc_en": "Moderately increase velocity with winning ambition when positioned toward the front on the final straight after engaging in a challenge on the final corner or later.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 3,
         "versions": [],
         "upgrade": null,
@@ -6676,7 +7162,8 @@
         "desc_en": "Decrease fatigue when determined to pass another runner. (Long)",
         "icon_id": 20022,
         "cost": 160,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             201202
@@ -6690,7 +7177,8 @@
         "desc_en": "Increase ability to maintain the lead when leading by a fair margin mid-race. (Long)",
         "icon_id": 20012,
         "cost": 160,
-        "score_per_sp": 3.75,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             201192
@@ -6699,36 +7187,39 @@
         "downgrade": 201192
     },
     "Victoria por plancha ☆": {
-        "id": 100141,
+        "id": 900141,
         "name_en": "Victoria por plancha ☆",
         "desc_en": "Hang onto the advantage when positioned toward the front with energy to spare on the final straight.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 4,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Victory Cheer!": {
-        "id": 100681,
+        "id": 900681,
         "name_en": "Victory Cheer!",
         "desc_en": "Moderately increase velocity when positioned toward the front on the third corner in the second half of the race. Or, kick forward hard when toward the front on the backstretch late-race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Victory belongs to me—Strelitzia! ☆": {
-        "id": 100441,
+        "id": 900441,
         "name_en": "Victory belongs to me—Strelitzia! ☆",
         "desc_en": "If positioned toward the back until the start of the final corner, when there are 300m remaining, cast a magic spell to increase velocity continuously.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -6740,7 +7231,8 @@
         "desc_en": "Slightly decrease fatigue and very slightly increase acceleration when positioned toward the back mid-race. (Sprint)",
         "icon_id": 20021,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -6752,7 +7244,8 @@
         "desc_en": "Moderately decrease performance when many other runners are using the same strategy.",
         "icon_id": 10034,
         "cost": 50,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.52,
         "rarity": 1,
         "versions": [
             200281,
@@ -6762,12 +7255,13 @@
         "downgrade": null
     },
     "Warning Shot!": {
-        "id": 10071,
+        "id": 900071,
         "name_en": "Warning Shot!",
         "desc_en": "Slightly increase velocity with a long spurt starting halfway through the race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 3,
         "versions": [],
         "upgrade": null,
@@ -6779,7 +7273,8 @@
         "desc_en": "Slightly decrease fatigue, then very slightly decrease velocity of runners ahead when positioned toward the back upon approaching mid-race. (Mile)",
         "icon_id": 20021,
         "cost": 160,
-        "score_per_sp": 3.13,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             200691
@@ -6793,7 +7288,8 @@
         "desc_en": "Moderately decrease performance on good, soft, and heavy ground.",
         "icon_id": 10034,
         "cost": 50,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.34,
         "rarity": 1,
         "versions": [
             200161,
@@ -6809,7 +7305,8 @@
         "desc_en": "Moderately increase performance on good, soft, and heavy ground.",
         "icon_id": 10031,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200161,
@@ -6825,7 +7322,8 @@
         "desc_en": "Increase performance on good, soft, and heavy ground.",
         "icon_id": 10031,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200162,
@@ -6836,36 +7334,39 @@
         "downgrade": 200162
     },
     "Where There's a Will, There's a Way": {
-        "id": 100111,
+        "id": 900111,
         "name_en": "Where There's a Will, There's a Way",
         "desc_en": "Increase velocity with a strong turn of foot when passing another runner toward the back on the final straight.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 4,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "Wherever This Wonder Leads": {
-        "id": 110591,
+        "id": 910591,
         "name_en": "Wherever This Wonder Leads",
         "desc_en": "If positioned midpack on a downhill just before late-race and there's a large distance left to the finish, enjoy the race to the fullest, increasing velocity.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "White Lightning Comin' Through!": {
-        "id": 100211,
+        "id": 900211,
         "name_en": "White Lightning Comin' Through!",
         "desc_en": "Bolt down the track like lightning when well-positioned or aiming for the front from midpack on a straight in the second half of the race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -6877,7 +7378,8 @@
         "desc_en": "When positioned toward the front mid-race, increase velocity and slightly decrease the velocity of runners behind the skill user. (Medium)",
         "icon_id": 20012,
         "cost": 160,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.59,
         "rarity": 2,
         "versions": [
             202132
@@ -6891,7 +7393,8 @@
         "desc_en": "Moderately decrease performance in winter.",
         "icon_id": 10014,
         "cost": 50,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -0.34,
         "rarity": 1,
         "versions": [
             200201,
@@ -6907,7 +7410,8 @@
         "desc_en": "Moderately increase performance in winter.",
         "icon_id": 10011,
         "cost": 90,
-        "score_per_sp": 5.56,
+        "eval_pt": 129,
+        "pt_ratio": 1.43,
         "rarity": 1,
         "versions": [
             200201,
@@ -6923,7 +7427,8 @@
         "desc_en": "Increase performance in winter.",
         "icon_id": 10011,
         "cost": 110,
-        "score_per_sp": 2.5,
+        "eval_pt": 174,
+        "pt_ratio": 0.87,
         "rarity": 1,
         "versions": [
             200202,
@@ -6939,7 +7444,8 @@
         "desc_en": "When positioned toward the front mid-race, slightly increase velocity and minimally decrease the velocity of runners behind the skill user. (Medium)",
         "icon_id": 20011,
         "cost": 160,
-        "score_per_sp": null,
+        "eval_pt": 217,
+        "pt_ratio": 1.36,
         "rarity": 1,
         "versions": [
             202131
@@ -6948,24 +7454,26 @@
         "downgrade": null
     },
     "Xceleration": {
-        "id": 10081,
+        "id": 900081,
         "name_en": "Xceleration",
         "desc_en": "Become stronger at challenging rivals and moderately increase velocity when positioned toward the front with 200m or less remaining.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 3,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "YUMMY☆SPEED!": {
-        "id": 100281,
+        "id": 900281,
         "name_en": "YUMMY☆SPEED!",
         "desc_en": "Kick forward hard with renewed vigor when starting to get tired while well-positioned halfway through the race.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -6977,7 +7485,8 @@
         "desc_en": "Increase performance at Kyoto Racecourse, boosting Stamina and Wit.",
         "icon_id": 10022,
         "cost": 130,
-        "score_per_sp": null,
+        "eval_pt": 461,
+        "pt_ratio": 1.4,
         "rarity": 2,
         "versions": [
             200061,
@@ -6988,12 +7497,13 @@
         "downgrade": null
     },
     "You and Me! One-on-One!": {
-        "id": 100121,
+        "id": 900121,
         "name_en": "You and Me! One-on-One!",
         "desc_en": "Increase velocity on the final straight after passing another runner on the outside toward the back on the final corner or later.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -7005,7 +7515,8 @@
         "desc_en": "Increase time lost to slow starts and moderately decrease Wit.",
         "icon_id": 20064,
         "cost": 0,
-        "score_per_sp": null,
+        "eval_pt": 0,
+        "pt_ratio": 0.0,
         "rarity": 1,
         "versions": [],
         "upgrade": null,
@@ -7017,7 +7528,8 @@
         "desc_en": "Cause panic in and moderately dull movement for runners ahead when positioned toward the back early-race. (Sprint)",
         "icon_id": 30052,
         "cost": 170,
-        "score_per_sp": null,
+        "eval_pt": 508,
+        "pt_ratio": 1.49,
         "rarity": 2,
         "versions": [
             201022
@@ -7026,24 +7538,26 @@
         "downgrade": 201022
     },
     "trigger:BEAT": {
-        "id": 100361,
+        "id": 900361,
         "name_en": "trigger:BEAT",
         "desc_en": "When near the inner rail midpack on the final corner or later, calculate the path to victory, increasing velocity and ability to navigate smoothly on the final straight.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": null,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
         "downgrade": null
     },
     "∴win Q.E.D.": {
-        "id": 100231,
+        "id": 900231,
         "name_en": "∴win Q.E.D.",
         "desc_en": "Increase velocity by deriving the winning equation when passing another runner toward the front on the final corner or later.",
         "icon_id": 20013,
         "cost": null,
-        "score_per_sp": 2.5,
+        "eval_pt": 180,
+        "pt_ratio": 0.9,
         "rarity": 5,
         "versions": [],
         "upgrade": null,
@@ -7055,7 +7569,8 @@
         "desc_en": "Moderately decrease performance on firm ground.",
         "icon_id": 10014,
         "cost": 50,
-        "score_per_sp": null,
+        "eval_pt": -129,
+        "pt_ratio": -2.58,
         "rarity": 1,
         "versions": [],
         "upgrade": null,

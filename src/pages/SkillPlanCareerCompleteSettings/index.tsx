@@ -19,7 +19,8 @@ interface Skill {
     desc_en: string
     icon_id: number
     cost: number | null
-    score_per_sp: number | null
+    eval_pt: number
+    pt_ratio: number
     rarity: number
     versions: number[]
     upgrade: number | null
@@ -287,7 +288,7 @@ const SkillPlanCareerCompleteSettings = () => {
                                             <View style={{ flex: 1 }}>
                                                 <Text style={styles.skillName}>{skill.name_en}</Text>
                                                 <Text style={styles.skillDescription}>{skill.desc_en}</Text>
-                                                <Text style={styles.skillSubtext}>ID: {skill.id}, Score/SP: {skill.score_per_sp}</Text>
+                                                <Text style={styles.skillSubtext}>ID: {skill.id}</Text>
                                             </View>
                                             {parsedSkillPlan.some((planned) => planned.name === skill.name_en) && (
                                                 <CircleCheckBig size={18} color={"green"} />

@@ -19,7 +19,8 @@ interface Skill {
     desc_en: string
     icon_id: number
     cost: number | null
-    score_per_sp: number | null
+    eval_pt: number
+    pt_ratio: number
     rarity: number
     versions: number[]
     upgrade: number | null
