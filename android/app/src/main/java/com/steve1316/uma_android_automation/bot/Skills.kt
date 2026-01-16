@@ -99,6 +99,7 @@ class Skills (private val game: Game) {
         private const val SKILLS_COLUMN_DESC_EN = "desc_en"
         private const val SKILLS_COLUMN_ICON_ID = "icon_id"
         private const val SKILLS_COLUMN_COST = "cost"
+        private const val SKILLS_COLUMN_COST_PER_SP = "cost_per_sp"
         private const val SKILLS_COLUMN_RARITY = "rarity"
         private const val SKILLS_COLUMN_VERSIONS = "versions"
         private const val SKILLS_COLUMN_UPGRADE = "upgrade"
@@ -178,6 +179,7 @@ class Skills (private val game: Game) {
                     description = skillObj.getString(SKILLS_COLUMN_DESC_EN),
                     iconId = skillObj.getInt(SKILLS_COLUMN_ICON_ID),
                     cost = skillObj.optInt(SKILLS_COLUMN_COST),
+                    costPerSP = skillObj.optDouble(SKILLS_COLUMN_COST_PER_SP),
                     rarity = skillObj.getInt(SKILLS_COLUMN_RARITY),
                     versions = skillObj.getString(SKILLS_COLUMN_VERSIONS),
                     upgrade = skillObj.optInt(SKILLS_COLUMN_UPGRADE),
@@ -349,6 +351,7 @@ class Skills (private val game: Game) {
                     SKILLS_COLUMN_DESC_EN,
                     SKILLS_COLUMN_ICON_ID,
                     SKILLS_COLUMN_COST,
+                    SKILLS_COLUMN_COST_PER_SP,
                     SKILLS_COLUMN_RARITY,
                     SKILLS_COLUMN_VERSIONS,
                     SKILLS_COLUMN_UPGRADE,
@@ -366,6 +369,7 @@ class Skills (private val game: Game) {
                     description = exactCursor.getString(2),
                     iconId = exactCursor.getInt(3),
                     cost = if (exactCursor.isNull(4)) null else exactCursor.getInt(4),
+                    costPerSP = if (exactCursor.isNull(5)) null else exactCursor.getDouble(5),
                     rarity = exactCursor.getInt(5),
                     versions = exactCursor.getString(6),
                     upgrade = if (exactCursor.isNull(7)) null else exactCursor.getInt(7),
@@ -388,6 +392,7 @@ class Skills (private val game: Game) {
                     SKILLS_COLUMN_DESC_EN,
                     SKILLS_COLUMN_ICON_ID,
                     SKILLS_COLUMN_COST,
+                    SKILLS_COLUMN_COST_PER_SP,
                     SKILLS_COLUMN_RARITY,
                     SKILLS_COLUMN_VERSIONS,
                     SKILLS_COLUMN_UPGRADE,
@@ -419,10 +424,11 @@ class Skills (private val game: Game) {
                         description = fuzzyCursor.getString(2),
                         iconId = fuzzyCursor.getInt(3),
                         cost = if (fuzzyCursor.isNull(4)) null else fuzzyCursor.getInt(4),
-                        rarity = fuzzyCursor.getInt(5),
-                        versions = fuzzyCursor.getString(6),
-                        upgrade = if (fuzzyCursor.isNull(7)) null else fuzzyCursor.getInt(7),
-                        downgrade = if (fuzzyCursor.isNull(8)) null else fuzzyCursor.getInt(8),
+                        costPerSP = if (fuzzyCursor.isNull(5)) null else fuzzyCursor.getDouble(5),
+                        rarity = fuzzyCursor.getInt(6),
+                        versions = fuzzyCursor.getString(7),
+                        upgrade = if (fuzzyCursor.isNull(8)) null else fuzzyCursor.getInt(8),
+                        downgrade = if (fuzzyCursor.isNull(9)) null else fuzzyCursor.getInt(9),
                     )
                     if (game.debugMode) {
                         MessageLog.d(TAG, "[DEBUG] Fuzzy match candidate: \"${bestMatch.name}\" AKA \"$tmpName\" with similarity ${game.decimalFormat.format(similarity)}.")

@@ -36,6 +36,7 @@ export interface DatabaseSkill {
     desc_en: string
     icon_id: number
     cost: number | null
+    cost_per_sp: number | null
     rarity: number
     versions: number[] | null
     upgrade: number | null
@@ -209,6 +210,7 @@ export class DatabaseManager {
                     desc_en TEXT NOT NULL,
                     icon_id INTEGER NOT NULL,
                     cost INTEGER,
+                    cost_per_sp REAL,
                     rarity INTEGER NOT NULL,
                     versions TEXT NOT NULL,
                     upgrade INTEGER,
@@ -694,8 +696,8 @@ export class DatabaseManager {
 
                 await this.db!.runAsync("BEGIN TRANSACTION")
                 const stmt = await this.db!.prepareAsync(
-                    `INSERT OR REPLACE INTO ${this.TABLE_SKILLS} (key, skill_id, name_en, desc_en, icon_id, cost, rarity, versions, upgrade, downgrade) 
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+                    `INSERT OR REPLACE INTO ${this.TABLE_SKILLS} (key, skill_id, name_en, desc_en, icon_id, cost, cost_per_sp, rarity, versions, upgrade, downgrade)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
                 )
 
                 // Execute all skills in batch using prepared statement.
@@ -711,6 +713,7 @@ export class DatabaseManager {
                         skill.desc_en,
                         skill.icon_id,
                         skill.cost,
+                        skill.cost_per_sp,
                         skill.rarity,
                         versions,
                         skill.upgrade,

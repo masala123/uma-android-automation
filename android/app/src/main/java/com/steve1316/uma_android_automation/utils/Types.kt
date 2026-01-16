@@ -277,6 +277,7 @@ data class SkillData(
     val description: String,
     val iconId: Int,
     val cost: Int?,
+    val costPerSP: Double?,
     val rarity: Int,
     val versions: List<Int>,
     val upgrade: Int?,
@@ -303,6 +304,7 @@ data class SkillData(
         description: String,
         iconId: Int,
         cost: Int?,
+        costPerSP: Double?,
         rarity: Int,
         versions: String,
         upgrade: Int?,
@@ -313,6 +315,7 @@ data class SkillData(
         description,
         iconId,
         cost,
+        costPerSP,
         rarity,
         versions
             .replace("[", "")
