@@ -1967,7 +1967,7 @@ class Skills (private val game: Game) {
             )
         }
 
-        //ButtonConfirm.click(game.imageUtils)
+        ButtonConfirm.click(game.imageUtils)
         game.wait(0.5, skipWaitingForLoading = true)
         // Two dialogs will appear if we purchase any skills.
         // First is the purchase confirmation.
