@@ -112,7 +112,7 @@ export const useBootstrap = () => {
                 desc_en: skill.desc_en,
                 icon_id: skill.icon_id,
                 cost: skill.cost,
-                cost_per_sp: skill.cost_per_sp,
+                score_per_sp: skill.score_per_sp,
                 rarity: skill.rarity,
                 versions: skill.versions,
                 upgrade: skill.upgrade,

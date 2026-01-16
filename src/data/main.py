@@ -523,7 +523,7 @@ class SkillScraper(BaseScraper):
                     "desc_en": skill["desc_en"],
                     "icon_id": skill["iconid"],
                     "cost": skill.get("cost", None),
-                    "cost_per_sp": additional_data.get(skill["name_en"], None),
+                    "score_per_sp": additional_data.get(skill["name_en"], None),
                     "rarity": skill["rarity"],
                     "versions": sorted(skill.get("versions", [])),
                     "upgrade": None,
