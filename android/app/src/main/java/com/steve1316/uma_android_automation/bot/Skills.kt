@@ -11,6 +11,7 @@ import java.util.concurrent.TimeUnit
 import java.util.Collections
 import kotlinx.coroutines.*
 import kotlin.math.ceil
+import kotlin.math.roundToInt
 
 import net.ricecode.similarity.JaroWinklerStrategy
 import net.ricecode.similarity.StringSimilarityServiceImpl
@@ -26,6 +27,9 @@ import com.steve1316.uma_android_automation.utils.types.BoundingBox
 import com.steve1316.uma_android_automation.utils.types.SkillData
 import com.steve1316.uma_android_automation.utils.types.SkillListEntry
 import com.steve1316.uma_android_automation.utils.types.SkillType
+import com.steve1316.uma_android_automation.utils.types.TrackDistance
+import com.steve1316.uma_android_automation.utils.types.RunningStyle
+import com.steve1316.uma_android_automation.utils.types.Aptitude
 
 import com.steve1316.uma_android_automation.components.*
 
@@ -33,6 +37,7 @@ import com.steve1316.uma_android_automation.components.*
 class Skills (private val game: Game) {
     private val TAG: String = "[${MainActivity.loggerTag}]Skills"
 
+    // Get user settings for skill plans.
     val enablePreFinalsSkillPlan = SettingsHelper.getBooleanSetting("skills", "enablePreFinalsSkillPlan")
     val enablePreFinalsSpendAll = SettingsHelper.getBooleanSetting("skills", "enablePreFinalsSpendAll")
     val enablePreFinalsOptimizeRank = SettingsHelper.getBooleanSetting("skills", "enablePreFinalsOptimizeRank")
@@ -49,6 +54,27 @@ class Skills (private val game: Game) {
     val enableCareerCompleteIgnoreGoldSkills = SettingsHelper.getBooleanSetting("skills", "enableCareerCompleteIgnoreGoldSkills")
     private val careerCompleteSkillPlanJson = SettingsHelper.getStringSetting("skills", "careerCompleteSkillPlan")
 
+    // Get other relevant user settings.
+    private val userSelectedTrackDistancesString = SettingsHelper.getStringSetting("racing", "preferredDistances")
+    // Parse preferred distances.
+    private val userSelectedTrackDistances: List<TrackDistance> = try {
+        // Parse as JSON array.
+        val jsonArray = JSONArray(userSelectedTrackDistancesString)
+        val parsed = (0 until jsonArray.length()).mapNotNull {
+            TrackDistance.fromName(jsonArray.getString(it).uppercase())
+        }
+        MessageLog.i(TAG, "[SKILLS] Parsed preferred distances as JSON array: $parsed.")
+        parsed
+    } catch (e: Exception) {
+        MessageLog.i(TAG, "[SKILLS] Error parsing preferred distances: ${e.message}, using fallback.")
+        val parsed = userSelectedTrackDistancesString.split(",").mapNotNull {
+            TrackDistance.fromName(it.trim().uppercase())
+        }
+        MessageLog.i(TAG, "[SKILLS] Fallback parsing result: $parsed")
+        parsed
+    }
+
+    private val userSelectedRunningStyleString = SettingsHelper.getStringSetting("racing", "originalRaceStrategy")
     
 
     // Cached skill plan data loaded once per class instance.
@@ -99,7 +125,8 @@ class Skills (private val game: Game) {
         private const val SKILLS_COLUMN_DESC_EN = "desc_en"
         private const val SKILLS_COLUMN_ICON_ID = "icon_id"
         private const val SKILLS_COLUMN_COST = "cost"
-        private const val SKILLS_COLUMN_SCORE_PER_SP = "score_per_sp"
+        private const val SKILLS_COLUMN_EVAL_PT = "eval_pt"
+        private const val SKILLS_COLUMN_PT_RATIO = "pt_ratio"
         private const val SKILLS_COLUMN_RARITY = "rarity"
         private const val SKILLS_COLUMN_VERSIONS = "versions"
         private const val SKILLS_COLUMN_UPGRADE = "upgrade"
@@ -179,7 +206,8 @@ class Skills (private val game: Game) {
                     description = skillObj.getString(SKILLS_COLUMN_DESC_EN),
                     iconId = skillObj.getInt(SKILLS_COLUMN_ICON_ID),
                     cost = skillObj.optInt(SKILLS_COLUMN_COST),
-                    costPerSP = skillObj.optDouble(SKILLS_COLUMN_SCORE_PER_SP),
+                    evalPt = skillObj.getInt(SKILLS_COLUMN_EVAL_PT),
+                    ptRatio = skillObj.getDouble(SKILLS_COLUMN_PT_RATIO),
                     rarity = skillObj.getInt(SKILLS_COLUMN_RARITY),
                     versions = skillObj.getString(SKILLS_COLUMN_VERSIONS),
                     upgrade = skillObj.optInt(SKILLS_COLUMN_UPGRADE),
@@ -351,7 +379,8 @@ class Skills (private val game: Game) {
                     SKILLS_COLUMN_DESC_EN,
                     SKILLS_COLUMN_ICON_ID,
                     SKILLS_COLUMN_COST,
-                    SKILLS_COLUMN_SCORE_PER_SP,
+                    SKILLS_COLUMN_EVAL_PT,
+                    SKILLS_COLUMN_PT_RATIO,
                     SKILLS_COLUMN_RARITY,
                     SKILLS_COLUMN_VERSIONS,
                     SKILLS_COLUMN_UPGRADE,
@@ -369,11 +398,12 @@ class Skills (private val game: Game) {
                     description = exactCursor.getString(2),
                     iconId = exactCursor.getInt(3),
                     cost = if (exactCursor.isNull(4)) null else exactCursor.getInt(4),
-                    costPerSP = if (exactCursor.isNull(5)) null else exactCursor.getDouble(5),
-                    rarity = exactCursor.getInt(5),
-                    versions = exactCursor.getString(6),
-                    upgrade = if (exactCursor.isNull(7)) null else exactCursor.getInt(7),
-                    downgrade = if (exactCursor.isNull(8)) null else exactCursor.getInt(8),
+                    evalPt = exactCursor.getInt(5),
+                    ptRatio = exactCursor.getDouble(6),
+                    rarity = exactCursor.getInt(7),
+                    versions = exactCursor.getString(8),
+                    upgrade = if (exactCursor.isNull(9)) null else exactCursor.getInt(9),
+                    downgrade = if (exactCursor.isNull(10)) null else exactCursor.getInt(10),
                 )
                 exactCursor.close()
                 settingsManager.close()
@@ -392,7 +422,8 @@ class Skills (private val game: Game) {
                     SKILLS_COLUMN_DESC_EN,
                     SKILLS_COLUMN_ICON_ID,
                     SKILLS_COLUMN_COST,
-                    SKILLS_COLUMN_SCORE_PER_SP,
+                    SKILLS_COLUMN_EVAL_PT,
+                    SKILLS_COLUMN_PT_RATIO,
                     SKILLS_COLUMN_RARITY,
                     SKILLS_COLUMN_VERSIONS,
                     SKILLS_COLUMN_UPGRADE,
@@ -424,11 +455,12 @@ class Skills (private val game: Game) {
                         description = fuzzyCursor.getString(2),
                         iconId = fuzzyCursor.getInt(3),
                         cost = if (fuzzyCursor.isNull(4)) null else fuzzyCursor.getInt(4),
-                        costPerSP = if (fuzzyCursor.isNull(5)) null else fuzzyCursor.getDouble(5),
-                        rarity = fuzzyCursor.getInt(6),
-                        versions = fuzzyCursor.getString(7),
-                        upgrade = if (fuzzyCursor.isNull(8)) null else fuzzyCursor.getInt(8),
-                        downgrade = if (fuzzyCursor.isNull(9)) null else fuzzyCursor.getInt(9),
+                        evalPt = fuzzyCursor.getInt(5),
+                        ptRatio = fuzzyCursor.getDouble(6),
+                        rarity = fuzzyCursor.getInt(7),
+                        versions = fuzzyCursor.getString(8),
+                        upgrade = if (fuzzyCursor.isNull(9)) null else fuzzyCursor.getInt(9),
+                        downgrade = if (fuzzyCursor.isNull(10)) null else fuzzyCursor.getInt(10),
                     )
                     if (game.debugMode) {
                         MessageLog.d(TAG, "[DEBUG] Fuzzy match candidate: \"${bestMatch.name}\" AKA \"$tmpName\" with similarity ${game.decimalFormat.format(similarity)}.")
@@ -1390,6 +1422,34 @@ class Skills (private val game: Game) {
         */
     }
 
+    private fun calculateAdjustedPointRatio(skillListEntry: SkillListEntry): Double {
+            val ratioModifierMap: Map<Aptitude, Double> = mapOf(
+                Aptitude.S to 1.1,
+                Aptitude.A to 1.1,
+                Aptitude.B to 0.9,
+                Aptitude.C to 0.9,
+                Aptitude.D to 0.8,
+                Aptitude.E to 0.8,
+                Aptitude.F to 0.8,
+                Aptitude.G to 0.7,
+            )
+            val skillRunningStyle: RunningStyle? = skillListEntry.skillData.style
+            val skillTrackDistance: TrackDistance? = skillListEntry.skillData.distance
+            val evalPt: Int = if (skillRunningStyle != null) {
+                val aptitude: Aptitude = game.trainee.checkRunningStyleAptitude(skillRunningStyle)
+                val ratioModifier: Double = ratioModifierMap[aptitude] ?: 1.0
+                (skillListEntry.skillData.evalPt * ratioModifier).roundToInt()
+            } else if (skillTrackDistance != null) {
+                val aptitude: Aptitude = game.trainee.checkTrackDistanceAptitude(skillTrackDistance)
+                val ratioModifier: Double = ratioModifierMap[aptitude] ?: 1.0
+                (skillListEntry.skillData.evalPt * ratioModifier).roundToInt()
+            } else {
+                skillListEntry.skillData.evalPt
+            }
+
+            return (evalPt.toDouble() / skillListEntry.price.toDouble()).toDouble()
+        }
+
     private fun getSkillsToBuyOptimizeRankStrategy(
         skills: Map<String, SkillListEntry>,
         skillPoints: Int,
@@ -1518,35 +1578,27 @@ class Skills (private val game: Game) {
             return skillsToBuy.toList().distinctBy { it.name }
         }
 
-        // Split skills by type
-        val filteredSkills: Map<String, SkillListEntry> = remainingSkills.filterKeys { it !in skillsToBuy.map { skillToBuy -> skillToBuy.name } }
-        val groupedByType: Map<SkillType, List<SkillListEntry>> = filteredSkills.values.groupBy { it.skillData.type }
+        var filteredSkills: Map<String, SkillListEntry> = remainingSkills.filterKeys { it !in skillsToBuy.map { skillToBuy -> skillToBuy.name } }
+        val sortedByPointRatio: List<SkillListEntry> = filteredSkills.values
+            .sortedByDescending { calculateAdjustedPointRatio(it) }
 
-        val skillTypePriority: List<SkillType> = listOf(
-            SkillType.YELLOW,
-            SkillType.BLUE,
-            SkillType.GREEN,
-            SkillType.RED,
-        )
-
-        for (skillType in skillTypePriority) {
-            val group: List<SkillListEntry>? = groupedByType[skillType]
-            if (group == null) {
+        for (entry in sortedByPointRatio) {
+            val ptRatioString: String = "%.2f".format(calculateAdjustedPointRatio(entry))
+            MessageLog.d(TAG, "${entry.skillData.name}: ${entry.price}pt (${ptRatioString} rating/pt)")
+            // If we can't afford this skill, continue to the next.
+            if (remainingSkillPoints < entry.price) {
                 continue
             }
 
-            // Add the skills that arent aptitude-dependent.
-            for (entry in group.sortedBy { it.price }) {
-                if (remainingSkillPoints < entry.price) {
-                    break
-                }
-                if (entry.skillData.bIsGold && skillPlanSettings.ignoreGoldSkills) {
-                    continue
-                }
-                skillsToBuy.add(SkillToBuy(entry.skillData.name))
-                remainingSkillPoints -= entry.price
+            // Skip any gold skills if user specified to not purchase them.
+            if (entry.skillData.bIsGold && skillPlanSettings.ignoreGoldSkills) {
+                continue
             }
+
+            skillsToBuy.add(SkillToBuy(entry.skillData.name))
+            remainingSkillPoints -= entry.price
         }
+
         remainingSkills -= skillsToBuy.map { it.name }
 
         return skillsToBuy.toList().distinctBy { it.name }
@@ -1712,7 +1764,26 @@ class Skills (private val game: Game) {
         remainingSkills -= skillsToBuy.map { it.name }
 
         // Split skills by type
-        val filteredSkills: Map<String, SkillListEntry> = remainingSkills.filterKeys { it !in skillsToBuy.map { skillToBuy -> skillToBuy.name } }
+        val preferredRunningStyle: RunningStyle? = when (userSelectedRunningStyleString.uppercase()) {
+            "DEFAULT", "AUTO" -> game.trainee.runningStyle
+            else -> RunningStyle.fromName(userSelectedRunningStyleString)
+        }
+
+        val preferredTrackDistances: List<TrackDistance> = if (userSelectedTrackDistances.isEmpty()) {
+            listOf<TrackDistance>(game.trainee.trackDistance)
+        } else {
+            userSelectedTrackDistances
+        }
+
+        var filteredSkills: Map<String, SkillListEntry> = remainingSkills.filterKeys { it !in skillsToBuy.map { skillToBuy -> skillToBuy.name } }
+        // Now filter by trainee aptitudes.
+        // If the user specified a track distance and/or a running style, then those
+        // will be used. Otherwise, the trainee's highest aptitude track distance and
+        // running style will be used.
+        filteredSkills = filteredSkills.filterValues {
+            it.skillData.style == preferredRunningStyle ||
+            it.skillData.distance in preferredTrackDistances
+        }
         val groupedByType: Map<SkillType, List<SkillListEntry>> = filteredSkills.values.groupBy { it.skillData.type }
 
         val skillTypePriority: List<SkillType> = listOf(
@@ -1740,7 +1811,8 @@ class Skills (private val game: Game) {
             }
 
             // Add the skills that arent aptitude-dependent.
-            for (entry in a.sortedBy { it.price }) {
+            // Prioritize skills with better evaluation point ratio.
+            for (entry in a.sortedByDescending { calculateAdjustedPointRatio(it) }) {
                 if (remainingSkillPoints < entry.price) {
                     break
                 }
@@ -1752,7 +1824,8 @@ class Skills (private val game: Game) {
             }
 
             // Add the aptitude-dependent skills.
-            for (entry in b.sortedBy { it.price }) {
+            // Prioritize skills with better evaluation point ratio.
+            for (entry in b.sortedByDescending { calculateAdjustedPointRatio(it) }) {
                 if (remainingSkillPoints < entry.price) {
                     break
                 }
@@ -1894,7 +1967,7 @@ class Skills (private val game: Game) {
             )
         }
 
-        ButtonConfirm.click(game.imageUtils)
+        //ButtonConfirm.click(game.imageUtils)
         game.wait(0.5, skipWaitingForLoading = true)
         // Two dialogs will appear if we purchase any skills.
         // First is the purchase confirmation.
