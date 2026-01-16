@@ -203,7 +203,8 @@ export class DatabaseManager {
             // Create skills table.
             logWithTimestamp("Creating skills table...")
             await this.db.execAsync(`
-                CREATE TABLE IF NOT EXISTS ${this.TABLE_SKILLS} (
+                DROP TABLE IF EXISTS ${this.TABLE_SKILLS};
+                CREATE TABLE ${this.TABLE_SKILLS} (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     key TEXT UNIQUE NOT NULL,
                     skill_id INTEGER NOT NULL,
@@ -733,8 +734,8 @@ export class DatabaseManager {
 
             endTiming({ status: "success", racesCount: skills.length })
         } catch (error) {
-            const skillsInfo = skills.length > 0 ? ` (${skills.length} skills: ${skills.map((s) => `${s.name_en} (turn ${s.skill_id})`).join(", ")})` : " (no skills)"
-            logErrorWithTimestamp(`[DB] Failed to save skills batch${skillsInfo}:`, error)
+            const skillsInfo = skills.length > 0 ? ` (${skills.length} skills: ${skills.map((s) => `${s.name_en} (id ${s.skill_id})`).join(", ")})` : " (no skills)"
+            logErrorWithTimestamp(`[DB] Failed to save skills batch${skillsInfo}:\n`, error)
 
             // Rollback transaction on error.
             try {
