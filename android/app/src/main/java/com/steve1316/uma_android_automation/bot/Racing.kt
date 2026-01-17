@@ -132,6 +132,15 @@ class Racing (private val game: Game) {
     )
 
     /**
+     * Clears all racing requirement flags like fan and trophy requirements.
+     */
+    private fun clearRacingRequirementFlags() {
+        hasFanRequirement = false
+        hasTrophyRequirement = false
+        hasPreOpOrAboveRequirement = false
+    }
+
+    /**
      * Detects and handles any dialog popups.
      *
      * To prevent the bot moving too fast, we add a 500ms delay to the
@@ -160,8 +169,7 @@ class Racing (private val game: Game) {
                     game.wait(1.0, skipWaitingForLoading = true)
                 } else {
                     MessageLog.i(TAG, "[RACE] Consecutive race warning! Aborting racing...")
-                    hasFanRequirement = false
-                    hasTrophyRequirement = false
+                    clearRacingRequirementFlags()
                     dialog.close(imageUtils = game.imageUtils)
                 }
                 // Always reset this flag after handling this dialog.
@@ -385,8 +393,7 @@ class Racing (private val game: Game) {
             MessageLog.i(TAG, "[RACE] There are no races to compete in. Canceling the racing process and doing something else.")
             MessageLog.i(TAG, "********************")
             // Clear requirement flags since we cannot proceed with racing.
-            hasFanRequirement = false
-            hasTrophyRequirement = false
+            clearRacingRequirementFlags()
             return false
         }
 
@@ -430,8 +437,7 @@ class Racing (private val game: Game) {
         }
 
         // Clear requirement flags if no race selection buttons were found.
-        hasFanRequirement = false
-        hasTrophyRequirement = false
+        clearRacingRequirementFlags()
         MessageLog.i(TAG, "********************")
         return false
     }
@@ -657,8 +663,7 @@ class Racing (private val game: Game) {
         if (!ButtonRaceListFullStats.check(imageUtils = game.imageUtils, tries = 30)) {
             MessageLog.e(TAG, "[RACE] Not at race list screen. Aborting racing...")
             // Clear requirement flags since we cannot proceed with racing.
-            hasFanRequirement = false
-            hasTrophyRequirement = false
+            clearRacingRequirementFlags()
             return false
         }
 
@@ -734,8 +739,7 @@ class Racing (private val game: Game) {
                     MessageLog.i(TAG, "[RACE] Closing popup warning of doing more than 3+ races and setting flag to prevent racing for now. Canceling the racing process and doing something else.")
                     game.findAndTapImage("cancel", region = game.imageUtils.regionBottomHalf)
                     // Clear requirement flags since we cannot proceed with racing.
-                    hasFanRequirement = false
-                    hasTrophyRequirement = false
+                    clearRacingRequirementFlags()
                     MessageLog.i(TAG, "********************")
                     return false
                 } else {
@@ -749,8 +753,7 @@ class Racing (private val game: Game) {
             if (statusLocation == null) {
                 MessageLog.e(TAG, "[ERROR] Unable to determine existence of list of extra races. Canceling the racing process and doing something else.")
                 // Clear requirement flags since we cannot proceed with racing.
-                hasFanRequirement = false
-                hasTrophyRequirement = false
+                clearRacingRequirementFlags()
                 MessageLog.i(TAG, "********************")
                 return false
             }
@@ -764,8 +767,7 @@ class Racing (private val game: Game) {
                     MessageLog.e(TAG, "[ERROR] Was unable to find any extra races to select. Canceling the racing process and doing something else.")
                 }
                 // Always clear requirement flags when no races are available.
-                hasFanRequirement = false
-                hasTrophyRequirement = false
+                clearRacingRequirementFlags()
                 MessageLog.i(TAG, "********************")
                 return false
             } else {
@@ -819,8 +821,7 @@ class Racing (private val game: Game) {
 
             if (!success) {
                 // Clear requirement flags if race selection failed.
-                hasFanRequirement = false
-                hasTrophyRequirement = false
+                clearRacingRequirementFlags()
                 return false
             }
         } else if (isScheduledRace) {
@@ -1976,8 +1977,7 @@ class Racing (private val game: Game) {
 
         // Always reset flags after successful race completion, regardless of UI flow.
         firstTimeRacing = false
-        hasFanRequirement = false
-        hasTrophyRequirement = false
+        clearRacingRequirementFlags()
 
         // Bot will be at the screen where it shows the final positions of all participants.
         // Press the confirm button and wait to see the triangle of fans.
