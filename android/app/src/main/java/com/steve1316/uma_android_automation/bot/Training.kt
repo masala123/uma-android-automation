@@ -1261,6 +1261,18 @@ class Training(private val game: Game) {
 						}
 					}
 				}
+			} else {
+				// Only one training available - explain why it was selected.
+				val numSkipped = skippedScores.size
+				val numBlacklisted = config.blacklist.filterNotNull().size
+				val reasons = mutableListOf<String>()
+				if (numSkipped > 0) reasons.add("$numSkipped skipped due to high failure chance")
+				if (numBlacklisted > 0) reasons.add("$numBlacklisted blacklisted")
+				if (reasons.isNotEmpty()) {
+					sb.appendLine("${selected.name} was the only available training (${reasons.joinToString(", ")}).")
+				} else {
+					sb.appendLine("${selected.name} was the only available training.")
+				}
 			}
 		}
 
