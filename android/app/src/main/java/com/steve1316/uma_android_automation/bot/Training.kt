@@ -1256,7 +1256,7 @@ class Training(private val game: Game) {
 						if (completion < 70.0) {
 							sb.appendLine("Key factor: ${selected.name} stat is at ${String.format("%.0f", completion)}% of target (behind, higher priority).")
 						}
-						if (mainGain >= 30) {
+						if (mainGain >= 30 && selected.numRainbow == 0) {
 							sb.appendLine("Key factor: High main stat gain of $mainGain (potential undetected rainbow bonus).")
 						}
 					}
