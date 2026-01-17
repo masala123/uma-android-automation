@@ -919,8 +919,6 @@ class Training(private val game: Game) {
                     } finally {
                         val elapsedTime = System.currentTimeMillis() - startTime
                         Log.d(TAG, "Total time for $statName training analysis: ${elapsedTime}ms")
-                        // Log stat gain results sequentially after threads complete to ensure correct order.
-                        logStatGainResults(statName, result.statGains, result.statGainRowValues)
                         MessageLog.i(TAG, "All 5 stat regions processed for $statName training. Results: ${result.statGains.toSortedMap(compareBy { it.ordinal }).toString()}")
                     }
 
@@ -1008,14 +1006,6 @@ class Training(private val game: Game) {
 
                 // Process results and output logs in training order.
                 for (result in analysisResults) {
-                    // Output buffered log messages for this training.
-                    while (result.logMessages.isNotEmpty()) {
-                        MessageLog.i(TAG, result.logMessages.poll())
-                    }
-
-                    // Log stat gain results sequentially after threads complete to ensure correct order.
-                    logStatGainResults(result.name, result.statGains, result.statGainRowValues)
-
                     // Check if risky training logic should apply based on main stat gain.
                     val mainStatGain: Int = result.statGains[result.name] ?: 0
                     val effectiveFailureChance = if (enableRiskyTraining && mainStatGain >= riskyTrainingMinStatGain) {
@@ -1143,7 +1133,6 @@ class Training(private val game: Game) {
 		val trainingSelected: StatName? = recommendTraining()
 
 		if (trainingSelected != null) {
-			printTrainingMap()
 			MessageLog.i(TAG, "[TRAINING] Executing the $trainingSelected Training.")
 			game.findAndTapImage("training_${trainingSelected.name.lowercase()}", region = game.imageUtils.regionBottomHalf, taps = 3)
             game.wait(1.0)
