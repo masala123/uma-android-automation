@@ -1362,7 +1362,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		// Get the stat indices affected by this training type and filter out the main stat to get side-effects.
 		val affectedStats: List<StatName> = trainingToAffectedStatNames[trainingName] ?: return boostedResults
 		val sideEffectStats: List<StatName> = affectedStats.filter { it != trainingName }
-        val sideEffectStatGains: Map<StatName, Int> = boostedResults.filterKeys { it !in sideEffectStats }
+        val sideEffectStatGains: Map<StatName, Int> = boostedResults.filterKeys { it in sideEffectStats }
 		
 		val mainStatGain = boostedResults[trainingName] ?: 0
 		
