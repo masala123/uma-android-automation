@@ -1147,7 +1147,7 @@ class Racing (private val game: Game) {
         val doublePredictionLocations = game.imageUtils.findAll("race_extra_double_prediction")
         val maxCount = doublePredictionLocations.size
         if (maxCount == 0) {
-            MessageLog.w(TAG, "No extra races found on screen. Canceling racing process.")
+            MessageLog.w(TAG, "No extra races with double predictions found on screen. Canceling racing process.")
             return false
         }
 
