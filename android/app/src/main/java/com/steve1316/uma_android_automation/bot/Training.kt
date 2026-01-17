@@ -557,6 +557,7 @@ class Training(private val game: Game) {
 	}
 
 	private val trainingMap: MutableMap<StatName, TrainingOption> = mutableMapOf()
+	private val skippedTrainingMap: MutableMap<StatName, TrainingOption> = mutableMapOf()
 	private val blacklist: List<StatName?> = SettingsHelper.getStringArraySetting("training", "trainingBlacklist").map { StatName.fromName(it) }
 	private val statPrioritizationRaw: List<StatName> = SettingsHelper.getStringArraySetting("training", "statPrioritization").map { StatName.fromName(it)!! }
 	
@@ -1021,6 +1022,19 @@ class Training(private val game: Game) {
                         } else {
                             MessageLog.i(TAG, "[TRAINING] Skipping ${result.name} training due to failure chance (${result.failureChance}%) exceeding threshold (${maximumFailureChance}%).")
                         }
+
+                        // Store the skipped training for logging purposes.
+                        val skippedTraining = TrainingOption(
+                            name = result.name,
+                            statGains = result.statGains,
+                            failureChance = result.failureChance,
+                            relationshipBars = result.relationshipBars,
+                            numRainbow = result.numRainbow,
+                            numSpiritGaugesCanFill = result.numSpiritGaugesCanFill,
+                            numSpiritGaugesReadyToBurst = result.numSpiritGaugesReadyToBurst,
+                            numSkillHints = result.numSkillHints,
+                        )
+                        skippedTrainingMap[result.name] = skippedTraining
                         continue
                     }
 
@@ -1041,6 +1055,7 @@ class Training(private val game: Game) {
             // Clear the Training map if the bot failed to have enough energy to conduct the training.
             MessageLog.i(TAG, "[TRAINING] $failureChance% is not within acceptable range of ${maximumFailureChance}%${if (enableRiskyTraining) " or the risky threshold of ${riskyTrainingMaxFailureChance}%" else ""}. Proceeding to recover energy.")
             trainingMap.clear()
+            skippedTrainingMap.clear()
         }
 
         if (singleTraining) {
