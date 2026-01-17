@@ -1206,23 +1206,23 @@ class Training(private val game: Game) {
 		sb.appendLine("")
 
 		// Print individual training details.
-		appendTrainingDetails(sb)
+		appendTrainingDetails(sb, config.blacklist, selected)
 
 		// Combine regular and skipped scores for the selection explanation.
 		val allScores = scores.map { Triple(it.key, it.value, false) } + skippedScores.map { Triple(it.key, it.value, true) }
 		val sortedScores = allScores.sortedBy { it.first.name.ordinal }
 
-		// Add explanation for why the selected training was chosen.
-		if (selected != null && sortedScores.size > 1) {
+		// Add selection explanation if a training was selected.
+		if (selected != null) {
 			sb.appendLine("")
 			sb.appendLine("--- Selection Explanation ---")
 
-            // Sort scores to find the selected training and its relative performance.
+			// Sort scores to find the selected training and its relative performance.
 			val scoreRanked = allScores.filter { !it.third }.sortedByDescending { it.second }
 			val selectedScore = scoreRanked.firstOrNull { it.first == selected }?.second ?: 0.0
 			val secondBest = scoreRanked.getOrNull(1)
 
-            // If a second best training exists, provide specific reasoning.
+			// If a second best training exists, provide specific reasoning.
 			if (secondBest != null) {
 				val scoreDiff = selectedScore - secondBest.second
 				val pctDiff = if (secondBest.second > 0) (scoreDiff / secondBest.second * 100.0) else 0.0
@@ -1272,30 +1272,61 @@ class Training(private val game: Game) {
 	 * Appends training details to the provided StringBuilder.
 	 *
 	 * @param sb The StringBuilder to append training details to.
+	 * @param blacklistedStats List of stat names that are blacklisted for indication.
+	 * @param selected The selected training option to mark with an indicator, or null if none selected.
 	 */
-	private fun appendTrainingDetails(sb: StringBuilder) {
-		trainingMap.forEach { name, training ->
-			// Build the basic training info line.
-			val basicInfo = "$name Training: stats=${training.statGains.toSortedMap(compareBy { it.ordinal }).toString()}, fail=${training.failureChance}%, rainbows=${training.numRainbow}"
-			sb.appendLine(basicInfo)
+	private fun appendTrainingDetails(sb: StringBuilder, blacklistedStats: List<StatName?> = emptyList(), selected: TrainingOption? = null) {
+		val blacklistedStatNames = blacklistedStats.filterNotNull()
 
-			// Print relationship bars if any.
-			if (training.relationshipBars.isNotEmpty()) {
-				val barsSummary = training.relationshipBars.mapIndexed { index, bar ->
-					"#${index + 1}:${bar.dominantColor}(${String.format("%.0f", bar.fillPercent)}%)"
-				}.joinToString(", ")
-				sb.appendLine("  -> Relationship bars: $barsSummary")
+		// Iterate over all stats in order (Speed, Stamina, Power, Guts, Wit).
+		for (statName in StatName.entries) {
+			when {
+				// Check if training is available in trainingMap.
+				trainingMap.containsKey(statName) -> {
+					appendSingleTrainingDetails(sb, statName, trainingMap[statName]!!, selected)
+				}
+				// Check if training was skipped.
+				skippedTrainingMap.containsKey(statName) -> {
+					appendSingleTrainingDetails(sb, statName, skippedTrainingMap[statName]!!, selected)
+				}
+				// Check if training is blacklisted.
+				statName in blacklistedStatNames -> {
+					sb.appendLine("$statName Training: (BLACKLISTED)")
+				}
 			}
+		}
+	}
 
-			// Print spirit gauge info if any gauges are present.
-			if (training.numSpiritGaugesCanFill > 0 || training.numSpiritGaugesReadyToBurst > 0) {
-				sb.appendLine("  -> Spirit gauges: fillable=${training.numSpiritGaugesCanFill}, ready to burst=${training.numSpiritGaugesReadyToBurst}")
-			}
+	/**
+	 * Appends a single training's details to the StringBuilder.
+	 *
+	 * @param sb The StringBuilder to append training details to.
+	 * @param name The stat name of the training.
+	 * @param training The training option to print.
+	 * @param selected The selected training option to mark with an indicator, or null if none selected.
+	 */
+	private fun appendSingleTrainingDetails(sb: StringBuilder, name: StatName, training: TrainingOption, selected: TrainingOption? = null) {
+		// Build the basic training info line with optional selected indicator.
+		val selectedIndicator = if (training == selected) " <---- SELECTED" else ""
+		val basicInfo = "$name Training: stats=${training.statGains.toSortedMap(compareBy { it.ordinal }).toString()}, fail=${training.failureChance}%, rainbows=${training.numRainbow}$selectedIndicator"
+		sb.appendLine(basicInfo)
 
-			// Print skill hints if any.
-			if (training.numSkillHints > 0) {
-				sb.appendLine("  -> Skill hints: ${training.numSkillHints}")
-			}
+		// Print relationship bars if any.
+		if (training.relationshipBars.isNotEmpty()) {
+			val barsSummary = training.relationshipBars.mapIndexed { index, bar ->
+				"#${index + 1}:${bar.dominantColor}(${String.format("%.0f", bar.fillPercent)}%)"
+			}.joinToString(", ")
+			sb.appendLine("  -> Relationship bars: $barsSummary")
+		}
+
+		// Print spirit gauge info if any gauges are present.
+		if (training.numSpiritGaugesCanFill > 0 || training.numSpiritGaugesReadyToBurst > 0) {
+			sb.appendLine("  -> Spirit gauges: fillable=${training.numSpiritGaugesCanFill}, ready to burst=${training.numSpiritGaugesReadyToBurst}")
+		}
+
+		// Print skill hints if any.
+		if (training.numSkillHints > 0) {
+			sb.appendLine("  -> Skill hints: ${training.numSkillHints}")
 		}
 	}
 
@@ -1306,7 +1337,7 @@ class Training(private val game: Game) {
 	private fun printTrainingMap() {
 		val sb = StringBuilder()
 		sb.appendLine("\n========== Training Analysis Results ==========")
-		appendTrainingDetails(sb)
+		appendTrainingDetails(sb, emptyList())
 		sb.appendLine("================================================")
 		MessageLog.i(TAG, sb.toString())
 	}
