@@ -1144,7 +1144,30 @@ class Racing (private val game: Game) {
         MessageLog.i(TAG, "[RACE] Using traditional racing logic for extra races...")
 
         // Detects double-star races on screen.
-        val doublePredictionLocations = game.imageUtils.findAll("race_extra_double_prediction")
+        var doublePredictionLocations = game.imageUtils.findAll("race_extra_double_prediction")
+
+        // If no double predictions found and fans/pre-op requirement is active and is after Junior Year, scroll to find them.
+        if (doublePredictionLocations.isEmpty() && game.currentDate.year != DateYear.JUNIOR && (hasFanRequirement || hasPreOpOrAboveRequirement)) {
+            val maxScrollAttempts = 5
+            MessageLog.i(TAG, "[RACE] No double-star predictions found on initial screen. Scrolling to find races to satisfy fans/pre-op requirement...")
+
+            for (scrollAttempt in 1..maxScrollAttempts) {
+                MessageLog.i(TAG, "[RACE] Scrolling down (attempt $scrollAttempt/$maxScrollAttempts)...")
+                val newPredictions = scrollRaceListAndRedetect(scrollDown = true)
+
+                if (newPredictions == null) {
+                    MessageLog.i(TAG, "[RACE] Scroll failed. Stopping scroll attempts.")
+                    break
+                }
+
+                doublePredictionLocations = newPredictions
+                if (doublePredictionLocations.isNotEmpty()) {
+                    MessageLog.i(TAG, "[RACE] Found ${doublePredictionLocations.size} double-star prediction(s) after $scrollAttempt scroll(s).")
+                    break
+                }
+            }
+        }
+
         val maxCount = doublePredictionLocations.size
         if (maxCount == 0) {
             MessageLog.w(TAG, "No extra races with double predictions found on screen. Canceling racing process.")
