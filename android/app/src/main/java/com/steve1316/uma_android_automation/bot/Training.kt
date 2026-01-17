@@ -946,7 +946,7 @@ class Training(private val game: Game) {
                         MessageLog.i(TAG, "[TRAINING] Skipping $statName training due to failure chance (${result.failureChance}%) exceeding the effective failure chance threshold (${effectiveFailureChance}%).")
                         continue
                     }
-                    if (enableRiskyTraining && mainStatGain < riskyTrainingMinStatGain) {
+                    if (!test && enableRiskyTraining && mainStatGain < riskyTrainingMinStatGain) {
                         MessageLog.i(TAG, "[TRAINING] Skipping $statName training due to main stat gain (${mainStatGain}) not meeting minimum threshold (${riskyTrainingMinStatGain}).")
                         continue
                     }
