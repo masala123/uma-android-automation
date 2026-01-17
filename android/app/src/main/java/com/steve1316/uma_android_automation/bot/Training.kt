@@ -696,7 +696,7 @@ class Training(private val game: Game) {
         if (!singleTraining && !IconTrainingHeaderSpeed.check(imageUtils = game.imageUtils)) {
             ButtonTrainingSpeed.click(imageUtils = game.imageUtils)
             // Wait for screen to finish updating before proceeding.
-            game.wait(0.2)
+            game.wait(0.2, skipWaitingForLoading = true)
         }
 
         // List to store all training analysis results for parallel processing.
@@ -762,7 +762,7 @@ class Training(private val game: Game) {
                         return
                     }
                     // Slight delay for UI to update after clicking button.
-                    game.wait(0.2)
+                    game.wait(0.2, skipWaitingForLoading = true)
                 }
 
                 // Get bitmaps and locations before starting threads to make them safe for parallel processing.
