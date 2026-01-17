@@ -771,10 +771,10 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		// Find all Spirit Training icons (there may be multiple for the currently selected training).
 		var spiritTrainingIcons = findAllWithBitmap("unitycup_spirit_training", currentBitmap, region = customRegion, customConfidence = 0.90)
 		
-		// If no gauges detected, try one more time after 0.25s just in case the icon was bouncing.
+		// If no gauges detected, try one more time after a short delay just in case the icon was bouncing.
 		if (spiritTrainingIcons.isEmpty()) {
 			try {
-				Thread.sleep(250)
+				Thread.sleep(150)
 			} catch (e: InterruptedException) {
 				Thread.currentThread().interrupt()
 				return null
