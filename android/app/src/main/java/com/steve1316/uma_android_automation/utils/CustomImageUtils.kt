@@ -279,7 +279,17 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
             // Parse the result.
             return try {
                 val cleanedResult = detectedText.replace("%", "").replace(Regex("[^0-9]"), "").trim()
-                cleanedResult.toInt()
+                var value = cleanedResult.toInt()
+
+                // Correct the OCR error if failure chance exceeds 100% and strip the last digit.
+                if (value > 100 && cleanedResult.length > 2) {
+                    val correctedResult = cleanedResult.dropLast(1)
+                    val correctedValue = correctedResult.toInt()
+                    Log.w(TAG, "Failure chance $value% exceeds 100%, correcting to $correctedValue%.")
+                    value = correctedValue
+                }
+
+                value
             } catch (_: NumberFormatException) {
                 MessageLog.e(TAG, "Could not convert \"$detectedText\" to integer for training failure chance.")
                 -1
