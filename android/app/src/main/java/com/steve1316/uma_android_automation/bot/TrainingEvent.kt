@@ -155,6 +155,38 @@ class TrainingEvent(private val game: Game) {
     }
 
     /**
+     * Print a formatted summary of the training event and the selected option.
+     *
+     * @param eventTitle The detected event title from OCR.
+     * @param ownerName The character or support card name that owns this event.
+     * @param eventRewards List of reward strings for each option.
+     * @param weights List of calculated weights for each option (can be null for override cases).
+     * @param selectedOption The 0-based index of the selected option.
+     * @param confidence The OCR matching confidence.
+     */
+    private fun printEventSummary(eventTitle: String, ownerName: String, eventRewards: ArrayList<String>, weights: List<Int>?, selectedOption: Int, confidence: Double) {
+        val ownerInfo = if (ownerName.isNotEmpty()) " ($ownerName)" else ""
+        MessageLog.i(TAG, "[TRAINING_EVENT] Event: \"$eventTitle\"$ownerInfo [Confidence: ${game.decimalFormat.format(confidence)}]")
+        MessageLog.i(TAG, "[TRAINING_EVENT] Options:")
+        
+        eventRewards.forEachIndexed { index, reward ->
+            // Create condensed reward summary (first line or truncated).
+            val rewardLines = reward.split("\n").filter { it.isNotBlank() && !it.startsWith("---") }
+            val condensed = if (rewardLines.size <= 3) {
+                rewardLines.joinToString(", ")
+            } else {
+                rewardLines.take(3).joinToString(", ") + "..."
+            }
+            
+            val weightInfo = if (weights != null && index < weights.size) " [Weight: ${weights[index]}]" else ""
+            val selectionMarker = if (index == selectedOption) " <---- SELECTED" else ""
+            MessageLog.i(TAG, "  Option ${index + 1}$weightInfo: $condensed$selectionMarker")
+        }
+        
+        MessageLog.i(TAG, "[TRAINING_EVENT] Selected: Option ${selectedOption + 1}")
+    }
+
+    /**
      * Start text detection to determine what Training Event it is and the event rewards for each option.
      * It will then select the best option according to the user's preferences. By default, it will choose the first option.
      */
@@ -236,7 +268,8 @@ class TrainingEvent(private val game: Game) {
                         optionSelected = eventRewards.size - 1
                     }
                     
-                    MessageLog.i(TAG, "[TRAINING_EVENT] Character event override applied: option ${optionSelected + 1}: \"${eventRewards[optionSelected]}\"")
+                    MessageLog.i(TAG, "[TRAINING_EVENT] Character event override applied.")
+                    printEventSummary(eventTitle, characterOrSupportName, eventRewards, null, optionSelected, confidence)
                 } else if (supportOverride != null) {
                     optionSelected = supportOverride
                     
@@ -246,7 +279,8 @@ class TrainingEvent(private val game: Game) {
                         optionSelected = eventRewards.size - 1
                     }
                     
-                    MessageLog.i(TAG, "[TRAINING_EVENT] Support event override applied: option ${optionSelected + 1}: \"${eventRewards[optionSelected]}\"")
+                    MessageLog.i(TAG, "[TRAINING_EVENT] Support event override applied.")
+                    printEventSummary(eventTitle, characterOrSupportName, eventRewards, null, optionSelected, confidence)
                 } else {
                     // Initialize the List for normal event processing.
                     val selectionWeight = List(eventRewards.size) { 0 }.toMutableList()
@@ -318,8 +352,9 @@ class TrainingEvent(private val game: Game) {
                                 MessageLog.i(TAG, "[TRAINING-EVENT] Adding weight for option#${optionSelected + 1} of $moodWeight for ${if (moodWeight > 0) "positive" else "negative"} mood gain.")
                                 selectionWeight[optionSelected] += moodWeight
                             } else if (line.lowercase().contains("bond")) {
-                                MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 20 for bond.")
-                                selectionWeight[optionSelected] += 20
+                                val bondWeight = if (formattedLine.contains("-")) -20 else 20
+                                MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of $bondWeight for bond ${if (bondWeight > 0) "gain" else "loss"}.")
+                                selectionWeight[optionSelected] += bondWeight
                             } else if (line.lowercase().contains("hint")) {
                                 MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 25 for skill hint(s).")
                                 selectionWeight[optionSelected] += 25
@@ -429,29 +464,14 @@ class TrainingEvent(private val game: Game) {
                     }
 
                     // Print the selection weights.
-                    MessageLog.i(TAG, "[TRAINING_EVENT] Selection weights for each option:")
-                    selectionWeight.forEachIndexed { index, weight ->
-                        MessageLog.i(TAG, "Option ${index + 1}: $weight")
-                    }
+                    printEventSummary(eventTitle, characterOrSupportName, eventRewards, selectionWeight, optionSelected, confidence)
                 }
             }
 
-            // Format the string to display each option's rewards.
-            var eventRewardsString = ""
-            var optionNumber = 1
-            eventRewards.forEach { reward ->
-                eventRewardsString += "Option $optionNumber: \"$reward\"\n"
-                optionNumber += 1
+            // Print summary for special event overrides (character/support overrides are handled in their branches).
+            if (specialEventHandled) {
+                printEventSummary(eventTitle, characterOrSupportName, eventRewards, null, optionSelected, confidence)
             }
-
-            val minimumConfidence = SettingsHelper.getStringSetting("debug", "templateMatchConfidence").toDouble()
-            val resultString = if (confidence >= minimumConfidence) {
-                "[TRAINING_EVENT] For this Training Event consisting of:\n$eventRewardsString\nThe bot will select Option ${optionSelected + 1}: \"${eventRewards[optionSelected]}\"."
-            } else {
-                "[TRAINING_EVENT] Since the confidence was less than the set minimum, first option will be selected."
-            }
-
-            MessageLog.i(TAG, resultString)
         } else {
             if (!specialEventHandled) {
                 MessageLog.w(TAG, "First option will be selected since OCR failed to match the event title and no event rewards were found.")

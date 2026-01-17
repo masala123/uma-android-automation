@@ -285,7 +285,9 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 					MessageLog.i(TAG, "\n[RESULT] Threshold incremented by $increment")
 				}
 				
-				if (matchingResult.confidence < minimumConfidence && enableAutomaticRetry) {
+				// Round confidence to 2 decimal places to match display precision and avoid floating point issues.
+				val roundedConfidence = Math.round(matchingResult.confidence * 100.0) / 100.0
+				if (roundedConfidence < minimumConfidence && enableAutomaticRetry) {
 					increment += 5.0
 				} else {
 					break
