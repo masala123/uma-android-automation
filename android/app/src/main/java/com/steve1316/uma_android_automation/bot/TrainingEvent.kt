@@ -352,8 +352,9 @@ class TrainingEvent(private val game: Game) {
                                 MessageLog.i(TAG, "[TRAINING-EVENT] Adding weight for option#${optionSelected + 1} of $moodWeight for ${if (moodWeight > 0) "positive" else "negative"} mood gain.")
                                 selectionWeight[optionSelected] += moodWeight
                             } else if (line.lowercase().contains("bond")) {
-                                MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 20 for bond.")
-                                selectionWeight[optionSelected] += 20
+                                val bondWeight = if (formattedLine.contains("-")) -20 else 20
+                                MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of $bondWeight for bond ${if (bondWeight > 0) "gain" else "loss"}.")
+                                selectionWeight[optionSelected] += bondWeight
                             } else if (line.lowercase().contains("hint")) {
                                 MessageLog.i(TAG, "[TRAINING_EVENT] Adding weight for option #${optionSelected + 1} of 25 for skill hint(s).")
                                 selectionWeight[optionSelected] += 25
