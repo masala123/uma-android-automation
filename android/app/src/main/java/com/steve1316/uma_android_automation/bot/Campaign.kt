@@ -290,6 +290,21 @@ open class Campaign(val game: Game) {
     }
 
     /**
+     * Waits for the current dialog to be processed.
+     *
+     * This loops calling [handleDialogs] until no dialog is detected,
+     * allowing dialogs to be processed within the same function call
+     * instead of returning early and re-entering [handleMainScreen].
+     */
+    private fun waitForDialogProcessed() {
+        while (true) {
+            if (!handleDialogs().first && !game.handleDialogs().first) {
+                break
+            }
+        }
+    }
+
+    /**
      * Detects the trainee's current fan count class from the main screen.
      *
      * This reads the fan count class label directly from the screen using OCR
@@ -634,7 +649,7 @@ open class Campaign(val game: Game) {
 
         if (!game.trainee.bHasUpdatedAptitudes) {
             openAptitudesDialog()
-            return true
+            waitForDialogProcessed()
         }
 
         val bIsScheduledRaceDay = LabelScheduledRace.check(game.imageUtils)
@@ -650,7 +665,7 @@ open class Campaign(val game: Game) {
             !bHasTriedCheckingFansToday
         ) {
             openFansDialog()
-            return true
+            waitForDialogProcessed()
         }
 
         // Check if bot should stop before the finals.
