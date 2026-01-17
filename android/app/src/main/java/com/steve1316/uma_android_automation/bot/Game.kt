@@ -495,12 +495,13 @@ class Game(val myContext: Context) {
     /**
      * Updates the currentDate GameDate object by detecting the date on screen.
      *
+     * @param isOnMainScreen If true, it can go straight to checking the Main screen for the date. Defaults to true.
      * @return Whether the date changed.
      */
-	fun updateDate(): Boolean {
+	fun updateDate(isOnMainScreen: Boolean = true): Boolean {
 		MessageLog.i(TAG, "[DATE] Attempting to update the current date.")
         val prevDay: Int = currentDate.day
-        if (!currentDate.update(imageUtils = imageUtils)) {
+        if (!currentDate.update(imageUtils = imageUtils, isOnMainScreen = isOnMainScreen)) {
             MessageLog.e(TAG, "[DATE] currentDate.update() failed to update date.")
             return false
         }
