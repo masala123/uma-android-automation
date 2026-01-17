@@ -52,6 +52,7 @@ class Racing (private val game: Game) {
     var firstTimeRacing = true
     var hasFanRequirement = false  // Indicates that a fan requirement has been detected on the main screen.
     var hasTrophyRequirement = false  // Indicates that a trophy requirement has been detected on the main screen.
+    var hasPreOpOrAboveRequirement = false  // Indicates that a Pre-OP or above requirement has been detected (any race can fulfill it).
     private var nextSmartRaceDay: Int? = null  // Tracks the specific day to race based on opportunity cost analysis.
     private var hasLoadedUserRaceAgenda = false  // Tracks if the user's race agenda has been loaded this career.
 
@@ -772,7 +773,13 @@ class Racing (private val game: Game) {
             }
 
             if (hasFanRequirement) MessageLog.i(TAG, "[RACE] Fan requirement criteria detected. This race must be completed to meet the requirement.")
-            if (hasTrophyRequirement) MessageLog.i(TAG, "[RACE] Trophy requirement criteria detected. Only G1 races will be selected to meet the requirement.")
+            if (hasTrophyRequirement) {
+                if (hasPreOpOrAboveRequirement) {
+                    MessageLog.i(TAG, "[RACE] Trophy requirement with Pre-OP or above criteria detected. Any race can be selected to meet the requirement.")
+                } else {
+                    MessageLog.i(TAG, "[RACE] Trophy requirement criteria detected. Only G1 races will be selected to meet the requirement.")
+                }
+            }
 
             // Determine whether to use smart racing with user-selected races or standard racing.
             val useSmartRacing = if (hasFanRequirement) {
@@ -975,7 +982,8 @@ class Racing (private val game: Game) {
 
         // If trophy requirement is active, filter to only G1 races.
         // Trophy requirement is independent of racing plan and farming fans settings.
-        val racesForSelection = if (hasTrophyRequirement) {
+        // If Pre-OP or above requirement is active, any race can fulfill the requirement.
+        val racesForSelection = if (hasTrophyRequirement && !hasPreOpOrAboveRequirement) {
             val g1Races = currentRaces.filter { it.grade == RaceGrade.G1 }
             if (g1Races.isEmpty()) {
                 // No G1 races available. Cancel since trophy requirement specifically needs G1 races.
@@ -985,6 +993,9 @@ class Racing (private val game: Game) {
                 MessageLog.i(TAG, "[RACE] Trophy requirement active. Filtering to ${g1Races.size} G1 races: ${g1Races.map { it.name }}.")
                 g1Races
             }
+        } else if (hasTrophyRequirement && hasPreOpOrAboveRequirement) {
+            MessageLog.i(TAG, "[RACE] Trophy requirement with Pre-OP or above criteria active. Using all ${currentRaces.size} races.")
+            currentRaces
         } else {
             currentRaces
         }
@@ -1140,8 +1151,9 @@ class Racing (private val game: Game) {
         }
 
         // If only one race has double predictions, check if it's G1 when trophy requirement is active.
+        // If Pre-OP or above requirement is active, any race is acceptable.
         if (maxCount == 1) {
-            if (hasTrophyRequirement) {
+            if (hasTrophyRequirement && !hasPreOpOrAboveRequirement) {
                 game.updateDate()
                 val raceName = game.imageUtils.extractRaceName(doublePredictionLocations[0])
                 val raceDataList = lookupRaceInDatabase(game.currentDate.day, raceName)
@@ -1155,6 +1167,10 @@ class Racing (private val game: Game) {
                     MessageLog.i(TAG, "[RACE] Trophy requirement active but only non-G1 race available. Canceling racing process...")
                     return false
                 }
+            } else if (hasTrophyRequirement && hasPreOpOrAboveRequirement) {
+                MessageLog.i(TAG, "[RACE] Only one race with double predictions and Pre-OP or above criteria active. Selecting it.")
+                game.tap(doublePredictionLocations[0].x, doublePredictionLocations[0].y, "race_extra_double_prediction", ignoreWaiting = true)
+                return true
             } else {
                 MessageLog.i(TAG, "[RACE] Only one race with double predictions. Selecting it.")
                 game.tap(doublePredictionLocations[0].x, doublePredictionLocations[0].y, "race_extra_double_prediction", ignoreWaiting = true)
@@ -1191,7 +1207,7 @@ class Racing (private val game: Game) {
         }
 
         // If trophy requirement is active, filter to only G1 races.
-        val (filteredRaces, filteredLocations, _) = if (hasTrophyRequirement) {
+        val (filteredRaces, filteredLocations, _) = if (hasTrophyRequirement && !hasPreOpOrAboveRequirement) {
             game.updateDate()
             val g1Indices = raceNamesList.mapIndexedNotNull { index, raceName ->
                 val raceDataList = lookupRaceInDatabase(game.currentDate.day, raceName)
@@ -1211,6 +1227,9 @@ class Racing (private val game: Game) {
                 val filteredNames = g1Indices.map { raceNamesList[it] }
                 Triple(filtered, filteredLocations, filteredNames)
             }
+        } else if (hasTrophyRequirement && hasPreOpOrAboveRequirement) {
+            MessageLog.i(TAG, "[RACE] Trophy requirement with Pre-OP or above criteria active. Using all ${listOfRaces.size} races.")
+            Triple(listOfRaces, extraRaceLocations, raceNamesList)
         } else {
             Triple(listOfRaces, extraRaceLocations, raceNamesList)
         }
@@ -1516,12 +1535,23 @@ class Racing (private val game: Game) {
             val needsTrophyRequirement = game.imageUtils.findImageWithBitmap("race_trophies_criteria", sourceBitmap, region = game.imageUtils.regionTopHalf, customConfidence = 0.90) != null
             if (needsTrophyRequirement) {
                 hasTrophyRequirement = true
-                MessageLog.i(TAG, "[RACE] Trophy requirement criteria detected on main screen. Forcing racing to fulfill requirement.")
+                
+                // Check for Pre-OP or above criteria.
+                val needsPreOpOrAbove = game.imageUtils.findImageWithBitmap("race_pre_op_or_above_criteria", sourceBitmap, region = game.imageUtils.regionTopHalf, customConfidence = 0.90) != null
+                if (needsPreOpOrAbove) {
+                    hasPreOpOrAboveRequirement = true
+                    MessageLog.i(TAG, "[RACE] Trophy requirement with Pre-OP or above criteria detected. Any race can be run to fulfill the requirement.")
+                } else {
+                    hasPreOpOrAboveRequirement = false
+                    MessageLog.i(TAG, "[RACE] Trophy requirement criteria detected on main screen. Forcing racing to fulfill requirement (G1 races only).")
+                }
             } else {
-                // Clear the flag if requirement is no longer present.
+                // Clear the flags if requirement is no longer present.
                 if (hasTrophyRequirement) {
-                    MessageLog.i(TAG, "[RACE] Trophy requirement no longer detected on main screen. Clearing flag.")
+                    MessageLog.i(TAG, "[RACE] Trophy requirement no longer detected on main screen. Clearing flags.")
+                    // Clear trophy and Pre-OP flags together since they are related.
                     hasTrophyRequirement = false
+                    hasPreOpOrAboveRequirement = false
                 }
             }
         }
@@ -1622,6 +1652,11 @@ class Racing (private val game: Game) {
             MessageLog.i(TAG, "[RACE] Fan requirement detected. Bypassing smart racing logic to fulfill requirement.")
             return !raceRepeatWarningCheck
         } else if (hasTrophyRequirement) {
+            if (hasPreOpOrAboveRequirement) {
+                MessageLog.i(TAG, "[RACE] Trophy requirement with Pre-OP or above criteria detected. Proceeding to racing screen.")
+                return !raceRepeatWarningCheck
+            }
+
             // Check if G1 races exist at current turn before proceeding.
             // If no G1 races are available, it will still allow regular racing if it's a regular race day or smart racing day.
             if (!hasG1RacesAtTurn(game.currentDate.day)) {
