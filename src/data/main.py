@@ -1,3 +1,4 @@
+from deprecated import deprecated
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException, WebDriverException
@@ -451,6 +452,7 @@ class SkillScraper(BaseScraper):
     def __init__(self):
         super().__init__("https://gametora.com/umamusume/skills", "skills.json")
 
+    @deprecated("Use start_webpack_method() instead.")
     def start(self):
         """Starts the scraping process."""
         driver = create_chromedriver()
@@ -821,7 +823,7 @@ if __name__ == "__main__":
     start_time = time.time()
 
     skill_scraper = SkillScraper()
-    skill_scraper.start()
+    skill_scraper.start_webpack_method()
 
     after_race_events = load_after_race_events()
     character_scraper = CharacterScraper(after_race_events)
