@@ -11,7 +11,7 @@ from typing import List, Dict
 from difflib import SequenceMatcher
 import bisect
 import requests
-from bs4 import BeautifulSoup
+
 
 IS_DELTA = True
 DELTA_BACKLOG_COUNT = 10
@@ -382,38 +382,42 @@ class SkillScraper(BaseScraper):
             "✕": 4,
         }
 
-    def scrape_additional_data(self):
-        url = "https://umamusu.wiki/Game:List_of_Skills"
-        response = requests.get(url)
-        soup = BeautifulSoup(response.text, "html.parser")
+    def scrape_skill_evaluation_points(self):
+        driver = create_chromedriver()
+        driver.get("https://umamusu.wiki/Game:List_of_Skills")
+        time.sleep(5)
+        self.handle_cookie_consent(driver)
+
         data = {}
 
-        for table in soup.find_all("table"):
-            for row in table.tbody.find_all("tr"):
-                if row.find("th"):
-                    continue
-                cells = row.find_all("td")
-                skill_id = cells[1].find("a")["title"]
+        tables = driver.find_elements(By.TAG_NAME, "table")
+        for table in tables:
+            tbody = table.find_element(By.TAG_NAME, "tbody")
+            rows = tbody.find_elements(By.TAG_NAME, "tr")
+            for row in rows:
+                cells = row.find_elements(By.TAG_NAME, "td")
+                skill_name_anchor = cells[1].find_element(By.TAG_NAME, "a")
+                skill_id = skill_name_anchor.get_attribute("title")
                 skill_id = int("".join(filter(str.isdigit, skill_id)))
-                skill_points = int(cells[3].get_text(strip=True))
+                skill_points = int(cells[3].text.strip())
                 if skill_points == 0:
                     continue
-                skill_evaluation_points = int(cells[4].get_text(strip=True))
-                skill_point_ratio = float(cells[5].get_text(strip=True))
+                skill_evaluation_points = int(cells[4].text.strip())
+                skill_point_ratio = float(cells[5].text.strip())
                 data[skill_id] = {
                     "evaluation_points": skill_evaluation_points,
                     "point_ratio": skill_point_ratio,
                 }
-        
+
+        driver.quit()
         return data
     
     def scrape_skill_tier_list(self):
         driver = create_chromedriver()
         driver.get("https://game8.co/games/Umamusume-Pretty-Derby/archives/536805")
         time.sleep(5)
-
         self.handle_cookie_consent(driver)
-        
+
         h4_tier_map = {
             "hs_1": "SS",
             "hs_2": "S",
@@ -519,18 +523,14 @@ class SkillScraper(BaseScraper):
         driver = create_chromedriver()
         driver.get(self.url)
         time.sleep(5)
-
         self.handle_cookie_consent(driver)
-        
-        tmp = self.scrape_skill_tier_list()
-        print(tmp["SS"])
-        return
-        
+
         self.data = {}
-        
+
         # Get supplementary data for later use.
-        additional_data = self.scrape_additional_data()
-        
+        skill_evaluation_points = self.scrape_skill_evaluation_points()
+        skill_tier_list = self.scrape_skill_tier_list()
+
         # Webpack for Next.js loads chunks into a global variable called webpackChunk_N_E.
         # Each chunk contains these module functions that populates "module.exports".
         # This JS script creates a fake object "tmp" with a null "exports" property.
@@ -552,7 +552,7 @@ class SkillScraper(BaseScraper):
                 if "gene_version" in skill:
                     skill_id = skill["gene_version"]["id"]
 
-                extra_data = additional_data.get(
+                extra_data = skill_evaluation_points.get(
                     skill_id,
                     {"evaluation_points": 0, "point_ratio": 0.0},
                 )
@@ -842,7 +842,7 @@ if __name__ == "__main__":
     skill_scraper = SkillScraper()
     #skill_scraper.start()
     skill_scraper.start_webpack_method()
-    """
+
     character_scraper = CharacterScraper()
     character_scraper.start()
 
@@ -851,6 +851,6 @@ if __name__ == "__main__":
 
     race_scraper = RaceScraper()
     race_scraper.start()
-    """
+
     end_time = round(time.time() - start_time, 2)
     logging.info(f"Total time for processing all applications: {end_time} seconds or {round(end_time / 60, 2)} minutes.")
