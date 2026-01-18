@@ -29,7 +29,8 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		"Extra Training" to listOf("Extra Training"),
 		"Acupuncture (Just an Acupuncturist, No Worries! ☆)" to listOf("Acupuncture", "Just an Acupuncturist"),
 		"Etsuko's Exhaustive Coverage" to listOf("Etsuko", "Exhaustive Coverage"),
-        "Tutorial" to listOf("Tutorial")
+        "Tutorial" to listOf("Tutorial"),
+		"A Team at Last" to listOf("A Team at Last", "Team at Last")
 	)
 	
 	// The full character event data should be stored in SQLite and will be loaded here.
