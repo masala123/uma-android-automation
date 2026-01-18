@@ -12,7 +12,7 @@ from difflib import SequenceMatcher
 import bisect
 
 IS_DELTA = True
-DELTA_BACKLOG_COUNT = 10
+DELTA_BACKLOG_COUNT = 5
 
 
 def create_chromedriver():
