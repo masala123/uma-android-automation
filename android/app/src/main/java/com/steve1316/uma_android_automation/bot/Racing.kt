@@ -148,12 +148,15 @@ class Racing (private val game: Game) {
      * This gives the dialog time to close since there is a very short
      * animation that plays when a dialog closes.
      *
+     * @param dialog An optional dialog to evaluate. This allows chaining
+     * dialog handler calls for improved performance.
+     *
      * @return A pair of a boolean and a nullable DialogInterface.
      * The boolean is true when a dialog has been handled by this function.
      * The DialogInterface is the detected dialog, or NULL if no dialogs were found.
      */
-    fun handleDialogs(): Pair<Boolean, DialogInterface?> {
-        val dialog: DialogInterface? = DialogUtils.getDialog(imageUtils = game.imageUtils)
+    fun handleDialogs(dialog: DialogInterface? = null): Pair<Boolean, DialogInterface?> {
+        val dialog: DialogInterface? = dialog ?: DialogUtils.getDialog(imageUtils = game.imageUtils)
         if (dialog == null) {
             return Pair(false, null)
         }
