@@ -35,6 +35,7 @@ const excludedEventNames = new Set([
     "Failed training (Get Well Soon!)",
     "Failed training (Don't Overdo It!)",
     "Extra Training",
+    "A Team at Last",
 ])
 
 const TrainingEventSettings = () => {
@@ -95,6 +96,13 @@ const TrainingEventSettings = () => {
     const extraTrainingOptions = [
         { value: "Option 1: Energy -5 / Stat increase / (Random) Heal a negative status effect", label: "Option 1: Energy -5 / Stat increase / (Random) Heal a negative status effect" },
         { value: "Option 2: Energy +5", label: "Option 2: Energy +5" },
+    ]
+    const aTeamAtLastOptions = [
+        { value: "Default", label: "Default (First Option)" },
+        { value: "Happy Hoppers, like Taiki suggested", label: "Happy Hoppers (Taiki)" },
+        { value: "Sunny Runners, like Fukukitaru suggested", label: "Sunny Runners (Fukukitaru)" },
+        { value: "Carrot Pudding, like Urara suggested", label: "Carrot Pudding (Urara)" },
+        { value: "Blue Bloom, like Rice Shower suggested", label: "Blue Bloom (Rice Shower)" },
     ]
 
     const updateTrainingEventSetting = (key: keyof typeof settings.trainingEvent, value: any) => {
@@ -692,6 +700,21 @@ const TrainingEventSettings = () => {
                                                 value={specialEventOverrides["Etsuko's Exhaustive Coverage"]?.selectedOption || "Option 2: Energy Down / Gain skill points"}
                                                 onValueChange={(value) => updateSpecialEventOverride("Etsuko's Exhaustive Coverage", "selectedOption", value)}
                                                 placeholder="Select Option"
+                                                width="100%"
+                                            />
+                                        </View>
+
+                                        <View style={styles.section}>
+                                            <Text style={{ fontSize: 16, fontWeight: "600", color: colors.foreground, marginBottom: 8 }}>A Team at Last (Unity Cup)</Text>
+                                            <Text style={{ fontSize: 14, color: colors.mutedForeground, marginBottom: 12 }}>
+                                                Select your preferred team name for Unity Cup (must be available via your chosen trainee or supports). The available options depend on which characters
+                                                you have bonded with. "Default" will always select the first option.
+                                            </Text>
+                                            <CustomSelect
+                                                options={aTeamAtLastOptions}
+                                                value={specialEventOverrides["A Team at Last"]?.selectedOption || "Default"}
+                                                onValueChange={(value) => updateSpecialEventOverride("A Team at Last", "selectedOption", value)}
+                                                placeholder="Select Team Name for Unity Cup"
                                                 width="100%"
                                             />
                                         </View>
