@@ -453,7 +453,10 @@ class Training(private val game: Game) {
 					// Early game bonus for relationship building.
 					val earlyGameBonus = if (config.currentDate.year == DateYear.JUNIOR || config.currentDate.bIsPreDebut) 1.3 else 1.0
 
-					val contribution = baseValue * diminishingFactor * earlyGameBonus
+					// Trainer support bonus to prioritize them slightly above regular supports.
+					val trainerSupportBonus = if (bar.isTrainerSupport) 1.15 else 1.0
+
+					val contribution = baseValue * diminishingFactor * earlyGameBonus * trainerSupportBonus
 					score += contribution
 					maxScore += 2.5 * 1.3
 				}
