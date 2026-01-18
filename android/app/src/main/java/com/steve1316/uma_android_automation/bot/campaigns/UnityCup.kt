@@ -1,5 +1,7 @@
 package com.steve1316.uma_android_automation.bot.campaigns
 
+import android.graphics.Bitmap
+
 import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.bot.Campaign
 import com.steve1316.uma_android_automation.bot.Game
@@ -36,12 +38,15 @@ class UnityCup(game: Game) : Campaign(game) {
      * This gives the dialog time to close since there is a very short
      * animation that plays when a dialog closes.
      *
+     * @param dialog An optional dialog to evaluate. This allows chaining
+     * dialog handler calls for improved performance.
+     *
      * @return A pair of a boolean and a nullable DialogInterface.
      * The boolean is true when a dialog has been handled by this function.
      * The DialogInterface is the detected dialog, or NULL if no dialogs were found.
      */
-    override fun handleDialogs(): Pair<Boolean, DialogInterface?> {
-        val (bDialogHandled, dialog) = super.handleDialogs()
+    override fun handleDialogs(dialog: DialogInterface?): Pair<Boolean, DialogInterface?> {
+        val (bDialogHandled, dialog) = super.handleDialogs(dialog)
         if (bDialogHandled) {
             return Pair(bDialogHandled, dialog)
         }
@@ -137,21 +142,22 @@ class UnityCup(game: Game) : Campaign(game) {
         val startTime = System.currentTimeMillis()
 
         while (true) {
+            val sourceBitmap: Bitmap = game.imageUtils.getSourceBitmap()
             when {
                 handleDialogs().first -> {}
                 // Go to opponent selection screen.
-                game.findAndTapImage("unitycup_race") -> {
+                game.findAndTapImage("unitycup_race", sourceBitmap = sourceBitmap) -> {
                     MessageLog.d(TAG, "[UNITY_CUP] Going to opponent selection screen...")
                     selectedOpponentIndex = -1
                     bOverrideOpponentSelection = false
                 }
-                game.findAndTapImage("unitycup_final_race") -> {
+                game.findAndTapImage("unitycup_final_race", sourceBitmap = sourceBitmap) -> {
                     MessageLog.i(TAG, "[UNITY_CUP] Final race detected with Team Zenith.")
                     bIsFinals = true
                 }
                 // Handle opponent selection.
-                ButtonSelectOpponent.check(imageUtils = game.imageUtils) -> {
-                    val opponents = LabelUnityCupOpponentSelectionLaurel.findAll(game.imageUtils)
+                ButtonSelectOpponent.check(imageUtils = game.imageUtils, sourceBitmap = sourceBitmap) -> {
+                    val opponents = LabelUnityCupOpponentSelectionLaurel.findAll(game.imageUtils, sourceBitmap = sourceBitmap)
                     if (opponents.size != 3) {
                         MessageLog.e(TAG, "[UNITY_CUP] Failed to detect all three opponents on opponent selection screen.")
                         return false
@@ -166,26 +172,26 @@ class UnityCup(game: Game) : Campaign(game) {
                     }
                     val opponent = opponents[selectedOpponentIndex]
                     game.gestureUtils.tap(opponent.x, opponent.y, LabelUnityCupOpponentSelectionLaurel.template.path)
-                    ButtonSelectOpponent.click(imageUtils = game.imageUtils)
+                    ButtonSelectOpponent.click(imageUtils = game.imageUtils, sourceBitmap = sourceBitmap)
                 }
                 // If the skip button is locked, need to manually run the race.
-                ButtonViewResultsLocked.check(game.imageUtils) -> {
+                ButtonViewResultsLocked.check(game.imageUtils, sourceBitmap = sourceBitmap) -> {
                     MessageLog.d(TAG, "[UNITY_CUP] Race skip is locked. Manually running race...")
                     game.findAndTapImage("unitycup_race_manual", region = game.imageUtils.regionBottomHalf)
                     game.racing.runRaceWithRetries()
                 }
                 // Skip the race if possible.
-                ButtonUnityCupSeeAllRaceResults.click(game.imageUtils) -> {
+                ButtonUnityCupSeeAllRaceResults.click(game.imageUtils, sourceBitmap = sourceBitmap) -> {
                     MessageLog.d(TAG, "[UNITY_CUP] Skipping to race results.")
                 }
                 // This is our only natural exit point from this function.
-                IconUnityCupRaceEndLogo.check(imageUtils = game.imageUtils) && ButtonNext.click(imageUtils = game.imageUtils) -> {
+                IconUnityCupRaceEndLogo.check(imageUtils = game.imageUtils, sourceBitmap = sourceBitmap) && ButtonNext.click(imageUtils = game.imageUtils, sourceBitmap = sourceBitmap) -> {
                     MessageLog.i(TAG, "[UNITY_CUP] Race event completed.")
                     return true
                 }
-                ButtonNext.click(imageUtils = game.imageUtils) -> {}
-                ButtonSkip.click(imageUtils = game.imageUtils) -> {}
-                ButtonNextRaceEnd.click(imageUtils = game.imageUtils) -> {}
+                ButtonNext.click(imageUtils = game.imageUtils, sourceBitmap = sourceBitmap) -> {}
+                ButtonSkip.click(imageUtils = game.imageUtils, sourceBitmap = sourceBitmap) -> {}
+                ButtonNextRaceEnd.click(imageUtils = game.imageUtils, sourceBitmap = sourceBitmap) -> {}
                 // Exit from function if it runs too long.
                 System.currentTimeMillis() - startTime > executionTimeThresholdMs -> {
                     MessageLog.i(TAG, "[UNITY_CUP] Race event took too long to complete. Aborting...")

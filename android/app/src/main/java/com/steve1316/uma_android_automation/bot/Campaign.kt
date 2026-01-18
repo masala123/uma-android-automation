@@ -50,12 +50,15 @@ open class Campaign(val game: Game) {
      * This gives the dialog time to close since there is a very short
      * animation that plays when a dialog closes.
      *
+     * @param dialog An optional dialog to evaluate. This allows chaining
+     * dialog handler calls for improved performance.
+     *
      * @return A pair of a boolean and a nullable DialogInterface.
      * The boolean is true when a dialog has been handled by this function.
      * The DialogInterface is the detected dialog, or NULL if no dialogs were found.
      */
-    open fun handleDialogs(): Pair<Boolean, DialogInterface?> {
-        val dialog: DialogInterface? = DialogUtils.getDialog(imageUtils = game.imageUtils)
+    open fun handleDialogs(dialog: DialogInterface? = null): Pair<Boolean, DialogInterface?> {
+        val dialog: DialogInterface? = dialog ?: DialogUtils.getDialog(imageUtils = game.imageUtils)
         if (dialog == null) {
             return Pair(false, null)
         }
@@ -314,12 +317,13 @@ open class Campaign(val game: Game) {
      * @return The detected [FanCountClass], or NULL if detection failed.
      */
     fun getFanCountClass(bitmap: Bitmap? = null): FanCountClass? {
-        val (bitmap, templateBitmap) = game.imageUtils.getBitmaps(ButtonHomeFansInfo.template.path)
+        val bitmap: Bitmap = bitmap ?: game.imageUtils.getSourceBitmap()
+        val templateBitmap: Bitmap? = ButtonHomeFansInfo.template.getBitmap(game.imageUtils)
         if (templateBitmap == null) {
             MessageLog.e(TAG, "getFanCountClass: Could not get template bitmap for ButtonHomeFansInfo: ${ButtonHomeFansInfo.template.path}.")
             return null
         }
-        val point: Point? = ButtonHomeFansInfo.find(imageUtils = game.imageUtils).first
+        val point: Point? = ButtonHomeFansInfo.findImageWithBitmap(imageUtils = game.imageUtils, sourceBitmap = bitmap)
         if (point == null) {
             MessageLog.w(TAG, "getFanCountClass: Could not find ButtonHomeFansInfo.")
             return null
@@ -553,6 +557,8 @@ open class Campaign(val game: Game) {
         // Perform first-time setup of loading the user's race agenda if needed.
         game.racing.loadUserRaceAgenda()
 
+        val sourceBitmap = game.imageUtils.getSourceBitmap()
+
         // Operations to be done every time the date changes.
         // Skip if we've already checked the date this turn and no game-advancing action was taken.
         if (!bHasCheckedDateThisTurn) {
@@ -565,13 +571,12 @@ open class Campaign(val game: Game) {
                 bHasCheckedForMaidenRaceToday = false
 
                 // Update the fan count class every time we're at the main screen.
-                val fanCountClass: FanCountClass? = getFanCountClass()
+                val fanCountClass: FanCountClass? = getFanCountClass(sourceBitmap)
                 if (fanCountClass != null) {
                     game.trainee.fanCountClass = fanCountClass
                 }
 
                 // Update trainee information using parallel processing with shared screenshot.
-                val sourceBitmap = game.imageUtils.getSourceBitmap()
                 val skillPointsLocation = game.imageUtils.findImageWithBitmap("skill_points", sourceBitmap, suppressError = true)
 
                 if (!BotService.isRunning) {
@@ -652,8 +657,8 @@ open class Campaign(val game: Game) {
             waitForDialogProcessed()
         }
 
-        val bIsScheduledRaceDay = LabelScheduledRace.check(game.imageUtils)
-        val bIsMandatoryRaceDay = IconRaceDayRibbon.check(imageUtils = game.imageUtils)
+        val bIsScheduledRaceDay = LabelScheduledRace.check(game.imageUtils, sourceBitmap = sourceBitmap)
+        val bIsMandatoryRaceDay = IconRaceDayRibbon.check(game.imageUtils, sourceBitmap = sourceBitmap)
         var needToRace = bIsMandatoryRaceDay || bIsScheduledRaceDay
 
         // We don't need to bother checking fans on a mandatory race day.
@@ -696,17 +701,17 @@ open class Campaign(val game: Game) {
             ) {
                 // Check if we need to rest before Summer Training (June Early/Late in Classic/Senior Year).
                 MessageLog.i(TAG, "Forcing rest during ${game.currentDate} in preparation for Summer Training.")
-                game.recoverEnergy()
+                game.recoverEnergy(sourceBitmap)
                 bHasCheckedDateThisTurn = false
             } else {
-                val hasInjury = game.checkInjury()
+                val hasInjury = game.checkInjury(sourceBitmap)
 
                 if (hasInjury && !game.checkFinals()) {
-                    game.findAndTapImage("ok", region = game.imageUtils.regionMiddle)
+                    game.findAndTapImage("ok", sourceBitmap = sourceBitmap, region = game.imageUtils.regionMiddle)
                     game.wait(3.0)
                     bHasCheckedDateThisTurn = false
                 } else {
-                    val didRecoverMood = game.recoverMood()
+                    val didRecoverMood = game.recoverMood(sourceBitmap)
 
                     if (didRecoverMood && !game.checkFinals()) {
                         bHasCheckedDateThisTurn = false
@@ -767,12 +772,18 @@ open class Campaign(val game: Game) {
 	fun start() {
 		while (true) {
             try {
+                val (bWasDialogHandled, dialog) = handleDialogs()
                 // We always check for dialogs first.
-                if (handleDialogs().first) {
+                if (bWasDialogHandled) {
                     continue
-                } else if (game.handleDialogs().first) {
+                }
+                // Chaining the result from the first dialog handler should
+                // improve speed by a few tenths.
+                if (game.handleDialogs(dialog).first) {
                     continue
-                } else if (handleMainScreen()) {
+                }
+
+                if (handleMainScreen()) {
                     continue
                 } else if (game.checkTrainingEventScreen()) {
                     // If the bot is at the Training Event screen, that means there are selectable options for rewards.
