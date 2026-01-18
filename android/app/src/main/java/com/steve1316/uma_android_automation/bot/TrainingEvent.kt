@@ -597,6 +597,9 @@ class TrainingEvent(private val game: Game) {
             }
         }
 
+        // Wait briefly for the UI to fully render all option buttons.
+        game.wait(0.1)
+        
         val trainingOptionLocations: ArrayList<Point> = game.imageUtils.findAll("training_event_active")
         
         // Handle Tutorial events specially.
