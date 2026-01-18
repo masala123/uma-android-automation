@@ -14,6 +14,67 @@ import bisect
 IS_DELTA = True
 DELTA_BACKLOG_COUNT = 5
 
+# Event name patterns that belong to the "After a Race" section.
+AFTER_RACE_EVENT_PATTERNS = [
+    "Victory! (G1)",
+    "Victory! (G2/G3)",
+    "Victory! (Pre/OP)",
+    "Solid Showing (G1)",
+    "Solid Showing (G2/G3)",
+    "Solid Showing (Pre/OP)",
+    "Defeat (G1)",
+    "Defeat (G2/G3)",
+    "Defeat (Pre/OP)",
+    "Etsuko's Elated Coverage (G1)",
+    "Etsuko's Elated Coverage (G2/G3)",
+    "Etsuko's Elated Coverage (Pre/OP)",
+    "Etsuko's Exhaustive Coverage (G1)",
+    "Etsuko's Exhaustive Coverage (G2/G3)",
+    "Etsuko's Exhaustive Coverage (Pre/OP)",
+]
+
+
+def load_after_race_events() -> Dict[str, List[str]]:
+    """Load "After a Race" events from characters.json.
+
+    These events are identical across all characters, so we only need to read
+    them from the first character's data.
+
+    Returns:
+        A dictionary of event names to their options.
+    """
+    after_race_events: Dict[str, List[str]] = {}
+
+    characters_file = os.path.join(os.path.dirname(__file__), "characters.json")
+    if not os.path.exists(characters_file):
+        logging.warning("characters.json not found. Cannot load \"After a Race\" events.")
+        return after_race_events
+
+    try:
+        with open(characters_file, "r", encoding="utf-8") as f:
+            characters_data = json.load(f)
+
+        # Get the first character's data only.
+        if not characters_data:
+            logging.warning("characters.json is empty. Cannot load \"After a Race\" events.")
+            return after_race_events
+
+        first_character_events = next(iter(characters_data.values()))
+
+        # Extract only events that match the "After a Race" patterns.
+        for event_name, options in first_character_events.items():
+            for pattern in AFTER_RACE_EVENT_PATTERNS:
+                if event_name.startswith(pattern):
+                    after_race_events[event_name] = options
+                    break
+
+        logging.info(f"Loaded {len(after_race_events)} \"After a Race\" events from characters.json.")
+
+    except (json.JSONDecodeError, KeyError) as e:
+        logging.warning(f"Failed to load \"After a Race\" events from characters.json: {e}")
+
+    return after_race_events
+
 
 def create_chromedriver():
     """Creates the Chrome driver for scraping.
@@ -282,16 +343,65 @@ class BaseScraper:
             options.append(option_text)
         return options
 
-    def process_training_events(self, driver: uc.Chrome, item_name: str, data_dict: Dict[str, List[str]]):
+    def process_training_events(self, driver: uc.Chrome, item_name: str, data_dict: Dict[str, List[str]], include_after_race_events: bool = False):
         """Processes the training events for the given item.
 
         Args:
             driver (uc.Chrome): The Chrome driver.
             item_name (str): The name of the item.
             data_dict (Dict[str, List[str]]): The data dictionary to modify.
+            include_after_race_events (bool): Whether to include 'After a Race' events (only for characters).
         """
-        all_training_events = driver.find_elements(By.XPATH, "//button[contains(@class, 'sc-') and contains(@class, '-0 ')]")
-        logging.info(f"Found {len(all_training_events)} training events for {item_name}.")
+        # Find all training events first.
+        all_training_events_unfiltered = driver.find_elements(By.XPATH, "//button[contains(@class, 'sc-') and contains(@class, '-0 ')]")
+        logging.info(f"Found {len(all_training_events_unfiltered)} unfiltered training events for {item_name}.")
+
+        # Find the "Events Without Choices" section header and exclude events from its following grid.
+        # The section header is a div with class 'sc-*-0' containing the text "Events Without Choices".
+        # The grid following it (sc-*-2) contains training events we want to exclude.
+        events_to_exclude = set()
+        try:
+            # Find the div containing "Events Without Choices" text.
+            no_choices_header = driver.find_element(
+                By.XPATH,
+                "//div[contains(@class, 'sc-') and contains(@class, '-0 ') and contains(text(), 'Events Without Choices')]"
+            )
+            # Find the next sibling div which should be the grid containing events without choices.
+            no_choices_grid = no_choices_header.find_element(By.XPATH, "./following-sibling::div[contains(@class, 'sc-') and contains(@class, '-2 ')][1]")
+            # Get all training event buttons within this grid.
+            events_without_choices = no_choices_grid.find_elements(By.XPATH, ".//button[contains(@class, 'sc-') and contains(@class, '-0 ')]")
+            events_to_exclude = set(events_without_choices)
+            logging.info(f"Found {len(events_to_exclude)} events without choices to exclude for {item_name}.")
+        except NoSuchElementException:
+            logging.info(f"No \"Events Without Choices\" section found for {item_name}. Including all events.")
+
+        # Filter out the events without choices.
+        all_training_events = [event for event in all_training_events_unfiltered if event not in events_to_exclude]
+        logging.info(f"Found {len(all_training_events)} training events (after filtering) for {item_name}.")
+
+        # Find the "After a Race" section and exclude its events from scraping.
+        # These events are identical across all characters, so we copy them from characters.json.
+        if include_after_race_events:
+            after_race_events = set()
+            try:
+                after_race_header = driver.find_element(
+                    By.XPATH,
+                    "//div[contains(@class, 'sc-') and contains(@class, '-0 ') and contains(text(), 'After a Race')]"
+                )
+                after_race_grid = after_race_header.find_element(By.XPATH, "./following-sibling::div[contains(@class, 'sc-') and contains(@class, '-2 ')][1]")
+                after_race_buttons = after_race_grid.find_elements(By.XPATH, ".//button[contains(@class, 'sc-') and contains(@class, '-0 ')]")
+                after_race_events = set(after_race_buttons)
+                logging.info(f"Found {len(after_race_events)} \"After a Race\" events to copy for {item_name}.")
+            except NoSuchElementException:
+                logging.info(f"No \"After a Race\" section found for {item_name}.")
+
+            # Filter out the "After a Race" events from the list to scrape.
+            all_training_events = [event for event in all_training_events if event not in after_race_events]
+            logging.info(f"Found {len(all_training_events)} training events (after excluding \"After a Race\") for {item_name}.")
+
+            # Copy the "After a Race" events from the preloaded cache.
+            data_dict.update(self.after_race_events)
+            logging.info(f"Copied {len(self.after_race_events)} \"After a Race\" events for {item_name}.")
 
         ad_banner_closed = False
 
@@ -488,10 +598,15 @@ class SkillScraper(BaseScraper):
 
 
 class CharacterScraper(BaseScraper):
-    """Scrapes the characters from the website."""
+    """Scrapes the characters from the website.
 
-    def __init__(self):
+    Args:
+        after_race_events (Dict[str, List[str]]): Preloaded "After a Race" events to copy to each character.
+    """
+
+    def __init__(self, after_race_events: Dict[str, List[str]]):
         super().__init__("https://gametora.com/umamusume/characters", "characters.json")
+        self.after_race_events = after_race_events
 
     def start(self):
         """Starts the scraping process."""
@@ -535,8 +650,8 @@ class CharacterScraper(BaseScraper):
             if character_name not in self.data:
                 self.data[character_name] = {}
 
-            # Scrape all the Training Events.
-            self.process_training_events(driver, character_name, self.data[character_name])
+            # Scrape all the Training Events (including "After a Race" events for characters).
+            self.process_training_events(driver, character_name, self.data[character_name], include_after_race_events=True)
 
         self.save_data()
         driver.quit()
@@ -708,7 +823,8 @@ if __name__ == "__main__":
     skill_scraper = SkillScraper()
     skill_scraper.start()
 
-    character_scraper = CharacterScraper()
+    after_race_events = load_after_race_events()
+    character_scraper = CharacterScraper(after_race_events)
     character_scraper.start()
 
     support_card_scraper = SupportCardScraper()
