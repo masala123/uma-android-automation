@@ -12,7 +12,6 @@ from difflib import SequenceMatcher
 import bisect
 import requests
 
-
 IS_DELTA = True
 DELTA_BACKLOG_COUNT = 10
 
@@ -353,41 +352,9 @@ class SkillScraper(BaseScraper):
     def __init__(self):
         super().__init__("https://gametora.com/umamusume/skills", "skills.json")
 
-    def parse_tier_list(self):
-        # Tier list source:
-        #https://docs.google.com/spreadsheets/d/1oB3eTvKqREtJDWJL0q80O_VjBcpOmRl5xE0z5fZKgFY/edit?gid=1499223104#gid=1499223104
-        with open("./skills_tier_list.csv", "r", encoding="utf8") as f_in:
-            rows = [row.replace("◯", "○").split(",") for row in f_in.readlines()]
-            #rows = 
-        
-        modifier_map = {
-            "[Season]": ["Spring", "Summer", "Fall", "Winter"],
-            "[Rotation]": ["Left", "Right"],
-            "[Location]": [
-                "Sapporo", "Hakodate", "Niigata", "Fukushima", "Nakayama",
-                "Tokyo", "Chukyo", "Kyoto", "Hanshin", "Kokura", "Ooi",
-                "Kawasaki", "Funabashi", "Morioka",
-            ],
-            "[Ground Condition]": ["Firm", "Wet"],
-            "[Run Style]": ["Front Runner", "Pace Chaser", "Late Surger", "End Closer"],
-            "[Distance]": ["Sprint", "Mile", "Medium", "Long"],
-            "[Weather]": ["Sunny", "Cloudy", "Rainy", "Snowy"],
-        }
-        
-        tier_symbol_map = {
-            "⍟": 0,
-            "◎": 1,
-            "○": 2,
-            "△": 3,
-            "✕": 4,
-        }
-
     def scrape_skill_evaluation_points(self):
         driver = create_chromedriver()
         driver.get("https://umamusu.wiki/Game:List_of_Skills")
-        time.sleep(5)
-        self.handle_cookie_consent(driver)
-
         data = {}
 
         tables = driver.find_elements(By.TAG_NAME, "table")
@@ -415,23 +382,16 @@ class SkillScraper(BaseScraper):
     def scrape_skill_tier_list(self):
         driver = create_chromedriver()
         driver.get("https://game8.co/games/Umamusume-Pretty-Derby/archives/536805")
-        time.sleep(5)
-        self.handle_cookie_consent(driver)
 
         h4_tier_map = {
-            "hs_1": "SS",
-            "hs_2": "S",
-            "hs_3": "A",
-            "hs_4": "B",
+            "hs_1": 0,
+            "hs_2": 1,
+            "hs_3": 2,
+            "hs_4": 3,
         }
-        
-        res = {
-            "SS": [],
-            "S": [],
-            "A": [],
-            "B": [],
-        }
-        
+
+        res = {}
+
         for h4_id, tier_name in h4_tier_map.items():
             table = driver.find_element(By.XPATH, f"//h4[@id='{h4_id}']/following-sibling::table[2]")
             tds = table.find_elements(By.TAG_NAME, "td")
@@ -444,9 +404,30 @@ class SkillScraper(BaseScraper):
                     # Make sure we use the same special characters as gametora.
                     skill_name = skill_name.replace("◯", "○")
                     skill_name = skill_name.replace("◎", "◎")
-                    res[tier_name].append(skill_name)
+                    # Get rid of any double spaces.
+                    skill_name = skill_name.replace("  ", "")
+                    if skill_name in res and res[skill_name] != tier_name:
+                        logging.warning(f"Skill is already in tier map with conflicting value: {skill_name} ({tier_name} != {res[skill_name]})")
+                        continue
+                    res[skill_name] = tier_name
         
         driver.quit()
+        
+        rename_map = {
+            "Let's Pump Some Iron": "Let's Pump Some Iron!",
+            "Fast and Furious": "Fast & Furious",
+            "Mile Straightaway ○": "Mile Straightaways ○",
+            "Mile Straightaway ◎": "Mile Straightaways ◎",
+            "Flowery ☆ Maneuver": "Flowery☆Maneuver",
+            "OMG! ☆ The Final Sprint (ﾟ∀ﾟ)": "OMG! (ﾟ∀ﾟ) The Final Sprint! ☆",
+        }
+        
+        for old_name, new_name in rename_map.items():
+            if old_name in res:
+                res[new_name] = res.pop(old_name)
+            else:
+                logging.warning(f"Old name not in rename_map: {old_name}")
+        
         return res
 
     def start(self):
@@ -522,14 +503,16 @@ class SkillScraper(BaseScraper):
         """Starts the scraping process using the JS webpack method."""
         driver = create_chromedriver()
         driver.get(self.url)
-        time.sleep(5)
-        self.handle_cookie_consent(driver)
 
         self.data = {}
 
         # Get supplementary data for later use.
         skill_evaluation_points = self.scrape_skill_evaluation_points()
-        skill_tier_list = self.scrape_skill_tier_list()
+        skill_to_tier_map = self.scrape_skill_tier_list()
+        
+        # Capitalization on the website we use for the tier list may differ.
+        # We need to make everything lowercase for proper lookups between sources.
+        skill_to_tier_map_lowercase = {k.lower(): k for k in skill_to_tier_map.keys()}
 
         # Webpack for Next.js loads chunks into a global variable called webpackChunk_N_E.
         # Each chunk contains these module functions that populates "module.exports".
@@ -556,21 +539,36 @@ class SkillScraper(BaseScraper):
                     skill_id,
                     {"evaluation_points": 0, "point_ratio": 0.0},
                 )
+                
+                skill_name = skill["name_en"]
+                skill_name = skill_name.strip().replace("  ", " ")
+
+                # The tier list doesn't include any of the JP skills so we don't treat
+                # missing skills as errors. These warnings should be reviewed by maintainer
+                # in case any skill names are misspelled.
+                # We can ignore any negative skills since they won't appear in the tier list.
+                tmp_skill_name = skill_to_tier_map_lowercase.get(skill_name.lower(), None)
+                bIsNegative = skill["iconid"] % 10 == 4
+                if tmp_skill_name is None and not bIsNegative:
+                    logging.warning(f"Skill Tier Unknown: {skill_name}")
+
+                community_tier = skill_to_tier_map.get(tmp_skill_name, None)
 
                 tmp = {
                     "id": skill_id,
-                    "name_en": skill["name_en"],
+                    "name_en": skill_name,
                     "desc_en": skill["desc_en"],
                     "icon_id": skill["iconid"],
                     "cost": skill.get("cost", None),
                     "eval_pt": extra_data["evaluation_points"],
                     "pt_ratio": extra_data["point_ratio"],
                     "rarity": skill["rarity"],
+                    "community_tier": community_tier,
                     "versions": sorted(skill.get("versions", [])),
                     "upgrade": None,
                     "downgrade": None,
                 }
-                skill_id_to_name[skill["id"]] = skill["name_en"]
+                skill_id_to_name[skill["id"]] = skill_name
 
                 self.data[tmp["name_en"]] = tmp
             except KeyError as exc:
