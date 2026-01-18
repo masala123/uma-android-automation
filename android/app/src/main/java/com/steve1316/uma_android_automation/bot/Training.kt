@@ -855,7 +855,7 @@ class Training(private val game: Game) {
                 Thread {
                     val startTimeRelationshipBars = System.currentTimeMillis()
                     try {
-                        result.relationshipBars = game.imageUtils.analyzeRelationshipBars(sourceBitmap, statName)
+                        result.relationshipBars = game.imageUtils.analyzeRelationshipBars(sourceBitmap, statName, game.scenario)
                         result.numRainbow = result.relationshipBars.count { barFillResult -> barFillResult.isRainbow }
                     } catch (e: Exception) {
                         Log.e(TAG, "[ERROR] Error in analyzeRelationshipBars: ${e.stackTraceToString()}")
