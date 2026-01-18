@@ -467,6 +467,23 @@
             "Wit +15\nFrenzied End Closers hint +3\nIkuno Dictus bond +5"
         ]
     },
+    "Inari One": {
+        "Let's Tussle! Booyah!": [
+            "Energy -5\nPower +15\nInari One bond +5",
+            "Mood +1\nGuts +5\nInari One bond +5"
+        ],
+        "Mikoshi, Heave Ho!": [
+            "Skill points +15\nInari One bond +5",
+            "Kyoto Racecourse ○ hint +1\nInari One bond +5"
+        ],
+        "(❯) Don't Give Up!": [
+            "Energy -10\nSpeed +12\nPower +12\nInari One bond +5"
+        ],
+        "(❯❯) A Good Ruckus!": [
+            "Energy -5\nMood +2\nSpeed +3\nPower +3\nGuts +3\nInari One bond +5",
+            "Energy -5\nSpeed +10\nOi Racecourse ○ hint +3\nInari One bond +5"
+        ]
+    },
     "Ines Fujin": {
         "(❯) The Power of a Big Sister": [
             "Energy -10\nSpeed +5\nStamina +5\nGuts +10"
@@ -568,6 +585,16 @@
         "A Taste of Silence": [
             "Stamina +5\nSkill points +15\nManhattan Cafe bond +5",
             "Non-Standard Distance ○ hint +1\nManhattan Cafe bond +5"
+        ],
+        "(❯) Drawn In": [
+            "Stamina +10\nWit +5"
+        ],
+        "(❯❯) Discovery": [
+            "Randomly either\n----------\nStamina +10\nWit +10\nLong Corners ○ hint +1\nManhattan Cafe bond +5\n----------\n\n----------\nEnergy +15\nLong Corners ○ hint +1\nGet Night Owl status\nManhattan Cafe bond +5",
+            "Energy +15\nManhattan Cafe bond +5"
+        ],
+        "(❯❯❯) Shadowing": [
+            "Stamina +15\nStamina Siphon hint +1\nManhattan Cafe bond +5"
         ]
     },
     "Maruzensky": {

@@ -453,7 +453,10 @@ class Training(private val game: Game) {
 					// Early game bonus for relationship building.
 					val earlyGameBonus = if (config.currentDate.year == DateYear.JUNIOR || config.currentDate.bIsPreDebut) 1.3 else 1.0
 
-					val contribution = baseValue * diminishingFactor * earlyGameBonus
+					// Trainer support bonus to prioritize them slightly above regular supports.
+					val trainerSupportBonus = if (bar.isTrainerSupport) 1.15 else 1.0
+
+					val contribution = baseValue * diminishingFactor * earlyGameBonus * trainerSupportBonus
 					score += contribution
 					maxScore += 2.5 * 1.3
 				}
@@ -855,7 +858,7 @@ class Training(private val game: Game) {
                 Thread {
                     val startTimeRelationshipBars = System.currentTimeMillis()
                     try {
-                        result.relationshipBars = game.imageUtils.analyzeRelationshipBars(sourceBitmap, statName)
+                        result.relationshipBars = game.imageUtils.analyzeRelationshipBars(sourceBitmap, statName, game.scenario)
                         result.numRainbow = result.relationshipBars.count { barFillResult -> barFillResult.isRainbow }
                     } catch (e: Exception) {
                         Log.e(TAG, "[ERROR] Error in analyzeRelationshipBars: ${e.stackTraceToString()}")
@@ -1326,7 +1329,8 @@ class Training(private val game: Game) {
 		// Print relationship bars if any.
 		if (training.relationshipBars.isNotEmpty()) {
 			val barsSummary = training.relationshipBars.mapIndexed { index, bar ->
-				"#${index + 1}:${bar.dominantColor}(${String.format("%.0f", bar.fillPercent)}%)"
+				val trainerLabel = if (bar.isTrainerSupport && bar.trainerName != null) "[${bar.trainerName}]" else ""
+				"#${index + 1}:${bar.dominantColor}(${String.format("%.0f", bar.fillPercent)}%)$trainerLabel"
 			}.joinToString(", ")
 			sb.appendLine("  -> Relationship bars: $barsSummary")
 		}
