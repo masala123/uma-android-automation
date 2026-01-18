@@ -353,6 +353,35 @@ class SkillScraper(BaseScraper):
     def __init__(self):
         super().__init__("https://gametora.com/umamusume/skills", "skills.json")
 
+    def parse_tier_list(self):
+        # Tier list source:
+        #https://docs.google.com/spreadsheets/d/1oB3eTvKqREtJDWJL0q80O_VjBcpOmRl5xE0z5fZKgFY/edit?gid=1499223104#gid=1499223104
+        with open("./skills_tier_list.csv", "r", encoding="utf8") as f_in:
+            rows = [row.replace("◯", "○").split(",") for row in f_in.readlines()]
+            #rows = 
+        
+        modifier_map = {
+            "[Season]": ["Spring", "Summer", "Fall", "Winter"],
+            "[Rotation]": ["Left", "Right"],
+            "[Location]": [
+                "Sapporo", "Hakodate", "Niigata", "Fukushima", "Nakayama",
+                "Tokyo", "Chukyo", "Kyoto", "Hanshin", "Kokura", "Ooi",
+                "Kawasaki", "Funabashi", "Morioka",
+            ],
+            "[Ground Condition]": ["Firm", "Wet"],
+            "[Run Style]": ["Front Runner", "Pace Chaser", "Late Surger", "End Closer"],
+            "[Distance]": ["Sprint", "Mile", "Medium", "Long"],
+            "[Weather]": ["Sunny", "Cloudy", "Rainy", "Snowy"],
+        }
+        
+        tier_symbol_map = {
+            "⍟": 0,
+            "◎": 1,
+            "○": 2,
+            "△": 3,
+            "✕": 4,
+        }
+
     def scrape_additional_data(self):
         url = "https://umamusu.wiki/Game:List_of_Skills"
         response = requests.get(url)
@@ -377,6 +406,44 @@ class SkillScraper(BaseScraper):
                 }
         
         return data
+    
+    def scrape_skill_tier_list(self):
+        driver = create_chromedriver()
+        driver.get("https://game8.co/games/Umamusume-Pretty-Derby/archives/536805")
+        time.sleep(5)
+
+        self.handle_cookie_consent(driver)
+        
+        h4_tier_map = {
+            "hs_1": "SS",
+            "hs_2": "S",
+            "hs_3": "A",
+            "hs_4": "B",
+        }
+        
+        res = {
+            "SS": [],
+            "S": [],
+            "A": [],
+            "B": [],
+        }
+        
+        for h4_id, tier_name in h4_tier_map.items():
+            table = driver.find_element(By.XPATH, f"//h4[@id='{h4_id}']/following-sibling::table[2]")
+            tds = table.find_elements(By.TAG_NAME, "td")
+        
+            for td in tds:
+                divs = td.find_elements(By.TAG_NAME, "div")
+                for div in divs:
+                    anchor = div.find_elements(By.TAG_NAME, "a")[-1]
+                    skill_name = anchor.text.strip()
+                    # Make sure we use the same special characters as gametora.
+                    skill_name = skill_name.replace("◯", "○")
+                    skill_name = skill_name.replace("◎", "◎")
+                    res[tier_name].append(skill_name)
+        
+        driver.quit()
+        return res
 
     def start(self):
         """Starts the scraping process."""
@@ -454,6 +521,10 @@ class SkillScraper(BaseScraper):
         time.sleep(5)
 
         self.handle_cookie_consent(driver)
+        
+        tmp = self.scrape_skill_tier_list()
+        print(tmp["SS"])
+        return
         
         self.data = {}
         
