@@ -1329,7 +1329,8 @@ class Training(private val game: Game) {
 		// Print relationship bars if any.
 		if (training.relationshipBars.isNotEmpty()) {
 			val barsSummary = training.relationshipBars.mapIndexed { index, bar ->
-				"#${index + 1}:${bar.dominantColor}(${String.format("%.0f", bar.fillPercent)}%)"
+				val trainerLabel = if (bar.isTrainerSupport && bar.trainerName != null) "[${bar.trainerName}]" else ""
+				"#${index + 1}:${bar.dominantColor}(${String.format("%.0f", bar.fillPercent)}%)$trainerLabel"
 			}.joinToString(", ")
 			sb.appendLine("  -> Relationship bars: $barsSummary")
 		}
