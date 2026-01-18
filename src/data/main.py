@@ -314,7 +314,8 @@ class BaseScraper:
                 continue
 
             logging.info(f"Found {len(tooltip_rows)} options for training event {tooltip_title} ({j + 1}/{len(all_training_events)}).")
-            data_dict[tooltip_title] = self.extract_training_event_options(tooltip_rows)
+            options = self.extract_training_event_options(tooltip_rows)
+            data_dict[tooltip_title] = options
 
             ad_banner_closed = self.handle_ad_banner(driver, ad_banner_closed)
 
@@ -326,11 +327,10 @@ class BaseScraper:
             value_key (str): The key to sort by.
         """
         # Click on the "Sort by" dropdown and select the value key.
-        sort_by_dropdown = driver.find_element(By.XPATH, "//div[contains(@class, 'filters_sort_row')]")
-        first_select = sort_by_dropdown.find_element(By.XPATH, ".//select[1]")
-        first_select.click()
+        sort_by_dropdown = driver.find_element(By.XPATH, "//select[contains(@id, ':r')]")
+        sort_by_dropdown.click()
         time.sleep(0.5)
-        value_option = first_select.find_element(By.XPATH, f".//option[@value='{value_key}']")
+        value_option = sort_by_dropdown.find_element(By.XPATH, f".//option[@value='{value_key}']")
         value_option.click()
         time.sleep(0.5)
 
@@ -501,12 +501,12 @@ class CharacterScraper(BaseScraper):
 
         self.handle_cookie_consent(driver)
 
-        # Sort the characters by ascending order.
+        # Sort the characters by release date descending order.
         self._sort_by_value(driver, "implemented")
 
         # Get all character links.
-        character_grid = driver.find_element(By.XPATH, "//div[contains(@class, 'sc-70f2d7f-0')]")
-        all_character_items = character_grid.find_elements(By.CSS_SELECTOR, "a.sc-73e3e686-1")
+        character_grid = driver.find_element(By.XPATH, "//div[contains(@class, 'sc-dc9ce0a6-0')]")
+        all_character_items = character_grid.find_elements(By.CSS_SELECTOR, "a.sc-3c5fe984-1")
         # Filter out hidden elements using Selenium's is_displayed() method.
         character_items = [item for item in all_character_items if item.is_displayed()]
 
@@ -526,7 +526,7 @@ class CharacterScraper(BaseScraper):
             driver.get(link)
             time.sleep(3)
 
-            character_name = driver.find_element(By.XPATH, "//h1[contains(@class, 'utils_headingXl')]").text
+            character_name = driver.find_element(By.XPATH, "//main//h1").text
             character_name = character_name.replace("(Original)", "").strip()
             # Remove any other parentheses that denote different forms of the character like "Wedding" or "Swimsuit".
             character_name = re.sub(r"\s*\(.*?\)", "", character_name).strip()
@@ -556,16 +556,17 @@ class SupportCardScraper(BaseScraper):
 
         self.handle_cookie_consent(driver)
 
-        # Get all support card links.
-        support_card_grid = driver.find_element(By.XPATH, "//div[contains(@class, 'sc-70f2d7f-0')]")
-        support_card_items = support_card_grid.find_elements(By.XPATH, ".//div[contains(@class, 'sc-73e3e686-3')]")
-        # Filter out hidden elements using Selenium's is_displayed() method.
-        filtered_support_card_items = [item for item in support_card_items if item.is_displayed()]
-
+        # Sort the support cards by release date descending order.
         self._sort_by_value(driver, "implemented")
 
+        # Get all support card links.
+        support_card_grid = driver.find_element(By.XPATH, "//div[contains(@class, 'sc-dc9ce0a6-0')]")
+        all_support_card_items = support_card_grid.find_elements(By.CSS_SELECTOR, "a.sc-3c5fe984-1")
+        # Filter out hidden elements using Selenium's is_displayed() method.
+        filtered_support_card_items = [item for item in all_support_card_items if item.is_displayed()]
+
         logging.info(f"Found {len(filtered_support_card_items)} support cards.")
-        support_card_links = [item.find_element(By.XPATH, "./..").get_attribute("href") for item in filtered_support_card_items]
+        support_card_links = [item.get_attribute("href") for item in filtered_support_card_items]
 
         # If this is a delta scrape, scrape the first 10 support cards as the list is now sorted by descending release date.
         if IS_DELTA:
@@ -580,7 +581,7 @@ class SupportCardScraper(BaseScraper):
             driver.get(link)
             time.sleep(3)
 
-            support_card_name = driver.find_element(By.XPATH, "//h1[contains(@class, 'utils_headingXl')]").text
+            support_card_name = driver.find_element(By.XPATH, "//main//h1").text
             support_card_name = support_card_name.replace("Support Card", "").strip()
             # Remove any other parentheses that denote different forms of the support card.
             support_card_name = re.sub(r"\s*\(.*?\)", "", support_card_name).strip()
@@ -620,8 +621,7 @@ class RaceScraper(BaseScraper):
         self.handle_cookie_consent(driver)
 
         # Get references to all the races in the list.
-        race_list = driver.find_element(By.XPATH, "//div[contains(@class, 'races_race_list')]")
-        race_items = race_list.find_elements(By.XPATH, ".//div[contains(@class, 'races_row')]")
+        race_items = driver.find_elements(By.XPATH, ".//div[contains(@class, 'sc-5615e33d-0')]")
 
         # Pop the first 2 races (Junior Make Debut and Junior Maiden Race).
         race_items = race_items[2:]
@@ -632,9 +632,7 @@ class RaceScraper(BaseScraper):
         logging.info(f"Found {len(race_items)} races.")
 
         race_details_links = [
-            item.find_element(By.XPATH, ".//div[contains(@class, 'races_ribbon')]").find_element(
-                By.XPATH, ".//div[contains(@class, 'utils_linkcolor')]"
-            )
+            item.find_element(By.XPATH, ".//div[contains(@class, 'sc-9a731efd-2')]")
             for item in race_items
         ]
 
@@ -695,7 +693,7 @@ class RaceScraper(BaseScraper):
                 self.data[unique_key] = race_data
 
             # Close the dialog.
-            dialog_close_button = driver.find_element(By.XPATH, "//div[contains(@class, 'sc-f83b4a49-1')]")
+            dialog_close_button = driver.find_element(By.XPATH, "//div[contains(@class, 'sc-a145bdd2-1')]")
             dialog_close_button.click()
             time.sleep(0.5)
 
