@@ -1,3 +1,4 @@
+from deprecated import deprecated
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException, WebDriverException
@@ -12,7 +13,68 @@ from difflib import SequenceMatcher
 import bisect
 
 IS_DELTA = True
-DELTA_BACKLOG_COUNT = 10
+DELTA_BACKLOG_COUNT = 5
+
+# Event name patterns that belong to the "After a Race" section.
+AFTER_RACE_EVENT_PATTERNS = [
+    "Victory! (G1)",
+    "Victory! (G2/G3)",
+    "Victory! (Pre/OP)",
+    "Solid Showing (G1)",
+    "Solid Showing (G2/G3)",
+    "Solid Showing (Pre/OP)",
+    "Defeat (G1)",
+    "Defeat (G2/G3)",
+    "Defeat (Pre/OP)",
+    "Etsuko's Elated Coverage (G1)",
+    "Etsuko's Elated Coverage (G2/G3)",
+    "Etsuko's Elated Coverage (Pre/OP)",
+    "Etsuko's Exhaustive Coverage (G1)",
+    "Etsuko's Exhaustive Coverage (G2/G3)",
+    "Etsuko's Exhaustive Coverage (Pre/OP)",
+]
+
+
+def load_after_race_events() -> Dict[str, List[str]]:
+    """Load "After a Race" events from characters.json.
+
+    These events are identical across all characters, so we only need to read
+    them from the first character's data.
+
+    Returns:
+        A dictionary of event names to their options.
+    """
+    after_race_events: Dict[str, List[str]] = {}
+
+    characters_file = os.path.join(os.path.dirname(__file__), "characters.json")
+    if not os.path.exists(characters_file):
+        logging.warning("characters.json not found. Cannot load \"After a Race\" events.")
+        return after_race_events
+
+    try:
+        with open(characters_file, "r", encoding="utf-8") as f:
+            characters_data = json.load(f)
+
+        # Get the first character's data only.
+        if not characters_data:
+            logging.warning("characters.json is empty. Cannot load \"After a Race\" events.")
+            return after_race_events
+
+        first_character_events = next(iter(characters_data.values()))
+
+        # Extract only events that match the "After a Race" patterns.
+        for event_name, options in first_character_events.items():
+            for pattern in AFTER_RACE_EVENT_PATTERNS:
+                if event_name.startswith(pattern):
+                    after_race_events[event_name] = options
+                    break
+
+        logging.info(f"Loaded {len(after_race_events)} \"After a Race\" events from characters.json.")
+
+    except (json.JSONDecodeError, KeyError) as e:
+        logging.warning(f"Failed to load \"After a Race\" events from characters.json: {e}")
+
+    return after_race_events
 
 
 def create_chromedriver():
@@ -282,16 +344,65 @@ class BaseScraper:
             options.append(option_text)
         return options
 
-    def process_training_events(self, driver: uc.Chrome, item_name: str, data_dict: Dict[str, List[str]]):
+    def process_training_events(self, driver: uc.Chrome, item_name: str, data_dict: Dict[str, List[str]], include_after_race_events: bool = False):
         """Processes the training events for the given item.
 
         Args:
             driver (uc.Chrome): The Chrome driver.
             item_name (str): The name of the item.
             data_dict (Dict[str, List[str]]): The data dictionary to modify.
+            include_after_race_events (bool): Whether to include 'After a Race' events (only for characters).
         """
-        all_training_events = driver.find_elements(By.XPATH, "//button[contains(@class, 'sc-') and contains(@class, '-0 ')]")
-        logging.info(f"Found {len(all_training_events)} training events for {item_name}.")
+        # Find all training events first.
+        all_training_events_unfiltered = driver.find_elements(By.XPATH, "//button[contains(@class, 'sc-') and contains(@class, '-0 ')]")
+        logging.info(f"Found {len(all_training_events_unfiltered)} unfiltered training events for {item_name}.")
+
+        # Find the "Events Without Choices" section header and exclude events from its following grid.
+        # The section header is a div with class 'sc-*-0' containing the text "Events Without Choices".
+        # The grid following it (sc-*-2) contains training events we want to exclude.
+        events_to_exclude = set()
+        try:
+            # Find the div containing "Events Without Choices" text.
+            no_choices_header = driver.find_element(
+                By.XPATH,
+                "//div[contains(@class, 'sc-') and contains(@class, '-0 ') and contains(text(), 'Events Without Choices')]"
+            )
+            # Find the next sibling div which should be the grid containing events without choices.
+            no_choices_grid = no_choices_header.find_element(By.XPATH, "./following-sibling::div[contains(@class, 'sc-') and contains(@class, '-2 ')][1]")
+            # Get all training event buttons within this grid.
+            events_without_choices = no_choices_grid.find_elements(By.XPATH, ".//button[contains(@class, 'sc-') and contains(@class, '-0 ')]")
+            events_to_exclude = set(events_without_choices)
+            logging.info(f"Found {len(events_to_exclude)} events without choices to exclude for {item_name}.")
+        except NoSuchElementException:
+            logging.info(f"No \"Events Without Choices\" section found for {item_name}. Including all events.")
+
+        # Filter out the events without choices.
+        all_training_events = [event for event in all_training_events_unfiltered if event not in events_to_exclude]
+        logging.info(f"Found {len(all_training_events)} training events (after filtering) for {item_name}.")
+
+        # Find the "After a Race" section and exclude its events from scraping.
+        # These events are identical across all characters, so we copy them from characters.json.
+        if include_after_race_events:
+            after_race_events = set()
+            try:
+                after_race_header = driver.find_element(
+                    By.XPATH,
+                    "//div[contains(@class, 'sc-') and contains(@class, '-0 ') and contains(text(), 'After a Race')]"
+                )
+                after_race_grid = after_race_header.find_element(By.XPATH, "./following-sibling::div[contains(@class, 'sc-') and contains(@class, '-2 ')][1]")
+                after_race_buttons = after_race_grid.find_elements(By.XPATH, ".//button[contains(@class, 'sc-') and contains(@class, '-0 ')]")
+                after_race_events = set(after_race_buttons)
+                logging.info(f"Found {len(after_race_events)} \"After a Race\" events to copy for {item_name}.")
+            except NoSuchElementException:
+                logging.info(f"No \"After a Race\" section found for {item_name}.")
+
+            # Filter out the "After a Race" events from the list to scrape.
+            all_training_events = [event for event in all_training_events if event not in after_race_events]
+            logging.info(f"Found {len(all_training_events)} training events (after excluding \"After a Race\") for {item_name}.")
+
+            # Copy the "After a Race" events from the preloaded cache.
+            data_dict.update(self.after_race_events)
+            logging.info(f"Copied {len(self.after_race_events)} \"After a Race\" events for {item_name}.")
 
         ad_banner_closed = False
 
@@ -314,7 +425,8 @@ class BaseScraper:
                 continue
 
             logging.info(f"Found {len(tooltip_rows)} options for training event {tooltip_title} ({j + 1}/{len(all_training_events)}).")
-            data_dict[tooltip_title] = self.extract_training_event_options(tooltip_rows)
+            options = self.extract_training_event_options(tooltip_rows)
+            data_dict[tooltip_title] = options
 
             ad_banner_closed = self.handle_ad_banner(driver, ad_banner_closed)
 
@@ -326,11 +438,10 @@ class BaseScraper:
             value_key (str): The key to sort by.
         """
         # Click on the "Sort by" dropdown and select the value key.
-        sort_by_dropdown = driver.find_element(By.XPATH, "//div[contains(@class, 'filters_sort_row')]")
-        first_select = sort_by_dropdown.find_element(By.XPATH, ".//select[1]")
-        first_select.click()
+        sort_by_dropdown = driver.find_element(By.XPATH, "//select[contains(@id, ':r')]")
+        sort_by_dropdown.click()
         time.sleep(0.5)
-        value_option = first_select.find_element(By.XPATH, f".//option[@value='{value_key}']")
+        value_option = sort_by_dropdown.find_element(By.XPATH, f".//option[@value='{value_key}']")
         value_option.click()
         time.sleep(0.5)
 
@@ -341,6 +452,7 @@ class SkillScraper(BaseScraper):
     def __init__(self):
         super().__init__("https://gametora.com/umamusume/skills", "skills.json")
 
+    @deprecated("Use start_webpack_method() instead.")
     def start(self):
         """Starts the scraping process."""
         driver = create_chromedriver()
@@ -488,10 +600,15 @@ class SkillScraper(BaseScraper):
 
 
 class CharacterScraper(BaseScraper):
-    """Scrapes the characters from the website."""
+    """Scrapes the characters from the website.
 
-    def __init__(self):
+    Args:
+        after_race_events (Dict[str, List[str]]): Preloaded "After a Race" events to copy to each character.
+    """
+
+    def __init__(self, after_race_events: Dict[str, List[str]]):
         super().__init__("https://gametora.com/umamusume/characters", "characters.json")
+        self.after_race_events = after_race_events
 
     def start(self):
         """Starts the scraping process."""
@@ -501,12 +618,12 @@ class CharacterScraper(BaseScraper):
 
         self.handle_cookie_consent(driver)
 
-        # Sort the characters by ascending order.
+        # Sort the characters by release date descending order.
         self._sort_by_value(driver, "implemented")
 
         # Get all character links.
-        character_grid = driver.find_element(By.XPATH, "//div[contains(@class, 'sc-70f2d7f-0')]")
-        all_character_items = character_grid.find_elements(By.CSS_SELECTOR, "a.sc-73e3e686-1")
+        character_grid = driver.find_element(By.XPATH, "//div[contains(@class, 'sc-dc9ce0a6-0')]")
+        all_character_items = character_grid.find_elements(By.CSS_SELECTOR, "a.sc-3c5fe984-1")
         # Filter out hidden elements using Selenium's is_displayed() method.
         character_items = [item for item in all_character_items if item.is_displayed()]
 
@@ -526,7 +643,7 @@ class CharacterScraper(BaseScraper):
             driver.get(link)
             time.sleep(3)
 
-            character_name = driver.find_element(By.XPATH, "//h1[contains(@class, 'utils_headingXl')]").text
+            character_name = driver.find_element(By.XPATH, "//main//h1").text
             character_name = character_name.replace("(Original)", "").strip()
             # Remove any other parentheses that denote different forms of the character like "Wedding" or "Swimsuit".
             character_name = re.sub(r"\s*\(.*?\)", "", character_name).strip()
@@ -535,8 +652,8 @@ class CharacterScraper(BaseScraper):
             if character_name not in self.data:
                 self.data[character_name] = {}
 
-            # Scrape all the Training Events.
-            self.process_training_events(driver, character_name, self.data[character_name])
+            # Scrape all the Training Events (including "After a Race" events for characters).
+            self.process_training_events(driver, character_name, self.data[character_name], include_after_race_events=True)
 
         self.save_data()
         driver.quit()
@@ -556,16 +673,17 @@ class SupportCardScraper(BaseScraper):
 
         self.handle_cookie_consent(driver)
 
-        # Get all support card links.
-        support_card_grid = driver.find_element(By.XPATH, "//div[contains(@class, 'sc-70f2d7f-0')]")
-        support_card_items = support_card_grid.find_elements(By.XPATH, ".//div[contains(@class, 'sc-73e3e686-3')]")
-        # Filter out hidden elements using Selenium's is_displayed() method.
-        filtered_support_card_items = [item for item in support_card_items if item.is_displayed()]
-
+        # Sort the support cards by release date descending order.
         self._sort_by_value(driver, "implemented")
 
+        # Get all support card links.
+        support_card_grid = driver.find_element(By.XPATH, "//div[contains(@class, 'sc-dc9ce0a6-0')]")
+        all_support_card_items = support_card_grid.find_elements(By.CSS_SELECTOR, "a.sc-3c5fe984-1")
+        # Filter out hidden elements using Selenium's is_displayed() method.
+        filtered_support_card_items = [item for item in all_support_card_items if item.is_displayed()]
+
         logging.info(f"Found {len(filtered_support_card_items)} support cards.")
-        support_card_links = [item.find_element(By.XPATH, "./..").get_attribute("href") for item in filtered_support_card_items]
+        support_card_links = [item.get_attribute("href") for item in filtered_support_card_items]
 
         # If this is a delta scrape, scrape the first 10 support cards as the list is now sorted by descending release date.
         if IS_DELTA:
@@ -580,7 +698,7 @@ class SupportCardScraper(BaseScraper):
             driver.get(link)
             time.sleep(3)
 
-            support_card_name = driver.find_element(By.XPATH, "//h1[contains(@class, 'utils_headingXl')]").text
+            support_card_name = driver.find_element(By.XPATH, "//main//h1").text
             support_card_name = support_card_name.replace("Support Card", "").strip()
             # Remove any other parentheses that denote different forms of the support card.
             support_card_name = re.sub(r"\s*\(.*?\)", "", support_card_name).strip()
@@ -620,8 +738,7 @@ class RaceScraper(BaseScraper):
         self.handle_cookie_consent(driver)
 
         # Get references to all the races in the list.
-        race_list = driver.find_element(By.XPATH, "//div[contains(@class, 'races_race_list')]")
-        race_items = race_list.find_elements(By.XPATH, ".//div[contains(@class, 'races_row')]")
+        race_items = driver.find_elements(By.XPATH, ".//div[contains(@class, 'sc-5615e33d-0')]")
 
         # Pop the first 2 races (Junior Make Debut and Junior Maiden Race).
         race_items = race_items[2:]
@@ -632,9 +749,7 @@ class RaceScraper(BaseScraper):
         logging.info(f"Found {len(race_items)} races.")
 
         race_details_links = [
-            item.find_element(By.XPATH, ".//div[contains(@class, 'races_ribbon')]").find_element(
-                By.XPATH, ".//div[contains(@class, 'utils_linkcolor')]"
-            )
+            item.find_element(By.XPATH, ".//div[contains(@class, 'sc-9a731efd-2')]")
             for item in race_items
         ]
 
@@ -695,7 +810,7 @@ class RaceScraper(BaseScraper):
                 self.data[unique_key] = race_data
 
             # Close the dialog.
-            dialog_close_button = driver.find_element(By.XPATH, "//div[contains(@class, 'sc-f83b4a49-1')]")
+            dialog_close_button = driver.find_element(By.XPATH, "//div[contains(@class, 'sc-a145bdd2-1')]")
             dialog_close_button.click()
             time.sleep(0.5)
 
@@ -708,9 +823,10 @@ if __name__ == "__main__":
     start_time = time.time()
 
     skill_scraper = SkillScraper()
-    skill_scraper.start()
+    skill_scraper.start_webpack_method()
 
-    character_scraper = CharacterScraper()
+    after_race_events = load_after_race_events()
+    character_scraper = CharacterScraper(after_race_events)
     character_scraper.start()
 
     support_card_scraper = SupportCardScraper()
