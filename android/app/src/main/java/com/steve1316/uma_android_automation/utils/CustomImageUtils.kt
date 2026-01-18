@@ -11,6 +11,7 @@ import com.steve1316.automation_library.utils.ImageUtils
 import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.bot.Game
+import com.steve1316.uma_android_automation.components.Region
 import com.steve1316.uma_android_automation.utils.types.StatName
 import com.steve1316.uma_android_automation.utils.types.Aptitude
 import com.steve1316.uma_android_automation.utils.types.BoundingBox
@@ -61,6 +62,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
     data class StatBlock(
         val name: String,
         val point: Point,
+        val trainerName: String? = null,
     )
 
 	data class StatGainRowConfig(
@@ -81,6 +83,12 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	) {
         val isRainbow: Boolean
             get() = statBlock != null && statBlock.name == statName.name && dominantColor == "orange"
+
+        val isTrainerSupport: Boolean
+            get() = statBlock != null && statBlock.name == "trainer_support"
+
+        val trainerName: String?
+            get() = statBlock?.trainerName
     }
 
 	data class SpiritGaugeResult(
@@ -606,12 +614,12 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	 * Analyze the relationship bars on the Training screen for the currently selected training. Parameter is optional to allow for thread-safe operations.
 	 *
 	 * @param sourceBitmap Bitmap of the source image separately taken. Defaults to null.
+	 * @param statName The stat name of the currently selected training.
+	 * @param scenario The current game scenario (e.g., "URA Finale", "Unity Cup"). Used to determine which trainer supports to search for.
 	 *
 	 * @return A list of the results for each relationship bar.
 	 */
-	fun analyzeRelationshipBars(sourceBitmap: Bitmap? = null, statName: StatName): ArrayList<BarFillResult> {
-		val customRegion = intArrayOf(displayWidth - (displayWidth / 3), 0, (displayWidth / 3), displayHeight - (displayHeight / 3))
-
+	fun analyzeRelationshipBars(sourceBitmap: Bitmap? = null, statName: StatName, scenario: String? = null): ArrayList<BarFillResult> {
 		// Take a single screenshot first to avoid buffer overflow.
 		val sourceBitmap = sourceBitmap ?: getSourceBitmap()
 
@@ -627,7 +635,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
                     blockMap[name.name] = findAllWithBitmap(
                         "stat_${name.name.lowercase()}_block",
                         sourceBitmap,
-                        region=customRegion,
+                        region=Region.topRightThird,
                     )
                 } catch (_: InterruptedException) {
                 } finally {
@@ -644,7 +652,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
                 blockMap["trainer"] = findAllWithBitmap(
                     "stat_trainer_block",
                     sourceBitmap,
-                    region=customRegion,
+                    region=Region.topRightThird,
                 )
             } catch (_: InterruptedException) {
                 // Gracefully handle interruption when bot is stopped.
@@ -671,6 +679,44 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
             }
         }
 
+		// Check for scenario-specific trainer supports that do NOT show up with stat_trainer_block.
+		// At most one trainer support can appear per training option.
+		val foundTrainerBlock = blockMap["trainer"]?.isNotEmpty() == true
+		if (scenario != null) {
+			// Define scenario-specific trainer support assets.
+			val trainerSupportAssets: List<Triple<String, String, Boolean>> = when (scenario) {
+				"URA Finale" -> listOf(
+					Triple("stat_support_etsuko_otonashi", "Etsuko Otonashi", false),
+					Triple("stat_support_yayoi_akikawa", "Yayoi Akikawa", false)
+				)
+				"Unity Cup" -> listOf(
+					Triple("stat_support_etsuko_otonashi", "Etsuko Otonashi", false),
+					// Riko Kashimoto can also show up as a support card support with stat_trainer_block.
+					Triple("stat_support_riko_kashimoto", "Riko Kashimoto", true)
+				)
+				else -> emptyList()
+			}
+
+			// Filter out trainers that also show with stat_trainer_block if one was already found.
+			val trainersToSearch = if (foundTrainerBlock) {
+				trainerSupportAssets.filter { !it.third }
+			} else {
+				trainerSupportAssets
+			}
+
+			// Search for trainer supports. At most one can appear at a time for any one training option.
+			for ((assetName, trainerName, _) in trainersToSearch) {
+				val trainerLocation = findImageWithBitmap(assetName, sourceBitmap, region = Region.topRightThird, suppressError = true)
+				if (trainerLocation != null) {
+					// Store the actual center location. The processing loop will use a different offset for trainer_support.
+					allStatBlocks.add(StatBlock("trainer_support", trainerLocation, trainerName))
+
+					// Only one trainer support can appear per training option.
+					break
+				}
+			}
+		}
+
         // Filter out duplicates based on exact coordinate matches.
 		allStatBlocks = allStatBlocks.distinctBy {
             "${it.point.x},${it.point.y}"
@@ -691,9 +737,18 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		val results = arrayListOf<BarFillResult>()
 
 		for ((index, statBlock) in allStatBlocks.withIndex()) {
-			if (debugMode) MessageLog.d(TAG, "Processing stat block #${index + 1} at position: (${statBlock.point.x}, ${statBlock.point.y})")
+			if (debugMode) MessageLog.d(TAG, "Processing stat block #${index + 1} (${statBlock.name}) at position: (${statBlock.point.x}, ${statBlock.point.y})")
 
-			val croppedBitmap = createSafeBitmap(sourceBitmap, relX(statBlock.point.x, -9), relY(statBlock.point.y, 107), 111, 13, "analyzeRelationshipBars stat block ${index + 1}")
+			// Use different offsets based on block type.
+			// Stat blocks: relationship bar is at offset (-9, 107) from detected location.
+			// Trainer supports: relationship bar is at offset (-50, 55) from icon center.
+			val (offsetX, offsetY) = if (statBlock.name == "trainer_support") {
+				Pair(-50, 55)
+			} else {
+				Pair(-9, 107)
+			}
+
+			val croppedBitmap = createSafeBitmap(sourceBitmap, relX(statBlock.point.x, offsetX), relY(statBlock.point.y, offsetY), 111, 13, "analyzeRelationshipBars stat block ${index + 1}")
 			if (croppedBitmap == null) {
 				MessageLog.e(TAG, "Failed to create cropped bitmap for stat block #${index + 1}.")
 				continue
@@ -743,11 +798,14 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			// Estimate the filled segments (each segment is about 20% of the whole bar).
 			val filledSegments = (fillPercent / 20).coerceAtMost(5.0).toInt()
 
-			val dominantColor = when {
+			// Determine dominant color, but normalize to "none" if fill is essentially 0%.
+			val dominantColor = if (fillPercent < 1.0) {
+				"none"
+			} else when {
 				orangePixels > greenPixels && orangePixels > bluePixels -> "orange"
 				greenPixels > bluePixels -> "green"
 				bluePixels > 0 -> "blue"
-				else -> "none"
+				else -> "unknown"
 			}
 
 			blueMask.release()
@@ -777,13 +835,11 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	 * @return A SpiritGaugeResult for the currently selected training, or null if no gauges found.
 	 */
 	fun analyzeSpiritExplosionGauges(sourceBitmap: Bitmap? = null): SpiritGaugeResult? {
-		val customRegion = intArrayOf(displayWidth - (displayWidth / 3), 0, (displayWidth / 3), displayHeight - (displayHeight / 3))
-
 		// Take a single screenshot first to avoid buffer overflow.
 		var currentBitmap = sourceBitmap ?: getSourceBitmap()
 
 		// Find all Spirit Training icons (there may be multiple for the currently selected training).
-		var spiritTrainingIcons = findAllWithBitmap("unitycup_spirit_training", currentBitmap, region = customRegion, customConfidence = 0.90)
+		var spiritTrainingIcons = findAllWithBitmap("unitycup_spirit_training", currentBitmap, region = Region.topRightThird, customConfidence = 0.90)
 		
 		// If no gauges detected, try one more time after a short delay just in case the icon was bouncing.
 		if (spiritTrainingIcons.isEmpty()) {
@@ -797,14 +853,14 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			// Take a new screenshot for the retry.
 			currentBitmap = getSourceBitmap()
 			
-			spiritTrainingIcons = findAllWithBitmap("unitycup_spirit_training", currentBitmap, region = customRegion, customConfidence = 0.90)
+			spiritTrainingIcons = findAllWithBitmap("unitycup_spirit_training", currentBitmap, region = Region.topRightThird, customConfidence = 0.90)
 			if (spiritTrainingIcons.isEmpty()) {
 				return null
 			}
 		}
 
 		// Find all Spirit Explosion icons to determine burst readiness.
-		val spiritExplosionIcons = findAllWithBitmap("unitycup_spirit_explosion", currentBitmap, region = customRegion, customConfidence = 0.90)
+		val spiritExplosionIcons = findAllWithBitmap("unitycup_spirit_explosion", currentBitmap, region = Region.topRightThird, customConfidence = 0.90)
 
 		// Analyze all gauges for all spirit training icons to count how many can be filled.
 		var numGaugesCanFill = 0

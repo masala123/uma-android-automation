@@ -677,6 +677,11 @@ class Racing (private val game: Game) {
                 ButtonBack.click(imageUtils = game.imageUtils)
                 return false
             }
+        } else {
+            // No maiden races available on this day. Back out and try again later.
+            MessageLog.i(TAG, "[RACE] No maiden races available on this day. Aborting racing...")
+            ButtonBack.click(imageUtils = game.imageUtils)
+            return false
         }
 
         // Confirm the selection and the resultant popup and then wait for the game to load.
@@ -1327,17 +1332,20 @@ class Racing (private val game: Game) {
         // It is assumed that the user is already at the screen with the list of selectable races.
         // Now tap on the Agenda button.
         if (!game.findAndTapImage("race_agenda", tries = 1, region = game.imageUtils.regionBottomHalf)) {
-            MessageLog.w(TAG, "[RACE] Could not find the Agenda button. Skipping agenda loading.")
+            MessageLog.w(TAG, "[RACE] Could not find the Agenda button. Backing out and skipping agenda loading.")
+            ButtonBack.click(game.imageUtils)
+            game.waitForLoading()
             return
         }
         game.waitForLoading()
 
         // Now tap on the My Agenda button.
         if (!game.findAndTapImage("race_my_agenda", tries = 1, region = game.imageUtils.regionBottomHalf)) {
-            MessageLog.w(TAG, "[RACE] Could not find the My Agenda button. Closing and skipping agenda loading.")
+            MessageLog.w(TAG, "[RACE] Could not find the My Agenda button. Closing and backing out.")
             ButtonClose.click(game.imageUtils)
-            game.waitForLoading()
             game.wait(0.5)
+            ButtonBack.click(game.imageUtils)
+            game.waitForLoading()
             return
         }
         game.waitForLoading()

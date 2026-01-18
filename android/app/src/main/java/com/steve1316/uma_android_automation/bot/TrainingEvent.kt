@@ -3,6 +3,8 @@ package com.steve1316.uma_android_automation.bot
 import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.utils.SettingsHelper
 import com.steve1316.automation_library.utils.MessageLog
+import net.ricecode.similarity.JaroWinklerStrategy
+import net.ricecode.similarity.StringSimilarityServiceImpl
 import org.opencv.core.Point
 import org.json.JSONObject
 
@@ -155,6 +157,115 @@ class TrainingEvent(private val game: Game) {
     }
 
     /**
+     * Handle the "A Team at Last" Unity Cup event by detecting options via OCR
+     * and selecting based on user preference.
+     *
+     * This event is unique because:
+     * - It may have 0 options or 2-5 options.
+     * - The last option is always "Team Carrot" (default).
+     * - Other options are character suggestions that need to be detected via OCR.
+     *
+     * @param optionLocations The list of detected option locations.
+     * @return The 0-based index of the option to select, or 0 if no match found.
+     */
+    private fun selectUnityCupTeamNameEvent(optionLocations: ArrayList<Point>): Int {
+        val numOptions = optionLocations.size
+        MessageLog.i(TAG, "[TRAINING_EVENT] Handling \"A Team at Last\" event with $numOptions option(s).")
+
+        // If 0-1 options, just return 0 (auto-completed or single option).
+        if (numOptions <= 1) {
+            MessageLog.i(TAG, "[TRAINING_EVENT] Event has $numOptions option(s). Selecting first/only option.")
+            return 0
+        }
+
+        // Get the user's selected preference from settings.
+        val override = specialEventOverrides["A Team at Last"]
+        val selectedPreference = override?.selectedOption ?: "Default"
+        MessageLog.i(TAG, "[TRAINING_EVENT] User preference for team name: $selectedPreference")
+
+        // If user selected "Default", always select the first option.
+        if (selectedPreference == "Default") {
+            MessageLog.i(TAG, "[TRAINING_EVENT] Using default preference, selecting first option.")
+            return 0
+        }
+
+        // Define the possible team name options (excluding "Team Carrot" which is always last).
+        val teamNameOptions = listOf(
+            "Happy Hoppers, like Taiki suggested",
+            "Sunny Runners, like Fukukitaru suggested",
+            "Carrot Pudding, like Urara suggested",
+            "Blue Bloom, like Rice Shower suggested"
+        )
+
+        // OCR each option except the last one (which is always "Team Carrot").
+        val sourceBitmap = game.imageUtils.getSourceBitmap()
+        val detectedOptions = mutableListOf<Pair<Int, String>>()
+
+        for (i in 0 until numOptions - 1) {
+            val optionCenter = optionLocations[i]
+            val cropX = game.imageUtils.relX(optionCenter.x, 45)
+            val cropY = game.imageUtils.relY(optionCenter.y, -30)
+            val cropWidth = 800
+            val cropHeight = 55
+
+            val ocrText = game.imageUtils.performOCROnRegion(
+                sourceBitmap,
+                cropX,
+                cropY,
+                cropWidth,
+                cropHeight,
+                useThreshold = false,
+                useGrayscale = true,
+                scale = 1.0,
+                ocrEngine = "tesseract",
+                debugName = "selectUnityCupTeamNameEvent_option_${i + 1}"
+            )
+
+            MessageLog.i(TAG, "[TRAINING_EVENT] Option ${i + 1} OCR result: \"$ocrText\"")
+            if (ocrText.isNotEmpty()) {
+                detectedOptions.add(Pair(i, ocrText))
+            }
+        }
+
+        // Use string similarity to find the best match for the user's preference.
+        var bestMatchIndex = 0
+        var bestMatchScore = 0.0
+
+        for ((optionIndex, ocrText) in detectedOptions) {
+            for (teamName in teamNameOptions) {
+                // Use contains check first for exact match.
+                if (ocrText.contains(teamName, ignoreCase = true) || teamName.contains(ocrText, ignoreCase = true)) {
+                    if (teamName == selectedPreference) {
+                        MessageLog.i(TAG, "[TRAINING_EVENT] Found exact match for \"$selectedPreference\" at option ${optionIndex + 1}.")
+                        return optionIndex
+                    }
+                }
+
+                // Check if this OCR text matches the user's preference.
+                if (teamName == selectedPreference) {
+                    val score = StringSimilarityServiceImpl(JaroWinklerStrategy()).score(ocrText.lowercase(), teamName.lowercase())
+
+                    if (score > bestMatchScore) {
+                        bestMatchScore = score
+                        bestMatchIndex = optionIndex
+                        MessageLog.i(TAG, "[TRAINING_EVENT] Option ${optionIndex + 1} matches preference with score: ${game.decimalFormat.format(score)}")
+                    }
+                }
+            }
+        }
+
+        // If we found a good match, use it.
+        if (bestMatchScore >= 0.8) {
+            MessageLog.i(TAG, "[TRAINING_EVENT] Selected option ${bestMatchIndex + 1} based on similarity match (score: ${game.decimalFormat.format(bestMatchScore)}).")
+            return bestMatchIndex
+        }
+
+        // Fallback to first option if no good match found.
+        MessageLog.i(TAG, "[TRAINING_EVENT] No good match found for preference. Falling back to first option.")
+        return 0
+    }
+
+    /**
      * Print a formatted summary of the training event and the selected option.
      *
      * @param eventTitle The detected event title from OCR.
@@ -234,6 +345,12 @@ class TrainingEvent(private val game: Game) {
                 MessageLog.w(TAG, "[TRAINING_EVENT] Unexpected option count ($tutorialOptionCount). Selecting last option.")
             }
             
+            specialEventHandled = true
+        } else if (eventTitle == "A Team at Last") {
+            // Handle "A Team at Last" Unity Cup event specially.
+            MessageLog.i(TAG, "[TRAINING_EVENT] \"A Team at Last\" event detected for Unity Cup.")
+            val trainingOptionLocations: ArrayList<Point> = game.imageUtils.findAll("training_event_active")
+            optionSelected = selectUnityCupTeamNameEvent(trainingOptionLocations)
             specialEventHandled = true
         } else if (specialEventResult != null) {
             val (selectedOptionIndex, _) = specialEventResult
@@ -481,6 +598,9 @@ class TrainingEvent(private val game: Game) {
             }
         }
 
+        // Wait briefly for the UI to fully render all option buttons.
+        game.wait(0.1)
+        
         val trainingOptionLocations: ArrayList<Point> = game.imageUtils.findAll("training_event_active")
         
         // Handle Tutorial events specially.

@@ -243,6 +243,10 @@ export const defaultSettings: Settings = {
                 selectedOption: "Option 2: Energy Down / Gain skill points",
                 requiresConfirmation: false,
             },
+            "A Team at Last": {
+                selectedOption: "Default",
+                requiresConfirmation: false,
+            },
         },
         characterEventOverrides: {},
         supportEventOverrides: {},
