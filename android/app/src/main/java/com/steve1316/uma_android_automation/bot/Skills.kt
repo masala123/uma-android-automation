@@ -51,7 +51,7 @@ class Skills (private val game: Game) {
     private val careerCompleteSkillPlanJson = SettingsHelper.getStringSetting("skills", "careerCompleteSkillPlan")
 
     // Get other relevant user settings.
-    private val userSelectedTrackDistanceOverrideString = SettingsHelper.getStringSetting("racing", "preferredDistanceOverride")
+    private val userSelectedTrackDistanceOverrideString = SettingsHelper.getStringSetting("training", "preferredDistanceOverride")
     private val userSelectedRunningStyleString = SettingsHelper.getStringSetting("racing", "originalRaceStrategy")
     
 
