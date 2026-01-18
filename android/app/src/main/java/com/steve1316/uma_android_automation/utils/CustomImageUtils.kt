@@ -77,10 +77,10 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		val fillPercent: Double,
 		val filledSegments: Int,
 		val dominantColor: String,
-        val statBlock: StatBlock,
+        val statBlock: StatBlock? = null,
 	) {
         val isRainbow: Boolean
-            get() = statBlock.name == statName.name && dominantColor == "orange"
+            get() = statBlock != null && statBlock.name == statName.name && dominantColor == "orange"
     }
 
 	data class SpiritGaugeResult(
@@ -283,7 +283,17 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
             // Parse the result.
             return try {
                 val cleanedResult = detectedText.replace("%", "").replace(Regex("[^0-9]"), "").trim()
-                cleanedResult.toInt()
+                var value = cleanedResult.toInt()
+
+                // Correct the OCR error if failure chance exceeds 100% and strip the last digit.
+                if (value > 100 && cleanedResult.length > 2) {
+                    val correctedResult = cleanedResult.dropLast(1)
+                    val correctedValue = correctedResult.toInt()
+                    Log.w(TAG, "Failure chance $value% exceeds 100%, correcting to $correctedValue%.")
+                    value = correctedValue
+                }
+
+                value
             } catch (_: NumberFormatException) {
                 MessageLog.e(TAG, "Could not convert \"$detectedText\" to integer for training failure chance.")
                 -1
@@ -775,10 +785,10 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		// Find all Spirit Training icons (there may be multiple for the currently selected training).
 		var spiritTrainingIcons = findAllWithBitmap("unitycup_spirit_training", currentBitmap, region = customRegion, customConfidence = 0.90)
 		
-		// If no gauges detected, try one more time after 0.25s just in case the icon was bouncing.
+		// If no gauges detected, try one more time after a short delay just in case the icon was bouncing.
 		if (spiritTrainingIcons.isEmpty()) {
 			try {
-				Thread.sleep(250)
+				Thread.sleep(150)
 			} catch (e: InterruptedException) {
 				Thread.currentThread().interrupt()
 				return null
@@ -981,50 +991,67 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 	/**
 	 * Performs OCR on the date region from either the Race List screen or the Main screen to extract the current date string.
 	 *
+	 * @param isOnMainScreen If true, skip the check to see if the game is at the Race List screen.
 	 * @return The detected date string from the game screen, or empty string if detection fails.
 	 */
-	fun determineDayString(): String {
+	fun determineDayString(isOnMainScreen: Boolean = false): String {
 		var result = ""
-		val (raceStatusLocation, sourceBitmap) = findImage("race_status", tries = 1)
-		if (raceStatusLocation != null) {
-			// Perform OCR with thresholding (date text is on solid white background).
-			MessageLog.i(TAG, "Detecting date from the Race List screen.")
-			result = performOCROnRegion(
-				sourceBitmap,
-				relX(raceStatusLocation.x, -170),
-				relY(raceStatusLocation.y, 105),
-				relWidth(640),
-				relHeight(70),
-				useThreshold = true,
-				useGrayscale = true,
-				scale = 1.0,
-				ocrEngine = "mlkit",
-				debugName = "dateString"
-			)
-		} else {
-			val (energyLocation, _) = findImage("energy")
-            val offsetX = if (game.scenario == "Unity Cup") {
-                -40
-            } else {
-                -268
-            }
 
-			if (energyLocation != null) {
-				// Perform OCR with no thresholding (date text is on moving background).
-				MessageLog.i(TAG, "Detecting date from the Main screen.")
+		// Skip this check if we know we're on the Main screen.
+		if (!isOnMainScreen) {
+			val (raceStatusLocation, sourceBitmap) = findImage("race_status", tries = 1)
+			if (raceStatusLocation != null) {
+				// Perform OCR with thresholding (date text is on solid white background).
+				MessageLog.i(TAG, "Detecting date from the Race List screen.")
 				result = performOCROnRegion(
 					sourceBitmap,
-					relX(energyLocation.x, offsetX),
-					relY(energyLocation.y, -180),
-					relWidth(308),
-					relHeight(35),
-					useThreshold = false,
+					relX(raceStatusLocation.x, -170),
+					relY(raceStatusLocation.y, 105),
+					relWidth(640),
+					relHeight(70),
+					useThreshold = true,
 					useGrayscale = true,
 					scale = 1.0,
 					ocrEngine = "mlkit",
 					debugName = "dateString"
 				)
+				if (result != "") {
+					MessageLog.i(TAG, "Detected date: $result")
+					
+					if (debugMode) {
+						MessageLog.d(TAG, "Date string detected to be at \"$result\".")
+					} else {
+						Log.d(TAG, "Date string detected to be at \"$result\".")
+					}
+
+					return result
+				}
 			}
+		}
+
+		// Main screen detection path.
+		val (energyLocation, sourceBitmap) = findImage("energy")
+		val offsetX = if (game.scenario == "Unity Cup") {
+			-40
+		} else {
+			-268
+		}
+
+		if (energyLocation != null) {
+			// Perform OCR with no thresholding (date text is on moving background).
+			MessageLog.i(TAG, "Detecting date from the Main screen.")
+			result = performOCROnRegion(
+				sourceBitmap,
+				relX(energyLocation.x, offsetX),
+				relY(energyLocation.y, -180),
+				relWidth(308),
+				relHeight(35),
+				useThreshold = false,
+				useGrayscale = true,
+				scale = 1.0,
+				ocrEngine = "mlkit",
+				debugName = "dateString"
+			)
 		}
 
 		if (result != "") {
@@ -1366,7 +1393,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		// Get the stat indices affected by this training type and filter out the main stat to get side-effects.
 		val affectedStats: List<StatName> = trainingToAffectedStatNames[trainingName] ?: return boostedResults
 		val sideEffectStats: List<StatName> = affectedStats.filter { it != trainingName }
-        val sideEffectStatGains: Map<StatName, Int> = boostedResults.filterKeys { it !in sideEffectStats }
+        val sideEffectStatGains: Map<StatName, Int> = boostedResults.filterKeys { it in sideEffectStats }
 		
 		val mainStatGain = boostedResults[trainingName] ?: 0
 		

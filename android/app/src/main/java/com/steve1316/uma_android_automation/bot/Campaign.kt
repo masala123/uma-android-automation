@@ -39,6 +39,10 @@ open class Campaign(val game: Game) {
     // Flag for only checking for maiden races once per day.
     var bHasCheckedForMaidenRaceToday: Boolean = false
 
+    // Flag to skip redundant date checks when no game-advancing action was taken.
+    // Reset to false when training, resting, racing, or other game-advancing actions complete.
+    protected var bHasCheckedDateThisTurn: Boolean = false
+
     /**
      * Detects and handles any dialog popups.
      *
@@ -293,6 +297,21 @@ open class Campaign(val game: Game) {
     }
 
     /**
+     * Waits for the current dialog to be processed.
+     *
+     * This loops calling [handleDialogs] until no dialog is detected,
+     * allowing dialogs to be processed within the same function call
+     * instead of returning early and re-entering [handleMainScreen].
+     */
+    private fun waitForDialogProcessed() {
+        while (true) {
+            if (!handleDialogs().first && !game.handleDialogs().first) {
+                break
+            }
+        }
+    }
+
+    /**
      * Detects the trainee's current fan count class from the main screen.
      *
      * This reads the fan count class label directly from the screen using OCR
@@ -542,92 +561,100 @@ open class Campaign(val game: Game) {
         game.racing.loadUserRaceAgenda()
 
         // Operations to be done every time the date changes.
-        if (game.updateDate()) {
-            // Reset flags on date change.
-            game.racing.encounteredRacingPopup = false
-            game.racing.raceRepeatWarningCheck = false
-            bHasTriedCheckingFansToday = false
-            bHasCheckedForMaidenRaceToday = false
+        // Skip if we've already checked the date this turn and no game-advancing action was taken.
+        if (!bHasCheckedDateThisTurn) {
+            if (game.updateDate()) {
 
-            // Update the fan count class every time we're at the main screen.
-            val fanCountClass: FanCountClass? = getFanCountClass()
-            if (fanCountClass != null) {
-                game.trainee.fanCountClass = fanCountClass
-            }
-            // Update trainee information using parallel processing with shared screenshot.
-            val sourceBitmap = game.imageUtils.getSourceBitmap()
-            val skillPointsLocation = game.imageUtils.findImageWithBitmap("skill_points", sourceBitmap, suppressError = true)
-            if (!BotService.isRunning) {
-                return false
-            }
-            
-            // Use CountDownLatch to run the operations in parallel
-            // 1 racingRequirements + 5 stats + 1 skill points + 1 mood = 8 threads
-            val latch = CountDownLatch(8)
+                // Reset flags on date change.
+                game.racing.encounteredRacingPopup = false
+                game.racing.raceRepeatWarningCheck = false
+                bHasTriedCheckingFansToday = false
+                bHasCheckedForMaidenRaceToday = false
 
-            MessageLog.disableOutput = true
-            
-            // Threads 1-5: Update stats (one thread per stat, created inside updateStats).
-            // Pass the external latch so updateStats can count down for each stat thread.
-            game.trainee.updateStats(game.imageUtils, sourceBitmap, skillPointsLocation, latch)
-            
-            // Thread 6: Update skill points.
-            Thread {
+                // Update the fan count class every time we're at the main screen.
+                val fanCountClass: FanCountClass? = getFanCountClass()
+                if (fanCountClass != null) {
+                    game.trainee.fanCountClass = fanCountClass
+                }
+
+                // Update trainee information using parallel processing with shared screenshot.
+                val sourceBitmap = game.imageUtils.getSourceBitmap()
+                val skillPointsLocation = game.imageUtils.findImageWithBitmap("skill_points", sourceBitmap, suppressError = true)
+
+                if (!BotService.isRunning) {
+                    return false
+                }
+                
+                // Use CountDownLatch to run the operations in parallel.
+                // 1 racingRequirements + 5 stats + 1 skill points + 1 mood = 8 threads.
+                val latch = CountDownLatch(8)
+
+                MessageLog.disableOutput = true
+                
+                // Threads 1-5: Update stats (one thread per stat, created inside updateStats).
+                // Pass the external latch so updateStats can count down for each stat thread.
+                game.trainee.updateStats(game.imageUtils, sourceBitmap, skillPointsLocation, latch)
+                
+                // Thread 6: Update skill points.
+                Thread {
+                    try {
+                        game.trainee.updateSkillPoints(game.imageUtils, sourceBitmap, skillPointsLocation)
+                    } catch (e: Exception) {
+                        MessageLog.e(TAG, "Error in updateSkillPoints thread: ${e.stackTraceToString()}")
+                    } finally {
+                        latch.countDown()
+                    }
+                }.apply { isDaemon = true }.start()
+                
+                // Thread 7: Update mood.
+                Thread {
+                    try {
+                        game.trainee.updateMood(game.imageUtils, sourceBitmap)
+                    } catch (e: Exception) {
+                        MessageLog.e(TAG, "Error in updateMood thread: ${e.stackTraceToString()}")
+                    } finally {
+                        latch.countDown()
+                    }
+                }.apply { isDaemon = true }.start()
+
+                // Thread 8: Update racing requirements.
+                Thread {
+                    try {
+                        game.racing.checkRacingRequirements(sourceBitmap)
+                    } catch (e: Exception) {
+                        MessageLog.e(TAG, "Error in checkRacingRequirements thread: ${e.stackTraceToString()}")
+                    } finally {
+                        latch.countDown()
+                    }
+                }.apply { isDaemon = true }.start()
+                
+                // Wait for all threads to complete.
                 try {
-                    game.trainee.updateSkillPoints(game.imageUtils, sourceBitmap, skillPointsLocation)
-                } catch (e: Exception) {
-                    MessageLog.e(TAG, "Error in updateSkillPoints thread: ${e.stackTraceToString()}")
+                    latch.await(10, TimeUnit.SECONDS)
+                } catch (_: InterruptedException) {
+                    MessageLog.e(TAG, "Date change operations threads timed out.")
                 } finally {
-                    latch.countDown()
+                    MessageLog.disableOutput = false
                 }
-            }.apply { isDaemon = true }.start()
-            
-            // Thread 7: Update mood.
-            Thread {
-                try {
-                    game.trainee.updateMood(game.imageUtils, sourceBitmap)
-                } catch (e: Exception) {
-                    MessageLog.e(TAG, "Error in updateMood thread: ${e.stackTraceToString()}")
-                } finally {
-                    latch.countDown()
-                }
-            }.apply { isDaemon = true }.start()
+                MessageLog.i(TAG, "[TRAINEE] Skills Updated: ${game.trainee.getStatsString()}")
+                MessageLog.i(TAG, "[TRAINEE] Mood Updated: ${game.trainee.mood}")
+                if (game.trainee.bHasUpdatedAptitudes) game.trainee.logInfo()
 
-            // Thread 8: Update racing requirements.
-            Thread {
-                try {
-                    game.racing.checkRacingRequirements(sourceBitmap)
-                } catch (e: Exception) {
-                    MessageLog.e(TAG, "Error in checkRacingRequirements thread: ${e.stackTraceToString()}")
-                } finally {
-                    latch.countDown()
+                // Now check if we need to handle skills before finals.
+                if (game.currentDate.day == 72 && game.skills.enablePreFinalsSkillPlan) {
+                    ButtonSkills.click(game.imageUtils)
+                    game.wait(1.0)
+                    if (!handleSkillListScreen()) {
+                        MessageLog.w(TAG, "handleMainScreen:: handleSkillList() failed.")
+                    }
+                    // Return to main screen.
+                    ButtonBack.click(game.imageUtils)
+                    game.wait(0.5, skipWaitingForLoading = true)
                 }
-            }.apply { isDaemon = true }.start()
-            
-            // Wait for all threads to complete.
-            try {
-                latch.await(10, TimeUnit.SECONDS)
-            } catch (_: InterruptedException) {
-                MessageLog.e(TAG, "Datre change operations threads timed out.")
-            } finally {
-                MessageLog.disableOutput = false
             }
 
-            MessageLog.i(TAG, "[TRAINEE] Skills Updated: ${game.trainee.getStatsString()}")
-            MessageLog.i(TAG, "[TRAINEE] Mood Updated: ${game.trainee.mood}")
-
-            // Now check if we need to handle skills before finals.
-            if (game.currentDate.day == 72 && game.skills.enablePreFinalsSkillPlan) {
-                ButtonSkills.click(game.imageUtils)
-                game.wait(1.0)
-                if (!handleSkillListScreen()) {
-                    MessageLog.w(TAG, "handleMainScreen:: handleSkillList() failed.")
-                }
-                // Return to main screen.
-                ButtonBack.click(game.imageUtils)
-                game.wait(0.5, skipWaitingForLoading = true)
-            }
-            if (game.trainee.bHasUpdatedAptitudes) game.trainee.logInfo()
+            // Mark that we've checked the date this turn.
+            bHasCheckedDateThisTurn = true
         }
 
         // If the required skill points has been reached, stop the bot.
@@ -641,7 +668,7 @@ open class Campaign(val game: Game) {
 
         if (!game.trainee.bHasUpdatedAptitudes) {
             openAptitudesDialog()
-            return true
+            waitForDialogProcessed()
         }
 
         val bIsScheduledRaceDay = LabelScheduledRace.check(game.imageUtils)
@@ -657,7 +684,7 @@ open class Campaign(val game: Game) {
             !bHasTriedCheckingFansToday
         ) {
             openFansDialog()
-            return true
+            waitForDialogProcessed()
         }
 
         // Check if bot should stop before the finals.
@@ -667,7 +694,7 @@ open class Campaign(val game: Game) {
 
         if (!needToRace && !game.racing.encounteredRacingPopup) {
             if (game.racing.enableForceRacing) {
-                // If force racing is enabled, skip all other activities and go straight to racing
+                // If force racing is enabled, skip all other activities and go straight to racing.
                 MessageLog.i(TAG, "Force racing enabled - skipping all other activities and going straight to racing.")
                 needToRace = true
             } else if (
@@ -689,25 +716,46 @@ open class Campaign(val game: Game) {
                 // Check if we need to rest before Summer Training (June Early/Late in Classic/Senior Year).
                 MessageLog.i(TAG, "Forcing rest during ${game.currentDate} in preparation for Summer Training.")
                 game.recoverEnergy()
-            } else if (game.checkInjury() && !game.checkFinals()) {
-                game.findAndTapImage("ok", region = game.imageUtils.regionMiddle)
-                game.wait(3.0)
-            } else if (game.recoverMood() && !game.checkFinals()) {
-                // NO-OP
-            } else if (game.currentDate.day >= 16 && game.racing.checkEligibilityToStartExtraRacingProcess()) {
-                MessageLog.i(TAG, "[INFO] Bot has no injuries, mood is sufficient and extra races can be run today. Setting the needToRace flag to true.")
-                needToRace = true
+                bHasCheckedDateThisTurn = false
             } else {
-                MessageLog.i(TAG, "[INFO] Training due to it not being an extra race day.")
-                game.training.handleTraining()
+                val hasInjury = game.checkInjury()
+
+                if (hasInjury && !game.checkFinals()) {
+                    game.findAndTapImage("ok", region = game.imageUtils.regionMiddle)
+                    game.wait(3.0)
+                    bHasCheckedDateThisTurn = false
+                } else {
+                    val didRecoverMood = game.recoverMood()
+
+                    if (didRecoverMood && !game.checkFinals()) {
+                        bHasCheckedDateThisTurn = false
+                    } else if (game.currentDate.day >= 16) {
+                        val eligibleForExtraRace = game.racing.checkEligibilityToStartExtraRacingProcess()
+
+                        if (eligibleForExtraRace) {
+                            MessageLog.i(TAG, "[INFO] Bot has no injuries, mood is sufficient and extra races can be run today. Setting the needToRace flag to true.")
+                            needToRace = true
+                        } else {
+                            MessageLog.i(TAG, "[INFO] Training due to it not being an extra race day.")
+                            game.training.handleTraining()
+                            bHasCheckedDateThisTurn = false
+                        }
+                    } else {
+                        MessageLog.i(TAG, "[INFO] Training due to it not being an extra race day.")
+                        game.training.handleTraining()
+                        bHasCheckedDateThisTurn = false
+                    }
+                }
             }
         }
+
 
         if (game.racing.encounteredRacingPopup || needToRace) {
             MessageLog.i(TAG, "[INFO] All checks are cleared for racing.")
             if (!handleRaceEvents(bIsScheduledRaceDay) && handleRaceEventFallback()) {
                 throw InterruptedException("Mandatory race detected. Stopping bot...")
             }
+            bHasCheckedDateThisTurn = false
         }
         return true
     }

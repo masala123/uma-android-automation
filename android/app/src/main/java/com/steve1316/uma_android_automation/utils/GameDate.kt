@@ -171,7 +171,8 @@ class GameDate {
 
             if (s.lowercase().contains("finale")) {
                 MessageLog.d(TAG, "fromDateString:: Finale season.")
-                val finalsDay: Int? = getFinalsDay(imageUtils = imageUtils)
+                // Pass the cached day string to avoid redundant OCR operations.
+                val (finalsDay, _) = getFinalsDay(imageUtils = imageUtils, cachedDayString = s)
                 if (finalsDay == null) {
                     MessageLog.w(TAG, "fromDateString:: Could not determine day in finale season. Defaulting to first day of finale.")
                     return GameDate(day = 73)
@@ -260,27 +261,31 @@ class GameDate {
         /** Determines the day number in the finale season.
          *
          * @param imageUtils A reference to a CustomImageUtils instance.
-         * @return The day number if detection was successful, or NULL otherwise.
+         * @param cachedDayString Optional cached day string to avoid redundant OCR.
+         * @param isOnMainScreen If true, skip the check in [determineDayString].
+         * @return A Pair containing the day number and day string.
          */
-        fun getFinalsDay(imageUtils: CustomImageUtils): Int? {
-            val goalText = imageUtils.getGoalText().lowercase()
-
-            val dayString: String? = imageUtils.determineDayString()
+        fun getFinalsDay(imageUtils: CustomImageUtils, cachedDayString: String? = null, isOnMainScreen: Boolean = false): Pair<Int?, String?> {
+            // Get the day string first to check if we're in finals before doing expensive OCR operations.
+            val dayString: String? = cachedDayString ?: imageUtils.determineDayString(isOnMainScreen)
             if (dayString == null) {
                 MessageLog.w(TAG, "[DATE] Could not detect day string.")
-                return null
+                return Pair(null, null)
             }
 
+            // Early exit if not in finale season.
             if (!dayString.lowercase().contains("finale")) {
                 MessageLog.w(TAG, "[DATE] getFinalsDay:: Not in finale season. Day string: $dayString")
-                return null
+                return Pair(null, dayString)
             }
+
+            val goalText = imageUtils.getGoalText().lowercase()
 
             fun goalTextMatch(target: String, query: String, threshold: Double = 0.9): Boolean {
                 return TextUtils.findMostSimilarSubstring(target, query, threshold) != null
             }
 
-            return when {
+            val finalsDay = when {
                 goalTextMatch(goalText, "qualifier") -> {
                     MessageLog.d(TAG, "[DATE] Detected Finals Qualifier (Turn 73).")
                     73
@@ -298,6 +303,7 @@ class GameDate {
                     73
                 }
             }
+            return Pair(finalsDay, dayString)
         }
     }
 
@@ -364,15 +370,16 @@ class GameDate {
      * Updates the current date by detecting it from the screen.
      *
      * @param imageUtils A reference to a CustomImageUtils instance.
+     * @param isOnMainScreen If true, skip the check in [determineDayString].
      * @return True if the date was updated successfully, false otherwise.
      */
-    fun update(imageUtils: CustomImageUtils): Boolean {
-        val finalsDay: Int? = getFinalsDay(imageUtils)
+    fun update(imageUtils: CustomImageUtils, isOnMainScreen: Boolean = false): Boolean {
+        val (finalsDay, cachedDayString) = getFinalsDay(imageUtils, isOnMainScreen = isOnMainScreen)
         if (finalsDay != null) {
             updateDay(finalsDay)
         } else {
-            // If finalsDay is NULL then we need to detect the date from the screen.
-            val tmpDate: GameDate? = fromDateString(imageUtils = imageUtils)
+            // Pass the cached day string to avoid doing expensive OCR operations again.
+            val tmpDate: GameDate? = fromDateString(s = cachedDayString, imageUtils = imageUtils)
             if (tmpDate == null) {
                 MessageLog.e(TAG, "GameDate.fromDateString returned NULL.")
                 return false

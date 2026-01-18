@@ -75,6 +75,11 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 	private val threshold = SettingsHelper.getIntSetting("ocr", "ocrThreshold").toDouble()
 	private val enableAutomaticRetry = SettingsHelper.getBooleanSetting("ocr", "enableAutomaticOCRRetry")
 
+	private val stringSimilarityService = StringSimilarityServiceImpl(JaroWinklerStrategy())
+
+	// Cache OCR matching results to avoid redundant string comparisons.
+	private val ocrMatchingCache = mutableMapOf<String, MatchingResult>()
+
     /**
     * Data class to hold a quadruple of values.
     */
@@ -109,6 +114,12 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 	private fun findMostSimilarString(ocrResult: String): MatchingResult {
 		MessageLog.i(TAG, "[TRAINING_EVENT_RECOGNIZER] Now starting process to find most similar string to: $ocrResult")
 		
+		// Check cache first to avoid redundant comparisons.
+		ocrMatchingCache[ocrResult]?.let {
+			MessageLog.i(TAG, "[TRAINING_EVENT_RECOGNIZER] Using cached result for: $ocrResult")
+			return it
+		}
+		
 		// Initialize result with default values.
 		var confidence = 0.0
 		var category = ""
@@ -134,9 +145,6 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		// Remove any detected whitespaces.
 		val processedResult = ocrResult.replace(" ", "")
 		
-		// Use the Jaro Winkler algorithm to compare similarities the OCR detected string and the rest of the strings inside the data classes.
-		val service = StringSimilarityServiceImpl(JaroWinklerStrategy())
-		
 		// Attempt to find the most similar string inside the character event data.
 		if (characterEventData != null) {
 			characterEventData.keys().forEach { characterKey ->
@@ -153,7 +161,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 						eventOptions.add(eventOptionsArray.getString(i))
 					}
 					
-					val score = service.score(processedResult, eventName)
+					val score = stringSimilarityService.score(processedResult, eventName)
 					if (!hideComparisonResults) {
 						MessageLog.i(TAG, "[CHARA] $characterKey \"${processedResult}\" vs. \"${eventName}\" confidence: ${game.decimalFormat.format(score)}")
 					}
@@ -164,6 +172,13 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 						eventOptionRewards = eventOptions
 						category = "character"
 						character = characterKey
+						
+						// Early exit when we've found a match that meets the minimum confidence.
+						if (score >= minimumConfidence) {
+							val result = MatchingResult(confidence, category, eventTitle, supportCardTitle, eventOptionRewards, character)
+							ocrMatchingCache[ocrResult] = result
+							return result
+						}
 					}
 				}
 			}
@@ -185,7 +200,7 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 						eventOptions.add(eventOptionsArray.getString(i))
 					}
 					
-					val score = service.score(processedResult, eventName)
+					val score = stringSimilarityService.score(processedResult, eventName)
 					if (!hideComparisonResults) {
 						MessageLog.i(TAG, "[SUPPORT] $supportName \"${processedResult}\" vs. \"${eventName}\" confidence: $score")
 					}
@@ -196,6 +211,13 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 						supportCardTitle = supportName
 						eventOptionRewards = eventOptions
 						category = "support"
+						
+						// Early exit when we've found a match that meets the minimum confidence.
+						if (score >= minimumConfidence) {
+							val result = MatchingResult(confidence, category, eventTitle, supportCardTitle, eventOptionRewards, character)
+							ocrMatchingCache[ocrResult] = result
+							return result
+						}
 					}
 				}
 			}
@@ -204,7 +226,10 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 		MessageLog.i(TAG, "${if (!hideComparisonResults) "\n" else ""}[TRAINING_EVENT_RECOGNIZER] Finished process to find similar string.")
 		MessageLog.i(TAG, "[TRAINING_EVENT_RECOGNIZER] Event data fetched for \"${eventTitle}\".")
 		
-		return MatchingResult(confidence, category, eventTitle, supportCardTitle, eventOptionRewards, character)
+		// Cache result before returning.
+		val result = MatchingResult(confidence, category, eventTitle, supportCardTitle, eventOptionRewards, character)
+		ocrMatchingCache[ocrResult] = result
+		return result
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -260,7 +285,9 @@ class TrainingEventRecognizer(private val game: Game, private val imageUtils: Cu
 					MessageLog.i(TAG, "\n[RESULT] Threshold incremented by $increment")
 				}
 				
-				if (matchingResult.confidence < minimumConfidence && enableAutomaticRetry) {
+				// Round confidence to 2 decimal places to match display precision and avoid floating point issues.
+				val roundedConfidence = Math.round(matchingResult.confidence * 100.0) / 100.0
+				if (roundedConfidence < minimumConfidence && enableAutomaticRetry) {
 					increment += 5.0
 				} else {
 					break
