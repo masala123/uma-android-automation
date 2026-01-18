@@ -794,11 +794,14 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			// Estimate the filled segments (each segment is about 20% of the whole bar).
 			val filledSegments = (fillPercent / 20).coerceAtMost(5.0).toInt()
 
-			val dominantColor = when {
+			// Determine dominant color, but normalize to "none" if fill is essentially 0%.
+			val dominantColor = if (fillPercent < 1.0) {
+				"none"
+			} else when {
 				orangePixels > greenPixels && orangePixels > bluePixels -> "orange"
 				greenPixels > bluePixels -> "green"
 				bluePixels > 0 -> "blue"
-				else -> "none"
+				else -> "unknown"
 			}
 
 			blueMask.release()
