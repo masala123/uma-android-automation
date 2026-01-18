@@ -384,10 +384,10 @@ class SkillScraper(BaseScraper):
         driver.get("https://game8.co/games/Umamusume-Pretty-Derby/archives/536805")
 
         h4_tier_map = {
-            "hs_1": 0,
-            "hs_2": 1,
-            "hs_3": 2,
-            "hs_4": 3,
+            "hs_1": 0, # B
+            "hs_2": 1, # A
+            "hs_3": 2, # S
+            "hs_4": 3, # SS
         }
 
         res = {}

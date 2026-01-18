@@ -5,6 +5,7 @@ import { Ionicons } from "@expo/vector-icons"
 import { Divider } from "react-native-paper"
 import { useTheme } from "../../context/ThemeContext"
 import { BotStateContext, defaultSettings } from "../../context/BotStateContext"
+import CustomSelect from "../../components/CustomSelect"
 import CustomCheckbox from "../../components/CustomCheckbox"
 import CustomButton from "../../components/CustomButton"
 import CustomScrollView from "../../components/CustomScrollView"
@@ -48,11 +49,9 @@ const SkillPlanPreFinalsSettings = () => {
     const skillSettings = { ...defaultSettings.skills, ...settings.skills }
     const {
         enablePreFinalsSkillPlan,
-        enablePreFinalsSpendAll,
-        enablePreFinalsOptimizeRank,
+        preFinalsSpendingStrategy,
         enablePreFinalsBuyInheritedSkills,
         enablePreFinalsBuyNegativeSkills,
-        enablePreFinalsIgnoreGoldSkills,
         preFinalsSkillPlan,
     } = skillSettings
 
@@ -195,6 +194,9 @@ const SkillPlanPreFinalsSettings = () => {
             opacity: 0.7,
             marginTop: 4,
         },
+        inputContainer: {
+            marginBottom: 16,
+        },
         terrainButton: {
             padding: 12,
             borderRadius: 8,
@@ -209,28 +211,28 @@ const SkillPlanPreFinalsSettings = () => {
     const renderOptions = () => {
         return (
             <>
-                <CustomCheckbox
-                    id="enable-pre-finals-spend-all"
-                    checked={enablePreFinalsSpendAll}
-                    onCheckedChange={(checked) => updateSkillsSetting("enablePreFinalsSpendAll", checked)}
-                    label="Spend All Skill Points"
-                    description={"When enabled, the bot will attempt to spend all available skill points after purchasing skills from the Planned Skills list. Skills will be purchased to prioritize trainee aptitudes. This is not fully optimized so using this option is not recommended."}
-                    style={{ marginTop: 16 }}
-                />
-                <CustomCheckbox
-                    id="enable-pre-finals-optimize-rank"
-                    checked={enablePreFinalsOptimizeRank}
-                    onCheckedChange={(checked) => updateSkillsSetting("enablePreFinalsOptimizeRank", checked)}
-                    label="Purchase Skills to Optimize Rank"
-                    description={"When enabled, the bot will attempt to spend skill points on skills such that the final rank of the trainee is optimized. This is just a lazy evaluation so the optimization is only approximated."}
-                    style={{ marginTop: 16 }}
-                />
+                <View style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>Skill Point Spending Strategy</Text>
+                    <CustomSelect
+                        options={[
+                            { value: "default", label: "Do Not Spend Remaining Points" },
+                            { value: "optimize_skills", label: "Best Skills First" },
+                            { value: "optimize_rank", label: "Optimize Rank" },
+                        ]}
+                        value={preFinalsSpendingStrategy}
+                        onValueChange={(value) => updateSkillsSetting("preFinalsSpendingStrategy", value)}
+                        placeholder="Select Strategy"
+                    />
+                    <Text style={styles.inputDescription}>The strategy to use when spending skill points. Best Skills First will use a community skill tier list to purchase better skills first and then within each tier it will attempt to optimize rank. Optimize Rank will purchase skills </Text>
+                    <Text style={styles.inputDescription}>Best Skills First will use a community skill tier list to purchase better skills first and then within each tier it will attempt to optimize rank.</Text>
+                    <Text style={styles.inputDescription}>Optimize Rank will purchase skills in a way which will result in the highest trainee rank. Avoid this option since it will likely make a bad PvP trainee.</Text>
+                </View>
                 <CustomCheckbox
                     id="enable-pre-finals-buy-inherited-skills"
                     checked={enablePreFinalsBuyInheritedSkills}
                     onCheckedChange={(checked) => updateSkillsSetting("enablePreFinalsBuyInheritedSkills", checked)}
                     label="Purchase All Inherited Unique Skills"
-                    description={"When enabled, the bot will attempt to purchase all inherited unique skills."}
+                    description={"When enabled, the bot will attempt to purchase all inherited unique skills regardless of their evaluated rating or community tier list rating."}
                     style={{ marginTop: 16 }}
                 />
                 <CustomCheckbox
@@ -239,14 +241,6 @@ const SkillPlanPreFinalsSettings = () => {
                     onCheckedChange={(checked) => updateSkillsSetting("enablePreFinalsBuyNegativeSkills", checked)}
                     label="Purchase All Negative Skills"
                     description={"When enabled, the bot will attempt to purchase all negative skills (i.e. Firm Conditions ×)."}
-                    style={{ marginTop: 16 }}
-                />
-                <CustomCheckbox
-                    id="enable-pre-finals-ignore-gold-skills"
-                    checked={enablePreFinalsIgnoreGoldSkills}
-                    onCheckedChange={(checked) => updateSkillsSetting("enablePreFinalsIgnoreGoldSkills", checked)}
-                    label="Ignore Gold Skills"
-                    description={"When enabled, the bot will not purchase any gold skills that are not included in the skill plan."}
                     style={{ marginTop: 16 }}
                 />
             </>
