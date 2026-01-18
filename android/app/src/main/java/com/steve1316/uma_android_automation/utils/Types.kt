@@ -280,6 +280,7 @@ data class SkillData(
     val evalPt: Int,
     val ptRatio: Double,
     val rarity: Int,
+    val communityTier: Int?,
     val versions: List<Int>,
     val upgrade: Int?,
     val downgrade: Int?,
@@ -308,6 +309,7 @@ data class SkillData(
         evalPt: Int,
         ptRatio: Double,
         rarity: Int,
+        communityTier: Int?,
         versions: String,
         upgrade: Int?,
         downgrade: Int?,
@@ -320,6 +322,7 @@ data class SkillData(
         evalPt,
         ptRatio,
         rarity,
+        communityTier,
         versions
             .replace("[", "")
             .replace("]", "")

@@ -22,6 +22,7 @@ interface Skill {
     eval_pt: number
     pt_ratio: number
     rarity: number
+    community_tier: number | null
     versions: number[]
     upgrade: number | null
     downgrade: number | null

@@ -128,6 +128,7 @@ class Skills (private val game: Game) {
         private const val SKILLS_COLUMN_EVAL_PT = "eval_pt"
         private const val SKILLS_COLUMN_PT_RATIO = "pt_ratio"
         private const val SKILLS_COLUMN_RARITY = "rarity"
+        private const val SKILLS_COLUMN_COMMUNITY_TIER = "community_tier"
         private const val SKILLS_COLUMN_VERSIONS = "versions"
         private const val SKILLS_COLUMN_UPGRADE = "upgrade"
         private const val SKILLS_COLUMN_DOWNGRADE = "downgrade"
@@ -209,6 +210,7 @@ class Skills (private val game: Game) {
                     evalPt = skillObj.getInt(SKILLS_COLUMN_EVAL_PT),
                     ptRatio = skillObj.getDouble(SKILLS_COLUMN_PT_RATIO),
                     rarity = skillObj.getInt(SKILLS_COLUMN_RARITY),
+                    communityTier = skillObj.optInt(SKILLS_COLUMN_COMMUNITY_TIER),
                     versions = skillObj.getString(SKILLS_COLUMN_VERSIONS),
                     upgrade = skillObj.optInt(SKILLS_COLUMN_UPGRADE),
                     downgrade = skillObj.optInt(SKILLS_COLUMN_DOWNGRADE),
@@ -382,6 +384,7 @@ class Skills (private val game: Game) {
                     SKILLS_COLUMN_EVAL_PT,
                     SKILLS_COLUMN_PT_RATIO,
                     SKILLS_COLUMN_RARITY,
+                    SKILLS_COLUMN_COMMUNITY_TIER,
                     SKILLS_COLUMN_VERSIONS,
                     SKILLS_COLUMN_UPGRADE,
                     SKILLS_COLUMN_DOWNGRADE,
@@ -401,9 +404,10 @@ class Skills (private val game: Game) {
                     evalPt = exactCursor.getInt(5),
                     ptRatio = exactCursor.getDouble(6),
                     rarity = exactCursor.getInt(7),
-                    versions = exactCursor.getString(8),
-                    upgrade = if (exactCursor.isNull(9)) null else exactCursor.getInt(9),
-                    downgrade = if (exactCursor.isNull(10)) null else exactCursor.getInt(10),
+                    communityTier = if (exactCursor.isNull(8)) null else exactCursor.getInt(8),
+                    versions = exactCursor.getString(9),
+                    upgrade = if (exactCursor.isNull(10)) null else exactCursor.getInt(10),
+                    downgrade = if (exactCursor.isNull(11)) null else exactCursor.getInt(11),
                 )
                 exactCursor.close()
                 settingsManager.close()
@@ -425,6 +429,7 @@ class Skills (private val game: Game) {
                     SKILLS_COLUMN_EVAL_PT,
                     SKILLS_COLUMN_PT_RATIO,
                     SKILLS_COLUMN_RARITY,
+                    SKILLS_COLUMN_COMMUNITY_TIER,
                     SKILLS_COLUMN_VERSIONS,
                     SKILLS_COLUMN_UPGRADE,
                     SKILLS_COLUMN_DOWNGRADE,
@@ -458,9 +463,10 @@ class Skills (private val game: Game) {
                         evalPt = fuzzyCursor.getInt(5),
                         ptRatio = fuzzyCursor.getDouble(6),
                         rarity = fuzzyCursor.getInt(7),
-                        versions = fuzzyCursor.getString(8),
-                        upgrade = if (fuzzyCursor.isNull(9)) null else fuzzyCursor.getInt(9),
-                        downgrade = if (fuzzyCursor.isNull(10)) null else fuzzyCursor.getInt(10),
+                        communityTier = if (fuzzyCursor.isNull(8)) null else fuzzyCursor.getInt(8),
+                        versions = fuzzyCursor.getString(9),
+                        upgrade = if (fuzzyCursor.isNull(10)) null else fuzzyCursor.getInt(10),
+                        downgrade = if (fuzzyCursor.isNull(11)) null else fuzzyCursor.getInt(11),
                     )
                     if (game.debugMode) {
                         MessageLog.d(TAG, "[DEBUG] Fuzzy match candidate: \"${bestMatch.name}\" AKA \"$tmpName\" with similarity ${game.decimalFormat.format(similarity)}.")
