@@ -101,12 +101,15 @@ class Game(val myContext: Context) {
      * This gives the dialog time to close since there is a very short
      * animation that plays when a dialog closes.
      *
+     * @param dialog An optional dialog to evaluate. This allows chaining
+     * dialog handler calls for improved performance.
+     *
      * @return A pair of a boolean and a nullable DialogInterface.
      * The boolean is true when a dialog has been handled by this function.
      * The DialogInterface is the detected dialog, or NULL if no dialogs were found.
      */
-    fun handleDialogs(): Pair<Boolean, DialogInterface?> {
-        val dialog: DialogInterface? = DialogUtils.getDialog(imageUtils = imageUtils)
+    fun handleDialogs(dialog: DialogInterface? = null): Pair<Boolean, DialogInterface?> {
+        val dialog: DialogInterface? = dialog ?: DialogUtils.getDialog(imageUtils = imageUtils)
         if (dialog == null) {
             return Pair(false, null)
         }
@@ -346,19 +349,19 @@ class Game(val myContext: Context) {
 	fun checkMandatoryRacePrepScreen(): Boolean {
 		MessageLog.i(TAG, "\nChecking if the bot is sitting on the Race Preparation screen for a mandatory race.")
         val sourceBitmap = imageUtils.getSourceBitmap()
-		return if (IconRaceDayRibbon.check(imageUtils = imageUtils)) {
+		return if (IconRaceDayRibbon.check(imageUtils = imageUtils, sourceBitmap = sourceBitmap)) {
 			MessageLog.i(TAG, "Bot is at the preparation screen with a mandatory race ready to be completed.")
             if (scenario == "Unity Cup") wait(1.0)
 			true
-		} else if (IconGoalRibbon.check(imageUtils = imageUtils)) {
+		} else if (IconGoalRibbon.check(imageUtils = imageUtils, sourceBitmap = sourceBitmap)) {
 			// Most likely the user started the bot here so a delay will need to be placed to allow the start banner of the Service to disappear.
 			wait(2.0)
 			MessageLog.i(TAG, "Bot is at the Race Selection screen with a mandatory race needing to be selected.")
 			// Walk back to the preparation screen.
-            ButtonBack.click(imageUtils = imageUtils)
+            ButtonBack.click(imageUtils = imageUtils, sourceBitmap = sourceBitmap)
 			wait(1.0)
 			true
-		} else if (scenario == "Unity Cup" && ButtonUnityCupRace.check(imageUtils = imageUtils)) {
+		} else if (scenario == "Unity Cup" && ButtonUnityCupRace.check(imageUtils = imageUtils, sourceBitmap = sourceBitmap)) {
             MessageLog.i(TAG, "Bot is awaiting opponent selection for a Unity Cup race.")
             true
         } else {
@@ -412,7 +415,6 @@ class Game(val myContext: Context) {
 		}
 
 		MessageLog.i(TAG, "\n[FINALS] Checking if bot should stop before the finals.")
-		val sourceBitmap = imageUtils.getSourceBitmap()
 
 		// Check if turn is 72, but only stop if we progressed to turn 72 during this run.
 		if (currentDate.day == 72 && stopBeforeFinalsInitialTurnNumber != -1) {
@@ -434,9 +436,9 @@ class Game(val myContext: Context) {
 	 *
 	 * @return True if the bot has a injury. Otherwise false.
 	 */
-	fun checkInjury(): Boolean {
+	fun checkInjury(sourceBitmap: Bitmap? = null): Boolean {
 		MessageLog.i(TAG, "\n[INJURY] Checking if there is an injury that needs healing on ${currentDate}.")
-        val sourceBitmap = imageUtils.getSourceBitmap()
+        val sourceBitmap = sourceBitmap ?: imageUtils.getSourceBitmap()
 		val recoverInjuryLocation = imageUtils.findImageWithBitmap("recover_injury", sourceBitmap, region = imageUtils.regionBottomHalf)
 		return if (recoverInjuryLocation != null && imageUtils.checkColorAtCoordinates(
 				recoverInjuryLocation.x.toInt(),
@@ -541,13 +543,16 @@ class Game(val myContext: Context) {
 	 *
 	 * @return True if the bot successfully recovered energy. Otherwise false.
 	 */
-    fun recoverEnergy(): Boolean {
+    fun recoverEnergy(sourceBitmap: Bitmap? = null): Boolean {
 		MessageLog.i(TAG, "\n[ENERGY] Now starting attempt to recover energy on ${currentDate}.")
-        val sourceBitmap = imageUtils.getSourceBitmap()
+        val sourceBitmap: Bitmap = sourceBitmap ?: imageUtils.getSourceBitmap()
 		
 		// First, try to handle recreation date which also recovers energy if a date is available.
 		// Skip recreation date if it's already completed (will only be used for mood recovery).
-		if (!recreationDateCompleted && imageUtils.findImage("recreation_date", tries = 1, region = imageUtils.regionBottomHalf).first != null && handleRecreationDate(recoverMoodIfCompleted = false)) {
+		if (
+            !recreationDateCompleted &&
+            imageUtils.findImageWithBitmap("recreation_date", sourceBitmap = sourceBitmap, region = imageUtils.regionBottomHalf) != null &&
+            handleRecreationDate(recoverMoodIfCompleted = false)) {
 			MessageLog.i(TAG, "[ENERGY] Successfully recovered energy via recreation date.")
 			return true
 		}
@@ -582,13 +587,13 @@ class Game(val myContext: Context) {
 	 *
 	 * @return True if the bot successfully recovered mood. Otherwise false.
 	 */
-	fun recoverMood(): Boolean {
+	fun recoverMood(sourceBitmap: Bitmap? = null): Boolean {
 		MessageLog.i(TAG, "\n[MOOD] Detecting current mood on ${currentDate}.")
 
-        val sourceBitmap = imageUtils.getSourceBitmap()
+        val sourceBitmap = sourceBitmap ?: imageUtils.getSourceBitmap()
 
         // Make sure the trainee's mood is up to date.
-        trainee.updateMood(imageUtils)
+        trainee.updateMood(imageUtils, sourceBitmap)
 
 		MessageLog.i(TAG, "[MOOD] Detected mood to be ${trainee.mood}.")
 
@@ -600,7 +605,7 @@ class Game(val myContext: Context) {
 			MessageLog.i(TAG, "[MOOD] Current mood is not good (${trainee.mood}). Recovering mood now.")
 
             // Check if a date is available.
-            if (!recreationDateCompleted && imageUtils.findImage("recreation_date", tries = 1, region = imageUtils.regionBottomHalf).first != null) {
+            if (!recreationDateCompleted && imageUtils.findImageWithBitmap("recreation_date", sourceBitmap = sourceBitmap, region = imageUtils.regionBottomHalf) != null) {
                 handleRecreationDate(recoverMoodIfCompleted = true)
             } else {
                 // Otherwise, recover mood as normal.
@@ -750,7 +755,7 @@ class Game(val myContext: Context) {
             MessageLog.i(TAG, "[MISC] Consecutive race warning detected on the screen so dismissing the popup.")
             findAndTapImage("cancel", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf)
             wait(1.0)
-        } else if (ButtonCraneGame.check(imageUtils = imageUtils)) {
+        } else if (ButtonCraneGame.check(imageUtils = imageUtils, sourceBitmap = sourceBitmap)) {
             if (enableCraneGameAttempt) {
                 handleCraneGame()
             } else {
@@ -760,10 +765,10 @@ class Game(val myContext: Context) {
                 return false
             }
         } else if (
-            imageUtils.findImage("ordinary_cuties", region = imageUtils.regionMiddle).first != null &&
-            ButtonCraneGameOk.check(imageUtils = imageUtils)
+            imageUtils.findImageWithBitmap("ordinary_cuties", region = imageUtils.regionMiddle, sourceBitmap = sourceBitmap) != null &&
+            ButtonCraneGameOk.check(imageUtils = imageUtils, sourceBitmap = sourceBitmap)
         ) {
-            ButtonCraneGameOk.click(imageUtils = imageUtils)
+            ButtonCraneGameOk.click(imageUtils = imageUtils, sourceBitmap = sourceBitmap)
             MessageLog.i(TAG, "[CRANE GAME] Event exited.")
 		} else if (scenario != "Unity Cup" && findAndTapImage("close", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
 			MessageLog.i(TAG, "[MISC] There is a possible popup to accept a trophy.")
@@ -778,10 +783,10 @@ class Game(val myContext: Context) {
 			MessageLog.i(TAG, "[MISC] There was a popup about insufficient fans.")
 			racing.encounteredRacingPopup = true
 			findAndTapImage("cancel", region = imageUtils.regionBottomHalf)
-		} else if (findAndTapImage("back", tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
+		} else if (findAndTapImage("back", sourceBitmap = sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
 			MessageLog.i(TAG, "[MISC] Navigating back a screen since all the other misc checks have been completed.")
 			wait(1.0)
-		} else if (ButtonSkip.click(imageUtils = imageUtils)) {
+		} else if (ButtonSkip.click(imageUtils = imageUtils, sourceBitmap = sourceBitmap)) {
             MessageLog.d(TAG, "[MISC] Clicked skip button.")
         } else if (!BotService.isRunning) {
 			MessageLog.i(TAG, "\n[END] BotService is not running. Exiting now...")
