@@ -172,7 +172,9 @@ class UnityCup(game: Game) : Campaign(game) {
                     }
                     val opponent = opponents[selectedOpponentIndex]
                     game.gestureUtils.tap(opponent.x, opponent.y, LabelUnityCupOpponentSelectionLaurel.template.path)
+                    MessageLog.d(TAG, "[UNITY CUP] Selecting opponent #${selectedOpponentIndex} at ${opponent}")
                     ButtonSelectOpponent.click(imageUtils = game.imageUtils, sourceBitmap = sourceBitmap)
+                    game.wait(0.5, skipWaitingForLoading = true)
                 }
                 // If the skip button is locked, need to manually run the race.
                 ButtonViewResultsLocked.check(game.imageUtils, sourceBitmap = sourceBitmap) -> {
