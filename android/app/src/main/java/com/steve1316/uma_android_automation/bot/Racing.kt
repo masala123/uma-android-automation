@@ -1,9 +1,9 @@
 package com.steve1316.uma_android_automation.bot
 
 import com.steve1316.uma_android_automation.MainActivity
-import com.steve1316.uma_android_automation.utils.SettingsHelper
+import com.steve1316.automation_library.utils.SettingsHelper
 import com.steve1316.uma_android_automation.utils.CustomImageUtils.RaceDetails
-import com.steve1316.uma_android_automation.utils.SQLiteSettingsManager
+import com.steve1316.automation_library.utils.SQLiteSettingsManager
 import com.steve1316.automation_library.utils.MessageLog
 import net.ricecode.similarity.JaroWinklerStrategy
 import net.ricecode.similarity.StringSimilarityServiceImpl

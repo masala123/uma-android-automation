@@ -21,8 +21,6 @@ import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.automation_library.utils.MyAccessibilityService
 import com.steve1316.automation_library.utils.BatteryOptimizationUtils
 import com.steve1316.uma_android_automation.bot.Game
-import com.steve1316.uma_android_automation.utils.SettingsHelper
-import com.steve1316.uma_android_automation.utils.SQLiteSettingsManager
 import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.SubscriberExceptionEvent
@@ -252,7 +250,7 @@ class StartModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
             // Initialize SQLite settings with detailed debugging.
             Log.d(TAG, "Starting SQLite settings initialization...")
             
-            // Check if the database file exists before attempting to initialize.
+            // Check if the database file exists.
             val dbFile = java.io.File(context.filesDir, "SQLite/settings.db")
             Log.d(TAG, "Database file path: ${dbFile.absolutePath}")
             Log.d(TAG, "Database file exists: ${dbFile.exists()}")
@@ -281,17 +279,6 @@ class StartModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
                         Log.d(TAG, "  - ${file.name} (${file.length()} bytes)")
                     }
                 }
-            }
-            
-            // Check if database is available before attempting to initialize.
-            val settingsManager = SQLiteSettingsManager(context)
-            Log.d(TAG, "Database is available: ${settingsManager.isDatabaseAvailable()}")
-            
-            SettingsHelper.initialize(context)
-            if (SettingsHelper.isAvailable()) {
-                Log.d(TAG, "SQLite settings initialized successfully.")
-            } else {
-                Log.w(TAG, "Failed to initialize SQLite settings, continuing with defaults.")
             }
 
             val entryPoint = Game(context)
