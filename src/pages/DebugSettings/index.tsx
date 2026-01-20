@@ -5,6 +5,7 @@ import { BotStateContext } from "../../context/BotStateContext"
 import CustomSlider from "../../components/CustomSlider"
 import CustomCheckbox from "../../components/CustomCheckbox"
 import CustomTitle from "../../components/CustomTitle"
+import CustomSelect from "../../components/CustomSelect"
 import { Separator } from "../../components/ui/separator"
 import PageHeader from "../../components/PageHeader"
 
@@ -109,6 +110,95 @@ const DebugSettings = () => {
                             showLabels={true}
                             description="Manually set the scale to do template matching. The Basic Template Matching Test can help find your recommended scale. Making it too low or too high will cause the bot to match on too little or too many things as false positives."
                         />
+
+                        <Separator style={{ marginVertical: 16 }} />
+
+                        <CustomTitle title="Screen Recording Settings" description="Configure the quality settings for screen recording." />
+
+                        <CustomCheckbox
+                            checked={bsc.settings.debug.enableScreenRecording}
+                            onCheckedChange={(checked) => {
+                                bsc.setSettings({
+                                    ...bsc.settings,
+                                    debug: { ...bsc.settings.debug, enableScreenRecording: checked },
+                                })
+                            }}
+                            label="Enable Screen Recording"
+                            description="Records the screen while the bot is running. The mp4 file will be saved to the app's data directory. Note that performance may be impacted while recording."
+                        />
+
+                        {bsc.settings.debug.enableScreenRecording && (
+                            <View style={{ marginTop: 8, marginLeft: 20 }}>
+                                <CustomSlider
+                                    value={bsc.settings.debug.recordingBitRate}
+                                    placeholder={bsc.defaultSettings.debug.recordingBitRate}
+                                    onValueChange={(value) => {
+                                        bsc.setSettings({
+                                            ...bsc.settings,
+                                            debug: { ...bsc.settings.debug, recordingBitRate: value },
+                                        })
+                                    }}
+                                    onSlidingComplete={(value) => {
+                                        bsc.setSettings({
+                                            ...bsc.settings,
+                                            debug: { ...bsc.settings.debug, recordingBitRate: value },
+                                        })
+                                    }}
+                                    min={1}
+                                    max={20}
+                                    step={1}
+                                    label="Recording Quality (Bit Rate)"
+                                    labelUnit=" Mbps"
+                                    showValue={true}
+                                    showLabels={true}
+                                    description="Sets the video bit rate for screen recording. Higher values produce better quality but larger file sizes."
+                                />
+
+                                <CustomTitle title="Recording Frame Rate" description="Sets the frame rate for screen recording." />
+                                <CustomSelect
+                                    value={bsc.settings.debug.recordingFrameRate.toString()}
+                                    options={[
+                                        { value: "30", label: "30 FPS" },
+                                        { value: "60", label: "60 FPS" },
+                                    ]}
+                                    onValueChange={(value) => {
+                                        if (value) {
+                                            bsc.setSettings({
+                                                ...bsc.settings,
+                                                debug: { ...bsc.settings.debug, recordingFrameRate: parseInt(value, 10) },
+                                            })
+                                        }
+                                    }}
+                                    placeholder="Select Frame Rate for Recording"
+                                    style={{ marginTop: 8, marginBottom: 16 }}
+                                />
+
+                                <CustomSlider
+                                    value={bsc.settings.debug.recordingResolutionScale}
+                                    placeholder={bsc.defaultSettings.debug.recordingResolutionScale}
+                                    onValueChange={(value) => {
+                                        bsc.setSettings({
+                                            ...bsc.settings,
+                                            debug: { ...bsc.settings.debug, recordingResolutionScale: value },
+                                        })
+                                    }}
+                                    onSlidingComplete={(value) => {
+                                        bsc.setSettings({
+                                            ...bsc.settings,
+                                            debug: { ...bsc.settings.debug, recordingResolutionScale: value },
+                                        })
+                                    }}
+                                    min={0.25}
+                                    max={1.0}
+                                    step={0.05}
+                                    label="Recording Resolution Scale"
+                                    labelUnit=""
+                                    showValue={true}
+                                    showLabels={true}
+                                    description="Scales the recording resolution. Lower values produce smaller file sizes but lower quality. 1.0 = full resolution, 0.5 = half resolution."
+                                />
+                            </View>
+                        )}
 
                         <Separator style={{ marginVertical: 16 }} />
 
