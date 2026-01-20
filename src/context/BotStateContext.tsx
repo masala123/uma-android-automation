@@ -55,6 +55,7 @@ export interface Settings {
         enableMessageIdDisplay: boolean
         currentProfileName: string
         messageLogFontSize: number
+        overlayButtonSizeDP: number
     }
 
     // Training settings
@@ -127,6 +128,10 @@ export interface Settings {
         debugMode_startMainScreenOCRTest: boolean
         debugMode_startTrainingScreenOCRTest: boolean
         enableHideOCRComparisonResults: boolean
+        enableScreenRecording: boolean
+        recordingBitRate: number
+        recordingFrameRate: number
+        recordingResolutionScale: number
     }
 }
 
@@ -228,6 +233,7 @@ export const defaultSettings: Settings = {
         enableMessageIdDisplay: false,
         currentProfileName: "",
         messageLogFontSize: 8,
+        overlayButtonSizeDP: 40,
     },
     training: {
         trainingBlacklist: [],
@@ -285,6 +291,10 @@ export const defaultSettings: Settings = {
         debugMode_startMainScreenOCRTest: false,
         debugMode_startTrainingScreenOCRTest: false,
         enableHideOCRComparisonResults: true,
+        enableScreenRecording: false,
+        recordingBitRate: 6,
+        recordingFrameRate: 30,
+        recordingResolutionScale: 1.0,
     },
 }
 
