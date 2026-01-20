@@ -11,7 +11,7 @@ import com.steve1316.automation_library.utils.BotService
 import com.steve1316.automation_library.data.SharedData
 import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.automation_library.utils.MyAccessibilityService
-import com.steve1316.uma_android_automation.utils.SettingsHelper
+import com.steve1316.automation_library.utils.SettingsHelper
 import com.steve1316.uma_android_automation.utils.GameDate
 import com.steve1316.uma_android_automation.bot.Trainee
 import com.steve1316.uma_android_automation.bot.Skills

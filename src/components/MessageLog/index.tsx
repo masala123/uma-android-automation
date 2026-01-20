@@ -307,6 +307,9 @@ ${longTargetsString}
 🐛 Debug Mode: ${settings.debug.enableDebugMode ? "✅" : "❌"}
 🔍 Minimum Template Match Confidence: ${settings.debug.templateMatchConfidence}
 🔍 Custom Scale: ${settings.debug.templateMatchCustomScale}
+📹 Enable Screen Recording: ${
+            settings.debug.enableScreenRecording ? `✅ (${settings.debug.recordingBitRate} Mbps, ${settings.debug.recordingFrameRate} FPS, ${settings.debug.recordingResolutionScale}x scale)` : "❌"
+        }
 🔍 Start Template Matching Test: ${settings.debug.debugMode_startTemplateMatchingTest ? "✅" : "❌"}
 🔍 Start Single Training OCR Test: ${settings.debug.debugMode_startSingleTrainingOCRTest ? "✅" : "❌"}
 🔍 Start Comprehensive Training OCR Test: ${settings.debug.debugMode_startComprehensiveTrainingOCRTest ? "✅" : "❌"}

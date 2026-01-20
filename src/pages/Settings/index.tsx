@@ -299,6 +299,25 @@ const Settings = () => {
                     description="Sets the delay between actions and imaging operations. Lowering this will make the bot run much faster."
                 />
 
+                <CustomSlider
+                    value={bsc.settings.misc.overlayButtonSizeDP}
+                    placeholder={bsc.defaultSettings.misc.overlayButtonSizeDP}
+                    onValueChange={(value) => {
+                        bsc.setSettings({ ...bsc.settings, misc: { ...bsc.settings.misc, overlayButtonSizeDP: value } })
+                    }}
+                    onSlidingComplete={(value) => {
+                        bsc.setSettings({ ...bsc.settings, misc: { ...bsc.settings.misc, overlayButtonSizeDP: value } })
+                    }}
+                    min={30}
+                    max={60}
+                    step={5}
+                    label="Overlay Button Size"
+                    labelUnit=" dp"
+                    showValue={true}
+                    showLabels={true}
+                    description="Sets the size of the floating overlay button in density-independent pixels (dp). Higher values make the button easier to tap."
+                />
+
                 <Separator style={{ marginVertical: 16 }} />
 
                 <CustomTitle title="Settings Management" description="Import and export settings from JSON file or access the app's data directory." />
