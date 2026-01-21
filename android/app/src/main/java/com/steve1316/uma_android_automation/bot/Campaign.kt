@@ -267,7 +267,7 @@ open class Campaign(val game: Game) {
     fun handleSkillListScreen(): Boolean {
         MessageLog.i(TAG, "Beginning process to purchase skills...")
 
-        return game.skills.handleSkillList()
+        return game.skillPlan.start()
     }
 
     /**
@@ -646,7 +646,7 @@ open class Campaign(val game: Game) {
                 if (game.trainee.bHasUpdatedAptitudes) game.trainee.logInfo()
 
                 // Now check if we need to handle skills before finals.
-                if (game.currentDate.day == 72 && game.skills.enablePreFinalsSkillPlan) {
+                if (game.currentDate.day == 72 && game.skillPlan.enablePreFinalsSkillPlan) {
                     ButtonSkills.click(game.imageUtils)
                     game.wait(1.0)
                     if (!handleSkillListScreen()) {
@@ -818,7 +818,7 @@ open class Campaign(val game: Game) {
                     game.racing.handleStandaloneRace()
                 } else if (game.checkEndScreen()) {
                     // Stop when the bot has reached the screen where it details the overall result of the run.
-                    if (game.skills.enableCareerCompleteSkillPlan) {
+                    if (game.skillPlan.enableCareerCompleteSkillPlan) {
                         ButtonCareerEndSkills.click(game.imageUtils)
                         game.wait(1.0)
                         if (!handleSkillListScreen()) {

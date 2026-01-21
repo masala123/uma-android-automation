@@ -271,6 +271,13 @@ enum class SkillType {
     }
 }
 
+/**
+ * @property bIsInPlace Whether this skill chain has an in-place upgrade system.
+ * Only certain types of skills can have in-place upgrades:
+ *      Negative Skills (purple)
+ *      Green Skills
+ *      Distance-based Skills (i.e. [Distance/Style] Straightaway/Corners)
+ */
 data class SkillData(
     val id: Int,
     val name: String,
@@ -285,20 +292,21 @@ data class SkillData(
     val upgrade: Int?,
     val downgrade: Int?,
 ) {
+    val bIsGold: Boolean = iconId % 10 == 2
+    val bIsUnique: Boolean = iconId % 10 == 3
+    val bIsNegative: Boolean = iconId % 10 == 4
     val type: SkillType = SkillType.fromIconId(iconId)!!
+    val bIsInPlace: Boolean =
+        type != SkillType.GREEN &&
+        !bIsNegative &&
+        !name.dropLast(2).endsWith("straightaways", ignoreCase = true) &&
+        !name.dropLast(2).endsWith("corners", ignoreCase = true)
     // Some skills are for specific running styles or track distances.
     // This information is appeneded to the end of the description
     // string inside parentheses.
     // We extract this and store it in a nullable property.
-    val style: RunningStyle?
-        get() = RunningStyle.entries.find { description.contains("(${it.name.replace('_', ' ')})", ignoreCase = true) }
-
-    val distance: TrackDistance?
-        get() = TrackDistance.entries.find { description.contains("($it)", ignoreCase = true) }
-
-    val bIsGold: Boolean = iconId % 10 == 2
-    val bIsUnique: Boolean = iconId % 10 == 3
-    val bIsNegative: Boolean = iconId % 10 == 4
+    val runningStyle: RunningStyle? = RunningStyle.entries.find { description.contains("(${it.name.replace('_', ' ')})", ignoreCase = true) }
+    val trackDistance: TrackDistance? = TrackDistance.entries.find { description.contains("($it)", ignoreCase = true) }
 
     constructor(
         id: Int,
@@ -333,23 +341,4 @@ data class SkillData(
         upgrade,
         downgrade,
     )
-}
-
-data class SkillListEntry(
-    val skillData: SkillData,
-    val price: Int,
-    val discount: Int,
-    val bIsObtained: Boolean,
-) {
-    val name: String
-        get() = skillData.name
-
-    // If there is a direct upgrade/downgrade version of this entry in the skill list,
-    // then these variables can be set to form a pseudo linked list.
-    var upgrade: SkillListEntry? = null
-    var downgrade: SkillListEntry? = null
-
-    override fun toString(): String {
-        return "name=$name, price=$price, discount=$discount, bIsObtained=$bIsObtained"
-    }
 }

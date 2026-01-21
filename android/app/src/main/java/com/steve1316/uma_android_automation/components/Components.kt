@@ -128,7 +128,7 @@ interface BaseComponentInterface {
     fun findImageWithBitmap(
         imageUtils: CustomImageUtils,
         sourceBitmap: Bitmap,
-        region: IntArray = intArrayOf(0, 0, 0, 0),
+        region: IntArray? = null,
         confidence: Double? = null,
     ): Point?
     /** Attempts to click on the component.
@@ -188,13 +188,13 @@ interface ComponentInterface: BaseComponentInterface {
     override fun findImageWithBitmap(
         imageUtils: CustomImageUtils,
         sourceBitmap: Bitmap,
-        region: IntArray,
+        region: IntArray?,
         confidence: Double?,
     ): Point? {
         return imageUtils.findImageWithBitmap(
             templateName = template.path,
             sourceBitmap = sourceBitmap,
-            region = region,
+            region = region ?: template.region,
             customConfidence = confidence ?: template.confidence,
             suppressError = true,
         )
@@ -308,9 +308,15 @@ interface ComplexComponentInterface: BaseComponentInterface {
         return Pair(null, imageUtils.getSourceBitmap())
     }
 
-    override fun findImageWithBitmap(imageUtils: CustomImageUtils, sourceBitmap: Bitmap, region: IntArray, confidence: Double?): Point? {
+    override fun findImageWithBitmap(imageUtils: CustomImageUtils, sourceBitmap: Bitmap, region: IntArray?, confidence: Double?): Point? {
         for (template in templates) {
-            val result: Point? = imageUtils.findImageWithBitmap(template.path, sourceBitmap, region, customConfidence = confidence ?: template.confidence, suppressError = true)
+            val result: Point? = imageUtils.findImageWithBitmap(
+                template.path,
+                sourceBitmap,
+                region ?: template.region,
+                customConfidence = confidence ?: template.confidence,
+                suppressError = true,
+            )
             if (result != null) {
                 return result
             }
