@@ -16,7 +16,6 @@ import com.steve1316.uma_android_automation.utils.types.StatName
 import com.steve1316.uma_android_automation.utils.types.Aptitude
 import com.steve1316.uma_android_automation.utils.types.BoundingBox
 import com.steve1316.uma_android_automation.utils.types.SkillData
-import com.steve1316.uma_android_automation.utils.types.SkillListEntry
 import com.steve1316.uma_android_automation.components.*
 import org.opencv.android.Utils
 import org.opencv.core.*
@@ -2124,5 +2123,52 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
             context,
         )
     }
-}
 
+    fun getRegionBitmap(bbox: BoundingBox): Bitmap? {
+        return getRegionBitmap(
+            x = bbox.x,
+            y = bbox.y,
+            w = bbox.w,
+            h = bbox.h,
+        )
+    }
+
+    fun compareBitmapsSSIM(bitmap1: Bitmap, bitmap2: Bitmap): Double {
+        // Ensure bitmaps are same size for SSIM comparison
+        if (bitmap1.width != bitmap2.width || bitmap1.height != bitmap2.height) {
+            // Handle error or resize
+            return 0.0
+        }
+
+        val mat1 = Mat()
+        val mat2 = Mat()
+        Utils.bitmapToMat(bitmap1, mat1)
+        Utils.bitmapToMat(bitmap2, mat2)
+
+        val grayMat1 = Mat()
+        val grayMat2 = Mat()
+        Imgproc.cvtColor(mat1, grayMat1, Imgproc.COLOR_BGR2GRAY)
+        Imgproc.cvtColor(mat2, grayMat2, Imgproc.COLOR_BGR2GRAY)
+
+        // A direct SSIM function isn't readily available in the core Java/Kotlin bindings,
+        // so you'd need a custom implementation or use a different metric like MSE
+        // for a quick calculation. A simplified pixel difference is shown below.
+
+        val diff = Mat()
+        org.opencv.core.Core.absdiff(grayMat1, grayMat2, diff)
+        val nonZeroPixels = org.opencv.core.Core.countNonZero(diff)
+
+        val totalPixels = grayMat1.rows() * grayMat1.cols()
+        val similarityScore = 1.0 - (nonZeroPixels.toDouble() / totalPixels.toDouble())
+
+        // A score near 1.0 means very similar.
+
+        mat1.release()
+        mat2.release()
+        grayMat1.release()
+        grayMat2.release()
+        diff.release()
+
+        return similarityScore
+    }
+}
