@@ -45,7 +45,6 @@ class Training(private val game: Game) {
 	 */
 	data class TrainingAnalysisResult(
 		val name: StatName,
-		val logMessages: ConcurrentLinkedQueue<String>,
 		val latch: CountDownLatch,
 		val startTime: Long
 	) {
@@ -782,13 +781,9 @@ class Training(private val game: Game) {
                 // For singleTraining, Spirit Explosion Gauge runs in a thread for Unity Cup, so latch count is 5.
                 val latch = CountDownLatch(if (singleTraining && game.scenario == "Unity Cup") 5 else 4)
 
-                // Create log message buffer for this training.
-                val logMessages = ConcurrentLinkedQueue<String>()
-
                 // Create result object to store analysis state.
                 val result = TrainingAnalysisResult(
                     name = statName,
-                    logMessages = logMessages,
                     latch = latch,
                     startTime = startTime,
                 )
@@ -830,9 +825,6 @@ class Training(private val game: Game) {
                         latch.countDown()
                         val elapsedTime = System.currentTimeMillis() - startTimeStatGains
                         Log.d(TAG, "Total time to determine stat gains for $statName: ${elapsedTime}ms")
-                        if (!singleTraining) {
-                            logMessages.offer("[TRAINING] [$statName] Stat gains analysis completed in ${elapsedTime}ms")
-                        }
                     }
                 }.start()
 
@@ -848,9 +840,6 @@ class Training(private val game: Game) {
                         latch.countDown()
                         val elapsedTime = System.currentTimeMillis() - startTimeFailureChance
                         Log.d(TAG, "Total time to determine failure chance for $statName: ${elapsedTime}ms")
-                        if (!singleTraining) {
-                            logMessages.offer("[TRAINING] [$statName] Failure chance analysis completed in ${elapsedTime}ms")
-                        }
                     }
                 }.start()
 
@@ -867,9 +856,6 @@ class Training(private val game: Game) {
                         latch.countDown()
                         val elapsedTime = System.currentTimeMillis() - startTimeRelationshipBars
                         Log.d(TAG, "Total time to analyze relationship bars for $statName: ${elapsedTime}ms")
-                        if (!singleTraining) {
-                            logMessages.offer("[TRAINING] [$statName] Relationship bars analysis completed in ${elapsedTime}ms")
-                        }
                     }
                 }.start()
 
@@ -886,9 +872,6 @@ class Training(private val game: Game) {
                         latch.countDown()
                         val elapsedTime = System.currentTimeMillis() - startTimeSkillHints
                         Log.d(TAG, "Total time to detect skill hints for $statName: ${elapsedTime}ms")
-                        if (!singleTraining) {
-                            logMessages.offer("[TRAINING] [$statName] Skill hint detection completed in ${elapsedTime}ms")
-                        }
                     }
                 }.start()
 
@@ -992,8 +975,6 @@ class Training(private val game: Game) {
                             if (BotService.isRunning) {
                                 val elapsedTime = System.currentTimeMillis() - result.startTime
                                 Log.d(TAG, "Total time for ${result.name} training analysis: ${elapsedTime}ms")
-                                result.logMessages.offer("[TRAINING] [${result.name}] All analysis threads completed. Total time: ${elapsedTime}ms")
-                                result.logMessages.offer("[TRAINING] [${result.name}] All 5 stat regions processed. Results: ${result.statGains.toSortedMap(compareBy { it.ordinal }).toString()}")
                             }
                         }
                     }
