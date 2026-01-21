@@ -124,7 +124,7 @@ const DebugSettings = () => {
                                 })
                             }}
                             label="Enable Screen Recording"
-                            description="Records the screen while the bot is running. The mp4 file will be saved to the app's data directory. Note that performance may be impacted while recording."
+                            description="Records the screen while the bot is running. The mp4 file will be saved to the /recordings folder of the app's data directory. Note that performance and battery life may be impacted while recording."
                         />
 
                         {bsc.settings.debug.enableScreenRecording && (
