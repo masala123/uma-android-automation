@@ -1,5 +1,7 @@
 from deprecated import deprecated
 import undetected_chromedriver as uc
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException, WebDriverException
 from selenium.webdriver.remote.webelement import WebElement
@@ -84,7 +86,13 @@ def create_chromedriver():
     Returns:
         The Chrome driver.
     """
-    driver = uc.Chrome(headless=True, use_subprocess=True)
+    chrome_options = Options()
+    chrome_options.add_argument("--headless=new") # Use the new headless mode
+    chrome_options.add_argument("--disable-gpu") # Disable GPU hardware acceleration (recommended for containers)
+    chrome_options.add_argument("--no-sandbox") # Bypass OS security model (needed for some environments like Docker)
+    chrome_options.add_argument("--window-size=1920,1080") # Set a default window size for consistent rendering
+    driver = webdriver.Chrome(options=chrome_options)
+    #driver = uc.Chrome(headless=True, use_subprocess=True)
     return driver
 
 
@@ -643,48 +651,54 @@ class SkillScraper(BaseScraper):
                     continue
                 
                 skill_id = skill["id"]
+                skill_name_en = skill["name_en"].strip().replace("  ", " ")
+                skill_desc_en = skill["desc_en"]
+                skill_iconid = skill["iconid"]
+                skill_rarity = skill["rarity"]
+                skill_cost = skill.get("cost", None)
                 # For inherited unique skills, we actually want the
                 # gene version's ID since the primary ID isn't the one that
                 # we can purchase through inheritance.
                 if "gene_version" in skill:
                     skill_id = skill["gene_version"]["id"]
+                    skill_desc_en = skill["gene_version"]["desc_en"]
+                    skill_iconid = skill["gene_version"]["iconid"]
+                    skill_rarity = skill["gene_version"]["rarity"]
+                    skill_cost = skill["gene_version"].get("cost", None)
 
                 extra_data = skill_evaluation_points.get(
                     skill_id,
                     {"evaluation_points": 0, "point_ratio": 0.0},
                 )
-                
-                skill_name = skill["name_en"]
-                skill_name = skill_name.strip().replace("  ", " ")
 
                 # The tier list doesn't include any of the JP skills so we don't treat
                 # missing skills as errors. These warnings should be reviewed by maintainer
                 # in case any skill names are misspelled.
                 # We can ignore any negative skills since they won't appear in the tier list.
-                tmp_skill_name = skill_to_tier_map_lowercase.get(skill_name.lower(), None)
-                bIsNegative = skill["iconid"] % 10 == 4
+                tmp_skill_name = skill_to_tier_map_lowercase.get(skill_name_en.lower(), None)
+                bIsNegative = skill_iconid % 10 == 4
                 if tmp_skill_name is None and not bIsNegative:
-                    logging.warning(f"Skill Tier Unknown: {skill_name}")
+                    logging.warning(f"Skill Tier Unknown: {skill_name_en}")
 
                 community_tier = skill_to_tier_map.get(tmp_skill_name, None)
 
                 tmp = {
                     "id": skill_id,
-                    "name_en": skill_name,
-                    "desc_en": skill["desc_en"],
-                    "icon_id": skill["iconid"],
-                    "cost": skill.get("cost", None),
+                    "name_en": skill_name_en,
+                    "desc_en": skill_desc_en,
+                    "icon_id": skill_iconid,
+                    "cost": skill_cost,
                     "eval_pt": extra_data["evaluation_points"],
                     "pt_ratio": extra_data["point_ratio"],
-                    "rarity": skill["rarity"],
+                    "rarity": skill_rarity,
                     "community_tier": community_tier,
                     "versions": sorted(skill.get("versions", [])),
                     "upgrade": None,
                     "downgrade": None,
                 }
-                skill_id_to_name[skill["id"]] = skill_name
+                skill_id_to_name[skill["id"]] = skill_name_en
 
-                self.data[tmp["name_en"]] = tmp
+                self.data[skill_name_en] = tmp
             except KeyError as exc:
                 if "name_en" in skill:
                     logging.error(f"KeyError when parsing skill ({skill['name_en']}): {exc}")
