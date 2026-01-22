@@ -17,8 +17,6 @@ import net.ricecode.similarity.JaroWinklerStrategy
 import net.ricecode.similarity.StringSimilarityServiceImpl
 
 import com.steve1316.uma_android_automation.MainActivity
-import com.steve1316.uma_android_automation.utils.SettingsHelper
-import com.steve1316.uma_android_automation.utils.SQLiteSettingsManager
 import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.automation_library.utils.TextUtils
 import com.steve1316.automation_library.data.SharedData
@@ -54,29 +52,23 @@ import com.steve1316.uma_android_automation.utils.types.Aptitude
  * Lowest level skills first.
  * @property downgrades Ordered list of entries which are downgrades to this skill.
  * Lowest level skills first.
- * @property versionMap A mapping of all other versions of this skill.
  */
 class SkillListEntry (
     private val game: Game,
     val skillData: SkillData,
-    val price: Int = 0,
+    val price: Int = -1,
     var bIsObtained: Boolean = false,
     var bIsVirtual: Boolean = false,
 ) {
     private val TAG: String = "[${MainActivity.loggerTag}]SkillListEntry"
 
     val name: String = skillData.name
-    val discount: Double = if (skillData.cost == null) 0.0 else price.toDouble() / (skillData.cost).toDouble()
+    val discount: Double = if (skillData.cost == null || price <= 0) 0.0 else price.toDouble() / (skillData.cost).toDouble()
 
     // If there is a direct upgrade/downgrade version of this entry in the skill list,
     // then these variables can be set to form a pseudo linked list.
     var upgrade: SkillListEntry? = getDirectUpgrade()
     var downgrade: SkillListEntry? = getDirectDowngrade()
-
-    var upgrades: List<SkillListEntry> = listOf()
-    var downgrades: List<SkillListEntry> = listOf()
-    val versionMap: Map<String, SkillListEntry>
-        get() = upgrades.associateBy { it.name } + downgrades.associateBy { it.name }
 
     /** Returns a (slightly) user friendly string of this class's key properties. */
     override fun toString(): String {
@@ -106,29 +98,29 @@ class SkillListEntry (
 
         res.add(entry)
 
-        val tmpEntry = if (bWalkUpgrades) {
+        val tmpId: Int? = if (bWalkUpgrades) {
             entry.skillData.upgrade
         } else {
             entry.skillData.downgrade
         }
-        if (tmpEntry == null) {
+        if (tmpId == null) {
             return res
         }
 
-        val name: String? = game.skillPlan.skillDatabase.getSkillName(entry.skillData.id)
-        if (name == null) {
+        val tmpName: String? = game.skillPlan.skillDatabase.getSkillName(tmpId)
+        if (tmpName == null) {
             return res
         }
 
-        val skillData: SkillData? = game.skillPlan.skillDatabase.getSkillData(name)
-        if (skillData == null) {
-            MessageLog.w(TAG, "SkillListEntry.walk: Failed to get skill data for \"$name\"")
+        val tmpSkillData: SkillData? = game.skillPlan.skillDatabase.getSkillData(tmpName)
+        if (tmpSkillData == null) {
+            MessageLog.w(TAG, "SkillListEntry.walk: Failed to get skill data for \"$tmpName\"")
             return res
         }
 
         val tmpSkillListEntry: SkillListEntry = SkillListEntry(
             game = game,
-            skillData = skillData,
+            skillData = tmpSkillData,
         )!!
 
         return walk(
@@ -148,12 +140,12 @@ class SkillListEntry (
             return null
         }
 
-        val name: String? = game.skillPlan.skillDatabase.getSkillName(skillData.upgrade)
-        if (name == null) {
+        val upgradeName: String? = game.skillPlan.skillDatabase.getSkillName(skillData.upgrade)
+        if (upgradeName == null) {
             return null
         }
 
-        return game.skillPlan.skillList.entries[name]
+        return game.skillPlan.skillList.entries[upgradeName]
     }
 
     /** Gets the direct downgrade to a SkillListEntry in the Skill List.
@@ -179,11 +171,11 @@ class SkillListEntry (
      * @return Ordered list of SkillListEntry objects.
      */
     fun getUpgrades(): List<SkillListEntry> {
-        if (upgrade == null) {
+        if (skillData.upgrade == null) {
             return emptyList()
         }
 
-        upgrades = walk(bWalkUpgrades = true)
+        return walk(bWalkUpgrades = true, entry = this)
             .map {
                 val basePrice: Int = it.skillData.cost ?: 0
                 SkillListEntry(
@@ -195,7 +187,6 @@ class SkillListEntry (
                 )
             }
             .drop(1)
-        return upgrades
     }
 
     /** Returns an ordered list of this entry's downgrades.
@@ -203,11 +194,11 @@ class SkillListEntry (
      * @return Ordered list of SkillListEntry objects.
      */
     fun getDowngrades(): List<SkillListEntry> {
-        if (downgrade == null) {
+        if (skillData.downgrade == null) {
             return emptyList()
         }
 
-        downgrades = walk(bWalkUpgrades = false)
+        return walk(bWalkUpgrades = false, entry = this)
             .map {
                 val basePrice: Int = it.skillData.cost ?: 0
                 SkillListEntry(
@@ -225,6 +216,5 @@ class SkillListEntry (
             // We want to remove any virtual entries from downgrades list
             // since they are impossible to obtain.
             .filter { !it.bIsVirtual }
-        return downgrades
     }
 }

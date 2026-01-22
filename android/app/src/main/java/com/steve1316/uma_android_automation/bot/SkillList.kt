@@ -17,8 +17,6 @@ import net.ricecode.similarity.JaroWinklerStrategy
 import net.ricecode.similarity.StringSimilarityServiceImpl
 
 import com.steve1316.uma_android_automation.MainActivity
-import com.steve1316.uma_android_automation.utils.SettingsHelper
-import com.steve1316.uma_android_automation.utils.SQLiteSettingsManager
 import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.automation_library.utils.TextUtils
 import com.steve1316.automation_library.data.SharedData
@@ -532,11 +530,12 @@ class SkillList (private val game: Game) {
                 }
 
                 // Now lookup the name in the database and update it.
-                val skillData: SkillData? = game.skillPlan.skillDatabase.getSkillData(skillName)
-                if (skillData == null) {
+                val tmpSkillData: SkillData? = game.skillPlan.skillDatabase.getSkillData(skillName)
+                if (tmpSkillData == null) {
                     Log.e(TAG, "[SKILLS] lookupSkillInDatabase(\"${skillName}\") returned NULL.")
                     return@Thread
                 }
+                skillData = tmpSkillData
             } catch (e: Exception) {
                 Log.e(TAG, "[ERROR] Error processing skill name: ${e.stackTraceToString()}")
             } finally {
@@ -548,11 +547,12 @@ class SkillList (private val game: Game) {
         Thread {
             try {
                 // If the skill is already obtained, don't bother trying to get the price.
-                val skillPrice: Int? = if (bIsObtained) 0 else getSkillListEntryPrice(bitmap, debugString)
-                if (skillPrice == null) {
+                val tmpSkillPrice: Int? = if (bIsObtained) 0 else getSkillListEntryPrice(bitmap, debugString)
+                if (tmpSkillPrice == null) {
                     Log.e(TAG, "[SKILLS] getSkillListEntryPrice() returned NULL.")
                     return@Thread
                 }
+                skillPrice = tmpSkillPrice
             } catch (e: Exception) {
                 Log.e(TAG, "[ERROR] Error processing skill price: ${e.stackTraceToString()}")
             } finally {
@@ -850,8 +850,9 @@ class SkillList (private val game: Game) {
      * use to calculate a set of virtual skills.
      */
     private fun getVirtualSkillListEntries(
-        skillListEntries: Map<String, SkillListEntry>,
+        skillListEntries: Map<String, SkillListEntry>? = null,
     ): Map<String, SkillListEntry> {
+        val skillListEntries: Map<String, SkillListEntry> = skillListEntries ?: entries
         val result: MutableMap<String, SkillListEntry> = mutableMapOf()
 
         for ((name, entry) in skillListEntries) {
@@ -866,7 +867,7 @@ class SkillList (private val game: Game) {
             }
 
             for (upgrade in entry.getUpgrades()) {
-                if (upgrade.skillData.name !in skillListEntries) {
+                if (upgrade.skillData.name in skillListEntries) {
                     continue
                 }
                 // The discount doesn't change for in-place upgrades, however
@@ -985,6 +986,7 @@ class SkillList (private val game: Game) {
 
         // Now add in any virtual skills.
         val virtualSkillListEntries: Map<String, SkillListEntry> = getVirtualSkillListEntries(skillListEntries)
+        printSkillListEntries(virtualSkillListEntries, verbose = true)
         skillListEntries.putAll(virtualSkillListEntries)
 
         entries = skillListEntries.toMap()
@@ -1053,6 +1055,7 @@ class SkillList (private val game: Game) {
 
         // Now add in any virtual skills.
         val virtualSkillListEntries: Map<String, SkillListEntry> = getVirtualSkillListEntries(skillListEntries)
+        printSkillListEntries(virtualSkillListEntries, verbose = true)
         skillListEntries.putAll(virtualSkillListEntries)
 
         entries = skillListEntries.toMap()
@@ -1086,7 +1089,7 @@ class SkillList (private val game: Game) {
     fun checkCareerCompleteSkillListScreen(bitmap: Bitmap? = null): Boolean {
         val bitmap: Bitmap = bitmap ?: game.imageUtils.getSourceBitmap()
         return (
-            ButtonLog.check(game.imageUtils, sourceBitmap = bitmap) &&
+            !ButtonLog.check(game.imageUtils, sourceBitmap = bitmap) &&
             checkSkillListScreen(bitmap)
         )
     }
@@ -1106,9 +1109,13 @@ class SkillList (private val game: Game) {
         return skillListEntries.filterValues { !it.bIsObtained }
     }
 
-    fun printSkillListEntries(verbose: Boolean) {
+    fun printSkillListEntries(
+        skillListEntries: Map<String, SkillListEntry>? = null,
+        verbose: Boolean = false,
+    ) {
+        val skillListEntries: Map<String, SkillListEntry> = skillListEntries ?: entries
         MessageLog.d(TAG, "============ Skill List Entries ============")
-        for ((name, entry) in entries) {
+        for ((name, entry) in skillListEntries) {
             val entryString: String = if (verbose) {
                 "${entry}"
             } else {

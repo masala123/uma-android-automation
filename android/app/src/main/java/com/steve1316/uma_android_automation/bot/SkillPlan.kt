@@ -16,12 +16,12 @@ import kotlin.math.roundToInt
 import net.ricecode.similarity.JaroWinklerStrategy
 import net.ricecode.similarity.StringSimilarityServiceImpl
 
-import com.steve1316.uma_android_automation.MainActivity
-import com.steve1316.uma_android_automation.utils.SettingsHelper
-import com.steve1316.uma_android_automation.utils.SQLiteSettingsManager
+import com.steve1316.automation_library.utils.SettingsHelper
 import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.automation_library.utils.TextUtils
 import com.steve1316.automation_library.data.SharedData
+
+import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.bot.SkillDatabase
 import com.steve1316.uma_android_automation.bot.SkillList
 
@@ -34,7 +34,7 @@ import com.steve1316.uma_android_automation.utils.types.Aptitude
 
 import com.steve1316.uma_android_automation.components.*
 
-private const val USE_MOCKED_DATA: Boolean = true
+private const val USE_MOCKED_DATA: Boolean = false
 
 class SkillPlan (private val game: Game) {
     val skillList: SkillList = SkillList(game)
@@ -246,7 +246,7 @@ class SkillPlan (private val game: Game) {
                 game.tap(point.x, point.y, ButtonSkillUp.template.path)
             } else if (skillPlanSettings.buyNegativeSkills && entry.skillData.bIsNegative) {
                 game.tap(point.x, point.y, ButtonSkillUp.template.path)
-            } else if (skillsToBuy != null) {
+            } else {
                 val skillToBuy: SkillToBuy? = skillsToBuy.find { it.name == entry.name }
                 if (skillToBuy != null) {
                     game.tap(point.x, point.y, ButtonSkillUp.template.path, taps = skillToBuy.numUpgrades)
@@ -666,6 +666,12 @@ class SkillPlan (private val game: Game) {
         }
 
         skillPlanSettings = if (bIsCareerComplete) skillPlanSettingsCareerComplete else skillPlanSettingsPreFinals
+        MessageLog.e("REMOVEME", "skillPlanSettings:")
+        MessageLog.e("REMOVEME", "bIsCareerComplete=$bIsCareerComplete")
+        MessageLog.e("REMOVEME", "\t${skillPlanSettings.skillPlan}")
+        MessageLog.e("REMOVEME", "\t${skillPlanSettings.spendingStrategy}")
+        MessageLog.e("REMOVEME", "\t${skillPlanSettings.buyInheritedSkills}")
+        MessageLog.e("REMOVEME", "\t${skillPlanSettings.buyNegativeSkills}")
         if (
             skillPlanSettings.skillPlan.isEmpty() &&
             skillPlanSettings.spendingStrategy == SpendingStrategy.DEFAULT &&
@@ -704,7 +710,7 @@ class SkillPlan (private val game: Game) {
             }
         }
 
-        if (skillList.entries == null) {
+        if (skillList.entries.isEmpty()) {
             MessageLog.e(TAG, "[SKILLS] Failed to detect skills.")
             return false
         }

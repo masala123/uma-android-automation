@@ -297,10 +297,10 @@ data class SkillData(
     val bIsNegative: Boolean = iconId % 10 == 4
     val type: SkillType = SkillType.fromIconId(iconId)!!
     val bIsInPlace: Boolean =
-        type != SkillType.GREEN &&
-        !bIsNegative &&
-        !name.dropLast(2).endsWith("straightaways", ignoreCase = true) &&
-        !name.dropLast(2).endsWith("corners", ignoreCase = true)
+        type == SkillType.GREEN ||
+        bIsNegative ||
+        name.dropLast(2).endsWith("straightaways", ignoreCase = true) ||
+        name.dropLast(2).endsWith("corners", ignoreCase = true)
     // Some skills are for specific running styles or track distances.
     // This information is appeneded to the end of the description
     // string inside parentheses.
