@@ -572,11 +572,6 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 			Pair(skillPointsLocation, sourceBitmap)
 		}
 
-        if (sourceBitmap == null) {
-            MessageLog.e(TAG, "determineSkillPoints: sourceBitmap is NULL.")
-            return -1
-        }
-
         if (skillPointsLocation == null) {
             MessageLog.e(TAG, "determineSkillPoints: skillPointsLocation is NULL.")
             return -1
