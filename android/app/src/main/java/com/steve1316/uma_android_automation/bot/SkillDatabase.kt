@@ -53,6 +53,7 @@ class SkillDatabase (private val game: Game) {
         private const val SKILLS_COLUMN_EVAL_PT = "eval_pt"
         private const val SKILLS_COLUMN_PT_RATIO = "pt_ratio"
         private const val SKILLS_COLUMN_RARITY = "rarity"
+        private const val SKILLS_COLUMN_INHERITED = "inherited"
         private const val SKILLS_COLUMN_COMMUNITY_TIER = "community_tier"
         private const val SKILLS_COLUMN_VERSIONS = "versions"
         private const val SKILLS_COLUMN_UPGRADE = "upgrade"
@@ -86,6 +87,7 @@ class SkillDatabase (private val game: Game) {
                     evalPt = skillObj.getInt(SKILLS_COLUMN_EVAL_PT),
                     ptRatio = skillObj.getDouble(SKILLS_COLUMN_PT_RATIO),
                     rarity = skillObj.getInt(SKILLS_COLUMN_RARITY),
+                    inherited = skillObj.getBoolean(SKILLS_COLUMN_INHERITED),
                     communityTier = skillObj.optInt(SKILLS_COLUMN_COMMUNITY_TIER),
                     versions = skillObj.getString(SKILLS_COLUMN_VERSIONS),
                     upgrade = skillObj.optInt(SKILLS_COLUMN_UPGRADE),
@@ -247,6 +249,7 @@ class SkillDatabase (private val game: Game) {
                     SKILLS_COLUMN_EVAL_PT,
                     SKILLS_COLUMN_PT_RATIO,
                     SKILLS_COLUMN_RARITY,
+                    SKILLS_COLUMN_INHERITED,
                     SKILLS_COLUMN_COMMUNITY_TIER,
                     SKILLS_COLUMN_VERSIONS,
                     SKILLS_COLUMN_UPGRADE,
@@ -267,10 +270,11 @@ class SkillDatabase (private val game: Game) {
                     evalPt = exactCursor.getInt(5),
                     ptRatio = exactCursor.getDouble(6),
                     rarity = exactCursor.getInt(7),
-                    communityTier = if (exactCursor.isNull(8)) null else exactCursor.getInt(8),
-                    versions = exactCursor.getString(9),
-                    upgrade = if (exactCursor.isNull(10)) null else exactCursor.getInt(10),
-                    downgrade = if (exactCursor.isNull(11)) null else exactCursor.getInt(11),
+                    inherited = exactCursor.getInt(8) == 1,
+                    communityTier = if (exactCursor.isNull(9)) null else exactCursor.getInt(9),
+                    versions = exactCursor.getString(10),
+                    upgrade = if (exactCursor.isNull(11)) null else exactCursor.getInt(11),
+                    downgrade = if (exactCursor.isNull(12)) null else exactCursor.getInt(12),
                 )
                 exactCursor.close()
                 settingsManager.close()
@@ -292,6 +296,7 @@ class SkillDatabase (private val game: Game) {
                     SKILLS_COLUMN_EVAL_PT,
                     SKILLS_COLUMN_PT_RATIO,
                     SKILLS_COLUMN_RARITY,
+                    SKILLS_COLUMN_INHERITED,
                     SKILLS_COLUMN_COMMUNITY_TIER,
                     SKILLS_COLUMN_VERSIONS,
                     SKILLS_COLUMN_UPGRADE,
@@ -326,10 +331,11 @@ class SkillDatabase (private val game: Game) {
                         evalPt = fuzzyCursor.getInt(5),
                         ptRatio = fuzzyCursor.getDouble(6),
                         rarity = fuzzyCursor.getInt(7),
-                        communityTier = if (fuzzyCursor.isNull(8)) null else fuzzyCursor.getInt(8),
-                        versions = fuzzyCursor.getString(9),
-                        upgrade = if (fuzzyCursor.isNull(10)) null else fuzzyCursor.getInt(10),
-                        downgrade = if (fuzzyCursor.isNull(11)) null else fuzzyCursor.getInt(11),
+                        inherited = fuzzyCursor.getInt(8) == 1,
+                        communityTier = if (fuzzyCursor.isNull(9)) null else fuzzyCursor.getInt(9),
+                        versions = fuzzyCursor.getString(10),
+                        upgrade = if (fuzzyCursor.isNull(11)) null else fuzzyCursor.getInt(11),
+                        downgrade = if (fuzzyCursor.isNull(12)) null else fuzzyCursor.getInt(12),
                     )
                     if (game.debugMode) {
                         MessageLog.d(TAG, "[DEBUG] Fuzzy match candidate: \"${bestMatch.name}\" AKA \"$tmpName\" with similarity ${game.decimalFormat.format(similarity)}.")

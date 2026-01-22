@@ -115,6 +115,7 @@ export const useBootstrap = () => {
                 eval_pt: skill.eval_pt,
                 pt_ratio: skill.pt_ratio,
                 rarity: skill.rarity,
+                inherited: skill.inherited,
                 community_tier: skill.community_tier,
                 versions: skill.versions,
                 upgrade: skill.upgrade,
