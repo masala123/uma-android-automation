@@ -8,6 +8,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -22,6 +23,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.81,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201411
@@ -38,6 +40,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -52,6 +55,7 @@
         "eval_pt": 334,
         "pt_ratio": 1.39,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201412
@@ -68,6 +72,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -82,6 +87,7 @@
         "eval_pt": 0,
         "pt_ratio": 0.0,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -96,6 +102,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 0,
         "versions": [],
         "upgrade": null,
@@ -110,6 +117,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -124,6 +132,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 3,
         "versions": [],
         "upgrade": null,
@@ -138,6 +147,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201421
@@ -154,6 +164,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201061
@@ -170,6 +181,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.49,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             201012
@@ -186,6 +198,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200762
@@ -202,6 +215,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.28,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201481
@@ -218,6 +232,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -232,6 +247,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             201701
@@ -248,6 +264,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201442
@@ -264,6 +281,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -278,6 +296,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -292,6 +311,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 0,
         "versions": [],
         "upgrade": null,
@@ -306,6 +326,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -320,6 +341,7 @@
         "eval_pt": 0,
         "pt_ratio": 0.0,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -334,6 +356,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -348,6 +371,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             201092
@@ -364,6 +388,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             201691
@@ -380,6 +405,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.49,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200362
@@ -396,6 +422,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 0,
         "versions": [],
         "upgrade": null,
@@ -410,6 +437,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -424,6 +452,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -438,6 +467,7 @@
         "eval_pt": 334,
         "pt_ratio": 1.39,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201072
@@ -454,6 +484,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             201171,
@@ -471,6 +502,7 @@
         "eval_pt": 0,
         "pt_ratio": 0.0,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -485,6 +517,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -499,6 +532,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200672
@@ -515,6 +549,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -529,6 +564,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -543,6 +579,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -557,6 +594,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.49,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200382
@@ -573,6 +611,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -587,6 +626,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202092
@@ -603,6 +643,7 @@
         "eval_pt": 633,
         "pt_ratio": 1.58,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             210042
@@ -619,6 +660,7 @@
         "eval_pt": 633,
         "pt_ratio": 1.58,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             210032
@@ -635,6 +677,7 @@
         "eval_pt": 633,
         "pt_ratio": 1.58,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             210012
@@ -651,6 +694,7 @@
         "eval_pt": 633,
         "pt_ratio": 1.58,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             210022
@@ -667,6 +711,7 @@
         "eval_pt": 633,
         "pt_ratio": 1.58,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             210052
@@ -683,6 +728,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 3,
         "versions": [],
         "upgrade": null,
@@ -697,6 +743,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200562
@@ -713,6 +760,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.28,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200481
@@ -729,6 +777,7 @@
         "eval_pt": 0,
         "pt_ratio": 0.0,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             1000011,
@@ -750,6 +799,7 @@
         "eval_pt": 334,
         "pt_ratio": 1.39,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200452
@@ -766,6 +816,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -780,6 +831,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             201052
@@ -796,6 +848,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -810,6 +863,7 @@
         "eval_pt": 0,
         "pt_ratio": 0.0,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -824,6 +878,7 @@
         "eval_pt": 0,
         "pt_ratio": 0.0,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -838,6 +893,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.52,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200071,
@@ -855,6 +911,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200071,
@@ -872,6 +929,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200072,
@@ -889,6 +947,7 @@
         "eval_pt": 334,
         "pt_ratio": 1.52,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             201122
@@ -905,6 +964,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -919,6 +979,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 0,
         "versions": [],
         "upgrade": null,
@@ -933,6 +994,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200221
@@ -949,6 +1011,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200222
@@ -965,6 +1028,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             201702
@@ -981,6 +1045,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200281,
@@ -998,6 +1063,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200282,
@@ -1015,6 +1081,7 @@
         "eval_pt": 394,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200432,
@@ -1032,6 +1099,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -1046,6 +1114,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200742
@@ -1062,6 +1131,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -1076,6 +1146,7 @@
         "eval_pt": -262,
         "pt_ratio": -0.57,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200341,
@@ -1093,6 +1164,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200341,
@@ -1110,6 +1182,7 @@
         "eval_pt": -262,
         "pt_ratio": -0.57,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200331,
@@ -1127,6 +1200,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200331,
@@ -1144,6 +1218,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200342,
@@ -1161,6 +1236,7 @@
         "eval_pt": -262,
         "pt_ratio": -0.6,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200351,
@@ -1178,6 +1254,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.28,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200351,
@@ -1195,6 +1272,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200991
@@ -1211,6 +1289,7 @@
         "eval_pt": 0,
         "pt_ratio": 0.0,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -1225,6 +1304,7 @@
         "eval_pt": 334,
         "pt_ratio": 1.52,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201502
@@ -1241,6 +1321,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -1255,6 +1336,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 3,
         "versions": [],
         "upgrade": null,
@@ -1269,6 +1351,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202022
@@ -1285,6 +1368,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202122
@@ -1301,6 +1385,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -1315,6 +1400,7 @@
         "eval_pt": 334,
         "pt_ratio": 1.52,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201372
@@ -1331,6 +1417,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200741
@@ -1347,6 +1434,7 @@
         "eval_pt": -262,
         "pt_ratio": -2.62,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -1361,6 +1449,7 @@
         "eval_pt": 334,
         "pt_ratio": 1.39,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201342
@@ -1377,6 +1466,7 @@
         "eval_pt": 85,
         "pt_ratio": 0.77,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201371
@@ -1393,6 +1483,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.17,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201261
@@ -1409,6 +1500,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201152
@@ -1425,6 +1517,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.28,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202171
@@ -1441,6 +1534,7 @@
         "eval_pt": 0,
         "pt_ratio": 0.0,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -1455,6 +1549,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -1469,6 +1564,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202101
@@ -1485,6 +1581,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.81,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200531
@@ -1501,6 +1598,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             202021
@@ -1517,6 +1615,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202102
@@ -1533,6 +1632,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -1547,6 +1647,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200642
@@ -1563,6 +1664,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.67,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201461,
@@ -1580,6 +1682,7 @@
         "eval_pt": 262,
         "pt_ratio": 0.97,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201462,
@@ -1597,6 +1700,7 @@
         "eval_pt": 174,
         "pt_ratio": 1.58,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201551
@@ -1613,6 +1717,7 @@
         "eval_pt": 217,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201552
@@ -1629,6 +1734,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.67,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201451,
@@ -1646,6 +1752,7 @@
         "eval_pt": 262,
         "pt_ratio": 0.97,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201452,
@@ -1663,6 +1770,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200542
@@ -1679,6 +1787,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -1693,6 +1802,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -1707,6 +1817,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -1721,6 +1832,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200761
@@ -1737,6 +1849,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -1751,6 +1864,7 @@
         "eval_pt": 461,
         "pt_ratio": 1.4,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200191,
@@ -1769,6 +1883,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.34,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200191,
@@ -1787,6 +1902,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200191,
@@ -1805,6 +1921,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200192,
@@ -1823,6 +1940,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             202001
@@ -1839,6 +1957,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200592
@@ -1855,6 +1974,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200541
@@ -1871,6 +1991,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202121
@@ -1887,6 +2008,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202011
@@ -1903,6 +2025,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 0,
         "versions": [],
         "upgrade": null,
@@ -1917,6 +2040,7 @@
         "eval_pt": 0,
         "pt_ratio": 0.0,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -1931,6 +2055,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 0,
         "versions": [],
         "upgrade": null,
@@ -1945,6 +2070,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.81,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201401
@@ -1961,6 +2087,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202091
@@ -1977,6 +2104,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200551
@@ -1993,6 +2121,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.34,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200151,
@@ -2011,6 +2140,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200151,
@@ -2029,6 +2159,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200152,
@@ -2047,6 +2178,7 @@
         "eval_pt": 461,
         "pt_ratio": 1.4,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200151,
@@ -2065,6 +2197,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             201101,
@@ -2082,6 +2215,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -2096,6 +2230,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -2110,6 +2245,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.67,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -2124,6 +2260,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.67,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -2138,6 +2275,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.67,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -2152,6 +2290,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.67,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -2166,6 +2305,7 @@
         "eval_pt": 129,
         "pt_ratio": 0.92,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200431,
@@ -2183,6 +2323,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -2197,6 +2338,7 @@
         "eval_pt": 0,
         "pt_ratio": 0.0,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -2211,6 +2353,7 @@
         "eval_pt": 174,
         "pt_ratio": 1.24,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             201681
@@ -2227,6 +2370,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.28,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202071
@@ -2243,6 +2387,7 @@
         "eval_pt": 174,
         "pt_ratio": 1.34,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -2257,6 +2402,7 @@
         "eval_pt": 174,
         "pt_ratio": 1.34,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -2271,6 +2417,7 @@
         "eval_pt": 174,
         "pt_ratio": 1.34,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -2285,6 +2432,7 @@
         "eval_pt": 174,
         "pt_ratio": 1.34,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -2299,6 +2447,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202082
@@ -2315,6 +2464,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.67,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201251,
@@ -2332,6 +2482,7 @@
         "eval_pt": 262,
         "pt_ratio": 0.97,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201252,
@@ -2349,6 +2500,7 @@
         "eval_pt": 174,
         "pt_ratio": 1.58,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201521
@@ -2365,6 +2517,7 @@
         "eval_pt": 217,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201522
@@ -2381,6 +2534,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.67,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201241,
@@ -2398,6 +2552,7 @@
         "eval_pt": 262,
         "pt_ratio": 0.97,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201242,
@@ -2415,6 +2570,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.65,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200101,
@@ -2432,6 +2588,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.84,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200101,
@@ -2449,6 +2606,7 @@
         "eval_pt": 174,
         "pt_ratio": 1.09,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200102,
@@ -2466,6 +2624,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202151
@@ -2482,6 +2641,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202112
@@ -2498,6 +2658,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200702
@@ -2514,6 +2675,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -2528,6 +2690,7 @@
         "eval_pt": -129,
         "pt_ratio": -2.58,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -2542,6 +2705,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200671
@@ -2558,6 +2722,7 @@
         "eval_pt": -174,
         "pt_ratio": -0.5,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200431,
@@ -2575,6 +2740,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -2589,6 +2755,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -2603,6 +2770,7 @@
         "eval_pt": 263,
         "pt_ratio": 1.31,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             210061
@@ -2619,6 +2787,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.07,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200501
@@ -2635,6 +2804,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -2649,6 +2819,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.49,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201482
@@ -2665,6 +2836,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201352
@@ -2681,6 +2853,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -2695,6 +2868,7 @@
         "eval_pt": 461,
         "pt_ratio": 1.44,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             201082
@@ -2711,6 +2885,7 @@
         "eval_pt": 217,
         "pt_ratio": 2.17,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201602
@@ -2727,6 +2902,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -2741,6 +2917,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.65,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200091,
@@ -2758,6 +2935,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.84,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200091,
@@ -2775,6 +2953,7 @@
         "eval_pt": 174,
         "pt_ratio": 1.09,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200092,
@@ -2792,6 +2971,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.52,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200051,
@@ -2809,6 +2989,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200051,
@@ -2826,6 +3007,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200052,
@@ -2843,6 +3025,7 @@
         "eval_pt": 334,
         "pt_ratio": 1.39,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201402
@@ -2859,6 +3042,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.17,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             201121
@@ -2875,6 +3059,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             201901
@@ -2891,6 +3076,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202012
@@ -2907,6 +3093,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.67,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -2921,6 +3108,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.67,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -2935,6 +3123,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.67,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -2949,6 +3138,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.67,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -2963,6 +3153,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201582
@@ -2979,6 +3170,7 @@
         "eval_pt": 0,
         "pt_ratio": 0.0,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -2993,6 +3185,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.28,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200511
@@ -3009,6 +3202,7 @@
         "eval_pt": 262,
         "pt_ratio": 1.54,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200981
@@ -3025,6 +3219,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201351
@@ -3041,6 +3236,7 @@
         "eval_pt": 85,
         "pt_ratio": 0.77,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201471
@@ -3057,6 +3253,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 3,
         "versions": [],
         "upgrade": null,
@@ -3071,6 +3268,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -3085,6 +3283,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 3,
         "versions": [],
         "upgrade": null,
@@ -3099,6 +3298,7 @@
         "eval_pt": 263,
         "pt_ratio": 1.31,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             210041
@@ -3115,6 +3315,7 @@
         "eval_pt": 263,
         "pt_ratio": 1.31,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             210031
@@ -3131,6 +3332,7 @@
         "eval_pt": 263,
         "pt_ratio": 1.31,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             210011
@@ -3147,6 +3349,7 @@
         "eval_pt": 263,
         "pt_ratio": 1.31,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             210021
@@ -3163,6 +3366,7 @@
         "eval_pt": 263,
         "pt_ratio": 1.31,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             210051
@@ -3179,6 +3383,7 @@
         "eval_pt": 334,
         "pt_ratio": 1.52,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             201232
@@ -3195,6 +3400,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.49,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200512
@@ -3211,6 +3417,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202042
@@ -3227,6 +3434,7 @@
         "eval_pt": 0,
         "pt_ratio": 0.0,
         "rarity": 5,
+        "inherited": false,
         "community_tier": 3,
         "versions": [],
         "upgrade": null,
@@ -3241,6 +3449,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200752
@@ -3257,6 +3466,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.52,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200251,
@@ -3274,6 +3484,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200251,
@@ -3291,6 +3502,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200252,
@@ -3308,6 +3520,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200751
@@ -3324,6 +3537,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             201511
@@ -3340,6 +3554,7 @@
         "eval_pt": 262,
         "pt_ratio": 1.54,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             201011
@@ -3356,6 +3571,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 0,
         "versions": [],
         "upgrade": null,
@@ -3370,6 +3586,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200442
@@ -3386,6 +3603,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.49,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200462
@@ -3402,6 +3620,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -3416,6 +3635,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 3,
         "versions": [],
         "upgrade": null,
@@ -3430,6 +3650,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -3444,6 +3665,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200692
@@ -3460,6 +3682,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202152
@@ -3476,6 +3699,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -3490,6 +3714,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201191
@@ -3506,6 +3731,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200722
@@ -3522,6 +3748,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.65,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200121,
@@ -3539,6 +3766,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.84,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200121,
@@ -3556,6 +3784,7 @@
         "eval_pt": 174,
         "pt_ratio": 1.09,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200122,
@@ -3573,6 +3802,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.34,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200061,
@@ -3591,6 +3821,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200061,
@@ -3609,6 +3840,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200062,
@@ -3627,6 +3859,7 @@
         "eval_pt": 334,
         "pt_ratio": 1.39,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200502
@@ -3643,6 +3876,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.67,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201391,
@@ -3660,6 +3894,7 @@
         "eval_pt": 262,
         "pt_ratio": 0.97,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201392,
@@ -3677,6 +3912,7 @@
         "eval_pt": 174,
         "pt_ratio": 1.58,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201541
@@ -3693,6 +3929,7 @@
         "eval_pt": 217,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201542
@@ -3709,6 +3946,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.67,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201381,
@@ -3726,6 +3964,7 @@
         "eval_pt": 262,
         "pt_ratio": 0.97,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201382,
@@ -3743,6 +3982,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200441
@@ -3759,6 +3999,7 @@
         "eval_pt": 394,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             201682
@@ -3775,6 +4016,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             201271
@@ -3791,6 +4033,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.34,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200021,
@@ -3809,6 +4052,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200021,
@@ -3827,6 +4071,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200022,
@@ -3845,6 +4090,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 3,
         "versions": [],
         "upgrade": null,
@@ -3859,6 +4105,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 0,
         "versions": [],
         "upgrade": null,
@@ -3873,6 +4120,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             201491
@@ -3889,6 +4137,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             201692
@@ -3905,6 +4154,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202041
@@ -3921,6 +4171,7 @@
         "eval_pt": 394,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             201132
@@ -3937,6 +4188,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -3951,6 +4203,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.84,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -3965,6 +4218,7 @@
         "eval_pt": 217,
         "pt_ratio": 2.17,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201181,
@@ -3982,6 +4236,7 @@
         "eval_pt": 262,
         "pt_ratio": 1.25,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201182,
@@ -3999,6 +4254,7 @@
         "eval_pt": 0,
         "pt_ratio": 0.0,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -4013,6 +4269,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200301
@@ -4029,6 +4286,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200302
@@ -4045,6 +4303,7 @@
         "eval_pt": 217,
         "pt_ratio": 2.17,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201171,
@@ -4062,6 +4321,7 @@
         "eval_pt": 262,
         "pt_ratio": 1.25,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201172,
@@ -4079,6 +4339,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -4093,6 +4354,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -4107,6 +4369,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 3,
         "versions": [],
         "upgrade": null,
@@ -4121,6 +4384,7 @@
         "eval_pt": 174,
         "pt_ratio": 1.58,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             201561
@@ -4137,6 +4401,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.34,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202002
@@ -4153,6 +4418,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200631
@@ -4169,6 +4435,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200271
@@ -4185,6 +4452,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200272
@@ -4201,6 +4469,7 @@
         "eval_pt": 217,
         "pt_ratio": 2.17,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201111,
@@ -4218,6 +4487,7 @@
         "eval_pt": 262,
         "pt_ratio": 1.25,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201112,
@@ -4235,6 +4505,7 @@
         "eval_pt": 0,
         "pt_ratio": 0.0,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -4249,6 +4520,7 @@
         "eval_pt": 217,
         "pt_ratio": 2.17,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201101,
@@ -4266,6 +4538,7 @@
         "eval_pt": 262,
         "pt_ratio": 1.25,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201102,
@@ -4283,6 +4556,7 @@
         "eval_pt": 174,
         "pt_ratio": 1.24,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201001
@@ -4299,6 +4573,7 @@
         "eval_pt": 217,
         "pt_ratio": 2.17,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201041,
@@ -4316,6 +4591,7 @@
         "eval_pt": 262,
         "pt_ratio": 1.25,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201042,
@@ -4333,6 +4609,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200682
@@ -4349,6 +4626,7 @@
         "eval_pt": 0,
         "pt_ratio": 0.0,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -4363,6 +4641,7 @@
         "eval_pt": 217,
         "pt_ratio": 2.17,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201031,
@@ -4380,6 +4659,7 @@
         "eval_pt": 262,
         "pt_ratio": 1.25,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201032,
@@ -4397,6 +4677,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             201142
@@ -4413,6 +4694,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.21,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             201451,
@@ -4430,6 +4712,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -4444,6 +4727,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201281
@@ -4460,6 +4744,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201161
@@ -4476,6 +4761,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201162
@@ -4492,6 +4778,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.52,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200041,
@@ -4509,6 +4796,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200041,
@@ -4526,6 +4814,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200042,
@@ -4543,6 +4832,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             201902
@@ -4559,6 +4849,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -4573,6 +4864,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.65,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200111,
@@ -4590,6 +4882,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.84,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200111,
@@ -4607,6 +4900,7 @@
         "eval_pt": 174,
         "pt_ratio": 1.09,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200112,
@@ -4624,6 +4918,7 @@
         "eval_pt": 174,
         "pt_ratio": 1.16,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200491
@@ -4640,6 +4935,7 @@
         "eval_pt": 394,
         "pt_ratio": 1.31,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200492
@@ -4656,6 +4952,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.52,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200141,
@@ -4673,6 +4970,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200141,
@@ -4690,6 +4988,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200142,
@@ -4707,6 +5006,7 @@
         "eval_pt": 334,
         "pt_ratio": 1.39,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202032
@@ -4723,6 +5023,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -4737,6 +5038,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -4751,6 +5053,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.49,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202072
@@ -4767,6 +5070,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.52,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200951,
@@ -4784,6 +5088,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200951,
@@ -4801,6 +5106,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200952,
@@ -4818,6 +5124,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200602
@@ -4834,6 +5141,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -4848,6 +5156,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             201091
@@ -4864,6 +5173,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -4878,6 +5188,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 3,
         "versions": [],
         "upgrade": null,
@@ -4892,6 +5203,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.52,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200261,
@@ -4909,6 +5221,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200261,
@@ -4926,6 +5239,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200262,
@@ -4943,6 +5257,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200611
@@ -4959,6 +5274,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             201212
@@ -4975,6 +5291,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.67,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201321,
@@ -4992,6 +5309,7 @@
         "eval_pt": 262,
         "pt_ratio": 0.97,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201322,
@@ -5009,6 +5327,7 @@
         "eval_pt": 174,
         "pt_ratio": 1.58,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201531
@@ -5025,6 +5344,7 @@
         "eval_pt": 217,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201532
@@ -5041,6 +5361,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.67,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201311,
@@ -5058,6 +5379,7 @@
         "eval_pt": 262,
         "pt_ratio": 0.97,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201312,
@@ -5075,6 +5397,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.28,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200471
@@ -5091,6 +5414,7 @@
         "eval_pt": -262,
         "pt_ratio": -2.62,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -5105,6 +5429,7 @@
         "eval_pt": -129,
         "pt_ratio": -2.58,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -5119,6 +5444,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201201
@@ -5135,6 +5461,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -5149,6 +5476,7 @@
         "eval_pt": 394,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201002
@@ -5165,6 +5493,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             201512
@@ -5181,6 +5510,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200992
@@ -5197,6 +5527,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             201662
@@ -5213,6 +5544,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -5227,6 +5559,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200591
@@ -5243,6 +5576,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200571
@@ -5259,6 +5593,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200581
@@ -5275,6 +5610,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -5289,6 +5625,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             201211
@@ -5305,6 +5642,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 3,
         "versions": [],
         "upgrade": null,
@@ -5319,6 +5657,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200681
@@ -5335,6 +5674,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200332,
@@ -5352,6 +5692,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.07,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200451
@@ -5368,6 +5709,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202111
@@ -5384,6 +5726,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 0,
         "versions": [],
         "upgrade": null,
@@ -5398,6 +5741,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200572
@@ -5414,6 +5758,7 @@
         "eval_pt": 633,
         "pt_ratio": 1.58,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             210062
@@ -5430,6 +5775,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.52,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200231,
@@ -5447,6 +5793,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200231,
@@ -5464,6 +5811,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200232,
@@ -5481,6 +5829,7 @@
         "eval_pt": -262,
         "pt_ratio": -2.62,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -5495,6 +5844,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.28,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200461
@@ -5511,6 +5861,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -5525,6 +5876,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -5539,6 +5891,7 @@
         "eval_pt": -262,
         "pt_ratio": -2.62,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -5553,6 +5906,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -5567,6 +5921,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 0,
         "versions": [],
         "upgrade": null,
@@ -5581,6 +5936,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             201111,
@@ -5598,6 +5954,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             201292
@@ -5614,6 +5971,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201422
@@ -5630,6 +5988,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -5644,6 +6003,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.67,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [],
         "upgrade": null,
@@ -5658,6 +6018,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201282
@@ -5674,6 +6035,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -5688,6 +6050,7 @@
         "eval_pt": 461,
         "pt_ratio": 1.4,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200011,
@@ -5706,6 +6069,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.34,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200011,
@@ -5724,6 +6088,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200011,
@@ -5742,6 +6107,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200012,
@@ -5760,6 +6126,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200612
@@ -5776,6 +6143,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.07,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             202031
@@ -5792,6 +6160,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200711
@@ -5808,6 +6177,7 @@
         "eval_pt": 0,
         "pt_ratio": 0.0,
         "rarity": 5,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -5822,6 +6192,7 @@
         "eval_pt": 370,
         "pt_ratio": 1.85,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -5836,6 +6207,7 @@
         "eval_pt": -262,
         "pt_ratio": -2.62,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -5850,6 +6222,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.49,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200372
@@ -5866,6 +6239,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -5880,6 +6254,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.65,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200081,
@@ -5897,6 +6272,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.84,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200081,
@@ -5914,6 +6290,7 @@
         "eval_pt": 174,
         "pt_ratio": 1.09,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200082,
@@ -5931,6 +6308,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -5945,6 +6323,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             201291
@@ -5961,6 +6340,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             201661
@@ -5977,6 +6357,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             201492
@@ -5993,6 +6374,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -6007,6 +6389,7 @@
         "eval_pt": 217,
         "pt_ratio": 2.17,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -6021,6 +6404,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201441
@@ -6037,6 +6421,7 @@
         "eval_pt": 334,
         "pt_ratio": 1.39,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             201362
@@ -6053,6 +6438,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             201051
@@ -6069,6 +6455,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -6083,6 +6470,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -6097,6 +6485,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 0,
         "versions": [],
         "upgrade": null,
@@ -6111,6 +6500,7 @@
         "eval_pt": 0,
         "pt_ratio": 0.0,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -6125,6 +6515,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.81,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             201331
@@ -6141,6 +6532,7 @@
         "eval_pt": 334,
         "pt_ratio": 1.52,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201262
@@ -6157,6 +6549,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -6171,6 +6564,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200622
@@ -6187,6 +6581,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200601
@@ -6203,6 +6598,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201652
@@ -6219,6 +6615,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.17,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             201231
@@ -6235,6 +6632,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200241
@@ -6251,6 +6649,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200242
@@ -6267,6 +6666,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             201141
@@ -6283,6 +6683,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201081
@@ -6299,6 +6700,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200582
@@ -6315,6 +6717,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.34,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200171,
@@ -6333,6 +6736,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200171,
@@ -6351,6 +6755,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200172,
@@ -6369,6 +6774,7 @@
         "eval_pt": 461,
         "pt_ratio": 1.4,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200171,
@@ -6387,6 +6793,7 @@
         "eval_pt": 217,
         "pt_ratio": 2.17,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200971,
@@ -6404,6 +6811,7 @@
         "eval_pt": 262,
         "pt_ratio": 1.25,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200972,
@@ -6421,6 +6829,7 @@
         "eval_pt": 217,
         "pt_ratio": 2.17,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200961,
@@ -6438,6 +6847,7 @@
         "eval_pt": 262,
         "pt_ratio": 1.25,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200962,
@@ -6455,6 +6865,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200651
@@ -6471,6 +6882,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.49,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200982
@@ -6487,6 +6899,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             201221
@@ -6503,6 +6916,7 @@
         "eval_pt": 461,
         "pt_ratio": 1.44,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             201222
@@ -6519,6 +6933,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200561
@@ -6535,6 +6950,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.52,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200131,
@@ -6552,6 +6968,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200131,
@@ -6569,6 +6986,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200132,
@@ -6586,6 +7004,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200621
@@ -6602,6 +7021,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200731
@@ -6618,6 +7038,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201062
@@ -6634,6 +7055,7 @@
         "eval_pt": 262,
         "pt_ratio": 1.54,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             201021
@@ -6650,6 +7072,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.81,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201341
@@ -6666,6 +7089,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.28,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200371
@@ -6682,6 +7106,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.28,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200361
@@ -6698,6 +7123,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.28,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200381
@@ -6714,6 +7140,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200641
@@ -6730,6 +7157,7 @@
         "eval_pt": 85,
         "pt_ratio": 0.77,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201501
@@ -6746,6 +7174,7 @@
         "eval_pt": 85,
         "pt_ratio": 0.71,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201431
@@ -6762,6 +7191,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200632
@@ -6778,6 +7208,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.67,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -6792,6 +7223,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.67,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -6806,6 +7238,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.67,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -6820,6 +7253,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.67,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -6834,6 +7268,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.34,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200181,
@@ -6852,6 +7287,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200181,
@@ -6870,6 +7306,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200182,
@@ -6888,6 +7325,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200211
@@ -6904,6 +7342,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200212
@@ -6920,6 +7359,7 @@
         "eval_pt": 334,
         "pt_ratio": 1.52,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             201562
@@ -6936,6 +7376,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 3,
         "versions": [],
         "upgrade": null,
@@ -6950,6 +7391,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 3,
         "versions": [],
         "upgrade": null,
@@ -6964,6 +7406,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -6978,6 +7421,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             201591
@@ -6994,6 +7438,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.49,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200352,
@@ -7011,6 +7456,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.84,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             201632
@@ -7027,6 +7473,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.81,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             201361
@@ -7043,6 +7490,7 @@
         "eval_pt": 217,
         "pt_ratio": 2.17,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201612
@@ -7059,6 +7507,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.81,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             201611
@@ -7075,6 +7524,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202081
@@ -7091,6 +7541,7 @@
         "eval_pt": 334,
         "pt_ratio": 1.39,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200532
@@ -7107,6 +7558,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.81,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200771
@@ -7123,6 +7575,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200291
@@ -7139,6 +7592,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200292
@@ -7155,6 +7609,7 @@
         "eval_pt": 334,
         "pt_ratio": 1.39,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             201332
@@ -7171,6 +7626,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201151
@@ -7187,6 +7643,7 @@
         "eval_pt": 334,
         "pt_ratio": 1.39,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201432
@@ -7203,6 +7660,7 @@
         "eval_pt": 334,
         "pt_ratio": 1.52,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201472
@@ -7219,6 +7677,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -7233,6 +7692,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -7247,6 +7707,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -7261,6 +7722,7 @@
         "eval_pt": 174,
         "pt_ratio": 1.24,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             201131
@@ -7277,6 +7739,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.34,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200031,
@@ -7295,6 +7758,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200031,
@@ -7313,6 +7777,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200032,
@@ -7331,6 +7796,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.21,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             201671
@@ -7347,6 +7813,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             201272
@@ -7363,6 +7830,7 @@
         "eval_pt": 0,
         "pt_ratio": 0.0,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -7377,6 +7845,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200712
@@ -7393,6 +7862,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             201672
@@ -7409,6 +7879,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.55,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200772
@@ -7425,6 +7896,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.55,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -7439,6 +7911,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -7453,6 +7926,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 0,
         "versions": [],
         "upgrade": null,
@@ -7467,6 +7941,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200652
@@ -7483,6 +7958,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 0,
         "versions": [],
         "upgrade": null,
@@ -7497,6 +7973,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             201592
@@ -7513,6 +7990,7 @@
         "eval_pt": 0,
         "pt_ratio": 0.0,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -7527,6 +8005,7 @@
         "eval_pt": 0,
         "pt_ratio": 0.0,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -7541,6 +8020,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.41,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             200552
@@ -7557,6 +8037,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.49,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200482
@@ -7573,6 +8054,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 3,
         "versions": [
             200732
@@ -7589,6 +8071,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.81,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201071
@@ -7605,6 +8088,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200721
@@ -7621,6 +8105,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200701
@@ -7637,6 +8122,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 3,
         "versions": [],
         "upgrade": null,
@@ -7651,6 +8137,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 0,
         "versions": [
             201202
@@ -7667,6 +8154,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             201192
@@ -7683,6 +8171,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -7697,6 +8186,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -7711,6 +8201,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -7725,6 +8216,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -7739,6 +8231,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.52,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200281,
@@ -7756,6 +8249,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -7770,6 +8264,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200691
@@ -7786,6 +8281,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.34,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200161,
@@ -7804,6 +8300,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200161,
@@ -7822,6 +8319,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 1,
         "versions": [
             200162,
@@ -7840,6 +8338,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -7854,6 +8353,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -7868,6 +8368,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -7882,6 +8383,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.59,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202132
@@ -7898,6 +8400,7 @@
         "eval_pt": -129,
         "pt_ratio": -0.34,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             200201,
@@ -7916,6 +8419,7 @@
         "eval_pt": 129,
         "pt_ratio": 1.43,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200201,
@@ -7934,6 +8438,7 @@
         "eval_pt": 174,
         "pt_ratio": 0.87,
         "rarity": 1,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200202,
@@ -7952,6 +8457,7 @@
         "eval_pt": 217,
         "pt_ratio": 1.36,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             202131
@@ -7968,6 +8474,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 1,
         "versions": [],
         "upgrade": null,
@@ -7982,6 +8489,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -7996,6 +8504,7 @@
         "eval_pt": 461,
         "pt_ratio": 1.4,
         "rarity": 2,
+        "inherited": false,
         "community_tier": 2,
         "versions": [
             200061,
@@ -8014,6 +8523,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -8028,6 +8538,7 @@
         "eval_pt": 0,
         "pt_ratio": 0.0,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -8042,6 +8553,7 @@
         "eval_pt": 508,
         "pt_ratio": 1.49,
         "rarity": 2,
+        "inherited": false,
         "community_tier": null,
         "versions": [
             201022
@@ -8058,6 +8570,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
@@ -8072,6 +8585,7 @@
         "eval_pt": 180,
         "pt_ratio": 0.9,
         "rarity": 1,
+        "inherited": true,
         "community_tier": 2,
         "versions": [],
         "upgrade": null,
@@ -8086,6 +8600,7 @@
         "eval_pt": -129,
         "pt_ratio": -2.58,
         "rarity": 1,
+        "inherited": false,
         "community_tier": null,
         "versions": [],
         "upgrade": null,
