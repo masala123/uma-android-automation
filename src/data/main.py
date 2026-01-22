@@ -684,6 +684,16 @@ class SkillScraper(BaseScraper):
 
                 community_tier = skill_to_tier_map.get(tmp_skill_name, None)
 
+                # Corrections to invalid GameTora skill data.
+                if skill_name_en.lower() == "indomitable" and skill_id != 200471:
+                    # There are multiple entries with the name "Indomitable".
+                    # Only the one with id 200471 is valid. Skip others.
+                    continue
+                elif skill_id in [1000011, 1000012, 1000013, 1000014, 1000015, 1000016, 1000017]:
+                    # These are carnival bonus skill IDs. These aren't currently valid.
+                    # Unsure if they ever will be. So we skip them.
+                    continue
+
                 tmp = {
                     "id": skill_id,
                     "name_en": skill_name_en,

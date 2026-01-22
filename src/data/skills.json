@@ -768,28 +768,6 @@
         "upgrade": 200481,
         "downgrade": null
     },
-    "Carnival Bonus": {
-        "id": 1000012,
-        "name_en": "Carnival Bonus",
-        "desc_en": "Increase attributes by +{0}％ in the Racing Carnival. {1}％ chance to also raise runner's mood to Great. This skill will disappear when the event ends.",
-        "icon_id": 1010011,
-        "cost": null,
-        "eval_pt": 0,
-        "pt_ratio": 0.0,
-        "rarity": 1,
-        "inherited": false,
-        "community_tier": null,
-        "versions": [
-            1000011,
-            1000013,
-            1000014,
-            1000015,
-            1000016,
-            1000017
-        ],
-        "upgrade": 1000011,
-        "downgrade": null
-    },
     "Center Stage": {
         "id": 200451,
         "name_en": "Center Stage",
@@ -3426,19 +3404,21 @@
         "downgrade": 202042
     },
     "Indomitable": {
-        "id": 300141,
+        "id": 200471,
         "name_en": "Indomitable",
-        "desc_en": "I'll rise up to the challenge!",
-        "icon_id": 20013,
-        "cost": null,
-        "eval_pt": 0,
-        "pt_ratio": 0.0,
-        "rarity": 5,
+        "desc_en": "Recover endurance when passed by another runner mid-race.",
+        "icon_id": 20022,
+        "cost": 170,
+        "eval_pt": 508,
+        "pt_ratio": 1.49,
+        "rarity": 2,
         "inherited": false,
         "community_tier": 3,
-        "versions": [],
+        "versions": [
+            200472
+        ],
         "upgrade": null,
-        "downgrade": null
+        "downgrade": 200472
     },
     "Innate Experience": {
         "id": 200751,
