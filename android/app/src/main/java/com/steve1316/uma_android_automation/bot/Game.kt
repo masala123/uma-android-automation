@@ -32,6 +32,7 @@ import com.steve1316.uma_android_automation.components.IconRaceDayRibbon
 import com.steve1316.uma_android_automation.components.IconGoalRibbon
 import com.steve1316.uma_android_automation.components.ButtonBack
 import com.steve1316.uma_android_automation.components.ButtonUnityCupRace
+import com.steve1316.uma_android_automation.components.ButtonCompleteCareer
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -393,7 +394,7 @@ class Game(val myContext: Context) {
 	 */
 	fun checkEndScreen(): Boolean {
 		MessageLog.i(TAG, "\nChecking if the bot is sitting on the End screen.")
-		return if (imageUtils.findImage("complete_career", tries = 1, region = imageUtils.regionBottomHalf).first != null) {
+		return if (ButtonCompleteCareer.check(imageUtils)) {
 			true
 		} else {
 			MessageLog.i(TAG, "Bot is not at the End screen and can keep going.")

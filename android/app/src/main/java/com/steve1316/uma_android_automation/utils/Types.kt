@@ -287,14 +287,14 @@ data class SkillData(
     val evalPt: Int,
     val ptRatio: Double,
     val rarity: Int,
-    val inherited: Boolean,
+    val bIsInheritedUnique: Boolean,
     val communityTier: Int?,
     val versions: List<Int>,
     val upgrade: Int?,
     val downgrade: Int?,
 ) {
     val bIsGold: Boolean = iconId % 10 == 2
-    val bIsUnique: Boolean = inherited || iconId % 10 == 3
+    val bIsUnique: Boolean = bIsInheritedUnique || iconId % 10 == 3
     val bIsNegative: Boolean = iconId % 10 == 4
     val type: SkillType = SkillType.fromIconId(iconId)!!
     val bIsInPlace: Boolean =
@@ -318,7 +318,7 @@ data class SkillData(
         evalPt: Int,
         ptRatio: Double,
         rarity: Int,
-        inherited: Boolean,
+        bIsInheritedUnique: Boolean,
         communityTier: Int?,
         versions: String,
         upgrade: Int?,
@@ -332,7 +332,7 @@ data class SkillData(
         evalPt,
         ptRatio,
         rarity,
-        inherited,
+        bIsInheritedUnique,
         communityTier,
         versions
             .replace("[", "")

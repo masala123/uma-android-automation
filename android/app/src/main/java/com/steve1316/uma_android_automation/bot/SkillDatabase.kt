@@ -13,9 +13,6 @@ import kotlinx.coroutines.*
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
-import net.ricecode.similarity.JaroWinklerStrategy
-import net.ricecode.similarity.StringSimilarityServiceImpl
-
 import com.steve1316.automation_library.utils.SettingsHelper
 import com.steve1316.automation_library.utils.SQLiteSettingsManager
 import com.steve1316.automation_library.utils.MessageLog
@@ -29,6 +26,8 @@ import com.steve1316.uma_android_automation.utils.types.SkillType
 import com.steve1316.uma_android_automation.utils.types.TrackDistance
 import com.steve1316.uma_android_automation.utils.types.RunningStyle
 import com.steve1316.uma_android_automation.utils.types.Aptitude
+import com.steve1316.uma_android_automation.utils.DoublyLinkedList
+import com.steve1316.uma_android_automation.utils.DoublyLinkedListNode
 
 import com.steve1316.uma_android_automation.components.*
 
@@ -36,12 +35,16 @@ import com.steve1316.uma_android_automation.components.*
 class SkillDatabase (private val game: Game) {
     private val TAG: String = "[${MainActivity.loggerTag}]SkillDatabase"
 
-    // Cached skill plan data loaded once per class instance.
+    // Mapping of skill names to their associated datum.
     private val skillData: Map<String, SkillData> = loadSkillData()
-
-    private val skillNameToId: Map<String, Int> = getSkillsToSkillIds()
-    // Invert the mapping.
-    private val skillIdToName: Map<Int, String> = skillNameToId.entries.associate { (k, v) -> v to k }
+    // A mapping of skill name to skill ID.
+    private val skillNameToId: Map<String, Int> = skillData.mapValues { it.value.id }
+    // Invert the mapping for reverse lookups.
+    private val skillIdToName: Map<Int, String> = skillNameToId.entries.associate { it.value to it.key }
+    // A structure used to map skill names to a doubly linked list representing
+    // the upgrade/downgrade paths (versions) for each skill.
+    private val skillStructure: Map<String, DoublyLinkedListNode<String>> = loadSkillStructure()
+    private val skillUpgradeChains: Map<String, List<String>> = skillStructure.mapValues { it.value.list.getValues() }
 
     companion object {
         private const val TABLE_SKILLS = "skills"
@@ -61,308 +64,471 @@ class SkillDatabase (private val game: Game) {
         private const val SIMILARITY_THRESHOLD = 0.7
     }
 
+    /** Loads all skill data from the database.
+     *
+     * @return A mapping of skill names to SkillData objects.
+     */
     private fun loadSkillData(): Map<String, SkillData> {
-        return try {
-            val skillPlanDataJson = SettingsHelper.getStringSetting("skills", "skillPlanData")
-            if (skillPlanDataJson.isEmpty()) {
-                MessageLog.i(TAG, "[SKILLS] SKill plan data is empty, returning empty map.")
-                return emptyMap()
-            }
-
-            val jsonObject = JSONObject(skillPlanDataJson)
-            val skillDataMap = mutableMapOf<String, SkillData>()
-            
-            val keys = jsonObject.keys()
-            while (keys.hasNext()) {
-                val key = keys.next()
-                val skillObj = jsonObject.getJSONObject(key)
-
-                val skillData = SkillData(
-                    // The JSON key is "id". We want this, not the database's "skill_id"
-                    id = skillObj.getInt("id"),
-                    name = skillObj.getString(SKILLS_COLUMN_NAME_EN),
-                    description = skillObj.getString(SKILLS_COLUMN_DESC_EN),
-                    iconId = skillObj.getInt(SKILLS_COLUMN_ICON_ID),
-                    cost = skillObj.optInt(SKILLS_COLUMN_COST),
-                    evalPt = skillObj.getInt(SKILLS_COLUMN_EVAL_PT),
-                    ptRatio = skillObj.getDouble(SKILLS_COLUMN_PT_RATIO),
-                    rarity = skillObj.getInt(SKILLS_COLUMN_RARITY),
-                    inherited = skillObj.getBoolean(SKILLS_COLUMN_INHERITED),
-                    communityTier = skillObj.optInt(SKILLS_COLUMN_COMMUNITY_TIER),
-                    versions = skillObj.getString(SKILLS_COLUMN_VERSIONS),
-                    upgrade = skillObj.optInt(SKILLS_COLUMN_UPGRADE),
-                    downgrade = skillObj.optInt(SKILLS_COLUMN_DOWNGRADE),
-                )
-
-                skillDataMap[skillData.name] = skillData
-            }
-
-            MessageLog.i(TAG, "[SKILLS] Successfully loaded ${skillDataMap.size} skill entries from skill plan data.")
-            skillDataMap
-        } catch (e: Exception) {
-            MessageLog.e(TAG, "[SKILLS] Failed to parse skill plan data JSON: ${e.message}. Returning empty map.")
-            emptyMap()
-        }
-    }
-
-    fun getSkillsToSkillIds(): Map<String, Int> {
         val settingsManager = SQLiteSettingsManager(game.myContext)
         if (!settingsManager.initialize()) {
-            MessageLog.e(TAG, "[ERROR] Database not available for skill lookup.")
+            MessageLog.e(TAG, "[ERROR] Database not available.")
             return emptyMap()
         }
-        try {
-            val res: MutableMap<String, Int> = mutableMapOf()
-            val database = settingsManager.getDatabase()
-            if (database == null) {
-                return emptyMap()
-            }
+        val database = settingsManager.getDatabase()
+        if (database == null) {
+            return emptyMap()
+        }
 
-            val cursor = database.rawQuery("SELECT $SKILLS_COLUMN_SKILL_ID, $SKILLS_COLUMN_NAME_EN FROM $TABLE_SKILLS", null)
-            if (cursor.moveToFirst()) {
-                val idIndex = cursor.getColumnIndex(SKILLS_COLUMN_SKILL_ID)
-                val nameIndex = cursor.getColumnIndex(SKILLS_COLUMN_NAME_EN)
-                if (idIndex != -1 && nameIndex != -1) {
+        try {
+            val result: MutableMap<String, SkillData> = mutableMapOf()
+
+            val query = "SELECT * FROM ${TABLE_SKILLS}"
+            val cursor = database.rawQuery(query, null)
+            cursor.use {
+                if (cursor.moveToFirst()) {
                     do {
-                        res[cursor.getString(nameIndex)] = cursor.getInt(idIndex)
+                        val idIndex: Int = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_SKILL_ID)
+                        val nameIndex: Int = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_NAME_EN)
+                        val descriptionIndex: Int = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_DESC_EN)
+                        val iconIdIndex: Int = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_ICON_ID)
+                        val costIndex: Int = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_COST)
+                        val evalPtIndex: Int = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_EVAL_PT)
+                        val ptRatioIndex: Int = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_PT_RATIO)
+                        val rarityIndex: Int = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_RARITY)
+                        val inheritedIndex: Int = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_INHERITED)
+                        val communityTierIndex: Int = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_COMMUNITY_TIER)
+                        val versionsIndex: Int = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_VERSIONS)
+                        val upgradeIndex: Int = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_UPGRADE)
+                        val downgradeIndex: Int = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_DOWNGRADE)
+
+                        val skillData: SkillData = SkillData(
+                            id = it.getInt(idIndex),
+                            name = it.getString(nameIndex),
+                            description = it.getString(descriptionIndex),
+                            iconId = it.getInt(iconIdIndex),
+                            cost = if (it.isNull(costIndex)) null else it.getInt(costIndex),
+                            evalPt = it.getInt(evalPtIndex),
+                            ptRatio = it.getDouble(ptRatioIndex),
+                            rarity = it.getInt(rarityIndex),
+                            bIsInheritedUnique = it.getInt(inheritedIndex) == 1,
+                            communityTier = if (it.isNull(communityTierIndex)) null else it.getInt(communityTierIndex),
+                            versions = it.getString(versionsIndex),
+                            upgrade = if (it.isNull(upgradeIndex)) null else it.getInt(upgradeIndex),
+                            downgrade = if (it.isNull(downgradeIndex)) null else it.getInt(downgradeIndex),
+                        )
+                        result[skillData.name] = skillData
                     } while (cursor.moveToNext())
                 }
             }
-            cursor.close()
-            return res.toMap()
+
+            return result.toMap()
         } catch (e: Exception) {
-            MessageLog.e(TAG, "[ERROR] getSkill: Error looking up skill: ${e.message}")
+            MessageLog.e(TAG, "[ERROR] blah: Error: ${e.message}")
+            return emptyMap<String, SkillData>()
         } finally {
             settingsManager.close()
         }
-        return emptyMap()
     }
 
+    /** Generates a mapping of skill names to a linked list of other versions of the skill.
+     *
+     * @return The generated mapping.
+     */
+    private fun loadSkillStructure(): Map<String, DoublyLinkedListNode<String>> {
+        fun getVersionNames(id: Int?, bIsUpgrade: Boolean = false): List<String> {
+            var id: Int? = id
+            if (id == null) {
+                return emptyList()
+            }
+
+            val result: MutableList<String> = mutableListOf()
+
+            while (id != null) {
+                val name: String? = getSkillName(id)
+                if (name == null) {
+                    break
+                }
+                val tmpData: SkillData? = getSkillData(name)
+                if (tmpData == null) {
+                    MessageLog.e(TAG, "loadSkillStructure::getVersionNames: \"$name\" not in skillData.")
+                    break
+                }
+
+                result.add(name)
+
+                id = if (bIsUpgrade) tmpData.upgrade else tmpData.downgrade
+            }
+
+            return if (bIsUpgrade) result.toList() else result.reversed().toList()
+        }
+
+        val result: MutableMap<String, DoublyLinkedListNode<String>> = mutableMapOf()
+
+        for ((name, skillData) in skillData) {
+            // Get all downgrade/upgrade versions for this skill.            
+            val downgradeNames: List<String> = getVersionNames(skillData.downgrade)
+            val upgradeNames: List<String> = getVersionNames(skillData.upgrade, bIsUpgrade = true)
+
+            // Combine the version names, including this one, in order.
+            val orderedNames: List<String> = downgradeNames + name + upgradeNames
+            // We don't want to add anything if it is already in the structure.
+            // The first occurence of any skill in a skill's upgrade chain
+            // will populate all entries for that chain in the structure.
+            if (orderedNames.any { it in result }) {
+                continue
+            }
+
+            // Now generate the linked list of versions.
+            val list = DoublyLinkedList<String>()
+            for (orderedName in orderedNames) {
+                if (orderedName in result) {
+                    MessageLog.e(TAG, "loadSkillStructure: \"$orderedName\" already in skillStructure!")
+                    continue
+                }
+                val node: DoublyLinkedListNode<String> = list.append(orderedName)
+                // Add this node's reference to the skill structure.
+                result[orderedName] = node
+            }
+        }
+
+        return result.toMap()
+    }
+
+    private fun fuzzySearchSkillName(name: String): String? {
+        return TextUtils.matchStringInList(
+            query = name,
+            choices = skillData.keys.toList(),
+            threshold = SIMILARITY_THRESHOLD,
+        )
+    }
+
+    private fun checkSkillName(name: String, fuzzySearch: Boolean = false): String? {
+        // Check for an exact match first.
+        if (name in skillData) {
+            return name
+        }
+        // Fallback to a fuzzy search.
+        return if (fuzzySearch) fuzzySearchSkillName(name) else null
+    }
+
+    /** Gets SkillData for a skill name.
+     *
+     * @param name The name to get.
+     *
+     * @return If name was found, the SkillData object. Otherwise, NULL.
+     */
     fun getSkillData(name: String): SkillData? {
-        val settingsManager = SQLiteSettingsManager(game.myContext)
-        if (!settingsManager.initialize()) {
-            MessageLog.e(TAG, "[ERROR] Database not available for skill lookup.")
+        var res: SkillData? = skillData[name]
+        if (res == null) {
+            MessageLog.w(TAG, "getSkillData: Skill name (\"$name\") not found. Attempting fuzzy search...")
+            val tmpName: String? = checkSkillName(name, fuzzySearch = true)
+            if (tmpName == null) {
+                MessageLog.w(TAG, "getSkillData: No fuzzy match found for \"$name\".")
+                return null
+            }
+            res = skillData[tmpName]
+        }
+        return res
+    }
+
+    /** Gets SkillData for a list of skill names.
+     *
+     * @param names The list of names to get.
+     *
+     * @return If all names were found, the list of SkillData objects. Otherwise, NULL.
+     */
+    fun getSkillData(names: List<String>): List<SkillData>? {
+        val res: MutableList<SkillData> = mutableListOf()
+        for (name in names) {
+            val skillData: SkillData? = getSkillData(name)
+            if (skillData == null) {
+                return null
+            }
+            res.add(skillData)
+        }
+        return res.toList()
+    }
+
+    fun getSkillName(id: Int): String? {
+        if (id !in skillIdToName) {
+            MessageLog.w(TAG, "getSkillName: Skill ID ($id) not found.")
+        }
+        return skillIdToName[id]
+    }
+
+    fun getSkillId(name: String): Int? {
+        var res: Int? = skillNameToId[name]
+        if (res == null) {
+            MessageLog.w(TAG, "getSkillId: Skill name (\"$name\") not found. Attempting fuzzy search...")
+            val tmpName: String? = checkSkillName(name, fuzzySearch = true)
+            if (tmpName == null) {
+                MessageLog.w(TAG, "getSkillId: No fuzzy match found for \"$name\".")
+                return null
+            }
+            res = skillNameToId[tmpName]
+            if (res == null) {
+                // This indicates some unknown error where skillNameToId somehow
+                // doesn't contain the same keys as skillData.
+                MessageLog.e(TAG, "getSkillId: skillData and skillNameToId keys are not the same.")
+            }
+        }
+        return res
+    }
+
+    /** Returns a list of skill names which must be purchased before the passed skill name becomes available.
+     *
+     * @param name The skill that we wish to purchase.
+     *
+     * @return A list of skill names which will need to be purchased for the passed
+     * skill to become available.
+     */
+    fun getRequiredUpgrades(name: String): List<String> {
+        if (checkSkillName(name) == null) {
+            MessageLog.e(TAG, "getRequiredUpgrades: Failed to find skill in database: $name")
+            return emptyList()
+        }
+
+        var node: DoublyLinkedListNode<String>? = skillStructure[name]
+        if (node == null) {
+            MessageLog.e(TAG, "getRequiredUpgrades: \"$name\" not in skillStructure.")
+            return emptyList()
+        }
+
+        val result: MutableList<String> = mutableListOf()
+        // Walk backward until there are no previous versions.
+        while(node != null) {
+            result.add(node.value)
+            node = node.prev
+        }
+        // Make sure to reverse to put it in order from first to last.
+        return result.reversed().toList()
+    }
+
+    /** Returns the direct upgrade skill name for the passed skill.
+     *
+     * @param name The skill whose upgrade we want to find.
+     *
+     * @return The upgraded skill name if one exists, otherwise NULL.
+     */
+    fun getUpgrade(name: String): String? {
+        if (checkSkillName(name) == null) {
+            MessageLog.e(TAG, "getUpgrade: Failed to find skill in database: $name")
             return null
         }
 
-        val names: MutableList<String> = mutableListOf()
-
-        try {
-            MessageLog.d(TAG, "[SKILLS] getSkillData: Looking up skill: $name")
-
-            val database = settingsManager.getDatabase()
-            if (database == null) {
-                return null
-            }
-
-            val cursor = database.rawQuery("SELECT $SKILLS_COLUMN_NAME_EN FROM $TABLE_SKILLS", null)
-            if (cursor.moveToFirst()) {
-                val columnIndex = cursor.getColumnIndex(SKILLS_COLUMN_NAME_EN)
-                if (columnIndex != -1) {
-                    do {
-                        names.add(cursor.getString(columnIndex))
-                    } while (cursor.moveToNext())
-                }
-            }
-            cursor.close()
-        } catch (e: Exception) {
-            MessageLog.e(TAG, "[ERROR] getSkill: Error looking up skill: ${e.message}")
-        } finally {
-            settingsManager.close()
-        }
-
-        val match: String? = TextUtils.matchStringInList(name, names.toList())
-        if (match == null) {
+        var node: DoublyLinkedListNode<String>? = skillStructure[name]
+        if (node == null) {
+            MessageLog.e(TAG, "getUpgrade: \"$name\" not in skillStructure.")
             return null
         }
-        return lookupSkillInDatabase(match)
+        return node.next?.value
     }
 
-    fun getSkillName(skillId: Int): String? {
-        return skillIdToName[skillId]
-    }
-
-    fun getSkillId(skillName: String): Int? {
-        return skillNameToId[skillName]
-    }
-
-    fun getSkillNameFromDatabase(skillId: Int): String? {
-        val settingsManager = SQLiteSettingsManager(game.myContext)
-        if (!settingsManager.initialize()) {
-            MessageLog.e(TAG, "[ERROR] Database not available for skill lookup.")
-            return null
+    /** Returns a list of skill names which are upgrades to the passed skill.
+     *
+     * @param name The skill whose upgrades we want to find.
+     *
+     * @return A list of the upgraded skill names.
+     */
+    fun getUpgrades(name: String): List<String> {
+        if (checkSkillName(name) == null) {
+            MessageLog.e(TAG, "getUpgrades: Failed to find skill in database: $name")
+            return emptyList()
         }
 
-        var name: String? = null
-
-        try {
-            MessageLog.d(TAG, "[SKILLS] getSkillName: Looking up skill by ID: $skillId")
-
-            val database = settingsManager.getDatabase()
-            if (database == null) {
-                return null
-            }
-
-            val query: String = "SELECT $SKILLS_COLUMN_NAME_EN FROM $TABLE_SKILLS WHERE $SKILLS_COLUMN_SKILL_ID = ?"
-            val cursor = database.rawQuery(query, arrayOf(skillId.toString()))
-            if (cursor.moveToFirst()) {
-                val columnIndex = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_NAME_EN)
-                if (columnIndex != -1) {
-                    name = cursor.getString(columnIndex)
-                }
-            }
-            cursor.close()
-        } catch (e: Exception) {
-            MessageLog.e(TAG, "[ERROR] getSkill: Error looking up skill: ${e.message}")
-        } finally {
-            settingsManager.close()
+        var node: DoublyLinkedListNode<String>? = skillStructure[name]
+        if (node == null) {
+            MessageLog.e(TAG, "getUpgrades: \"$name\" not in skillStructure.")
+            return emptyList()
         }
 
-        return name
+        val result: MutableList<String> = mutableListOf()
+        // Walk forward until there are no more versions.
+        while(node != null) {
+            result.add(node.value)
+            node = node.next
+        }
+        // This list is already in the correct order.
+        return result.toList()
     }
 
-    fun lookupSkillInDatabase(name: String): SkillData? {
-        val settingsManager = SQLiteSettingsManager(game.myContext)
-        if (!settingsManager.initialize()) {
-            MessageLog.e(TAG, "[ERROR] Database not available for skill lookup.")
+    /** Returns the direct downgrade skill name for the passed skill.
+     *
+     * @param name The skill whose downgrade we want to find.
+     *
+     * @return The downgraded skill name if one exists, otherwise NULL.
+     */
+    fun getDowngrade(name: String): String? {
+        if (checkSkillName(name) == null) {
+            MessageLog.e(TAG, "getDowngrade: Failed to find skill in database: $name")
             return null
         }
 
-        return try {
-            MessageLog.i(TAG, "[SKILLS] lookupSkillInDatabase: Looking up skill: $name")
-
-            val database = settingsManager.getDatabase()
-            if (database == null) {
-                return null
-            }
-
-            val tmp: String = name
-
-            val exactCursor = database.query(
-                TABLE_SKILLS,
-                arrayOf(
-                    SKILLS_COLUMN_SKILL_ID,
-                    SKILLS_COLUMN_NAME_EN,
-                    SKILLS_COLUMN_DESC_EN,
-                    SKILLS_COLUMN_ICON_ID,
-                    SKILLS_COLUMN_COST,
-                    SKILLS_COLUMN_EVAL_PT,
-                    SKILLS_COLUMN_PT_RATIO,
-                    SKILLS_COLUMN_RARITY,
-                    SKILLS_COLUMN_INHERITED,
-                    SKILLS_COLUMN_COMMUNITY_TIER,
-                    SKILLS_COLUMN_VERSIONS,
-                    SKILLS_COLUMN_UPGRADE,
-                    SKILLS_COLUMN_DOWNGRADE,
-                ),
-                "$SKILLS_COLUMN_NAME_EN = ?",
-                arrayOf(tmp),
-                null, null, null,
-            )
-
-            if (exactCursor.moveToFirst()) {
-                val skill = SkillData(
-                    id = exactCursor.getInt(0),
-                    name = exactCursor.getString(1),
-                    description = exactCursor.getString(2),
-                    iconId = exactCursor.getInt(3),
-                    cost = if (exactCursor.isNull(4)) null else exactCursor.getInt(4),
-                    evalPt = exactCursor.getInt(5),
-                    ptRatio = exactCursor.getDouble(6),
-                    rarity = exactCursor.getInt(7),
-                    inherited = exactCursor.getInt(8) == 1,
-                    communityTier = if (exactCursor.isNull(9)) null else exactCursor.getInt(9),
-                    versions = exactCursor.getString(10),
-                    upgrade = if (exactCursor.isNull(11)) null else exactCursor.getInt(11),
-                    downgrade = if (exactCursor.isNull(12)) null else exactCursor.getInt(12),
-                )
-                exactCursor.close()
-                settingsManager.close()
-                MessageLog.d(TAG, "[SKILLS] Found exact match: \"${skill.name}\"")
-                return skill
-            }
-            exactCursor.close()
-
-            MessageLog.d(TAG, "[SKILLS] No exact match for skill \"$name\". Attempting fuzzy search...")
-
-            val fuzzyCursor = database.query(
-                TABLE_SKILLS,
-                arrayOf(
-                    SKILLS_COLUMN_SKILL_ID,
-                    SKILLS_COLUMN_NAME_EN,
-                    SKILLS_COLUMN_DESC_EN,
-                    SKILLS_COLUMN_ICON_ID,
-                    SKILLS_COLUMN_COST,
-                    SKILLS_COLUMN_EVAL_PT,
-                    SKILLS_COLUMN_PT_RATIO,
-                    SKILLS_COLUMN_RARITY,
-                    SKILLS_COLUMN_INHERITED,
-                    SKILLS_COLUMN_COMMUNITY_TIER,
-                    SKILLS_COLUMN_VERSIONS,
-                    SKILLS_COLUMN_UPGRADE,
-                    SKILLS_COLUMN_DOWNGRADE,
-                ),
-                "$SKILLS_COLUMN_NAME_EN = ?",
-                arrayOf(name),
-                null, null, null,
-            )
-
-            if (!fuzzyCursor.moveToFirst()) {
-                fuzzyCursor.close()
-                MessageLog.i(TAG, "[SKILLS] No match found for skill with name \"$name\"")
-                return null
-            }
-
-            val similarityService = StringSimilarityServiceImpl(JaroWinklerStrategy())
-            var bestMatch: SkillData? = null
-            var bestScore = 0.0
-
-            do {
-                val tmpName = fuzzyCursor.getString(1)
-                val similarity = similarityService.score(name, tmpName)
-                if (similarity > bestScore && similarity >= SIMILARITY_THRESHOLD) {
-                    bestScore = similarity
-                    bestMatch = SkillData(
-                        id = fuzzyCursor.getInt(0),
-                        name = tmpName,
-                        description = fuzzyCursor.getString(2),
-                        iconId = fuzzyCursor.getInt(3),
-                        cost = if (fuzzyCursor.isNull(4)) null else fuzzyCursor.getInt(4),
-                        evalPt = fuzzyCursor.getInt(5),
-                        ptRatio = fuzzyCursor.getDouble(6),
-                        rarity = fuzzyCursor.getInt(7),
-                        inherited = fuzzyCursor.getInt(8) == 1,
-                        communityTier = if (fuzzyCursor.isNull(9)) null else fuzzyCursor.getInt(9),
-                        versions = fuzzyCursor.getString(10),
-                        upgrade = if (fuzzyCursor.isNull(11)) null else fuzzyCursor.getInt(11),
-                        downgrade = if (fuzzyCursor.isNull(12)) null else fuzzyCursor.getInt(12),
-                    )
-                    if (game.debugMode) {
-                        MessageLog.d(TAG, "[DEBUG] Fuzzy match candidate: \"${bestMatch.name}\" AKA \"$tmpName\" with similarity ${game.decimalFormat.format(similarity)}.")
-                    } else {
-                        Log.d(TAG, "[DEBUG] Fuzzy match candidate: \"${bestMatch.name}\" AKA \"$tmpName\" with similarity ${game.decimalFormat.format(similarity)}.")
-                    }
-                }
-            } while (fuzzyCursor.moveToNext())
-
-            fuzzyCursor.close()
-
-            if (bestMatch != null) {
-                MessageLog.i(TAG, "[SKILLS] Found fuzzy match: \"${bestMatch.name}\" with similarity ${game.decimalFormat.format(bestScore)}.")
-                return bestMatch
-            }
-
-            MessageLog.i(TAG, "[SKILLS] No match found for skill with name \"$name\".")
-            null
-        } catch (e: Exception) {
-            MessageLog.e(TAG, "[ERROR] lookupSkillInDatabase: Error looking up skill: ${e.message}")
-            null
-        } finally {
-            settingsManager.close()
+        var node: DoublyLinkedListNode<String>? = skillStructure[name]
+        if (node == null) {
+            MessageLog.e(TAG, "getDowngrade: \"$name\" not in skillStructure.")
+            return null
         }
+        return node.prev?.value
     }
 
-    fun checkSkill(name: String): Boolean {
-        return lookupSkillInDatabase(name) != null
+    /** Returns a list of skill names which are downgrades to the passed skill.
+     *
+     * @param name The skill whose downgrades we want to find.
+     *
+     * @return A list of the upgraded skill names.
+     */
+    fun getDowngrades(name: String): List<String> {
+        if (checkSkillName(name) == null) {
+            MessageLog.e(TAG, "getDowngrades: Failed to find skill in database: $name")
+            return emptyList()
+        }
+
+        var node: DoublyLinkedListNode<String>? = skillStructure[name]
+        if (node == null) {
+            MessageLog.e(TAG, "getDowngrades: \"$name\" not in skillStructure.")
+            return emptyList()
+        }
+
+        val result: MutableList<String> = mutableListOf()
+        // Walk forward until there are no more versions.
+        while(node != null) {
+            result.add(node.value)
+            node = node.prev
+        }
+        // This list is already in the correct order.
+        return result.toList()
+    }
+
+    /** Compare the version of two skills and return which ever is higher.
+     *
+     * @param a The first skill name to compare.
+     * @param b The skill name to compare against.
+     *
+     * @return On success, the skill name which is a higher version. On failure, NULL.
+     */
+    fun compareVersions(a: String, b: String): String? {
+        if (checkSkillName(a) == null) {
+            MessageLog.e(TAG, "compareVersions: Failed to find skill in database: $a")
+            return null
+        }
+
+        if (checkSkillName(b) == null) {
+            MessageLog.e(TAG, "compareVersions: Failed to find skill in database: $b")
+            return null
+        }
+
+        val nodeA: DoublyLinkedListNode<String>? = skillStructure[a]
+        if (nodeA == null) {
+            MessageLog.e(TAG, "compareVersions: \"$a\" not in skillStructure.")
+            return null
+        }
+
+        val nodeB: DoublyLinkedListNode<String>? = skillStructure[b]
+        if (nodeB == null) {
+            MessageLog.e(TAG, "compareVersions: \"$b\" not in skillStructure.")
+            return null
+        }
+
+        // Get index of A in its own list.
+        val indexA: Int? = nodeA.list.findIndex(nodeA.value)
+        if (indexA == null) {
+            MessageLog.e(TAG, "compareVersions: Error getting node index for \"$a\".")
+            return null
+        }
+        
+        // Now get the index of B in A's list.
+        val indexB: Int? = nodeA.list.findIndex(nodeB.value)
+        if (indexB == null) {
+            MessageLog.e(TAG, "compareVersions: \"$b\" not found in \"$a\"'s list: ${nodeA.list}")
+            return null
+        }
+        
+        return if (indexA > indexB) a else b
+    }
+
+    /** Compare the version of two skills the difference.
+     *
+     * For example, if A is version 1 and B is version 3, then we would return -2
+     * since A - B = 1 - 3 = -2.
+     *
+     * This is useful if we want to determine how many upgrades it would take
+     * to reach a certain version of a skill.
+     *
+     * @param a The first skill name to compare.
+     * @param b The skill name to compare against.
+     *
+     * @return On success, the difference between versions a and b. On failure, NULL.
+     */
+    fun getVersionDelta(a: String, b: String): Int? {
+        if (checkSkillName(a) == null) {
+            MessageLog.e(TAG, "compareVersions: Failed to find skill in database: $a")
+            return null
+        }
+
+        if (checkSkillName(b) == null) {
+            MessageLog.e(TAG, "compareVersions: Failed to find skill in database: $b")
+            return null
+        }
+
+        val nodeA: DoublyLinkedListNode<String>? = skillStructure[a]
+        if (nodeA == null) {
+            MessageLog.e(TAG, "compareVersions: \"$a\" not in skillStructure.")
+            return null
+        }
+
+        val nodeB: DoublyLinkedListNode<String>? = skillStructure[b]
+        if (nodeB == null) {
+            MessageLog.e(TAG, "compareVersions: \"$b\" not in skillStructure.")
+            return null
+        }
+
+        // Get index of A in its own list.
+        val indexA: Int? = nodeA.list.findIndex(nodeA.value)
+        if (indexA == null) {
+            MessageLog.e(TAG, "compareVersions: Error getting node index for \"$a\".")
+            return null
+        }
+        
+        // Now get the index of B in A's list.
+        val indexB: Int? = nodeA.list.findIndex(nodeB.value)
+        if (indexB == null) {
+            MessageLog.e(TAG, "compareVersions: \"$b\" not found in \"$a\"'s list: ${nodeA.list}")
+            return null
+        }
+        
+        return indexA - indexB
+    }
+
+    fun getVersionRange(a: String, b: String): List<String> {
+        val higherVersionName: String? = compareVersions(a, b)
+        if (higherVersionName == null) {
+            MessageLog.w(TAG, "getVersionRange: compareVersions returned NULL.")
+            return emptyList()
+        }
+
+        var a: String = a
+        var b: String = b
+
+        // If A is higher, we want to swap A and B for future operations.
+        if (higherVersionName == a) {
+            a = b
+            b = higherVersionName
+        }
+
+        var node: DoublyLinkedListNode<String>? = skillStructure[a]
+        if (node == null) {
+            MessageLog.e(TAG, "getVersionRange: \"$a\" not in skillStructure.")
+            return emptyList()
+        }
+
+        val result: MutableList<String> = mutableListOf()
+        while (node != null && node.value != b) {
+            result.add(node.value)
+            node = node.next
+        }
+        // Need to manually add our B value here.
+        result.add(b)
+        return result.toList()
     }
 }

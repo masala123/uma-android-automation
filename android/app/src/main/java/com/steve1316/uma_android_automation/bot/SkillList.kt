@@ -50,7 +50,8 @@ class SkillList (private val game: Game) {
     private val TAG: String = "[${MainActivity.loggerTag}]SkillList"
 
     var entries: Map<String, SkillListEntry> = mapOf()
-    var skillPoints: Int? = null
+    var skillPoints: Int = 0
+        private set
 
     /** Stops overscrolling of the skill list by clicking on screen.
      *
@@ -361,7 +362,7 @@ class SkillList (private val game: Game) {
      *
      * @return On success, the skill points as an integer. On failure, NULL.
      */
-    fun getSkillPoints(bitmap: Bitmap? = null): Int? {
+    fun detectSkillPoints(bitmap: Bitmap? = null): Int? {
         val bitmap: Bitmap = bitmap ?: game.imageUtils.getSourceBitmap()
 
         val templateBitmap: Bitmap? = LabelSkillListScreenSkillPoints.template.getBitmap(game.imageUtils)
@@ -385,14 +386,17 @@ class SkillList (private val game: Game) {
 
         val skillPointsBitmap: Bitmap? = game.imageUtils.createSafeBitmap(bitmap, bbox, "skillPointsBitmap")
         if (skillPointsBitmap == null) {
-            MessageLog.e(TAG, "[SKILLS] getSkillPoints: Failed to createSafeBitmap for skill points.")
+            MessageLog.e(TAG, "[SKILLS] detectSkillPoints: Failed to createSafeBitmap for skill points.")
             return null
         }
 
         val skillPointsString: String = extractText(skillPointsBitmap)
-        skillPoints = skillPointsString
+        val tmpSkillPoints: Int? = skillPointsString
             .replace("[^0-9]".toRegex(), "")
             .toIntOrNull()
+        if (tmpSkillPoints != null) {
+            skillPoints = tmpSkillPoints
+        }
         return skillPoints
     }
 
@@ -420,7 +424,7 @@ class SkillList (private val game: Game) {
             game.imageUtils.saveBitmap(croppedTitle, filename = "bboxTitle_$debugString")
         }
 
-        var skillName: String = extractText(croppedTitle).lowercase()
+        var skillName: String = extractText(croppedTitle)
         if (skillName == "") {
             Log.e(TAG, "[SKILLS] getSkillListEntryTitle: Failed to extract skill name.")
             return null
@@ -532,7 +536,7 @@ class SkillList (private val game: Game) {
                 // Now lookup the name in the database and update it.
                 val tmpSkillData: SkillData? = game.skillPlan.skillDatabase.getSkillData(skillName)
                 if (tmpSkillData == null) {
-                    Log.e(TAG, "[SKILLS] lookupSkillInDatabase(\"${skillName}\") returned NULL.")
+                    Log.e(TAG, "[SKILLS] getSkillData(\"${skillName}\") returned NULL.")
                     return@Thread
                 }
                 skillData = tmpSkillData
@@ -609,7 +613,7 @@ class SkillList (private val game: Game) {
         // Now lookup the name in the database and update it.
         val skillData: SkillData? = game.skillPlan.skillDatabase.getSkillData(skillName)
         if (skillData == null) {
-            MessageLog.e(TAG, "[SKILLS] lookupSkillInDatabase(\"${skillName}\") returned NULL.")
+            MessageLog.e(TAG, "[SKILLS] getSkillData(\"${skillName}\") returned NULL.")
             return null
         }
 
@@ -849,7 +853,7 @@ class SkillList (private val game: Game) {
      * @param skillListEntries A mapping of skill list entries which we
      * use to calculate a set of virtual skills.
      */
-    private fun getVirtualSkillListEntries(
+    fun getVirtualSkillListEntries(
         skillListEntries: Map<String, SkillListEntry>? = null,
     ): Map<String, SkillListEntry> {
         val skillListEntries: Map<String, SkillListEntry> = skillListEntries ?: entries
@@ -857,79 +861,77 @@ class SkillList (private val game: Game) {
 
         for ((name, entry) in skillListEntries) {
             // If entry has no upgrades then we can ignore it.
-            if (entry.skillData.upgrade == null) {
+            val upgradeNames: List<String> = game.skillPlan.skillDatabase.getUpgrades(name)
+            if (upgradeNames.isEmpty()) {
                 continue
             }
 
             // We also ignore the entry if it does not have in-place upgrades.
+            // Take Corner Recovery O for example. Purchasing it does not cause
+            // Swinging Maestro to appear in the skill list since it isn't an
+            // in-place upgrade. This is why we skip these.
             if (!entry.skillData.bIsInPlace) {
                 continue
             }
 
-            for (upgrade in entry.getUpgrades()) {
-                if (upgrade.skillData.name in skillListEntries) {
+            for (upgradeName in upgradeNames) {
+                // Don't need to parse upgrade if it is already in our entries.
+                if (upgradeName in skillListEntries) {
                     continue
                 }
+
+                val upgradeData: SkillData? = game.skillPlan.skillDatabase.getSkillData(upgradeName)
+                if (upgradeData == null) {
+                    continue
+                }
+                
                 // The discount doesn't change for in-place upgrades, however
                 // the base cost of each level of the skill does change.
-                val upgradePrice: Int = ceil(upgrade.skillData.cost!! * upgrade.discount).toInt()
+                val upgradeBaseCost: Int = upgradeData.cost ?: 0
+                val upgradePrice: Int = ceil(upgradeBaseCost * entry.discount).toInt()
                 val upgradeSkillListEntry: SkillListEntry = SkillListEntry(
                     game = game,
-                    skillData = upgrade.skillData,
+                    skillData = upgradeData,
                     price = upgradePrice,
-                    bIsObtained = upgrade.bIsObtained,
+                    bIsObtained = false,
                     bIsVirtual = true,
                 )
-                result[upgradeSkillListEntry.skillData.name] = upgradeSkillListEntry
+                result[upgradeName] = upgradeSkillListEntry
             }
         }
 
         return result.toMap()
     }
 
-    /** Gets all entries in the skill list.
-     *
-     * This function will scroll through the entire skill list until it reaches the
-     * bottom, extracting each entry's info along the way.
+    /** Scrolls through the entire skill list and extracts info from entries.
      *
      * @param onSkillListEntryDetected A callback function that is called for each
      * SkillListEntry that we detect. This can be useful if we want to perform
      * an operation immediately upon detecting an entry.
-     *
-     * @return A mapping of skill names to SkillListEntry objects.
      */
-    fun getSkillListEntries(
-        onSkillListEntryDetected: ((entry: SkillListEntry, point: Point) -> Unit)? = null,
-    ): Map<String, SkillListEntry>? {
-        // List of skills in the order that they are shown in the game.
-        // We use this later to purchase items from top to bottom.
-        val skillListEntries: MutableMap<String, SkillListEntry> = mutableMapOf()
-
+    fun iterateOverSkillList(onSkillListEntryDetected: ((entry: SkillListEntry, point: Point) -> Unit)? = null) {
         var bitmap = game.imageUtils.getSourceBitmap()
         val bboxSkillList: BoundingBox? = getSkillListBoundingRegion(bitmap)
         if (bboxSkillList == null) {
-            MessageLog.e(TAG, "[SKILLS] getSkillListEntries: getSkillListBoundingRegion() returned NULL.")
-            return null
+            MessageLog.e(TAG, "[SKILLS] iterateOverSkillList: getSkillListBoundingRegion() returned NULL.")
+            return
         }
 
         val bboxScrollBar: BoundingBox? = getSkillListScrollBarBoundingRegion(bitmap, bboxSkillList)
         if (bboxScrollBar == null) {
-            MessageLog.e(TAG, "[SKILLS] getSkillListEntries: getSkillListScrollBarBoundingRegion() returned NULL.")
-            return null
+            MessageLog.e(TAG, "[SKILLS] iterateOverSkillList: getSkillListScrollBarBoundingRegion() returned NULL.")
+            return
         }
 
         // Scroll to top before we do anything else.
         scrollToTop(bboxSkillList)
         
-        // Used as a break flag for the loop.
-        // When the last item we add is the same as this variable,
-        // we know that we are at the last element in the list.
-        var lastTitle: String? = null
-        // Max time limit for the while loop to search for skills.
+        // Max time limit for the while loop to scroll through the list.
         val startTime: Long = System.currentTimeMillis()
         val maxTimeMs: Long = 60000
         var prevScrollBarBitmap: Bitmap? = null
-        
+
+        var prevNames: Set<String> = setOf()
 
         while (System.currentTimeMillis() - startTime < maxTimeMs) {
             bitmap = game.imageUtils.getSourceBitmap()
@@ -941,8 +943,8 @@ class SkillList (private val game: Game) {
                 "bboxScrollBar",
             )
             if (scrollBarBitmap == null) {
-                MessageLog.e(TAG, "[SKILLS] getSkillListEntries: Failed to createSafeBitmap for scrollbar.")
-                return null
+                MessageLog.e(TAG, "[SKILLS] iterateOverSkillList: Failed to createSafeBitmap for scrollbar.")
+                return
             }
 
             // If the scrollbar hasn't changed after scrolling,
@@ -966,31 +968,116 @@ class SkillList (private val game: Game) {
             val tmpSkillListEntries: Map<String, SkillListEntry>? = processSkillList(
                 bitmap = bitmap,
                 bboxSkillList = bboxSkillList,
-                debugString = "getSkillListEntries",
+                debugString = "iterateOverSkillList",
                 onSkillListEntryDetected = onSkillListEntryDetected,
             )
             if (tmpSkillListEntries != null) {
                 // Another exit condition.
                 // If there are no new entries after scrolling,
                 // then we're at the bottom of the list.
-                if (skillListEntries.keys.containsAll(tmpSkillListEntries.keys)) {
+                if (prevNames == tmpSkillListEntries.keys.toSet()) {
                     break
                 }
-                skillListEntries.putAll(tmpSkillListEntries)
+                prevNames = tmpSkillListEntries.keys.toSet()
             }
 
             scrollDown(bboxSkillList)
             // Slight delay to allow screen to settle before next loop.
             game.wait(0.5, skipWaitingForLoading = true)
         }
+    }
+
+    /** Gets all entries in the skill list.
+     *
+     * @param onSkillListEntryDetected A callback function that is called for each
+     * SkillListEntry that we detect. This can be useful if we want to perform
+     * an operation immediately upon detecting an entry.
+     *
+     * @return A mapping of skill names to SkillListEntry objects.
+     */
+    fun getSkillListEntries(
+        onSkillListEntryDetected: ((entry: SkillListEntry, point: Point) -> Unit)? = null,
+    ): Map<String, SkillListEntry>? {
+        // List of skills in the order that they are shown in the game.
+        // We use this later to purchase items from top to bottom.
+        val skillListEntries: MutableMap<String, SkillListEntry> = mutableMapOf()
+
+        iterateOverSkillList() { entry: SkillListEntry, point: Point ->
+            skillListEntries[entry.name] = entry
+            // Pass this data along to the callback parameter.
+            if (onSkillListEntryDetected != null) {
+                onSkillListEntryDetected(entry, point)
+            }
+        }
 
         // Now add in any virtual skills.
         val virtualSkillListEntries: Map<String, SkillListEntry> = getVirtualSkillListEntries(skillListEntries)
-        printSkillListEntries(virtualSkillListEntries, verbose = true)
         skillListEntries.putAll(virtualSkillListEntries)
 
+        // The following steps rely on the `entries` property to be set.
         entries = skillListEntries.toMap()
+
+        // We need to go back through and correct the prices for skills that
+        // have upgrades that are not in-place.
+        for ((name, entry) in entries) {
+            updateSkillListEntryEvaluationPoints(name)
+            updateSkillListEntryBasePrice(name)
+        }
+
         return entries
+    }
+
+    fun updateSkillListEntryEvaluationPoints(name: String) {
+        val entry: SkillListEntry? = getEntry(name)
+        if (entry == null) {
+            return
+        }
+
+        if (entry.bIsObtained || entry.bIsVirtual || entry.skillData.bIsInPlace) {
+            return
+        }
+
+        val downgradeNames: MutableList<String> = game.skillPlan.skillDatabase.getDowngrades(name).toMutableList()
+        // Exclude the current entry from the downgrades list.
+        // We don't want to include it in the combined value.
+        downgradeNames.remove(name)
+        if (downgradeNames.isEmpty()) {
+            return
+        }
+
+        val downgradeEntries: MutableList<SkillListEntry> = downgradeNames.mapNotNull { this.entries[it] }.toMutableList()
+        // Virtual and obtained entries should not be counted.
+        downgradeEntries.removeAll { it.bIsObtained || it.bIsVirtual || it.skillData.bIsNegative }
+        // Combine downgrade version evaluation points.
+        val combinedDowngradeEvalPt: Int = downgradeEntries.sumOf { it.skillData.evalPt }
+        entry.updateEvalPt(combinedDowngradeEvalPt)
+    }
+
+    fun updateSkillListEntryBasePrice(name: String) {
+        val entry: SkillListEntry? = getEntry(name)
+        if (entry == null) {
+            return
+        }
+
+        if (entry.bIsObtained || entry.bIsVirtual || entry.skillData.bIsInPlace) {
+            return
+        }
+
+        val downgradeNames: MutableList<String> = game.skillPlan.skillDatabase.getDowngrades(name).toMutableList()
+        // Exclude the current entry from the downgrades list.
+        // We don't want to include it price in the combined value.
+        downgradeNames.remove(name)
+        if (downgradeNames.isEmpty()) {
+            return
+        }
+
+        val downgradeEntries: MutableList<SkillListEntry> = downgradeNames.mapNotNull { this.entries[it] }.toMutableList()
+        MessageLog.e("REMOVEME", "downgradeEntries for $name before filter: $downgradeEntries")
+        // Virtual and obtained entries should not be counted.
+        downgradeEntries.removeAll { it.bIsVirtual }
+        // Combine downgrade version prices.
+        val combinedDowngradePrices: Int = downgradeEntries.sumOf { it.price }
+        entry.updateBasePrice(combinedDowngradePrices)
     }
 
     /** Gets skill list entries using mocked data.
@@ -1004,7 +1091,8 @@ class SkillList (private val game: Game) {
             "Warning Shot!" to -1,
             "Triumphant Pulse" to 120,
             "Kyoto Racecourse ○" to 63,
-            "Standard Distance ×" to 35,//63 for o,
+            "Standard Distance ○" to 63,
+            //"Standard Distance ×" to 35,
             "Summer Runner ○" to 81,
             "Cloudy Days ○" to 81,
             "Professor of Curvature" to 279,
@@ -1055,7 +1143,6 @@ class SkillList (private val game: Game) {
 
         // Now add in any virtual skills.
         val virtualSkillListEntries: Map<String, SkillListEntry> = getVirtualSkillListEntries(skillListEntries)
-        printSkillListEntries(virtualSkillListEntries, verbose = true)
         skillListEntries.putAll(virtualSkillListEntries)
 
         entries = skillListEntries.toMap()
@@ -1094,21 +1181,6 @@ class SkillList (private val game: Game) {
         )
     }
 
-    /** Returns entries which are not yet obtained.
-     *
-     * @param skillListEntries Optional mapping of skill list entries to use
-     * as data source for filtering. If not specified, this class's `entries`
-     * property will be used.
-     *
-     * @return The source map with unobtained entries removed.
-     */
-    fun getAvailableEntries(
-        skillListEntries: Map<String, SkillListEntry>? = null,
-    ): Map<String, SkillListEntry> {
-        val skillListEntries: Map<String, SkillListEntry> = skillListEntries ?: entries
-        return skillListEntries.filterValues { !it.bIsObtained }
-    }
-
     fun printSkillListEntries(
         skillListEntries: Map<String, SkillListEntry>? = null,
         verbose: Boolean = false,
@@ -1119,11 +1191,110 @@ class SkillList (private val game: Game) {
             val entryString: String = if (verbose) {
                 "${entry}"
             } else {
+                val priceString: String = if (entry.price != entry.basePrice) "${entry.price}(${entry.basePrice})" else "${entry.price}"
                 val extraString: String = if (entry.bIsVirtual) " (virtual)" else ""
-                "${entry.price}${extraString}"
+                "${priceString}${extraString}"
             }
             MessageLog.d(TAG, "\t${name}: ${entryString}")
         }
         MessageLog.d(TAG, "============================================")
+    }
+
+    fun buySkill(name: String, skillUpButtonLocation: Point): SkillListEntry? {
+        MessageLog.e("REMOVEME", "buySkill: $name")
+        val entry: SkillListEntry? = entries[name]
+        if (entry == null) {
+            MessageLog.w(TAG, "buySkill: \"$name\" not found.")
+            return null
+        }
+
+        if (entry.price > skillPoints) {
+            MessageLog.w(TAG, "buySkill: Not enough skill points (${skillPoints}pt) to buy \"$name\" (${entry.price}pt).")
+            return null
+        }
+
+        game.tap(
+            skillUpButtonLocation.x,
+            skillUpButtonLocation.y,
+            ButtonSkillUp.template.path,
+        )
+
+        // If we just purchased the entry, then it can't be virtual
+        // since it exists on screen.
+        entry.bIsVirtual = false
+        entry.bIsObtained = true
+        skillPoints -= entry.price
+
+        return entry
+    }
+
+    fun getAllSkills(): Map<String, SkillListEntry> {
+        return entries
+    }
+    
+    fun getUnobtainedSkills(): Map<String, SkillListEntry> {
+        return entries.filterValues { !it.bIsObtained }
+    }
+
+    fun getAvailableSkills(): Map<String, SkillListEntry> {
+        return getUnobtainedSkills().filterValues { !it.bIsVirtual }
+    }
+    
+    fun getVirtualSkills(): Map<String, SkillListEntry> {
+        return getUnobtainedSkills().filterValues { it.bIsVirtual }
+    }
+
+    fun getNegativeSkills(): Map<String, SkillListEntry> {
+        return getUnobtainedSkills().filterValues { it.skillData.bIsNegative }
+    }
+
+    fun getInheritedUniqueSkills(): Map<String, SkillListEntry> {
+        return getUnobtainedSkills().filterValues { it.skillData.bIsInheritedUnique }
+    }
+
+    fun getAptitudeIndependentSkills(): Map<String, SkillListEntry> {
+        return getUnobtainedSkills().filterValues {
+            it.skillData.runningStyle == null &&
+            it.skillData.trackDistance == null
+        }
+    }
+
+    fun getRunningStyleSkills(runningStyle: RunningStyle): Map<String, SkillListEntry> {
+        return getUnobtainedSkills().filterValues { it.skillData.runningStyle == runningStyle }
+    }
+
+    fun getTrackDistanceSkills(trackDistance: TrackDistance): Map<String, SkillListEntry> {
+        return getUnobtainedSkills().filterValues { it.skillData.trackDistance == trackDistance }
+    }
+
+    fun getEntry(name: String): SkillListEntry? {
+        val result: SkillListEntry? = entries[name]
+        if (result == null) {
+            MessageLog.w(TAG, "getEntry: No entry found for \"$name\".")
+        }
+        return result
+    }
+
+    fun markEntryObtained(name: String): Boolean {
+        val entry: SkillListEntry? = getEntry(name)
+        if (entry == null) {
+            MessageLog.w(TAG, "updateEntry: getEntry(\"$name\") returned NULL.")
+            return false
+        }
+
+        // If entry is already obtained, we have nothing to do.
+        if (entry.bIsObtained) {
+            return true
+        }
+        MessageLog.e("REMOVEME", "markEntryObtained before: $name -> ${entries[name]?.bIsObtained}")
+        entry.bIsObtained = true
+        MessageLog.e("REMOVEME", "markEntryObtained after: $name -> ${entries[name]?.bIsObtained}")
+        
+        val upgradeNames: List<String> = game.skillPlan.skillDatabase.getUpgrades(name)
+        for (upgradeName in upgradeNames) {
+            updateSkillListEntryEvaluationPoints(upgradeName)
+            updateSkillListEntryBasePrice(upgradeName)
+        }
+        return true
     }
 }

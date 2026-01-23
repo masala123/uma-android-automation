@@ -70,6 +70,29 @@ class DoublyLinkedList<T> {
         return null
     }
 
+    fun findIndex(value: T): Int? {
+        var curr = head
+        var i: Int = 0
+        while (curr != null) {
+            if (curr.value == value) {
+                return i
+            }
+            curr = curr.next
+            i++
+        }
+        return null
+    }
+
+    fun getValues(): List<T> {
+        val res: MutableList<T> = mutableListOf()
+        var curr = head
+        while (curr != null) {
+            res.add(curr.value)
+            curr = curr.next
+        }
+        return res.toList()
+    }
+
     override fun toString(): String {
         if (isEmpty()) {
             return "Empty List"

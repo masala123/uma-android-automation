@@ -34,13 +34,14 @@ import com.steve1316.uma_android_automation.utils.types.Aptitude
 
 import com.steve1316.uma_android_automation.components.*
 
-private const val USE_MOCKED_DATA: Boolean = false
+private const val USE_MOCKED_DATA: Boolean = true
 
 class SkillPlan (private val game: Game) {
     val skillList: SkillList = SkillList(game)
     val skillDatabase: SkillDatabase = SkillDatabase(game)
 
-    var skillsToBuy: List<SkillToBuy> = listOf()
+    private val purchasedSkills: MutableList<SkillListEntry> = mutableListOf()
+    private var skillsToBuy: List<String> = listOf()
 
     // Get user settings for skill plans.
     val enablePreFinalsSkillPlan = SettingsHelper.getBooleanSetting("skills", "enablePreFinalsSkillPlan")
@@ -123,19 +124,6 @@ class SkillPlan (private val game: Game) {
                 buyNegativeSkills,
             )
         }
-
-        data class SkillToBuy(
-            val name: String,
-            var numUpgrades: Int = 0,
-            var totalPrice: Int = 0,
-        )
-
-        data class SkillsToBuyCommonReturnData (
-            val remainingSkillListEntries: Map<String, SkillListEntry>,
-            val remainingSkillPoints: Int,
-            val skillsToBuy: List<SkillToBuy>,
-            val earlyExit: Boolean = false,
-        )
     }
 
     private fun loadUserPlannedPreFinalsSkills(): List<String> {
@@ -239,18 +227,29 @@ class SkillPlan (private val game: Game) {
     }
 
     private fun onSkillListEntryDetected(entry: SkillListEntry, point: Point) {
-        // Don't need to buy skill if it's already obtained.
-        if (!entry.bIsObtained) {
-            // Purchase skill if necessary by clicking the skill up button.
-            if (skillPlanSettings.buyInheritedSkills && entry.skillData.bIsUnique) {
-                game.tap(point.x, point.y, ButtonSkillUp.template.path)
-            } else if (skillPlanSettings.buyNegativeSkills && entry.skillData.bIsNegative) {
-                game.tap(point.x, point.y, ButtonSkillUp.template.path)
-            } else {
-                val skillToBuy: SkillToBuy? = skillsToBuy.find { it.name == entry.name }
-                if (skillToBuy != null) {
-                    game.tap(point.x, point.y, ButtonSkillUp.template.path, taps = skillToBuy.numUpgrades)
+        if (entry.bIsObtained) {
+            return
+        }
+
+        if (entry.name !in this.skillsToBuy) {
+            return
+        }
+
+        // Determine if there are other in-place versions of this skill that
+        // we need to buy.
+        if (entry.skillData.bIsInPlace) {
+            val upgradeNames: MutableList<String> = this.skillDatabase.getUpgrades(entry.name).toMutableList()
+            upgradeNames.retainAll { it in this.skillsToBuy }
+            for (upgradeName in upgradeNames) {
+                val result: SkillListEntry? = this.skillList.buySkill(upgradeName, point)
+                if (result != null) {
+                    MessageLog.i(TAG, "Buying \"${result.name}\" for ${result.price} pts")
                 }
+            }
+        } else {
+            val result: SkillListEntry? = this.skillList.buySkill(entry.name, point)
+            if (result != null) {
+                MessageLog.i(TAG, "Buying \"${result.name}\" for ${result.price} pts")
             }
         }
     }
@@ -266,233 +265,204 @@ class SkillPlan (private val game: Game) {
             Aptitude.F to 0.8,
             Aptitude.G to 0.7,
         )
+
         val skillRunningStyle: RunningStyle? = skillListEntry.skillData.runningStyle
         val skillTrackDistance: TrackDistance? = skillListEntry.skillData.trackDistance
+
         val evalPt: Int = if (skillRunningStyle != null) {
             val aptitude: Aptitude = game.trainee.checkRunningStyleAptitude(skillRunningStyle)
             val ratioModifier: Double = ratioModifierMap[aptitude] ?: 1.0
-            (skillListEntry.skillData.evalPt * ratioModifier).roundToInt()
+            (skillListEntry.combinedDowngradeEvalPt * ratioModifier).roundToInt()
         } else if (skillTrackDistance != null) {
             val aptitude: Aptitude = game.trainee.checkTrackDistanceAptitude(skillTrackDistance)
             val ratioModifier: Double = ratioModifierMap[aptitude] ?: 1.0
-            (skillListEntry.skillData.evalPt * ratioModifier).roundToInt()
+            (skillListEntry.combinedDowngradeEvalPt * ratioModifier).roundToInt()
         } else {
-            skillListEntry.skillData.evalPt
+            skillListEntry.combinedDowngradeEvalPt
         }
 
-        return (evalPt.toDouble() / skillListEntry.price.toDouble()).toDouble()
+        return (evalPt.toDouble() / skillListEntry.basePrice.toDouble()).toDouble()
     }
 
-    private fun getSkillsToBuyCommon(
-        skillListEntries: Map<String, SkillListEntry>,
-        skillPoints: Int,
-        skillPlanSettings: SkillPlanSettings,
-    ): SkillsToBuyCommonReturnData {
-        var remainingSkillListEntries: MutableMap<String, SkillListEntry> = skillListEntries.toMutableMap()
-        var remainingSkillPoints: Int = skillPoints
-        var skillsToBuy: MutableList<SkillToBuy> = mutableListOf()
+    private fun addNegativeSkills(skillPlanSettings: SkillPlanSettings) {
+        if (!skillPlanSettings.buyNegativeSkills) {
+            return
+        }
 
-        // Add negative skills
-        for ((name, entry) in remainingSkillListEntries) {
-            if (entry.skillData.bIsNegative && entry.price <= remainingSkillPoints) {
-                skillsToBuy.add(SkillToBuy(name, totalPrice = entry.price))
-                remainingSkillPoints -= entry.price
+        val skillsToBuy: MutableList<String> = this.skillsToBuy.toMutableList()
+        var remainingSkillPoints: Int = this.remainingSkillPoints
+
+        val entries: Map<String, SkillListEntry> = this.skillList.getNegativeSkills()
+        for ((name, entry) in entries) {
+            if (name in skillsToBuy) {
+                continue
+            }
+
+            if (entry.price <= remainingSkillPoints) {
+                skillsToBuy.add(name)
+                remainingSkillPoints -= if (entry.bHasSeparateDowngrade) entry.basePrice else entry.price
+                this.skillList.markEntryObtained(name)
             }
         }
 
-        // Add user planned skills
+        this.skillsToBuy = skillsToBuy.toList()
+        this.remainingSkillPoints = remainingSkillPoints
+    }
+
+    private fun addInheritedUniqueSkills(skillPlanSettings: SkillPlanSettings) {
+        if (!skillPlanSettings.buyInheritedSkills) {
+            return
+        }
+
+        val skillsToBuy: MutableList<String> = this.skillsToBuy.toMutableList()
+        var remainingSkillPoints: Int = this.remainingSkillPoints
+
+        val entries: Map<String, SkillListEntry> = this.skillList.getInheritedUniqueSkills()
+        for ((name, entry) in entries) {
+            if (name in skillsToBuy) {
+                continue
+            }
+
+            if (entry.price <= remainingSkillPoints) {
+                skillsToBuy.add(name)
+                remainingSkillPoints -= if (entry.bHasSeparateDowngrade) entry.basePrice else entry.price
+                this.skillList.markEntryObtained(name)
+            }
+        }
+
+        this.skillsToBuy = skillsToBuy.toList()
+        this.remainingSkillPoints = remainingSkillPoints
+    }
+
+    private fun addUserPlannedSkills(skillPlanSettings: SkillPlanSettings) {
+        if (skillPlanSettings.skillPlan.isEmpty()) {
+            return
+        }
+
+        val skillsToBuy: MutableList<String> = this.skillsToBuy.toMutableList()
+        var remainingSkillPoints: Int = this.remainingSkillPoints
 
         // If two different versions of one skill are in the skill list AND in the
-        // skill plan, we want to buy the highest level version of that skill.
+        // skill plan, we want to buy the highest level version of that skill that we can afford.
         // For example, if Corner Recovery O and Swinging Maestro are both in the skill
         // plan, and both entries are in the skill list, then we want to buy Swinging Maestro.
         // However, if we do not have enough points for Swinging Maestro, then attempt to
         // buy Corner Recovery O instead.
-
-        val remainingRealSkills: Map<String, SkillListEntry> = remainingSkillListEntries
-            .filterValues { !it.bIsVirtual }
+        val availableSkills: Map<String, SkillListEntry> = this.skillList.getAvailableSkills()
+        MessageLog.e("REMOVEME", "============= addUserPlannedSkills: AVAILABLE =============")
+        for ((k, v) in availableSkills) {
+            MessageLog.e("REMOVEME", "\t$k: ${v.basePrice}")
+        }
 
         for (name in skillPlanSettings.skillPlan) {
-            var entry: SkillListEntry? = remainingSkillListEntries[name]
-            if (entry == null) {
+            // Do not add this skill if there is already a higher upgraded
+            // version in the list of skillsToBuy.
+            val upgrades: List<String> = this.skillDatabase.getUpgrades(name)
+            if (upgrades.any { it in skillsToBuy }) {
+                MessageLog.w("REMOVEME", "Higher version of \"$name\" exists: $upgrades")
                 continue
             }
 
-            val upgrades: List<SkillListEntry> = entry.getUpgrades()
-            // If any higher versions of this skill are already in the skillsToBuy
-            // list then we dont want to try adding this one.
-            val skillNames: List<String> = skillsToBuy.map { it.name }
-            if (upgrades.any { it.name in skillNames }) {
+            val downgrades: List<String> = this.skillDatabase.getDowngrades(name)
+            if (downgrades.any { it in skillsToBuy }) {
+                MessageLog.e("REMOVEME", "updating price and eval for \"$name\".")
+                this.skillList.updateSkillListEntryEvaluationPoints(name)
+                this.skillList.updateSkillListEntryBasePrice(name)
+            }
+
+
+            // Handle exact matches.
+            if (name in availableSkills) {
+                skillsToBuy.add(name)
+                val entry: SkillListEntry = availableSkills[name] ?: continue
+                remainingSkillPoints -= if (entry.bHasSeparateDowngrade) entry.basePrice else entry.price
+                this.skillList.markEntryObtained(name)
+                // We're done. Go to the next planned skill.
+                MessageLog.e("REMOVEME", "Exact match for \"$name\".")
                 continue
             }
 
-            val downgrades: MutableList<SkillListEntry> = entry.getDowngrades().toMutableList()
-            val currSkillDowngradeIndex: Int = downgrades.indexOfFirst {
-                val tmp: SkillListEntry? = remainingSkillListEntries[it.name]
-                tmp != null && !tmp.bIsVirtual
-            }
-            if (currSkillDowngradeIndex == -1) {
+            // Handle skills with multiple versions in the list.
+            
+            // If no downgraded versions exist in our skill list, skip this entry since
+            // we won't be able to buy it.
+            val existingSkillName: String? = downgrades.find { it in availableSkills }
+            MessageLog.e("REMOVEME", "skillPlan ($name) -> downgrades = $downgrades, existingSkillName=$existingSkillName")
+            if (existingSkillName == null) {
                 continue
             }
-            val currSkill: SkillListEntry = downgrades[currSkillDowngradeIndex]
-            // Trim list so that we only have a list from the skill in the list to the
-            // current skillToBuy's location in the list.
-            downgrades.subList(0, currSkillDowngradeIndex).clear()
-            MessageLog.e("REMOVEME", "downgrades sublist for $name: $downgrades")
-            // Check that we will be able to fully purchase this skill and
-            // any required upgrades to unlock it.
-            var i: Int = 0
-            var totPrice: Int = 0
-            val skillsToRemove: MutableList<String> = mutableListOf()
-            for (other in downgrades) {
-                if (totPrice + other.price > remainingSkillPoints) {
-                    break
-                }
-                entry = other
-                totPrice += entry.price
-                if (i > 0) {
-                    skillsToRemove.add(entry.skillData.name)
-                }
-                i++
-            }
 
-            if (totPrice <= remainingSkillPoints) {
-                if (skillsToBuy.any { it.name == currSkill.name && it.numUpgrades > i}) {
-                    // There is a better upgrade that we already plan on buying.
-                    // Skip the current entry.
+            // Get list of all prior versions that we'll have to buy in order to
+            // buy the user-specified skill.
+            val versions: List<String> = skillDatabase.getVersionRange(existingSkillName, name)
+            MessageLog.e("REMOVEME", "skillPlan ($name) -> versions=$versions")
+            var totalPrice: Int = 0
+            var bCanAfford: Boolean = true
+            val tmpSkillsToBuy: MutableList<String> = mutableListOf()
+            for (version in versions) {
+                // If we already added this entry to the list of skills to buy,
+                // then just skip it and check the next version.
+                if (version in skillsToBuy) {
                     continue
                 }
 
-                // Now remove any duplicate entries since they are worse than our
-                // current entry.
-                val tmpSkillsToRemove: List<SkillToBuy> = skillsToBuy.filter { it.name == currSkill.name }
-                // Need to add the total price back to our remaining skill points
-                // since we're not buying this one anymore.
-                for (skillToRemove in tmpSkillsToRemove) {
-                    remainingSkillPoints += skillToRemove.totalPrice
+                val entry: SkillListEntry? = this.skillList.getEntry(version)
+                if (entry == null) {
+                    break
                 }
-                skillsToBuy.removeAll { it.name == currSkill.name }
 
-                // Finally, add our current entry to be purchased.
-                skillsToBuy.add(SkillToBuy(currSkill.name, i, totPrice))
-                remainingSkillPoints -= totPrice
-                MessageLog.e("REMOVEME", "$name totPrice=$totPrice")
-                MessageLog.e("REMOVEME", "skillsToRemove = $skillsToRemove")
-                remainingSkillListEntries -= skillsToRemove
-                skillsToBuy.removeAll { it.name != currSkill.name && it.name in skillsToRemove }
+                // If we can't afford this skill, then bail out.
+                if (totalPrice + entry.price > remainingSkillPoints) {
+                    bCanAfford = false
+                    break
+                }
+
+                totalPrice += if (entry.bHasSeparateDowngrade) entry.basePrice else entry.price
+                tmpSkillsToBuy.add(version)
             }
-        }
-        remainingSkillListEntries -= skillsToBuy.map { it.name }
-
-        MessageLog.e("REMOVEME", "[SKILLS] After parsing upgrades/downgrades: $skillsToBuy")
-
-        // Now we need to handle skills in our plan which do not exist in the skill
-        // list BUT will exist if we upgrade a skill far enough. For example, if the
-        // user adds Firm Conditions ◎ to the skill plan but we only have
-        // Firm Conditions × in the skill list, then we'd need to purchase
-        // Firm Conditions ×, then Firm Conditions ○, and only then will we be able
-        // to purchase Firm Conditions ◎. This of course means we need to calculate
-        // the total price of the skill in our plan by adding the previous two skills
-        // prices.
-        val skillPlanIds: List<Int> = skillPlanSettings.skillPlan.mapNotNull { skillDatabase.getSkillId(it) }
-        for ((name, entry) in remainingSkillListEntries) {
-            // Only certain types of skills can have in-place upgrades:
-            // Negative skills
-            // Green skills
-            // Distance-based straightaway/corner skills
-            //
-            // We only want inplace upgrades, so just skip all others.
-            if (
-                entry.skillData.type != SkillType.GREEN &&
-                !entry.skillData.bIsNegative &&
-                !entry.skillData.name.dropLast(2).endsWith("straightaways", ignoreCase = true) &&
-                !entry.skillData.name.dropLast(2).endsWith("corners", ignoreCase = true)
-            ) {
-                continue
-            }
-
-            val upgradeNames: MutableList<String> = mutableListOf()
-            var upgradeId: Int? = entry.skillData.upgrade
-            var totalPrice: Int = entry.price
-            if (entry.skillData.cost == null) {
-                continue
-            }
-
-            while (upgradeId != null) {
-                val upgradeName: String? = skillDatabase.getSkillName(upgradeId)
-                if (upgradeName == null) {
-                    break
-                }
-
-                val upgradeSkillData: SkillData? = skillDatabase.getSkillData(upgradeName)
-                if (upgradeSkillData == null) {
-                    break
-                }
-
-                val upgradeCost: Int? = upgradeSkillData.cost
-                if (upgradeCost == null) {
-                    break
-                }
-                // The discount value doesn't change for in-place upgrades.
-                // REMOVEME fix this entry. we calculate this elsewhere.
-                totalPrice += ceil(upgradeCost * entry.discount).toInt()
-                MessageLog.e("REMOVEME", "$name -> ${upgradeSkillData.name} ($upgradeCost)")
-                upgradeNames.add(upgradeSkillData.name)
-                upgradeId = upgradeSkillData.upgrade
-
-                // If this upgrade version is in our skill plan, then we stop here
-                // and set it to be purchased. The numUpgrades is how many extra times
-                // we click the "+" button after purchasing the base skill.
-                if (upgradeName in skillPlanSettings.skillPlan && totalPrice <= remainingSkillPoints) {
-                    skillsToBuy.add(SkillToBuy(name, numUpgrades = upgradeNames.size, totalPrice = totalPrice))
-                    remainingSkillPoints -= totalPrice
-                    break
+            // Only add to skillsToBuy if we can afford ALL upgrades.
+            if (bCanAfford) {
+                skillsToBuy.addAll(tmpSkillsToBuy)
+                remainingSkillPoints -= totalPrice
+                for (tmpSkillToBuy in tmpSkillsToBuy) {
+                    this.skillList.markEntryObtained(tmpSkillToBuy)
                 }
             }
         }
-        remainingSkillListEntries -= skillsToBuy.map { it.name }
 
-        return SkillsToBuyCommonReturnData(
-            remainingSkillListEntries = remainingSkillListEntries.toMap(),
-            remainingSkillPoints = remainingSkillPoints,
-            skillsToBuy = skillsToBuy.toList().distinctBy { it.name },
-            // Early exit if we aren't spending all our points.
-            earlyExit = skillPlanSettings.spendingStrategy == SpendingStrategy.DEFAULT,
-        )
+        this.skillsToBuy = skillsToBuy.toList()
+        this.remainingSkillPoints = remainingSkillPoints
     }
 
-    private fun getSkillsToBuyDefaultStrategy(
-        skillListEntries: Map<String, SkillListEntry>,
-        skillPoints: Int,
-        skillPlanSettings: SkillPlanSettings,
-    ): List<SkillToBuy> {
-        val commonResultData: SkillsToBuyCommonReturnData = getSkillsToBuyCommon(
-            skillListEntries,
-            skillPoints,
-            skillPlanSettings,
-        )
-
-        return commonResultData.skillsToBuy.distinctBy { it.name }
+    private fun addSkillsToBuyCommon(skillPlanSettings: SkillPlanSettings) {
+        addNegativeSkills(skillPlanSettings)
+        MessageLog.e("REMOVEME", "[SKILLS] skillsToBuy after addNegativeSkills: $skillsToBuy")
+        addInheritedUniqueSkills(skillPlanSettings)
+        MessageLog.e("REMOVEME", "[SKILLS] skillsToBuy after addInheritedUniqueSkills: $skillsToBuy")
+        addUserPlannedSkills(skillPlanSettings)
+        MessageLog.e("REMOVEME", "[SKILLS] skillsToBuy after addUserPlannedSkills: $skillsToBuy")
     }
 
-    private fun getSkillsToBuyOptimizeSkillsStrategy(
-        skillListEntries: Map<String, SkillListEntry>,
-        skillPoints: Int,
-        skillPlanSettings: SkillPlanSettings,
-    ): List<SkillToBuy> {
-        val commonResultData: SkillsToBuyCommonReturnData = getSkillsToBuyCommon(
-            skillListEntries,
-            skillPoints,
-            skillPlanSettings,
-        )
+    private fun addSkillsToBuyDefaultStrategy(skillPlanSettings: SkillPlanSettings) {
+        if (skillPlanSettings.spendingStrategy != SpendingStrategy.DEFAULT) {
+            return
+        }
+        // For now this function is very simple and does no extra work.
+        // But we may want to add functionality to the default strategy later.
+        addSkillsToBuyCommon(skillPlanSettings)
+    }
 
-        if (commonResultData.earlyExit) {
-            return commonResultData.skillsToBuy
+    private fun addSkillsToBuyOptimizeSkillsStrategy(skillPlanSettings: SkillPlanSettings) {
+        if (skillPlanSettings.spendingStrategy != SpendingStrategy.OPTIMIZE_SKILLS) {
+            return
         }
 
-        var remainingSkillListEntries: MutableMap<String, SkillListEntry> = commonResultData.remainingSkillListEntries.toMutableMap()
-        var remainingSkillPoints: Int = commonResultData.remainingSkillPoints
-        val skillsToBuy: MutableList<SkillToBuy> = commonResultData.skillsToBuy.toMutableList()
+        // Must come before the temporary local variables.
+        addSkillsToBuyCommon(skillPlanSettings)
+
+        // Temporarily store class state as local variables.
+        val skillsToBuy: MutableList<String> = this.skillsToBuy.toMutableList()
+        var remainingSkillPoints: Int = this.remainingSkillPoints
 
         // Get user specified running style.
         // If not specified, then we use the trainee's highest aptitude option.
@@ -504,18 +474,16 @@ class SkillPlan (private val game: Game) {
         val userSelectedTrackDistance: TrackDistance? = TrackDistance.fromName(userSelectedTrackDistanceOverrideString)
         val preferredTrackDistance: TrackDistance = userSelectedTrackDistance ?: game.trainee.trackDistance
 
-        // Now filter by trainee aptitudes.
-        // If the user specified a track distance and/or a running style, then those
-        // will be used. Otherwise, the trainee's highest aptitude track distance and
-        // running style will be used.
-        remainingSkillListEntries = remainingSkillListEntries.filterValues {
-            it.skillData.runningStyle == preferredRunningStyle ||
-            it.skillData.trackDistance == preferredTrackDistance
-        }.toMutableMap()
+        // Get only skills which match our aptitudes or user-specified styles or
+        // are agnostic of style or track variables.
+        val filteredSkills: Map<String, SkillListEntry> =
+            this.skillList.getAptitudeIndependentSkills() +
+            this.skillList.getRunningStyleSkills(preferredRunningStyle) +
+            this.skillList.getTrackDistanceSkills(preferredTrackDistance)
 
         // Group the remaining entries by their communityTier. Higher values are better.
         // This can contain a NULL group for skills that are not in the tier list.
-        val groupedByCommunityTier: Map<Int?, List<SkillListEntry>> = remainingSkillListEntries.values
+        val groupedByCommunityTier: Map<Int?, List<SkillListEntry>> = filteredSkills.values
             .groupBy { it.skillData.communityTier }
             .toSortedMap(compareByDescending { it })
 
@@ -526,89 +494,94 @@ class SkillPlan (private val game: Game) {
                 continue
             }
 
+            // Sort the tier by its point ratio.
             val sortedByPointRatio: List<SkillListEntry> = group.sortedByDescending { calculateAdjustedPointRatio(it) }
+            for (entry in sortedByPointRatio) {
+                // Don't add duplicate entries.
+                if (entry.name in skillsToBuy) {
+                    continue
+                }
+
+                // If this skill isnt an in-place upgrade and we have already
+                // added its upgraded version to the list, then don't add it.
+                if (
+                    !entry.skillData.bIsInPlace &&
+                    entry.name in this.skillDatabase.getUpgrades(entry.name)
+                ) {
+                    continue
+                }
+
+                val ptRatioString: String = "%.2f".format(calculateAdjustedPointRatio(entry))
+                MessageLog.d(TAG, "${entry.skillData.name}: ${entry.price}pt (${ptRatioString} rating/pt)")
+                // If we can't afford this skill, continue to the next.
+                if (entry.price > remainingSkillPoints) {
+                    continue
+                }
+
+                skillsToBuy.add(entry.name)
+                remainingSkillPoints -= if (entry.bHasSeparateDowngrade) entry.basePrice else entry.price
+                this.skillList.markEntryObtained(entry.name)
+            }
+        }
+
+        // Update the class properties.
+        this.skillsToBuy = skillsToBuy.toList()
+        this.remainingSkillPoints = remainingSkillPoints
+    }
+
+    private fun addSkillsToBuyOptimizeRankStrategy(skillPlanSettings: SkillPlanSettings) {
+        if (skillPlanSettings.spendingStrategy != SpendingStrategy.OPTIMIZE_RANK) {
+            return
+        }
+
+        // Must come before the temporary local variables.
+        addSkillsToBuyCommon(skillPlanSettings)
+
+        // Temporarily store class state as local variables.
+        val skillsToBuy: MutableList<String> = this.skillsToBuy.toMutableList()
+        var remainingSkillPoints: Int = this.remainingSkillPoints
+
+        val remainingSkills: MutableMap<String, SkillListEntry> = this.skillList.getAvailableSkills().toMutableMap()
+
+        var sortedByPointRatio: List<SkillListEntry> = remainingSkills.values
+            .sortedByDescending { calculateAdjustedPointRatio(it) }
+
+        while (sortedByPointRatio.any { it.price <= remainingSkillPoints}) {
             for (entry in sortedByPointRatio) {
                 val ptRatioString: String = "%.2f".format(calculateAdjustedPointRatio(entry))
                 MessageLog.d(TAG, "${entry.skillData.name}: ${entry.price}pt (${ptRatioString} rating/pt)")
                 // If we can't afford this skill, continue to the next.
-                if (remainingSkillPoints < entry.price) {
+                if (entry.price > remainingSkillPoints) {
                     continue
                 }
 
-                skillsToBuy.add(SkillToBuy(entry.skillData.name, totalPrice = entry.price))
-                remainingSkillPoints -= entry.price
+                // If the entry is already in the list, don't add it again since
+                // that would double up on the skill point spending estimate.
+                if (skillsToBuy.any { it == entry.name }) {
+                    continue
+                }
+
+                skillsToBuy.add(entry.name)
+                remainingSkillPoints -= if (entry.bHasSeparateDowngrade) entry.basePrice else entry.price
+                remainingSkills.remove(entry.name)
+                this.skillList.markEntryObtained(entry.name)
             }
-            remainingSkillListEntries -= skillsToBuy.map { it.name }
+            MessageLog.e("REMOVEME", "ITERATION DONE. ${remainingSkillPoints} points remaining.")
+            sortedByPointRatio = remainingSkills.values
+                .sortedByDescending { calculateAdjustedPointRatio(it) }
         }
 
-        return skillsToBuy.toList().distinctBy { it.name }
+        // Update the class properties.
+        this.skillsToBuy = skillsToBuy.toList()
+        this.remainingSkillPoints = remainingSkillPoints
     }
 
-    private fun getSkillsToBuyOptimizeRankStrategy(
-        skillListEntries: Map<String, SkillListEntry>,
-        skillPoints: Int,
-        skillPlanSettings: SkillPlanSettings,
-    ): List<SkillToBuy> {
-        val commonResultData: SkillsToBuyCommonReturnData = getSkillsToBuyCommon(
-            skillListEntries,
-            skillPoints,
-            skillPlanSettings,
-        )
-
-        if (commonResultData.earlyExit) {
-            return commonResultData.skillsToBuy
-        }
-
-        var remainingSkillListEntries: MutableMap<String, SkillListEntry> = commonResultData.remainingSkillListEntries.toMutableMap()
-        var remainingSkillPoints: Int = commonResultData.remainingSkillPoints
-        val skillsToBuy: MutableList<SkillToBuy> = commonResultData.skillsToBuy.toMutableList()
-
-        val sortedByPointRatio: List<SkillListEntry> = remainingSkillListEntries.values
-            .sortedByDescending { calculateAdjustedPointRatio(it) }
-
-        for (entry in sortedByPointRatio) {
-            val ptRatioString: String = "%.2f".format(calculateAdjustedPointRatio(entry))
-            MessageLog.d(TAG, "${entry.skillData.name}: ${entry.price}pt (${ptRatioString} rating/pt)")
-            // If we can't afford this skill, continue to the next.
-            if (remainingSkillPoints < entry.price) {
-                continue
-            }
-
-            skillsToBuy.add(SkillToBuy(entry.skillData.name, totalPrice = entry.price))
-            remainingSkillPoints -= entry.price
-        }
-
-        remainingSkillListEntries -= skillsToBuy.map { it.name }
-        return skillsToBuy.toList().distinctBy { it.name }
-    }
-
-    private fun getSkillsToBuy(
-        skillPlanSettings: SkillPlanSettings,
-        skillPoints: Int? = null,
-        skillListEntries: Map<String, SkillListEntry>? = null,
-    ): List<SkillToBuy> {
+    private fun addSkillsToBuy(skillPlanSettings: SkillPlanSettings) {
         MessageLog.d(TAG, "[SKILLS] Beginning process of calculating skills to purchase...")
-
-        val skillListEntries: Map<String, SkillListEntry> = skillListEntries ?: skillList.entries
-        val skillPoints: Int? = skillPoints ?: skillList.getSkillPoints()
-        if (skillPoints == null) {
-            MessageLog.w(TAG, "[SKILLS] getSkillsToBuy: skillList.getSkillPoints returned NULL.")
-            return emptyList()
-        }
 
         if(!skillPlanSettings.enabled) {
             MessageLog.i(TAG, "[SKILLS] Skill plan is disabled. No skills will be purchased.")
-            return emptyList()
-        }
-
-        if (
-            skillPlanSettings.skillPlan.isEmpty() &&
-            skillPlanSettings.spendingStrategy == SpendingStrategy.DEFAULT &&
-            !skillPlanSettings.buyInheritedSkills &&
-            !skillPlanSettings.buyNegativeSkills
-        ) {
-            MessageLog.w(TAG, "[SKILLS] Skill Plan is empty and no options to purchase any skills are enabled. Aborting...")
-            return emptyList()
+            return
         }
 
         MessageLog.d(TAG, "[SKILLS] User-specified Skill Plan:")
@@ -616,47 +589,32 @@ class SkillPlan (private val game: Game) {
             MessageLog.d(TAG, "[SKILLS]\t$name")
         }
 
-        // Remove any skills that we've already obtained from the map.
-        val filteredSkills: Map<String, SkillListEntry> = skillList.getAvailableEntries(skillListEntries)
-
-        val result: List<SkillToBuy> = when (skillPlanSettings.spendingStrategy) {
-            SpendingStrategy.DEFAULT -> getSkillsToBuyDefaultStrategy(
-                filteredSkills,
-                skillPoints,
-                skillPlanSettings,
-            )
-            SpendingStrategy.OPTIMIZE_SKILLS -> getSkillsToBuyOptimizeSkillsStrategy(
-                filteredSkills,
-                skillPoints,
-                skillPlanSettings,
-            )
-            SpendingStrategy.OPTIMIZE_RANK -> getSkillsToBuyOptimizeRankStrategy(
-                filteredSkills,
-                skillPoints,
-                skillPlanSettings,
-            )
+        when (skillPlanSettings.spendingStrategy) {
+            SpendingStrategy.DEFAULT -> addSkillsToBuyDefaultStrategy(skillPlanSettings)
+            SpendingStrategy.OPTIMIZE_SKILLS -> addSkillsToBuyOptimizeSkillsStrategy(skillPlanSettings)
+            SpendingStrategy.OPTIMIZE_RANK -> addSkillsToBuyOptimizeRankStrategy(skillPlanSettings)
         }
 
-        if (result.isEmpty()) {
-            MessageLog.w(TAG, "[SKILLS] List of skills to buy is empty. Aborting...")
-            return emptyList()
+        MessageLog.d(TAG, "============== Skills To Buy ==============")
+        var totalPrice: Int = 0
+        for (name in this.skillsToBuy) {
+            val entry: SkillListEntry? = this.skillList.getEntry(name)
+            if (entry == null) {
+                MessageLog.w(TAG, "\t$name: NULL")
+                continue
+            }
+            val price: Int = if (entry.bHasSeparateDowngrade) entry.basePrice else entry.price
+            MessageLog.d(TAG, "\t$name: $price")
+            totalPrice += price
         }
-
-        MessageLog.d(TAG, "=======================================")
-        MessageLog.d(TAG, "[SKILLS] Skills to Buy:")
-        for (skillToBuy in result) {
-            val upgradeString: String = if (skillToBuy.numUpgrades > 0) " +${skillToBuy.numUpgrades} upgrade(s)" else ""
-            val price: Int = skillListEntries[skillToBuy.name]?.price ?: -1
-            MessageLog.d(TAG, "[SKILLS]\t${skillToBuy.name}${upgradeString} for ${skillToBuy.totalPrice}pts (${price}ea)")
-        }
-        MessageLog.d(TAG, "=======================================")
-
-        skillsToBuy = result
-        return skillsToBuy
+        MessageLog.d(TAG, "\n\tTOTAL: $totalPrice / ${this.skillList.skillPoints} pts")
+        MessageLog.d(TAG, "===========================================")
     }
 
     fun start(): Boolean {
         val bitmap: Bitmap = game.imageUtils.getSourceBitmap()
+
+        MessageLog.e("REMOVEME", "SkillPlan::start()")
 
         // Verify that we are at the skill list screen.
         val bIsCareerComplete: Boolean = skillList.checkCareerCompleteSkillListScreen(bitmap)
@@ -672,6 +630,9 @@ class SkillPlan (private val game: Game) {
         MessageLog.e("REMOVEME", "\t${skillPlanSettings.spendingStrategy}")
         MessageLog.e("REMOVEME", "\t${skillPlanSettings.buyInheritedSkills}")
         MessageLog.e("REMOVEME", "\t${skillPlanSettings.buyNegativeSkills}")
+
+        // If no options are enabled for purchasing skills, then we should
+        // exit early to avoid having to scan the whole skill list.
         if (
             skillPlanSettings.skillPlan.isEmpty() &&
             skillPlanSettings.spendingStrategy == SpendingStrategy.DEFAULT &&
@@ -691,23 +652,20 @@ class SkillPlan (private val game: Game) {
             handleDialogs()
         }
 
-        val skillPoints: Int? = skillList.getSkillPoints(bitmap)
-        if (skillPoints == null) {
-            MessageLog.w(TAG, "[SKILLS] skillList.getSkillPoints returned NULL.")
-            return false
-        }
-
-        if (skillPoints < 30) {
-            MessageLog.i(TAG, "[SKILLS] Skill Points < 30. Cannot afford any skills. Aborting...")
+        this.remainingSkillPoints = skillList.detectSkillPoints(bitmap) ?: 0
+        // The cheapest skills are all 70 points and with discounts
+        // can be as low as 42 points. If anything is less than this, then
+        // we should update this.
+        if (this.remainingSkillPoints < 42) {
+            MessageLog.i(TAG, "[SKILLS] Skill Points < 42. Cannot afford any skills. Aborting...")
             return true
         }
         
+        // Gather all skill list entry data.
         if (USE_MOCKED_DATA) {
             skillList.getMockSkillListEntries()
         } else {
-            skillList.getSkillListEntries() { entry: SkillListEntry, point: Point ->
-                MessageLog.e("REMOVEME", "getSkillListEntries Callback: ${entry.name}")
-            }
+            skillList.getSkillListEntries()
         }
 
         if (skillList.entries.isEmpty()) {
@@ -717,22 +675,28 @@ class SkillPlan (private val game: Game) {
 
         skillList.printSkillListEntries(verbose = true)
 
-        val skillsToBuy: List<SkillToBuy> = getSkillsToBuy(skillPlanSettings, skillPoints)
+        // Calculate list of skills to purchase.
+        addSkillsToBuy(skillPlanSettings)
 
-        if (skillsToBuy.isNotEmpty() && !USE_MOCKED_DATA) {
-            skillList.getSkillListEntries() { entry: SkillListEntry, point: Point ->
-                MessageLog.e("REMOVEME", "CALLBACK: ${entry.name}")
-            }
+        if (this.skillsToBuy.isEmpty()) {
+            // Return to previous screen.
+            ButtonBack.click(game.imageUtils)
+            return true
         }
 
+        // Go back through skill list and purchase skills.
+        skillList.getSkillListEntries(::onSkillListEntryDetected)
+
         return true
-        //ButtonConfirm.click(game.imageUtils)
+        ButtonConfirm.click(game.imageUtils)
         game.wait(0.5, skipWaitingForLoading = true)
         // Two dialogs will appear if we purchase any skills.
         // First is the purchase confirmation.
         handleDialogs()
         // Second is the Skills Learned dialog.
         handleDialogs()
+        // Return to previous screen.
+        ButtonBack.click(game.imageUtils)
 
         return true
     }
