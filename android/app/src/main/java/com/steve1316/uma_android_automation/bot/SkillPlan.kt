@@ -643,7 +643,7 @@ class SkillPlan (private val game: Game) {
         // Go back through skill list and purchase skills.
         skillList.parseSkillListEntries(::onSkillListEntryDetected)
 
-        return true
+        //return true
         ButtonConfirm.click(game.imageUtils)
         game.wait(0.5, skipWaitingForLoading = true)
         // Two dialogs will appear if we purchase any skills.
