@@ -1,13 +1,13 @@
 package com.steve1316.uma_android_automation.utils
 
-data class DoublyLinkedListNode<T>(
+open class DoublyLinkedListNode<T>(
     val list: DoublyLinkedList<T>,
     var value: T,
     var next: DoublyLinkedListNode<T>? = null,
     var prev: DoublyLinkedListNode<T>? = null,
 )
 
-class DoublyLinkedList<T> {
+open class DoublyLinkedList<T> {
     private var head: DoublyLinkedListNode<T>? = null
     private var tail: DoublyLinkedListNode<T>? = null
     var size: Int = 0

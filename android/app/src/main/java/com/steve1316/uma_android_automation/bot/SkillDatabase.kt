@@ -1,17 +1,8 @@
 package com.steve1316.uma_android_automation.bot
 
 import android.util.Log
-import android.graphics.Bitmap
-import org.opencv.core.Point
-import org.json.JSONArray
-import org.json.JSONObject
-import java.util.concurrent.ConcurrentLinkedQueue
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import java.util.Collections
 import kotlinx.coroutines.*
-import kotlin.math.ceil
-import kotlin.math.roundToInt
 
 import com.steve1316.automation_library.utils.SettingsHelper
 import com.steve1316.automation_library.utils.SQLiteSettingsManager
@@ -44,24 +35,24 @@ class SkillDatabase (private val game: Game) {
     // A structure used to map skill names to a doubly linked list representing
     // the upgrade/downgrade paths (versions) for each skill.
     private val skillStructure: Map<String, DoublyLinkedListNode<String>> = loadSkillStructure()
-    private val skillUpgradeChains: Map<String, List<String>> = skillStructure.mapValues { it.value.list.getValues() }
+    val skillUpgradeChains: Map<String, List<String>> = skillStructure.mapValues { it.value.list.getValues() }
 
     companion object {
-        private const val TABLE_SKILLS = "skills"
-        private const val SKILLS_COLUMN_SKILL_ID = "skill_id"
-        private const val SKILLS_COLUMN_NAME_EN = "name_en"
-        private const val SKILLS_COLUMN_DESC_EN = "desc_en"
-        private const val SKILLS_COLUMN_ICON_ID = "icon_id"
-        private const val SKILLS_COLUMN_COST = "cost"
-        private const val SKILLS_COLUMN_EVAL_PT = "eval_pt"
-        private const val SKILLS_COLUMN_PT_RATIO = "pt_ratio"
-        private const val SKILLS_COLUMN_RARITY = "rarity"
-        private const val SKILLS_COLUMN_INHERITED = "inherited"
-        private const val SKILLS_COLUMN_COMMUNITY_TIER = "community_tier"
-        private const val SKILLS_COLUMN_VERSIONS = "versions"
-        private const val SKILLS_COLUMN_UPGRADE = "upgrade"
-        private const val SKILLS_COLUMN_DOWNGRADE = "downgrade"
-        private const val SIMILARITY_THRESHOLD = 0.7
+        private val TABLE_SKILLS = "skills"
+        private val SKILLS_COLUMN_SKILL_ID = "skill_id"
+        private val SKILLS_COLUMN_NAME_EN = "name_en"
+        private val SKILLS_COLUMN_DESC_EN = "desc_en"
+        private val SKILLS_COLUMN_ICON_ID = "icon_id"
+        private val SKILLS_COLUMN_COST = "cost"
+        private val SKILLS_COLUMN_EVAL_PT = "eval_pt"
+        private val SKILLS_COLUMN_PT_RATIO = "pt_ratio"
+        private val SKILLS_COLUMN_RARITY = "rarity"
+        private val SKILLS_COLUMN_INHERITED = "inherited"
+        private val SKILLS_COLUMN_COMMUNITY_TIER = "community_tier"
+        private val SKILLS_COLUMN_VERSIONS = "versions"
+        private val SKILLS_COLUMN_UPGRADE = "upgrade"
+        private val SKILLS_COLUMN_DOWNGRADE = "downgrade"
+        private val SIMILARITY_THRESHOLD = 0.7
     }
 
     /** Loads all skill data from the database.
@@ -194,7 +185,7 @@ class SkillDatabase (private val game: Game) {
         return result.toMap()
     }
 
-    private fun fuzzySearchSkillName(name: String): String? {
+    fun fuzzySearchSkillName(name: String): String? {
         return TextUtils.matchStringInList(
             query = name,
             choices = skillData.keys.toList(),
@@ -202,7 +193,7 @@ class SkillDatabase (private val game: Game) {
         )
     }
 
-    private fun checkSkillName(name: String, fuzzySearch: Boolean = false): String? {
+    fun checkSkillName(name: String, fuzzySearch: Boolean = false): String? {
         // Check for an exact match first.
         if (name in skillData) {
             return name
