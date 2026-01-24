@@ -33,7 +33,7 @@ import com.steve1316.uma_android_automation.utils.types.Aptitude
 
 import com.steve1316.uma_android_automation.components.*
 
-private const val USE_MOCKED_DATA: Boolean = true
+private const val USE_MOCKED_DATA: Boolean = false
 
 class SkillPlan (private val game: Game) {
     private val TAG: String = "[${MainActivity.loggerTag}]SkillPlan"
