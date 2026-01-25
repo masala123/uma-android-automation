@@ -43,6 +43,8 @@ export interface Settings {
 
     // Skill Settings
     skills: {
+        preferredRunningStyle: string
+        preferredTrackDistance: string
         enablePreFinalsSkillPlan: boolean
         preFinalsSpendingStrategy: string
         enablePreFinalsBuyInheritedSkills: boolean
@@ -193,6 +195,8 @@ export const defaultSettings: Settings = {
         improvementThreshold: 25.0,
     },
     skills: {
+        preferredRunningStyle: "inherit",
+        preferredTrackDistance: "inherit",
         enablePreFinalsSkillPlan: false,
         preFinalsSpendingStrategy: "default",
         enablePreFinalsBuyInheritedSkills: false,

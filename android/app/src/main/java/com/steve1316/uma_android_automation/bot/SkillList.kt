@@ -1200,11 +1200,19 @@ class SkillList (private val game: Game) {
         }
     }
 
-    fun getRunningStyleSkills(runningStyle: RunningStyle): Map<String, SkillListEntry> {
+    fun getRunningStyleSkills(runningStyle: RunningStyle?): Map<String, SkillListEntry> {
+        // If null, then we want to return all skills that have any running style.
+        if (runningStyle == null) {
+            return getAvailableSkills().filterValues { it.runningStyle != null }
+        }
         return getAvailableSkills().filterValues { it.runningStyle == runningStyle }
     }
 
-    fun getTrackDistanceSkills(trackDistance: TrackDistance): Map<String, SkillListEntry> {
+    fun getTrackDistanceSkills(trackDistance: TrackDistance?): Map<String, SkillListEntry> {
+        // If null, then we want to return all skills that have any track distance.
+        if (trackDistance == null) {
+            return getAvailableSkills().filterValues { it.trackDistance != null }
+        }
         return getAvailableSkills().filterValues { it.trackDistance == trackDistance }
     }
 

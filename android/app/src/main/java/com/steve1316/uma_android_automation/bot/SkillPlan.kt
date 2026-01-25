@@ -25,6 +25,9 @@ class SkillPlan (private val game: Game) {
     private val TAG: String = "[${MainActivity.loggerTag}]SkillPlan"
 
     // Get user settings for skill plans.
+    val skillSettingRunningStyleString = SettingsHelper.getStringSetting("skills", "preferredRunningStyle")
+    val skillSettingTrackDistanceString = SettingsHelper.getStringSetting("skills", "preferredTrackDistance")
+
     val enablePreFinalsSkillPlan = SettingsHelper.getBooleanSetting("skills", "enablePreFinalsSkillPlan")
     val preFinalsSpendingStrategy = SettingsHelper.getStringSetting("skills", "preFinalsSpendingStrategy")
     val enablePreFinalsBuyInheritedSkills = SettingsHelper.getBooleanSetting("skills", "enablePreFinalsBuyInheritedSkills")
@@ -57,8 +60,8 @@ class SkillPlan (private val game: Game) {
     )
 
     // Other settings.
-    private val userSelectedTrackDistanceOverrideString = SettingsHelper.getStringSetting("training", "preferredDistanceOverride")
-    private val userSelectedRunningStyleString = SettingsHelper.getStringSetting("racing", "originalRaceStrategy")
+    private val trainingSettingTrackDistanceString = SettingsHelper.getStringSetting("training", "preferredDistanceOverride")
+    private val racingSettingRunningStyleString = SettingsHelper.getStringSetting("racing", "originalRaceStrategy")
 
     enum class SpendingStrategy {
         DEFAULT,
@@ -307,14 +310,18 @@ class SkillPlan (private val game: Game) {
         var remainingSkillPoints: Int = result.values.sum()
 
         // Get user specified running style.
-        // If not specified, then we use the trainee's highest aptitude option.
-        val userSelectedRunningStyle: RunningStyle? = RunningStyle.fromShortName(userSelectedRunningStyleString)
-        val preferredRunningStyle: RunningStyle = userSelectedRunningStyle ?: game.trainee.runningStyle
+        val preferredRunningStyle: RunningStyle? = when (skillSettingRunningStyleString.lowercase()) {
+            "disabled" -> null
+            "inherit" -> RunningStyle.fromName(racingSettingRunningStyleString) ?: game.trainee.runningStyle
+            else -> game.trainee.runningStyle
+        }
 
         // Get user specified track distance.
-        // If not specified, then we use the trainee's highest aptitude option.
-        val userSelectedTrackDistance: TrackDistance? = TrackDistance.fromName(userSelectedTrackDistanceOverrideString)
-        val preferredTrackDistance: TrackDistance = userSelectedTrackDistance ?: game.trainee.trackDistance
+        val preferredTrackDistance: TrackDistance? = when (skillSettingTrackDistanceString.lowercase()) {
+            "disabled" -> null
+            "inherit" -> TrackDistance.fromName(trainingSettingTrackDistanceString) ?: game.trainee.trackDistance
+            else -> game.trainee.trackDistance
+        }
 
         // Get only skills which match our aptitudes or user-specified styles or
         // are agnostic of style or track variables.
