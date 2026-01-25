@@ -5,8 +5,8 @@ import android.graphics.Bitmap
 import org.opencv.core.Point
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-import java.util.Collections
-import kotlinx.coroutines.*
+//import java.util.Collections
+//import kotlinx.coroutines.*
 
 import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.automation_library.utils.MessageLog
@@ -15,38 +15,61 @@ import com.steve1316.automation_library.data.SharedData
 import com.steve1316.uma_android_automation.bot.SkillDatabase
 
 import com.steve1316.uma_android_automation.utils.types.BoundingBox
-import com.steve1316.uma_android_automation.utils.types.SkillData
 import com.steve1316.uma_android_automation.utils.types.TrackDistance
 import com.steve1316.uma_android_automation.utils.types.RunningStyle
-import com.steve1316.uma_android_automation.utils.types.Aptitude
 
-import com.steve1316.uma_android_automation.components.ComponentInterface
-import com.steve1316.uma_android_automation.components.IconScrollListTopLeft
-import com.steve1316.uma_android_automation.components.IconScrollListBottomRight
-import com.steve1316.uma_android_automation.components.IconSkillTitleDoubleCircle
-import com.steve1316.uma_android_automation.components.IconSkillTitleCircle
-import com.steve1316.uma_android_automation.components.IconSkillTitleX
-import com.steve1316.uma_android_automation.components.IconObtainedPill
-import com.steve1316.uma_android_automation.components.ButtonSkillListFullStats
-import com.steve1316.uma_android_automation.components.ButtonSkillUp
-import com.steve1316.uma_android_automation.components.ButtonLog
-import com.steve1316.uma_android_automation.components.LabelSkillListScreenSkillPoints
+import com.steve1316.uma_android_automation.components.*
 
+typealias OnEntryDetectedCallback = (SkillList, SkillListEntry, Point) -> Unit
 
 /**
  * @property entries Mapping of SkillListEntry objects.
  * @property skillPoints The current remaining skill points.
  * Defaults to NULL if not yet detected.
  */
-class SkillList (
-    private val game: Game,
-    private val skillDatabase: SkillDatabase,
-) {
+class SkillList (private val game: Game) {
     private val TAG: String = "[${MainActivity.loggerTag}]SkillList"
+
+    private val skillDatabase: SkillDatabase = SkillDatabase(game)
 
     var entries: Map<String, SkillListEntry> = generateSkillListEntries()
     var skillPoints: Int = 0
         private set
+
+    /**
+     * Detects and handles any dialog popups.
+     *
+     * To prevent the bot moving too fast, we add a 500ms delay to the
+     * exit of this function whenever we close the dialog.
+     * This gives the dialog time to close since there is a very short
+     * animation that plays when a dialog closes.
+     *
+     * @return A pair of a boolean and a nullable DialogInterface.
+     * The boolean is true when a dialog has been handled by this function.
+     * The DialogInterface is the detected dialog, or NULL if no dialogs were found.
+     */
+    private fun handleDialogs(): Pair<Boolean, DialogInterface?> {
+        val dialog: DialogInterface? = DialogUtils.getDialog(game.imageUtils)
+        if (dialog == null) {
+            return Pair(false, null)
+        }
+
+        when (dialog.name) {
+            "skill_list_confirmation" -> dialog.ok(game.imageUtils)
+            "skill_list_confirm_exit" -> dialog.ok(game.imageUtils)
+            "skills_learned" -> dialog.close(game.imageUtils)
+            "umamusume_details" -> {
+                game.trainee.updateAptitudes(game.imageUtils)
+                dialog.close(game.imageUtils)
+            }
+            else -> {
+                return Pair(false, dialog)
+            }
+        }
+
+        game.wait(0.5, skipWaitingForLoading = true)
+        return Pair(true, dialog)
+    }
 
     private fun generateSkillListEntries(): Map<String, SkillListEntry> {
         // Get list of unique upgrade chains.
@@ -428,6 +451,42 @@ class SkillList (
         return skillPoints
     }
 
+    /** Confirms skill purchases and backs out of the Skill List screen. */
+    fun confirmAndExit() {
+        ButtonConfirm.click(game.imageUtils)
+        game.wait(0.5, skipWaitingForLoading = true)
+        // Two dialogs will appear if we purchase any skills.
+        // First is the purchase confirmation.
+        handleDialogs()
+        // Second is the Skills Learned dialog.
+        handleDialogs()
+        // Return to previous screen.
+        ButtonBack.click(game.imageUtils)
+    }
+
+    /** Aborts spending skill points and backs out of the Skill List screen. */
+    fun cancelAndExit() {
+        // Reset skills to prevent popup.
+        ButtonReset.click(game.imageUtils)
+        ButtonBack.click(game.imageUtils)
+        game.wait(0.5, skipWaitingForLoading = true)
+        // As a failsafe, handle dialogs to catch the dialog for
+        // aborting spending skill points.
+        handleDialogs()
+    }
+
+    /** Opens the stats dialog and parses it.
+     *
+     * This allows our dialog handler to update aptitudes for the trainee.
+     * This is useful for when we start the bot at the skills list or at
+     * the end of a career when aptitudes are unknown.
+     */
+    fun checkStats() {
+        ButtonSkillListFullStats.click(game.imageUtils)
+        game.wait(0.5, skipWaitingForLoading = true)
+        handleDialogs()
+    }
+
     /** Extracts the title (skill name) from a cropped skill list entry bitmap.
      *
      * @param bitmap A bitmap of a single cropped skill list entry.
@@ -670,7 +729,7 @@ class SkillList (
      * @param bboxSkillList The bounding region for the skill list in the bitmap.
      * If not specified, this region will be detected automatically.
      * @param debugString A string used in logging and saved bitmap filenames.
-     * @param onSkillListEntryDetected A callback function that is called for each
+     * @param onEntry A callback function that is called for each
      * SkillListEntry that we detect. This can be useful if we want to perform
      * an operation immediately upon detecting an entry.
      *
@@ -680,7 +739,7 @@ class SkillList (
         bitmap: Bitmap? = null,
         bboxSkillList: BoundingBox? = null,
         debugString: String = "",
-        onSkillListEntryDetected: ((entry: SkillListEntry, point: Point) -> Unit)? = null,
+        onEntry: OnEntryDetectedCallback? = null,
     ): List<String> {
         val bitmap = bitmap ?: game.imageUtils.getSourceBitmap()
 
@@ -762,8 +821,8 @@ class SkillList (
                 continue
             }
 
-            if (onSkillListEntryDetected != null) {
-                onSkillListEntryDetected(entry, point)
+            if (onEntry != null) {
+                onEntry(this, entry, point)
             }
 
             entryNames.add(entry.name)
@@ -778,7 +837,7 @@ class SkillList (
      * @param bboxSkillList The bounding region for the skill list in the bitmap.
      * @param debugString A string to append to logging messages and any
      * potential saved bitmaps.
-     * @param onSkillListEntryDetected A callback function that is called for each
+     * @param onEntry A callback function that is called for each
      * SkillListEntry that we detect. This can be useful if we want to perform
      * an operation immediately upon detecting an entry.
      * NOTE: This function MUST be thread safe.
@@ -789,7 +848,7 @@ class SkillList (
         bitmap: Bitmap,
         bboxSkillList: BoundingBox,
         debugString: String = "",
-        onSkillListEntryDetected: ((entry: SkillListEntry, point: Point) -> Unit)? = null,
+        onEntry: OnEntryDetectedCallback? = null,
     ): List<String> {
         val bboxSkillListEntries = getSkillListEntriesBoundingRegion(bitmap, bboxSkillList, debugString)
         if (bboxSkillListEntries == null) {
@@ -863,8 +922,8 @@ class SkillList (
                 continue
             }
 
-            if (onSkillListEntryDetected != null) {
-                onSkillListEntryDetected(entry, point)
+            if (onEntry != null) {
+                onEntry(this, entry, point)
             }
 
             entryNames.add(entry.name)
@@ -875,12 +934,14 @@ class SkillList (
 
     /** Scrolls through the entire skill list and extracts info from entries.
      *
-     * @param onSkillListEntryDetected A callback function that is called for each
+     * The entries are stored in the class state as they are read.
+     *
+     * @param onEntry A callback function that is called for each
      * SkillListEntry that we detect. This can be useful if we want to perform
      * an operation immediately upon detecting an entry.
      */
     fun iterateOverSkillList(
-        onSkillListEntryDetected: ((entry: SkillListEntry, point: Point) -> Unit)? = null,
+        onEntry: OnEntryDetectedCallback? = null,
     ) {
         var bitmap = game.imageUtils.getSourceBitmap()
         val bboxSkillList: BoundingBox? = getSkillListBoundingRegion(bitmap)
@@ -941,7 +1002,7 @@ class SkillList (
                 bitmap = bitmap,
                 bboxSkillList = bboxSkillList,
                 debugString = "iterateOverSkillList",
-                onSkillListEntryDetected = onSkillListEntryDetected,
+                onEntry = onEntry,
             )
             // Another exit condition. If there are no new entries after
             // scrolling, then we're at the bottom of the list.
@@ -958,21 +1019,24 @@ class SkillList (
 
     /** Gets all entries in the skill list.
      *
-     * @param onSkillListEntryDetected A callback function that is called for each
+     * @param onEntry A callback function that is called for each
      * SkillListEntry that we detect. This can be useful if we want to perform
      * an operation immediately upon detecting an entry.
      *
      * @return A mapping of skill names to SkillListEntry objects.
      */
     fun parseSkillListEntries(
-        onSkillListEntryDetected: ((entry: SkillListEntry, point: Point) -> Unit)? = null,
+        bUseMockData: Boolean = false,
+        onEntry: OnEntryDetectedCallback? = null,
     ): Map<String, SkillListEntry> {
-        // List of skills in the order that they are shown in the game.
-        // We use this later to purchase items from top to bottom.
-        iterateOverSkillList() { entry: SkillListEntry, point: Point ->
-            // Pass this data along to the callback parameter.
-            if (onSkillListEntryDetected != null) {
-                onSkillListEntryDetected(entry, point)
+        if (bUseMockData) {
+            return parseMockSkillListEntries()
+        }
+
+        iterateOverSkillList() { _, entry: SkillListEntry, point: Point ->
+            // Bubble the event up.
+            if (onEntry != null) {
+                onEntry(this, entry, point)
             }
         }
 
@@ -983,7 +1047,7 @@ class SkillList (
      *
      * @return A mapping of skill names to SkillListEntry objects.
      */
-    fun parseMockSkillListEntries(): Map<String, SkillListEntry>? {
+    fun parseMockSkillListEntries(): Map<String, SkillListEntry> {
         val mockSkills: Map<String, Int> = mapOf(
             "Warning Shot!" to -1,
             "Triumphant Pulse" to 120,
@@ -1018,13 +1082,19 @@ class SkillList (
             "Ignited Spirit SPD" to 180,
         )
 
-        for ((skillName, skillPrice) in mockSkills) {
-            // NULL would indicate a programmer error.
-            val entry: SkillListEntry = entries[skillName]!!
+        for ((name, price) in mockSkills) {
+            val entry: SkillListEntry? = entries[name]
+            // In case of error, we don't want to give back partial data so
+            // we just immediately return an empty list.
+            if (entry == null) {
+                MessageLog.e(TAG, "parseMockSkillListEntries: \"$name\" not in entries.")
+                return emptyMap()
+            }
 
-            entry.bIsObtained = skillPrice <= 0
+            // Manually update entries with data.
+            entry.bIsObtained = price <= 0
             entry.bIsVirtual = false
-            entry.updateScreenPrice(skillPrice)
+            entry.updateScreenPrice(price)
         }
 
         return entries

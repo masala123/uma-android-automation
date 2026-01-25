@@ -305,6 +305,7 @@ object DialogObjects {
         DialogSessionError,                 // Anywhere
         DialogSkillDetails,                 // Anywhere
         DialogSkillListConfirmation,        // Career
+        DialogSkillListConfirmExit,         // Career
         DialogSkillsLearned,                // Career
         DialogSongAcquired,                 // Career
         DialogSparkDetails,                 // Career (legacy uma details)
@@ -1148,6 +1149,18 @@ object DialogSkillListConfirmation : DialogInterface {
     override val buttons: List<ComponentInterface> = listOf(
         ButtonCancel,
         ButtonLearn,
+    )
+}
+
+object DialogSkillListConfirmExit : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogSkillListConfirmExit"
+    override val name: String = "skill_list_confirm_exit"
+    override val title: String = "Confirm"
+    override val closeButton = null
+    override val okButton: ComponentInterface = ButtonOk
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonCancel,
+        ButtonOk,
     )
 }
 
