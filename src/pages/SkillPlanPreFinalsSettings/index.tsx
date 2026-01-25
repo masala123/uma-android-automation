@@ -224,7 +224,7 @@ const SkillPlanPreFinalsSettings = () => {
                         onValueChange={(value) => updateSkillsSetting("preFinalsSpendingStrategy", value)}
                         placeholder="Select Strategy"
                     />
-                    <Text style={styles.inputDescription}>The strategy to use when spending skill points. Best Skills First will use a community skill tier list to purchase better skills first and then within each tier it will attempt to optimize rank. Optimize Rank will purchase skills </Text>
+                    <Text style={styles.inputDescription}>The strategy to use when spending skill points.</Text>
                     <Text style={styles.inputDescription}>Best Skills First will use a community skill tier list to purchase better skills first and then within each tier it will attempt to optimize rank.</Text>
                     <Text style={styles.inputDescription}>Optimize Rank will purchase skills in a way which will result in the highest trainee rank. Avoid this option since it will likely make a bad PvP trainee.</Text>
                 </View>
