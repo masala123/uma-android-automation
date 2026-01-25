@@ -23,11 +23,13 @@ import com.steve1316.uma_android_automation.utils.types.Aptitude
 
 class SkillListEntry(
     private val game: Game,
-    private val skillDatabase: SkillDatabase,
-    val name: String,
+    val skillData: SkillData,
     var screenPrice: Int = 0,
     var bIsObtained: Boolean = false,
     var bIsVirtual: Boolean = false,
+    // Pointers for linked-list style navigation.
+    var prev: SkillListEntry? = null,
+    var next: SkillListEntry? = null,
 ) {
     private val TAG: String = "[${MainActivity.loggerTag}]SkillListEntry"
 
@@ -51,10 +53,7 @@ class SkillListEntry(
         0.4,
     )
 
-    private lateinit var skillData: SkillData
-
-    var prev: SkillListEntry? = null
-    var next: SkillListEntry? = null
+    val name: String = skillData.name
 
     // Copy of the screen price that is only ever modified in `updateScreenPrice`.
     // We use this so that we have a baseline for what the screen price was
@@ -106,11 +105,20 @@ class SkillListEntry(
         get() = skillData.cost
 
     init {
-        val tmpSkillData: SkillData? = skillDatabase.getSkillData(name)
-        require(tmpSkillData != null) { "Failed to load skill data for \"$name\"." }
-        skillData = tmpSkillData
         if (screenPrice == 0) {
             screenPrice = skillData.cost ?: 0
+            originalScreenPrice = screenPrice
+        }
+
+        // Update linked list pointers if they were passed in.
+        val prev: SkillListEntry? = prev
+        if (prev != null) {
+            prev.next = this
+        }
+
+        val next: SkillListEntry? = next
+        if (next != null) {
+            next.prev = this
         }
     }
 

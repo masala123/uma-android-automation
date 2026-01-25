@@ -17,6 +17,7 @@ import com.steve1316.uma_android_automation.bot.SkillDatabase
 import com.steve1316.uma_android_automation.utils.types.BoundingBox
 import com.steve1316.uma_android_automation.utils.types.TrackDistance
 import com.steve1316.uma_android_automation.utils.types.RunningStyle
+import com.steve1316.uma_android_automation.utils.types.SkillData
 
 import com.steve1316.uma_android_automation.components.*
 
@@ -88,13 +89,13 @@ class SkillList (private val game: Game) {
                 }
                 // Because we're building this mapping before we've scanned
                 // the skill list, all entries are virtual.
-                val entry = SkillListEntry(game, skillDatabase, name, bIsVirtual = true)
-                
-                // Need to manually connect the entries like a linked list.
-                if (prevEntry != null) {
-                    entry.prev = prevEntry
-                    prevEntry.next = entry
+                val skillData: SkillData? = skillDatabase.getSkillData(name)
+                if (skillData == null) {
+                    MessageLog.e(TAG, "Failed to get skill data for \"$name\".")
+                    continue
                 }
+                val entry = SkillListEntry(game, skillData, bIsVirtual = true, prev = prevEntry)
+
                 // Now add to our mapping.
                 result[name] = entry
 
