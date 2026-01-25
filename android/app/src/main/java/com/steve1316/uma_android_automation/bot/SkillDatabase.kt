@@ -97,7 +97,7 @@ class SkillDatabase (private val game: Game) {
                             name = it.getString(nameIndex),
                             description = it.getString(descriptionIndex),
                             iconId = it.getInt(iconIdIndex),
-                            cost = if (it.isNull(costIndex)) null else it.getInt(costIndex),
+                            cost = it.getInt(costIndex),
                             evalPt = it.getInt(evalPtIndex),
                             ptRatio = it.getDouble(ptRatioIndex),
                             rarity = it.getInt(rarityIndex),

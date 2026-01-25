@@ -55,6 +55,8 @@ class SkillListEntry(
 
     val name: String = skillData.name
 
+    private val minScreenPrice: Int = (skillData.cost * (1.0 - DISCOUNT_VALUES.last())).roundToInt()
+
     // Copy of the screen price that is only ever modified in `updateScreenPrice`.
     // We use this so that we have a baseline for what the screen price was
     // when we originally read it with OCR.
@@ -101,12 +103,12 @@ class SkillListEntry(
         get() = skillData.trackDistance
     val communityTier: Int?
         get() = skillData.communityTier
-    val baseCost: Int?
+    val baseCost: Int
         get() = skillData.cost
 
     init {
-        if (screenPrice == 0) {
-            screenPrice = skillData.cost ?: 0
+        if (screenPrice < minScreenPrice || screenPrice > skillData.cost) {
+            screenPrice = skillData.cost
             originalScreenPrice = screenPrice
         }
 
@@ -138,12 +140,7 @@ class SkillListEntry(
             return 0.0
         }
 
-        val baseCost: Int? = skillData.cost
-        if (baseCost == null) {
-            return 0.0
-        }
-
-        val res: Double = 1.0 - (price.toDouble() / baseCost.toDouble())
+        val res: Double = 1.0 - (price.toDouble() / skillData.cost.toDouble())
         return res.roundDiscount()
     }
 
@@ -190,6 +187,7 @@ class SkillListEntry(
         val modifier: Double = getRunningStyleAptitudeEvaluationModifier() ?:
             getTrackDistanceAptitudeEvaluationModifier() ?:
             1.0
+
         return (res * modifier).roundToInt()
     }
 
@@ -203,8 +201,14 @@ class SkillListEntry(
      * anywhere else.
      */
     fun updateScreenPrice(value: Int) {
-        screenPrice = value
-        originalScreenPrice = value
+        // If price is 
+        if (value < minScreenPrice || value > skillData.cost) {
+            screenPrice = skillData.cost
+            originalScreenPrice = screenPrice
+        } else {
+            screenPrice = value
+            originalScreenPrice = value
+        }
 
         // Need to manually push changes to other in-place versions.
         if (bIsInPlace) {
@@ -220,9 +224,8 @@ class SkillListEntry(
             // available in the skill list. This entry is no longer virtual.
             bIsVirtual = false
             val prev: SkillListEntry? = prev
-            val baseCost: Int? = skillData.cost
-            if (prev != null && baseCost != null) {
-                screenPrice = (baseCost.toDouble() * (1.0 - prev.discount)).roundToInt()
+            if (prev != null) {
+                screenPrice = (skillData.cost.toDouble() * (1.0 - prev.discount)).roundToInt()
             }
         } else {
             // Otherwise if the two skills are separate entries in the skill list,

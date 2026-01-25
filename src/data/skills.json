@@ -332,21 +332,6 @@
         "upgrade": null,
         "downgrade": null
     },
-    "As a Friend and Rival": {
-        "id": 300091,
-        "name_en": "As a Friend and Rival",
-        "desc_en": "Moderately increase Silence Suzuka's performance through the happiness felt seeing a friend find their running style.",
-        "icon_id": 10031,
-        "cost": null,
-        "eval_pt": 0,
-        "pt_ratio": 0.0,
-        "rarity": 1,
-        "inherited": false,
-        "community_tier": null,
-        "versions": [],
-        "upgrade": null,
-        "downgrade": null
-    },
     "Barcarole of Blessings": {
         "id": 910151,
         "name_en": "Barcarole of Blessings",
@@ -491,21 +476,6 @@
             201172
         ],
         "upgrade": 201172,
-        "downgrade": null
-    },
-    "Blatant Fear": {
-        "id": 300051,
-        "name_en": "Blatant Fear",
-        "desc_en": "Greatly decrease velocity on a corner in the second half of the race due to Trainer's obvious anxiety.",
-        "icon_id": 20015,
-        "cost": null,
-        "eval_pt": 0,
-        "pt_ratio": 0.0,
-        "rarity": 2,
-        "inherited": false,
-        "community_tier": null,
-        "versions": [],
-        "upgrade": null,
         "downgrade": null
     },
     "Blazing Pride": {
@@ -828,36 +798,6 @@
         "rarity": 1,
         "inherited": true,
         "community_tier": 1,
-        "versions": [],
-        "upgrade": null,
-        "downgrade": null
-    },
-    "Cheers of a Fellow Dreamer": {
-        "id": 300101,
-        "name_en": "Cheers of a Fellow Dreamer",
-        "desc_en": "Recover Silence Suzuka's endurance on a corner in the second half of the race through a friend's cheers of support.",
-        "icon_id": 20022,
-        "cost": null,
-        "eval_pt": 0,
-        "pt_ratio": 0.0,
-        "rarity": 2,
-        "inherited": false,
-        "community_tier": null,
-        "versions": [],
-        "upgrade": null,
-        "downgrade": null
-    },
-    "Chin Up, Derby Umamusume!": {
-        "id": 300111,
-        "name_en": "Chin Up, Derby Umamusume!",
-        "desc_en": "Feel closer to being Japan's top racer, moderately increasing performance.",
-        "icon_id": 10011,
-        "cost": null,
-        "eval_pt": 0,
-        "pt_ratio": 0.0,
-        "rarity": 1,
-        "inherited": false,
-        "community_tier": null,
         "versions": [],
         "upgrade": null,
         "downgrade": null
@@ -1258,21 +1198,6 @@
         "upgrade": 200991,
         "downgrade": null
     },
-    "Creeping Anxiety": {
-        "id": 300041,
-        "name_en": "Creeping Anxiety",
-        "desc_en": "Moderately decrease performance due to Trainer's anxiety.",
-        "icon_id": 10014,
-        "cost": null,
-        "eval_pt": 0,
-        "pt_ratio": 0.0,
-        "rarity": 1,
-        "inherited": false,
-        "community_tier": null,
-        "versions": [],
-        "upgrade": null,
-        "downgrade": null
-    },
     "Crusader": {
         "id": 201501,
         "name_en": "Crusader",
@@ -1500,21 +1425,6 @@
         "versions": [
             202171
         ],
-        "upgrade": null,
-        "downgrade": null
-    },
-    "Dream Run": {
-        "id": 300061,
-        "name_en": "Dream Run",
-        "desc_en": "Increase velocity on the final straight due to a strong desire to cross the finish line carrying everyone's hopes and dreams.",
-        "icon_id": 20012,
-        "cost": null,
-        "eval_pt": 0,
-        "pt_ratio": 0.0,
-        "rarity": 2,
-        "inherited": false,
-        "community_tier": null,
-        "versions": [],
         "upgrade": null,
         "downgrade": null
     },
@@ -2009,21 +1919,6 @@
         "upgrade": null,
         "downgrade": null
     },
-    "Feelin' a Bit Silly": {
-        "id": 1100011,
-        "name_en": "Feelin' a Bit Silly",
-        "desc_en": "Greatly decrease the racer's proficiency in starting races. Effects include slow starts and reduced starting acceleration. Removed at the end of the Career playthrough.",
-        "icon_id": 20064,
-        "cost": null,
-        "eval_pt": 0,
-        "pt_ratio": 0.0,
-        "rarity": 1,
-        "inherited": false,
-        "community_tier": null,
-        "versions": [],
-        "upgrade": null,
-        "downgrade": null
-    },
     "Festive Miracle": {
         "id": 910061,
         "name_en": "Festive Miracle",
@@ -2303,21 +2198,6 @@
         "rarity": 1,
         "inherited": true,
         "community_tier": 2,
-        "versions": [],
-        "upgrade": null,
-        "downgrade": null
-    },
-    "For the Team": {
-        "id": 300121,
-        "name_en": "For the Team",
-        "desc_en": "The whole team feels super determined to win this special race, greatly increasing performance.",
-        "icon_id": 10022,
-        "cost": null,
-        "eval_pt": 0,
-        "pt_ratio": 0.0,
-        "rarity": 2,
-        "inherited": false,
-        "community_tier": null,
         "versions": [],
         "upgrade": null,
         "downgrade": null
@@ -3136,21 +3016,6 @@
         "versions": [
             201582
         ],
-        "upgrade": null,
-        "downgrade": null
-    },
-    "Hoiya! Have a Good Run!": {
-        "id": 300081,
-        "name_en": "Hoiya! Have a Good Run!",
-        "desc_en": "Moderately increase Silence Suzuka's performance thanks to a charm that guarantees a satisfying run.",
-        "icon_id": 10021,
-        "cost": null,
-        "eval_pt": 0,
-        "pt_ratio": 0.0,
-        "rarity": 1,
-        "inherited": false,
-        "community_tier": null,
-        "versions": [],
         "upgrade": null,
         "downgrade": null
     },
@@ -4225,21 +4090,6 @@
         "upgrade": null,
         "downgrade": 201182
     },
-    "Long Race Enthusiast": {
-        "id": 1200021,
-        "name_en": "Long Race Enthusiast",
-        "desc_en": "Increase proficiency in Long Turf races. This skill is exclusive to the event.",
-        "icon_id": 10021,
-        "cost": null,
-        "eval_pt": 0,
-        "pt_ratio": 0.0,
-        "rarity": 1,
-        "inherited": false,
-        "community_tier": null,
-        "versions": [],
-        "upgrade": null,
-        "downgrade": null
-    },
     "Long Shot ○": {
         "id": 200302,
         "name_en": "Long Shot ○",
@@ -4476,21 +4326,6 @@
         "upgrade": null,
         "downgrade": 201112
     },
-    "Medium Race Enthusiast": {
-        "id": 1200011,
-        "name_en": "Medium Race Enthusiast",
-        "desc_en": "Increase proficiency in Medium Turf races. This skill is exclusive to the event.",
-        "icon_id": 10051,
-        "cost": null,
-        "eval_pt": 0,
-        "pt_ratio": 0.0,
-        "rarity": 1,
-        "inherited": false,
-        "community_tier": null,
-        "versions": [],
-        "upgrade": null,
-        "downgrade": null
-    },
     "Medium Straightaways ○": {
         "id": 201102,
         "name_en": "Medium Straightaways ○",
@@ -4596,21 +4431,6 @@
         ],
         "upgrade": null,
         "downgrade": 200682
-    },
-    "Mile Race Enthusiast": {
-        "id": 1200031,
-        "name_en": "Mile Race Enthusiast",
-        "desc_en": "Increase proficiency in Mile Turf races. This skill is exclusive to the event.",
-        "icon_id": 10031,
-        "cost": null,
-        "eval_pt": 0,
-        "pt_ratio": 0.0,
-        "rarity": 1,
-        "inherited": false,
-        "community_tier": null,
-        "versions": [],
-        "upgrade": null,
-        "downgrade": null
     },
     "Mile Straightaways ○": {
         "id": 201032,
@@ -6148,21 +5968,6 @@
         "upgrade": 200711,
         "downgrade": null
     },
-    "Ruler of Japan": {
-        "id": 300131,
-        "name_en": "Ruler of Japan",
-        "desc_en": "I'll tackle this with everything I've got!",
-        "icon_id": 20013,
-        "cost": null,
-        "eval_pt": 0,
-        "pt_ratio": 0.0,
-        "rarity": 5,
-        "inherited": false,
-        "community_tier": null,
-        "versions": [],
-        "upgrade": null,
-        "downgrade": null
-    },
     "Runaway": {
         "id": 202051,
         "name_en": "Runaway",
@@ -6467,21 +6272,6 @@
         "rarity": 1,
         "inherited": true,
         "community_tier": 0,
-        "versions": [],
-        "upgrade": null,
-        "downgrade": null
-    },
-    "Show Me What Lies Beyond!": {
-        "id": 300071,
-        "name_en": "Show Me What Lies Beyond!",
-        "desc_en": "Moderately increase Silence Suzuka's performance thanks to the desire to see her running reach new heights.",
-        "icon_id": 10011,
-        "cost": null,
-        "eval_pt": 0,
-        "pt_ratio": 0.0,
-        "rarity": 1,
-        "inherited": false,
-        "community_tier": null,
         "versions": [],
         "upgrade": null,
         "downgrade": null
@@ -7488,7 +7278,7 @@
         "pt_ratio": 1.81,
         "rarity": 2,
         "inherited": false,
-        "community_tier": null,
+        "community_tier": 0,
         "versions": [
             201611
         ],
@@ -7801,21 +7591,6 @@
         "upgrade": null,
         "downgrade": 201272
     },
-    "Towards the Scenery I Seek": {
-        "id": 300031,
-        "name_en": "Towards the Scenery I Seek",
-        "desc_en": "Moderately increase performance in pursuit of that long sought-after scenery.",
-        "icon_id": 10011,
-        "cost": null,
-        "eval_pt": 0,
-        "pt_ratio": 0.0,
-        "rarity": 1,
-        "inherited": false,
-        "community_tier": null,
-        "versions": [],
-        "upgrade": null,
-        "downgrade": null
-    },
     "Trackblazer": {
         "id": 200711,
         "name_en": "Trackblazer",
@@ -7960,36 +7735,6 @@
         ],
         "upgrade": null,
         "downgrade": 201592
-    },
-    "Unchanging": {
-        "id": 300021,
-        "name_en": "Unchanging",
-        "desc_en": "Greatly increase performance with the same ambition of days past.",
-        "icon_id": 10012,
-        "cost": null,
-        "eval_pt": 0,
-        "pt_ratio": 0.0,
-        "rarity": 2,
-        "inherited": false,
-        "community_tier": null,
-        "versions": [],
-        "upgrade": null,
-        "downgrade": null
-    },
-    "Unquenched Thirst": {
-        "id": 300011,
-        "name_en": "Unquenched Thirst",
-        "desc_en": "Moderately increase performance with the desire to race.",
-        "icon_id": 10021,
-        "cost": null,
-        "eval_pt": 0,
-        "pt_ratio": 0.0,
-        "rarity": 1,
-        "inherited": false,
-        "community_tier": null,
-        "versions": [],
-        "upgrade": null,
-        "downgrade": null
     },
     "Unrestrained": {
         "id": 200551,
@@ -8349,7 +8094,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "inherited": true,
-        "community_tier": null,
+        "community_tier": 1,
         "versions": [],
         "upgrade": null,
         "downgrade": null

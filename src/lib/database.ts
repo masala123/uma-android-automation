@@ -35,7 +35,7 @@ export interface DatabaseSkill {
     name_en: string
     desc_en: string
     icon_id: number
-    cost: number | null
+    cost: number
     eval_pt: number
     pt_ratio: number
     rarity: number
@@ -213,7 +213,7 @@ export class DatabaseManager {
                     name_en TEXT NOT NULL,
                     desc_en TEXT NOT NULL,
                     icon_id INTEGER NOT NULL,
-                    cost INTEGER,
+                    cost INTEGER NOT NULL,
                     eval_pt INTEGER NOT NULL,
                     pt_ratio REAL NOT NULL,
                     rarity INTEGER NOT NULL,

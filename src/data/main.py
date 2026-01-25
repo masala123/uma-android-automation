@@ -668,6 +668,10 @@ class SkillScraper(BaseScraper):
                     skill_inherited = skill["gene_version"].get("inherited", False)
                     skill_cost = skill["gene_version"].get("cost", None)
 
+                if skill_cost is None:
+                    logging.warning(f"Dropping skill with invalid COST: {skill_name_en}")
+                    continue
+
                 extra_data = skill_evaluation_points.get(
                     skill_id,
                     {"evaluation_points": 0, "point_ratio": 0.0},

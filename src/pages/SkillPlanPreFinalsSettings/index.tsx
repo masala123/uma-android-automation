@@ -19,7 +19,7 @@ interface Skill {
     name_en: string
     desc_en: string
     icon_id: number
-    cost: number | null
+    cost: number
     eval_pt: number
     pt_ratio: number
     rarity: number
