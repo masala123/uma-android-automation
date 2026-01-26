@@ -655,6 +655,7 @@ class SkillScraper(BaseScraper):
                 skill_desc_en = skill["desc_en"]
                 skill_iconid = skill["iconid"]
                 skill_rarity = skill["rarity"]
+                skill_condition = skill.get("condition_groups", [{}])[0].get("condition", "")
                 skill_inherited = False
                 skill_cost = skill.get("cost", None)
                 # For inherited unique skills, we actually want the
@@ -665,6 +666,7 @@ class SkillScraper(BaseScraper):
                     skill_desc_en = skill["gene_version"]["desc_en"]
                     skill_iconid = skill["gene_version"]["iconid"]
                     skill_rarity = skill["gene_version"]["rarity"]
+                    skill_condition = skill["gene_version"].get("condition_groups", [{}])[0].get("condition", "")
                     skill_inherited = skill["gene_version"].get("inherited", False)
                     skill_cost = skill["gene_version"].get("cost", None)
 
@@ -707,6 +709,7 @@ class SkillScraper(BaseScraper):
                     "eval_pt": extra_data["evaluation_points"],
                     "pt_ratio": extra_data["point_ratio"],
                     "rarity": skill_rarity,
+                    "condition": skill_condition,
                     "inherited": skill_inherited,
                     "community_tier": community_tier,
                     "versions": sorted(skill.get("versions", [])),
