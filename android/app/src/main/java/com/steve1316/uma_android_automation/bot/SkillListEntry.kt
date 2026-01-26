@@ -24,7 +24,6 @@ import com.steve1316.uma_android_automation.utils.types.Aptitude
 class SkillListEntry(
     private val game: Game,
     val skillData: SkillData,
-    var screenPrice: Int = 0,
     var bIsObtained: Boolean = false,
     var bIsVirtual: Boolean = false,
     // Pointers for linked-list style navigation.
@@ -55,8 +54,18 @@ class SkillListEntry(
 
     val name: String = skillData.name
 
+    // Skills can't be cheaper than their max discount.
     private val minScreenPrice: Int = (skillData.cost * (1.0 - DISCOUNT_VALUES.last())).roundToInt()
-
+    // For skills that aren't in-place upgradable, their screen price also includes any
+    // previous unpurchased versions prices. The skillData.cost that we scraped does not
+    // account for this and is only the price of the skill if its upgrades have all
+    // been purchased. Double this cost is a safe margin of error since no lower
+    // versions are more expensive than their upgraded variant.
+    private val maxScreenPrice: Int = if (skillData.bIsInPlace) skillData.cost else skillData.cost * 2
+    // This is the price tag shown on the screen for the skill.
+    // NOTE: We need to make sure to call updateScreenPrice() after fully
+    // setting up the entire upgrade chain linked list.
+    var screenPrice: Int = maxScreenPrice
     // Copy of the screen price that is only ever modified in `updateScreenPrice`.
     // We use this so that we have a baseline for what the screen price was
     // when we originally read it with OCR.
@@ -107,11 +116,6 @@ class SkillListEntry(
         get() = skillData.cost
 
     init {
-        if (screenPrice < minScreenPrice || screenPrice > skillData.cost) {
-            screenPrice = skillData.cost
-            originalScreenPrice = screenPrice
-        }
-
         // Update linked list pointers if they were passed in.
         val prev: SkillListEntry? = prev
         if (prev != null) {
@@ -195,20 +199,27 @@ class SkillListEntry(
         return evaluationPoints.toDouble() / screenPrice.toDouble()
     }
 
+    private fun clampValueForScreenPrice(value: Int): Int {
+        if (value in minScreenPrice..maxScreenPrice) {
+            return value
+        }
+
+        if (bIsInPlace || prev == null) {
+            return skillData.cost
+        }
+
+        return if (prev.bIsObtained) skillData.cost else skillData.cost * 2
+    }
+
     /** Manually set the screen price.
      *
      * This also updates the `originalScreenPrice` which is not modified
      * anywhere else.
      */
     fun updateScreenPrice(value: Int) {
-        // If price is 
-        if (value < minScreenPrice || value > skillData.cost) {
-            screenPrice = skillData.cost
-            originalScreenPrice = screenPrice
-        } else {
-            screenPrice = value
-            originalScreenPrice = value
-        }
+        val clampedValue: Int = clampValueForScreenPrice(value)
+        screenPrice = clampedValue
+        originalScreenPrice = clampedValue
 
         // Need to manually push changes to other in-place versions.
         if (bIsInPlace) {
