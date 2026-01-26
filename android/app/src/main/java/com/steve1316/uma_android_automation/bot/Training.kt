@@ -694,9 +694,12 @@ class Training(private val game: Game) {
         }
         val isWithinRegularThreshold = failureChance <= maximumFailureChance
         val isWithinRiskyThreshold = enableRiskyTraining && failureChance <= riskyTrainingMaxFailureChance
-        if (test || isWithinRegularThreshold || isWithinRiskyThreshold) {
+        val isFinals = game.checkFinals()
+        if (test || isWithinRegularThreshold || isWithinRiskyThreshold || isFinals) {
             if (!test) {
-                if (isWithinRegularThreshold) {
+                if (isFinals) {
+                    MessageLog.i(TAG, "[TRAINING] $failureChance% exceeds thresholds but it is the Finals. Ignoring and proceeding to acquire all other percentages and total stat increases...")
+                } else if (isWithinRegularThreshold) {
                     MessageLog.i(TAG, "[TRAINING] $failureChance% within acceptable range of ${maximumFailureChance}%. Proceeding to acquire all other percentages and total stat increases...")
                 } else if (isWithinRiskyThreshold) {
                     MessageLog.i(TAG, "[TRAINING] $failureChance% exceeds regular threshold (${maximumFailureChance}%) but is within risky training threshold (${riskyTrainingMaxFailureChance}%). Proceeding to acquire all other percentages and total stat increases...")
