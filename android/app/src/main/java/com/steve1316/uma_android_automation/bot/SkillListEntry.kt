@@ -204,6 +204,7 @@ class SkillListEntry(
             return value
         }
 
+        val prev: SkillListEntry? = prev
         if (bIsInPlace || prev == null) {
             return skillData.cost
         }
