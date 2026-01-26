@@ -163,12 +163,12 @@ const RacingSettings = () => {
                     <Text style={styles.inputLabel}>Track Surface Override</Text>
                     <CustomSelect
                         options={[
-                            { value: "turf", label: "Front Runner" },
-                            { value: "dirt", label: "Pace Chaser" },
+                            { value: "turf", label: "Turf" },
+                            { value: "dirt", label: "Dirt" },
                             { value: "disabled", label: "Disabled" },
                         ]}
                         value={preferredTrackSurface}
-                        onValueChange={(value) => updateSkillsSetting("preferredRunningStyle", value)}
+                        onValueChange={(value) => updateSkillsSetting("preferredTrackSurface", value)}
                         placeholder="Select Track Surface"
                     />
                     <Text style={styles.inputDescription}>Overrides the preferred track surface when determining which skills to purchase.</Text>
