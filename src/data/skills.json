@@ -9,6 +9,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "distance_rate>=50&distance_rate<=65&order>=2&order_rate<=50&change_order_onetime<0",
+        "precondition": "",
         "inherited": true,
         "community_tier": 2,
         "versions": [],
@@ -25,6 +26,7 @@
         "pt_ratio": 1.81,
         "rarity": 1,
         "condition": "running_style==3&up_slope_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -43,6 +45,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_finalcorner==1&corner!=0&distance_diff_top>=7",
+        "precondition": "",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -59,6 +62,7 @@
         "pt_ratio": 1.39,
         "rarity": 2,
         "condition": "running_style==3&up_slope_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -77,6 +81,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_finalcorner==1&blocked_side_continuetime>=2&order<=3",
+        "precondition": "",
         "inherited": true,
         "community_tier": 2,
         "versions": [],
@@ -93,6 +98,7 @@
         "pt_ratio": 0.0,
         "rarity": 1,
         "condition": "always==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [],
@@ -109,6 +115,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "distance_rate>=50&activate_count_heal>=1&order<=3",
+        "precondition": "",
         "inherited": true,
         "community_tier": 0,
         "versions": [],
@@ -125,6 +132,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_last_straight==1&bashin_diff_behind<=1",
+        "precondition": "",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -141,6 +149,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_last_straight==1&blocked_side_continuetime>=2",
+        "precondition": "",
         "inherited": true,
         "community_tier": 3,
         "versions": [],
@@ -157,6 +166,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "running_style==3&phase_random==1&order_rate>=40",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -175,6 +185,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==2&distance_rate>=50&change_order_onetime<0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -193,6 +204,7 @@
         "pt_ratio": 1.49,
         "rarity": 2,
         "condition": "distance_type==1&phase_random==0&order_rate<=50&accumulatetime>=5",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -211,6 +223,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==4&hp_per<=30",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -229,6 +242,7 @@
         "pt_ratio": 1.28,
         "rarity": 1,
         "condition": "running_style==4&slope==2&accumulatetime>=10",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -247,6 +261,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "remain_distance<=299&remain_distance>=295&order<=2&slope==0@remain_distance<=299&remain_distance>=295&order<=2&slope==2",
+        "precondition": "remain_distance<=305&remain_distance>=300&slope==1",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -263,6 +278,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==3&is_last_straight==1&order_rate>=20&order_rate<=60&phase>=2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -281,6 +297,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "running_style==3&phase_random==2&order_rate>50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -299,6 +316,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "remain_distance<=300&order_rate<=40&bashin_diff_infront<=1",
+        "precondition": "",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -315,6 +333,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "distance_rate>=50&distance_rate<=60&order_rate>50",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -331,6 +350,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "phase>=2&corner!=0&order==1",
+        "precondition": "",
         "inherited": true,
         "community_tier": 0,
         "versions": [],
@@ -347,6 +367,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_finalcorner==1",
+        "precondition": "phase>=2&order_rate<=50&overtake_target_time>=2",
         "inherited": true,
         "community_tier": 2,
         "versions": [],
@@ -363,6 +384,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "remain_distance<=401&remain_distance>=399&order_rate<=40&activate_count_all>=7",
+        "precondition": "",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -379,6 +401,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==2&phase_random==0&order_rate>50&accumulatetime>=3",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -397,6 +420,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "running_style==3&phase_laterhalf_random==0&order_rate>=40",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -415,6 +439,7 @@
         "pt_ratio": 1.49,
         "rarity": 2,
         "condition": "straight_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -433,6 +458,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_last_straight==1&change_order_up_end_after>=3",
+        "precondition": "",
         "inherited": true,
         "community_tier": 0,
         "versions": [],
@@ -449,6 +475,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "remain_distance>=401&phase>=2&is_finalcorner==1&order_rate>=20&order_rate<=40",
+        "precondition": "",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -465,6 +492,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "distance_type==4&is_finalcorner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [],
@@ -481,6 +509,7 @@
         "pt_ratio": 1.39,
         "rarity": 2,
         "condition": "distance_type==2&is_overtake==1&accumulatetime>=5",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -499,6 +528,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "distance_type==4&straight_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -518,6 +548,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_finalcorner==1&corner!=0&order>=3&change_order_onetime<0",
+        "precondition": "",
         "inherited": true,
         "community_tier": 2,
         "versions": [],
@@ -534,6 +565,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==1&phase_random==2&order_rate>50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -552,6 +584,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_last_straight==1",
+        "precondition": "phase>=2&order<=4&change_order_onetime<0",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -568,6 +601,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "distance_rate>=50&order_rate>=40&overtake_target_time>=2",
+        "precondition": "",
         "inherited": true,
         "community_tier": 2,
         "versions": [],
@@ -584,6 +618,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "phase>=2&corner==0&order<=2&straight_front_type==2",
+        "precondition": "",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -600,6 +635,7 @@
         "pt_ratio": 1.49,
         "rarity": 2,
         "condition": "phase==1&corner==0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -618,6 +654,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "phase>=2&is_finalcorner_laterhalf==1&order>=3&order_rate<=40@phase>=2&is_finalcorner==1&corner==0&order>=3&order_rate<=40",
+        "precondition": "phase==1&blocked_side_continuetime>=2&corner!=0",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -634,6 +671,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==3&phase==1&order_rate<=80&order_rate>=30&blocked_side_continuetime>=2",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -652,6 +690,7 @@
         "pt_ratio": 1.58,
         "rarity": 2,
         "condition": "phase_random==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -670,6 +709,7 @@
         "pt_ratio": 1.58,
         "rarity": 2,
         "condition": "phase_random==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -688,6 +728,7 @@
         "pt_ratio": 1.58,
         "rarity": 2,
         "condition": "phase_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -706,6 +747,7 @@
         "pt_ratio": 1.58,
         "rarity": 2,
         "condition": "phase_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -724,6 +766,7 @@
         "pt_ratio": 1.58,
         "rarity": 2,
         "condition": "phase_random==0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -742,6 +785,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "temptation_count==0&remain_distance<=201&remain_distance>=199&order>=4&order_rate<=70",
+        "precondition": "",
         "inherited": true,
         "community_tier": 3,
         "versions": [],
@@ -758,6 +802,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "running_style==2&phase_laterhalf_random==0&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -776,6 +821,7 @@
         "pt_ratio": 1.28,
         "rarity": 1,
         "condition": "phase==1&is_surrounded==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -794,6 +840,7 @@
         "pt_ratio": 1.39,
         "rarity": 2,
         "condition": "phase_random==0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -812,6 +859,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_last_straight==1",
+        "precondition": "is_finalcorner==1&is_overtake==1&order<=5&order_rate<=50&overtake_target_no_order_up_time>=2",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -828,6 +876,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==2&phase_random==1&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -846,6 +895,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "distance_rate>=50&order_rate>=40&order_rate<=70",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -862,6 +912,7 @@
         "pt_ratio": -0.52,
         "rarity": 1,
         "condition": "track_id==10007",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -881,6 +932,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "track_id==10007",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -900,6 +952,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "track_id==10007",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -919,6 +972,7 @@
         "pt_ratio": 1.52,
         "rarity": 2,
         "condition": "distance_type==3&phase_random==0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -937,6 +991,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "distance_rate>=50&order<=3&blocked_side_continuetime>=2",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -953,6 +1008,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "phase_random==1&order>=2&order_rate<=40",
+        "precondition": "",
         "inherited": true,
         "community_tier": 0,
         "versions": [],
@@ -969,6 +1025,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "weather==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -987,6 +1044,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "weather==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -1005,6 +1063,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==3&is_last_straight==1&order_rate>=20&order_rate<=60&phase>=2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -1023,6 +1082,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "running_style_count_same_rate>=40",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -1042,6 +1102,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "running_style_count_same_rate>=40",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -1061,6 +1122,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "always==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -1080,6 +1142,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_finalcorner==1&corner!=0&is_overtake==1&order>=4&order_rate<=75",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -1096,6 +1159,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==4&phase_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -1114,6 +1178,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_last_straight==1&hp_per>=30&order<=2",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -1130,6 +1195,7 @@
         "pt_ratio": -0.57,
         "rarity": 1,
         "condition": "all_corner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -1149,6 +1215,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "all_corner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -1168,6 +1235,7 @@
         "pt_ratio": -0.57,
         "rarity": 1,
         "condition": "all_corner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -1187,6 +1255,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "all_corner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -1206,6 +1275,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "all_corner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -1225,6 +1295,7 @@
         "pt_ratio": -0.6,
         "rarity": 1,
         "condition": "corner_random==1@corner_random==2@corner_random==3@corner_random==4",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -1244,6 +1315,7 @@
         "pt_ratio": 1.28,
         "rarity": 1,
         "condition": "corner_random==1@corner_random==2@corner_random==3@corner_random==4",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -1263,6 +1335,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==1&phase_laterhalf_random==1&order>=2&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -1281,6 +1354,7 @@
         "pt_ratio": 1.52,
         "rarity": 2,
         "condition": "running_style==4&phase_random==2&order_rate>50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -1299,6 +1373,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "order>=3&order_rate<=50&remain_distance<=200&bashin_diff_infront<=1@order>=3&order_rate<=50&remain_distance<=200&bashin_diff_behind<=1",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -1315,6 +1390,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_finalcorner==1&corner!=0&order_rate>=30&order_rate<=70&blocked_side_continuetime>=2",
+        "precondition": "",
         "inherited": true,
         "community_tier": 3,
         "versions": [],
@@ -1331,6 +1407,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "running_style==4&phase_random==1&order_rate>=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -1349,6 +1426,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "running_style==3&distance_rate_after_random==50&order_rate>=30&order_rate<=80",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -1367,6 +1445,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "phase==1&order>=2&order_rate<=80&activate_count_middle>=2",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -1383,6 +1462,7 @@
         "pt_ratio": 1.52,
         "rarity": 2,
         "condition": "running_style==2&phase_random==2&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -1401,6 +1481,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==4&phase_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -1419,6 +1500,7 @@
         "pt_ratio": -2.62,
         "rarity": 1,
         "condition": "last_straight_random==1&distance_diff_rate>=75",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [],
@@ -1435,6 +1517,7 @@
         "pt_ratio": 1.39,
         "rarity": 2,
         "condition": "running_style==2&down_slope_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -1453,6 +1536,7 @@
         "pt_ratio": 0.77,
         "rarity": 1,
         "condition": "running_style==2&phase_random==2&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -1471,6 +1555,7 @@
         "pt_ratio": 1.17,
         "rarity": 1,
         "condition": "running_style==1&phase==0&blocked_front_continuetime>=1@running_style==1&phase==0&blocked_side_continuetime>=1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -1489,6 +1574,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==3&phase_random==2&order_rate>50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -1507,6 +1593,7 @@
         "pt_ratio": 1.28,
         "rarity": 1,
         "condition": "down_slope_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -1525,6 +1612,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "phase>=2&is_finalcorner==1&corner!=0&is_activate_any_skill==1",
+        "precondition": "track_id==10005",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -1541,6 +1629,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==3&phase_random==1&order_rate>=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -1559,6 +1648,7 @@
         "pt_ratio": 1.81,
         "rarity": 1,
         "condition": "running_style==1&phase==0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -1577,6 +1667,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "running_style==4&phase_random==1&order_rate>=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -1595,6 +1686,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==3&phase_random==1&order_rate>=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -1613,6 +1705,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_finalcorner==1&corner!=0&order>=3&change_order_onetime<0",
+        "precondition": "",
         "inherited": true,
         "community_tier": 2,
         "versions": [],
@@ -1629,6 +1722,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "running_style==4&is_lastspurt==1&corner==0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -1647,6 +1741,7 @@
         "pt_ratio": 1.67,
         "rarity": 1,
         "condition": "running_style==4&all_corner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -1666,6 +1761,7 @@
         "pt_ratio": 0.97,
         "rarity": 1,
         "condition": "running_style==4&all_corner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -1685,6 +1781,7 @@
         "pt_ratio": 1.58,
         "rarity": 1,
         "condition": "running_style==4",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -1703,6 +1800,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "running_style==4",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -1721,6 +1819,7 @@
         "pt_ratio": 1.67,
         "rarity": 1,
         "condition": "running_style==4&straight_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -1740,6 +1839,7 @@
         "pt_ratio": 0.97,
         "rarity": 1,
         "condition": "running_style==4&straight_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -1759,6 +1859,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "running_style==1&phase_random==1&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -1777,6 +1878,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_last_straight_onetime==1&order>=2&order<=5&distance_diff_top<=5",
+        "precondition": "",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -1793,6 +1895,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "phase==1&order>=3&order_rate<=50&is_overtake==1",
+        "precondition": "",
         "inherited": true,
         "community_tier": 2,
         "versions": [],
@@ -1809,6 +1912,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "phase==1&order>=2&order_rate<=50",
+        "precondition": "",
         "inherited": true,
         "community_tier": 2,
         "versions": [],
@@ -1825,6 +1929,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==4&hp_per<=30",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -1843,6 +1948,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "distance_rate>=50&order>=2&order_rate<=40&blocked_side_continuetime>=2",
+        "precondition": "",
         "inherited": true,
         "community_tier": 2,
         "versions": [],
@@ -1859,6 +1965,7 @@
         "pt_ratio": 1.4,
         "rarity": 2,
         "condition": "season==3",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -1879,6 +1986,7 @@
         "pt_ratio": -0.34,
         "rarity": 1,
         "condition": "season==3",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -1899,6 +2007,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "season==3",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -1919,6 +2028,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "season==3",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -1939,6 +2049,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "ground_type==2&phase_random==1&order_rate>=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -1957,6 +2068,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "running_style==3&phase_random==1&order_rate>=40",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -1975,6 +2087,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "running_style==1&phase_random==1&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -1993,6 +2106,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "running_style==3&distance_rate_after_random==50&order_rate>=30&order_rate<=80",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -2011,6 +2125,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==4&phase_laterhalf_random==1&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -2029,6 +2144,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "phase>=2&corner!=0&order_rate>=65&order_rate<=70",
+        "precondition": "",
         "inherited": true,
         "community_tier": 0,
         "versions": [],
@@ -2045,6 +2161,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "activate_count_heal>=3&distance_rate>=50",
+        "precondition": "",
         "inherited": true,
         "community_tier": 0,
         "versions": [],
@@ -2061,6 +2178,7 @@
         "pt_ratio": 1.81,
         "rarity": 1,
         "condition": "running_style==3&is_overtake==1&accumulatetime>=5",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -2079,6 +2197,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==3&phase==1&order_rate<=80&order_rate>=30&blocked_side_continuetime>=2",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -2097,6 +2216,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "running_style==1&is_finalcorner_random==1&order==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -2115,6 +2235,7 @@
         "pt_ratio": -0.34,
         "rarity": 1,
         "condition": "ground_condition==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -2135,6 +2256,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "ground_condition==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -2155,6 +2277,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "ground_condition==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -2175,6 +2298,7 @@
         "pt_ratio": 1.4,
         "rarity": 2,
         "condition": "ground_condition==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -2195,6 +2319,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "distance_type==3&straight_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -2214,6 +2339,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_finalcorner==1&blocked_side_continuetime>=2&order<=3",
+        "precondition": "",
         "inherited": true,
         "community_tier": 2,
         "versions": [],
@@ -2230,6 +2356,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_finalcorner==1&order_rate<=40&change_order_onetime<0",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -2246,6 +2373,7 @@
         "pt_ratio": 1.67,
         "rarity": 1,
         "condition": "running_style_count_oikomi_otherself>=1&phase_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [],
@@ -2262,6 +2390,7 @@
         "pt_ratio": 1.67,
         "rarity": 1,
         "condition": "running_style_count_nige_otherself>=1&phase_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [],
@@ -2278,6 +2407,7 @@
         "pt_ratio": 1.67,
         "rarity": 1,
         "condition": "running_style_count_sashi_otherself>=1&phase_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [],
@@ -2294,6 +2424,7 @@
         "pt_ratio": 1.67,
         "rarity": 1,
         "condition": "running_style_count_senko_otherself>=1&phase_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [],
@@ -2310,6 +2441,7 @@
         "pt_ratio": 0.92,
         "rarity": 1,
         "condition": "always==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -2329,6 +2461,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_last_straight==1&change_order_onetime<0&order>=3",
+        "precondition": "",
         "inherited": true,
         "community_tier": 2,
         "versions": [],
@@ -2345,6 +2478,7 @@
         "pt_ratio": 1.24,
         "rarity": 1,
         "condition": "ground_type==2&phase_random==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -2363,6 +2497,7 @@
         "pt_ratio": 1.28,
         "rarity": 1,
         "condition": "distance_type==4&phase_firsthalf_random==1&order_rate>=40&order_rate<=80",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -2381,6 +2516,7 @@
         "pt_ratio": 1.34,
         "rarity": 1,
         "condition": "running_style_temptation_opponent_count_oikomi>=1&is_temptation==0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [],
@@ -2397,6 +2533,7 @@
         "pt_ratio": 1.34,
         "rarity": 1,
         "condition": "running_style_temptation_opponent_count_nige>=1&is_temptation==0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [],
@@ -2413,6 +2550,7 @@
         "pt_ratio": 1.34,
         "rarity": 1,
         "condition": "running_style_temptation_opponent_count_sashi>=1&is_temptation==0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [],
@@ -2429,6 +2567,7 @@
         "pt_ratio": 1.34,
         "rarity": 1,
         "condition": "running_style_temptation_opponent_count_senko>=1&is_temptation==0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [],
@@ -2445,6 +2584,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==3&phase_firsthalf_random==2&order_rate>=40",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -2463,6 +2603,7 @@
         "pt_ratio": 1.67,
         "rarity": 1,
         "condition": "running_style==1&all_corner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -2482,6 +2623,7 @@
         "pt_ratio": 0.97,
         "rarity": 1,
         "condition": "running_style==1&all_corner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -2501,6 +2643,7 @@
         "pt_ratio": 1.58,
         "rarity": 1,
         "condition": "running_style==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -2519,6 +2662,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "running_style==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -2537,6 +2681,7 @@
         "pt_ratio": 1.67,
         "rarity": 1,
         "condition": "running_style==1&straight_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -2556,6 +2701,7 @@
         "pt_ratio": 0.97,
         "rarity": 1,
         "condition": "running_style==1&straight_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -2575,6 +2721,7 @@
         "pt_ratio": -0.65,
         "rarity": 1,
         "condition": "track_id==10004",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -2594,6 +2741,7 @@
         "pt_ratio": 1.84,
         "rarity": 1,
         "condition": "track_id==10004",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -2613,6 +2761,7 @@
         "pt_ratio": 1.09,
         "rarity": 1,
         "condition": "track_id==10004",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -2632,6 +2781,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "running_style==3&phase_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -2650,6 +2800,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==2&is_finalcorner_random==1&order_rate>=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -2668,6 +2819,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==2&phase_random==2&order_rate>50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -2686,6 +2838,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_badstart==0&order<=3&is_last_straight==1&order_rate_in20_continue==1",
+        "precondition": "",
         "inherited": true,
         "community_tier": 2,
         "versions": [],
@@ -2702,6 +2855,7 @@
         "pt_ratio": -2.58,
         "rarity": 1,
         "condition": "grade==100",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [],
@@ -2718,6 +2872,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==1&phase_random==2&order_rate>50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -2736,6 +2891,7 @@
         "pt_ratio": -0.5,
         "rarity": 1,
         "condition": "always==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -2755,6 +2911,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "distance_rate>=50&order<=3&blocked_side_continuetime>=2",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -2771,6 +2928,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_last_straight==1&order<=4&bashin_diff_infront<=1",
+        "precondition": "",
         "inherited": true,
         "community_tier": 2,
         "versions": [],
@@ -2787,6 +2945,7 @@
         "pt_ratio": 1.31,
         "rarity": 1,
         "condition": "distance_rate_after_random==50",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -2805,6 +2964,7 @@
         "pt_ratio": 1.07,
         "rarity": 1,
         "condition": "phase_random==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -2823,6 +2983,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "distance_rate>=50&phase==1&order>=3&order_rate<=70",
+        "precondition": "",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -2839,6 +3000,7 @@
         "pt_ratio": 1.49,
         "rarity": 2,
         "condition": "running_style==4&slope==2&accumulatetime>=10",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -2857,6 +3019,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "running_style==2&phase_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -2875,6 +3038,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_last_straight==1&order_rate>=40&order_rate<=70&popularity>=4",
+        "precondition": "is_finalcorner==1&change_order_onetime<0",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -2891,6 +3055,7 @@
         "pt_ratio": 1.44,
         "rarity": 2,
         "condition": "distance_type==2&phase_random==1&order<=3",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -2909,6 +3074,7 @@
         "pt_ratio": 2.17,
         "rarity": 1,
         "condition": "activate_count_start>=3",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -2927,6 +3093,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "change_order_up_finalcorner_after>=2&is_last_straight==1",
+        "precondition": "",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -2943,6 +3110,7 @@
         "pt_ratio": -0.65,
         "rarity": 1,
         "condition": "track_id==10002",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -2962,6 +3130,7 @@
         "pt_ratio": 1.84,
         "rarity": 1,
         "condition": "track_id==10002",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -2981,6 +3150,7 @@
         "pt_ratio": 1.09,
         "rarity": 1,
         "condition": "track_id==10002",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -3000,6 +3170,7 @@
         "pt_ratio": -0.52,
         "rarity": 1,
         "condition": "track_id==10009",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -3019,6 +3190,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "track_id==10009",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -3038,6 +3210,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "track_id==10009",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -3057,6 +3230,7 @@
         "pt_ratio": 1.39,
         "rarity": 2,
         "condition": "running_style==3&is_overtake==1&accumulatetime>=5",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -3075,6 +3249,7 @@
         "pt_ratio": 1.17,
         "rarity": 1,
         "condition": "distance_type==3&phase_random==0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -3093,6 +3268,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "running_style==2&phase_firsthalf_random==2&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -3111,6 +3287,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==4&phase_laterhalf_random==1&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -3129,6 +3306,7 @@
         "pt_ratio": 1.67,
         "rarity": 1,
         "condition": "running_style_count_oikomi_otherself>=1&phase_random==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [],
@@ -3145,6 +3323,7 @@
         "pt_ratio": 1.67,
         "rarity": 1,
         "condition": "running_style_count_nige_otherself>=1&phase_random==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [],
@@ -3161,6 +3340,7 @@
         "pt_ratio": 1.67,
         "rarity": 1,
         "condition": "running_style_count_sashi_otherself>=1&phase_random==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [],
@@ -3177,6 +3357,7 @@
         "pt_ratio": 1.67,
         "rarity": 1,
         "condition": "running_style_count_senko_otherself>=1&phase_random==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [],
@@ -3193,6 +3374,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "up_slope_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -3211,6 +3393,7 @@
         "pt_ratio": 1.28,
         "rarity": 1,
         "condition": "is_lastspurt==1&phase_firsthalf_random==3",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -3229,6 +3412,7 @@
         "pt_ratio": 1.54,
         "rarity": 1,
         "condition": "distance_type==1&phase==1&bashin_diff_behind>=3&order==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -3247,6 +3431,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "running_style==2&phase_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -3265,6 +3450,7 @@
         "pt_ratio": 0.77,
         "rarity": 1,
         "condition": "running_style==4&is_move_lane==1@running_style==4&is_move_lane==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -3283,6 +3469,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "phase>=2&order==3&bashin_diff_behind<=1",
+        "precondition": "",
         "inherited": true,
         "community_tier": 3,
         "versions": [],
@@ -3299,6 +3486,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "phase>=2&change_order_onetime<0",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -3315,6 +3503,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "phase>=2&order>=3&blocked_front==1",
+        "precondition": "",
         "inherited": true,
         "community_tier": 3,
         "versions": [],
@@ -3331,6 +3520,7 @@
         "pt_ratio": 1.31,
         "rarity": 1,
         "condition": "phase_random==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -3349,6 +3539,7 @@
         "pt_ratio": 1.31,
         "rarity": 1,
         "condition": "phase_random==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -3367,6 +3558,7 @@
         "pt_ratio": 1.31,
         "rarity": 1,
         "condition": "phase_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -3385,6 +3577,7 @@
         "pt_ratio": 1.31,
         "rarity": 1,
         "condition": "phase_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -3403,6 +3596,7 @@
         "pt_ratio": 1.31,
         "rarity": 1,
         "condition": "phase_random==0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -3421,6 +3615,7 @@
         "pt_ratio": 1.52,
         "rarity": 2,
         "condition": "distance_type==4&phase_random==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -3439,6 +3634,7 @@
         "pt_ratio": 1.49,
         "rarity": 2,
         "condition": "is_lastspurt==1&phase_firsthalf_random==3",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -3457,6 +3653,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==1&phase_laterhalf_random==1&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -3475,6 +3672,7 @@
         "pt_ratio": 1.49,
         "rarity": 2,
         "condition": "phase==1&change_order_onetime>0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -3493,6 +3691,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==4&is_finalcorner==1&corner!=0&lane_type==0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -3511,6 +3710,7 @@
         "pt_ratio": -0.52,
         "rarity": 1,
         "condition": "post_number<=3",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -3530,6 +3730,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "post_number<=3",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -3549,6 +3750,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "post_number<=3",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -3568,6 +3770,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==4&is_finalcorner==1&corner!=0&lane_type==0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -3586,6 +3789,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "running_style==4&phase_random==2&order>=2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -3604,6 +3808,7 @@
         "pt_ratio": 1.54,
         "rarity": 1,
         "condition": "distance_type==1&phase_random==0&order_rate<=50&accumulatetime>=5",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -3622,6 +3827,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "distance_rate>=50&corner!=0&order>=3&order_rate<=40",
+        "precondition": "",
         "inherited": true,
         "community_tier": 0,
         "versions": [],
@@ -3638,6 +3844,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "phase<=1&accumulatetime>=5&blocked_front_continuetime>=1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -3656,6 +3863,7 @@
         "pt_ratio": 1.49,
         "rarity": 2,
         "condition": "phase==1&change_order_onetime<0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -3674,6 +3882,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "distance_diff_top<=5&order>=2&order_rate<=40&remain_distance<=201&remain_distance>=199",
+        "precondition": "",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -3690,6 +3899,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "phase>=2&order==3&bashin_diff_behind<=1",
+        "precondition": "",
         "inherited": true,
         "community_tier": 3,
         "versions": [],
@@ -3706,6 +3916,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "distance_rate>=50&order_rate>=40&order_rate<=80&is_overtake==1",
+        "precondition": "",
         "inherited": true,
         "community_tier": 2,
         "versions": [],
@@ -3722,6 +3933,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==2&phase_laterhalf_random==0&order_rate>50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -3740,6 +3952,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "running_style==3&phase_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -3758,6 +3971,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "distance_rate>=50&order_rate_in20_continue==1",
+        "precondition": "",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -3774,6 +3988,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==4&phase_random==1&bashin_diff_behind>=1&order==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -3792,6 +4007,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==3&phase_random==1&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -3810,6 +4026,7 @@
         "pt_ratio": -0.65,
         "rarity": 1,
         "condition": "track_id==10010",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -3829,6 +4046,7 @@
         "pt_ratio": 1.84,
         "rarity": 1,
         "condition": "track_id==10010",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -3848,6 +4066,7 @@
         "pt_ratio": 1.09,
         "rarity": 1,
         "condition": "track_id==10010",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -3867,6 +4086,7 @@
         "pt_ratio": -0.34,
         "rarity": 1,
         "condition": "track_id==10008",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -3887,6 +4107,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "track_id==10008",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -3907,6 +4128,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "track_id==10008",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -3927,6 +4149,7 @@
         "pt_ratio": 1.39,
         "rarity": 2,
         "condition": "phase_random==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -3945,6 +4168,7 @@
         "pt_ratio": 1.67,
         "rarity": 1,
         "condition": "running_style==3&all_corner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -3964,6 +4188,7 @@
         "pt_ratio": 0.97,
         "rarity": 1,
         "condition": "running_style==3&all_corner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -3983,6 +4208,7 @@
         "pt_ratio": 1.58,
         "rarity": 1,
         "condition": "running_style==3",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -4001,6 +4227,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "running_style==3",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -4019,6 +4246,7 @@
         "pt_ratio": 1.67,
         "rarity": 1,
         "condition": "running_style==3&straight_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -4038,6 +4266,7 @@
         "pt_ratio": 0.97,
         "rarity": 1,
         "condition": "running_style==3&straight_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -4057,6 +4286,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "phase<=1&accumulatetime>=5&blocked_front_continuetime>=1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -4075,6 +4305,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "ground_type==2&phase_random==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -4093,6 +4324,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "running_style==1&phase<=1&change_order_onetime>0&accumulatetime>=5@running_style==1&phase<=1&blocked_side_continuetime>=2&accumulatetime>=5",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -4111,6 +4343,7 @@
         "pt_ratio": -0.34,
         "rarity": 1,
         "condition": "rotation==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -4131,6 +4364,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "rotation==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -4151,6 +4385,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "rotation==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -4171,6 +4406,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "phase>=2&is_finalcorner==1&order<=4&overtake_target_time>=1",
+        "precondition": "",
         "inherited": true,
         "community_tier": 3,
         "versions": [],
@@ -4187,6 +4423,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "phase>=2&corner!=0&order_rate>=65&order_rate<=70",
+        "precondition": "",
         "inherited": true,
         "community_tier": 0,
         "versions": [],
@@ -4203,6 +4440,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "running_style==4&infront_near_lane_time>=1&accumulatetime>=10",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -4221,6 +4459,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "running_style==3&phase_laterhalf_random==0&order_rate>=40",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -4239,6 +4478,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==1&phase_laterhalf_random==1&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -4257,6 +4497,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "distance_type==3&phase_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -4275,6 +4516,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "remain_distance<=300",
+        "precondition": "phase>=2&order_rate<=40&behind_near_lane_time_set1>=1",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -4291,6 +4533,7 @@
         "pt_ratio": 1.84,
         "rarity": 1,
         "condition": "same_skill_horse_count==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [],
@@ -4307,6 +4550,7 @@
         "pt_ratio": 2.17,
         "rarity": 1,
         "condition": "distance_type==4&all_corner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -4326,6 +4570,7 @@
         "pt_ratio": 1.25,
         "rarity": 1,
         "condition": "distance_type==4&all_corner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -4345,6 +4590,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "popularity>=4",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -4363,6 +4609,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "popularity>=4",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -4381,6 +4628,7 @@
         "pt_ratio": 2.17,
         "rarity": 1,
         "condition": "distance_type==4&straight_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -4400,6 +4648,7 @@
         "pt_ratio": 1.25,
         "rarity": 1,
         "condition": "distance_type==4&straight_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -4419,6 +4668,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_last_straight==1",
+        "precondition": "distance_rate>=50&order_rate_out70_continue==1&temptation_count==0",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -4435,6 +4685,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "distance_rate>=50&order_rate>=40&order_rate<=80",
+        "precondition": "",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -4451,6 +4702,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "phase>=2&order>=3&blocked_front==1",
+        "precondition": "",
         "inherited": true,
         "community_tier": 3,
         "versions": [],
@@ -4467,6 +4719,7 @@
         "pt_ratio": 1.58,
         "rarity": 1,
         "condition": "random_lot==50&post_number==7",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -4485,6 +4738,7 @@
         "pt_ratio": 1.34,
         "rarity": 2,
         "condition": "ground_type==2&phase_random==1&order_rate>=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -4503,6 +4757,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "running_style==4&phase_firsthalf_random==3&is_lastspurt==1",
+        "precondition": "phase==2&distance_diff_rate>=50",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -4521,6 +4776,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "running_style_count_same<=1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -4539,6 +4795,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "running_style_count_same<=1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -4557,6 +4814,7 @@
         "pt_ratio": 2.17,
         "rarity": 1,
         "condition": "distance_type==3&all_corner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -4576,6 +4834,7 @@
         "pt_ratio": 1.25,
         "rarity": 1,
         "condition": "distance_type==3&all_corner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -4595,6 +4854,7 @@
         "pt_ratio": 2.17,
         "rarity": 1,
         "condition": "distance_type==3&straight_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -4614,6 +4874,7 @@
         "pt_ratio": 1.25,
         "rarity": 1,
         "condition": "distance_type==3&straight_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -4633,6 +4894,7 @@
         "pt_ratio": 1.24,
         "rarity": 1,
         "condition": "distance_type==1&phase_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -4651,6 +4913,7 @@
         "pt_ratio": 2.17,
         "rarity": 1,
         "condition": "distance_type==2&all_corner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -4670,6 +4933,7 @@
         "pt_ratio": 1.25,
         "rarity": 1,
         "condition": "distance_type==2&all_corner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -4689,6 +4953,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==2&phase_laterhalf_random==0&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -4707,6 +4972,7 @@
         "pt_ratio": 2.17,
         "rarity": 1,
         "condition": "distance_type==2&straight_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -4726,6 +4992,7 @@
         "pt_ratio": 1.25,
         "rarity": 1,
         "condition": "distance_type==2&straight_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -4745,6 +5012,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==3&is_move_lane==1&accumulatetime>=10@distance_type==3&is_move_lane==2&accumulatetime>=10",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -4763,6 +5031,7 @@
         "pt_ratio": 1.21,
         "rarity": 2,
         "condition": "running_style==4&straight_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -4782,6 +5051,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "phase>=2&corner!=0&is_finalcorner==0&temptation_count==0&order_rate>=50&order_rate<=70@phase==1&corner!=0&is_finalcorner==1&temptation_count==0&order_rate>=50&order_rate<=70",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -4798,6 +5068,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "running_style==1&slope==1&accumulatetime>=10",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -4816,6 +5087,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==3&phase==1&blocked_front_continuetime>=1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -4834,6 +5106,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==3&phase==1&blocked_front_continuetime>=1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -4852,6 +5125,7 @@
         "pt_ratio": -0.52,
         "rarity": 1,
         "condition": "track_id==10005",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -4871,6 +5145,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "track_id==10005",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -4890,6 +5165,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "track_id==10005",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -4909,6 +5185,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "running_style==2&phase_firsthalf_random==2&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -4927,6 +5204,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_finalcorner==1&order_rate>=40&order_rate<=75&is_overtake==1",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -4943,6 +5221,7 @@
         "pt_ratio": -0.65,
         "rarity": 1,
         "condition": "track_id==10003",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -4962,6 +5241,7 @@
         "pt_ratio": 1.84,
         "rarity": 1,
         "condition": "track_id==10003",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -4981,6 +5261,7 @@
         "pt_ratio": 1.09,
         "rarity": 1,
         "condition": "track_id==10003",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -5000,6 +5281,7 @@
         "pt_ratio": 1.16,
         "rarity": 1,
         "condition": "infront_near_lane_time>=1&is_lastspurt==1&hp_per>=1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -5018,6 +5300,7 @@
         "pt_ratio": 1.31,
         "rarity": 2,
         "condition": "infront_near_lane_time>=1&is_lastspurt==1&hp_per>=1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -5036,6 +5319,7 @@
         "pt_ratio": -0.52,
         "rarity": 1,
         "condition": "is_basis_distance==0",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -5055,6 +5339,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "is_basis_distance==0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -5074,6 +5359,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "is_basis_distance==0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -5093,6 +5379,7 @@
         "pt_ratio": 1.39,
         "rarity": 2,
         "condition": "distance_rate_after_random==50",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -5111,6 +5398,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "compete_fight_count>0",
+        "precondition": "distance_rate>=50&order_rate_out40_continue==1",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -5127,6 +5415,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "change_order_up_end_after>=2",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -5143,6 +5432,7 @@
         "pt_ratio": 1.49,
         "rarity": 2,
         "condition": "distance_type==4&phase_firsthalf_random==1&order_rate>=40&order_rate<=80",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -5161,6 +5451,7 @@
         "pt_ratio": -0.52,
         "rarity": 1,
         "condition": "track_id==10101",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -5180,6 +5471,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "track_id==10101",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -5199,6 +5491,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "track_id==10101",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -5218,6 +5511,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "running_style==3&phase_firsthalf_random==2&order_rate>=40",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -5236,6 +5530,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "remain_distance<=350&order_rate<=40&order_rate>=20&bashin_diff_behind<=1",
+        "precondition": "",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -5252,6 +5547,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==2&phase_random==0&order_rate>50&accumulatetime>=3",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -5270,6 +5566,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "order<=4&phase==1&corner!=0&bashin_diff_behind<=3",
+        "precondition": "",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -5286,6 +5583,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_last_straight==1&order<=5",
+        "precondition": "is_finalcorner==1&blocked_side_continuetime>=2",
         "inherited": true,
         "community_tier": 3,
         "versions": [],
@@ -5302,6 +5600,7 @@
         "pt_ratio": -0.52,
         "rarity": 1,
         "condition": "post_number>=6",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -5321,6 +5620,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "post_number>=6",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -5340,6 +5640,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "post_number>=6",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -5359,6 +5660,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "running_style==3&is_finalcorner==1&corner!=0&is_behind_in==1&change_order_onetime<0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -5377,6 +5679,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==4&phase==2&change_order_onetime<0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -5395,6 +5698,7 @@
         "pt_ratio": 1.67,
         "rarity": 1,
         "condition": "running_style==2&all_corner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -5414,6 +5718,7 @@
         "pt_ratio": 0.97,
         "rarity": 1,
         "condition": "running_style==2&all_corner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -5433,6 +5738,7 @@
         "pt_ratio": 1.58,
         "rarity": 1,
         "condition": "running_style==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -5451,6 +5757,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "running_style==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -5469,6 +5776,7 @@
         "pt_ratio": 1.67,
         "rarity": 1,
         "condition": "running_style==2&straight_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -5488,6 +5796,7 @@
         "pt_ratio": 0.97,
         "rarity": 1,
         "condition": "running_style==2&straight_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -5507,6 +5816,7 @@
         "pt_ratio": 1.28,
         "rarity": 1,
         "condition": "phase==1&change_order_onetime>0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -5525,6 +5835,7 @@
         "pt_ratio": -2.62,
         "rarity": 1,
         "condition": "accumulatetime>=2&is_surrounded==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [],
@@ -5541,6 +5852,7 @@
         "pt_ratio": -2.58,
         "rarity": 1,
         "condition": "popularity==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [],
@@ -5557,6 +5869,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==4&is_overtake==1&accumulatetime>=5",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -5575,6 +5888,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "remain_distance<=300&order_rate<=40",
+        "precondition": "is_finalcorner==1&change_order_onetime<0",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -5591,6 +5905,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "distance_type==1&phase_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -5609,6 +5924,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "running_style==4&phase_random==2&order>=2",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -5627,6 +5943,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==1&phase_laterhalf_random==1&order>=2&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -5645,6 +5962,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "behind_near_lane_time>=3&accumulatetime>=10",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -5663,6 +5981,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_last_straight==1&order_rate<=40&overtake_target_time>=1@is_last_straight==1&order_rate<=40&is_overtake==1",
+        "precondition": "",
         "inherited": true,
         "community_tier": 2,
         "versions": [],
@@ -5679,6 +5998,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "running_style==3&phase_random==1&order_rate>=40",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -5697,6 +6017,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "running_style==2&phase_random==1&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -5715,6 +6036,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "running_style==2&is_finalcorner_random==1&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -5733,6 +6055,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "order_rate_in50_continue==1&phase==1&distance_rate>=50&order>=2&order_rate<=40",
+        "precondition": "",
         "inherited": true,
         "community_tier": 2,
         "versions": [],
@@ -5749,6 +6072,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==4&phase==2&change_order_onetime<0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -5767,6 +6091,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "temptation_count==0&remain_distance<=201&remain_distance>=199&order>=4&order_rate<=70",
+        "precondition": "",
         "inherited": true,
         "community_tier": 3,
         "versions": [],
@@ -5783,6 +6108,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==2&phase_laterhalf_random==0&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -5801,6 +6127,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "all_corner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -5820,6 +6147,7 @@
         "pt_ratio": 1.07,
         "rarity": 1,
         "condition": "phase_random==0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -5838,6 +6166,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==2&is_finalcorner_random==1&order_rate>=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -5856,6 +6185,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "phase_random==1&order>=2&order_rate<=40",
+        "precondition": "",
         "inherited": true,
         "community_tier": 0,
         "versions": [],
@@ -5872,6 +6202,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "running_style==2&phase_random==1&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -5890,6 +6221,7 @@
         "pt_ratio": 1.58,
         "rarity": 2,
         "condition": "distance_rate_after_random==50",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -5908,6 +6240,7 @@
         "pt_ratio": -0.52,
         "rarity": 1,
         "condition": "weather==3",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -5927,6 +6260,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "weather==3",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -5946,6 +6280,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "weather==3",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -5965,6 +6300,7 @@
         "pt_ratio": -2.62,
         "rarity": 1,
         "condition": "up_slope_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [],
@@ -5981,6 +6317,7 @@
         "pt_ratio": 1.28,
         "rarity": 1,
         "condition": "phase==1&change_order_onetime<0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -5999,6 +6336,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_finalcorner==1&change_order_onetime<0&order_rate<=40",
+        "precondition": "",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -6015,6 +6353,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "distance_rate>=50&phase==1&order>=3&order_rate<=70",
+        "precondition": "",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -6031,6 +6370,7 @@
         "pt_ratio": -2.62,
         "rarity": 1,
         "condition": "remain_distance==200&order==1&bashin_diff_behind>=1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [],
@@ -6047,6 +6387,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "distance_rate>=50&order==1&bashin_diff_behind<=1@distance_rate>=50&order==2&is_overtake==1",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -6063,6 +6404,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_finalcorner==1&order<=5&order_rate<=50",
+        "precondition": "",
         "inherited": true,
         "community_tier": 0,
         "versions": [],
@@ -6079,6 +6421,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "distance_type==3&all_corner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -6098,6 +6441,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "running_style==1&phase_random==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -6116,6 +6460,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "running_style==3&phase_random==1&order_rate>=40",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -6134,6 +6479,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "distance_rate>=50&order==1&bashin_diff_behind<=1@distance_rate>=50&order==2&is_overtake==1",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -6150,6 +6496,7 @@
         "pt_ratio": 1.67,
         "rarity": 1,
         "condition": "running_style==1&phase_random==0&order>=2&accumulatetime>=5",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [],
@@ -6166,6 +6513,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "running_style==1&slope==1&accumulatetime>=10",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -6184,6 +6532,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "always==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [],
@@ -6200,6 +6549,7 @@
         "pt_ratio": 1.4,
         "rarity": 2,
         "condition": "rotation==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -6220,6 +6570,7 @@
         "pt_ratio": -0.34,
         "rarity": 1,
         "condition": "rotation==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -6240,6 +6591,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "rotation==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -6260,6 +6612,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "rotation==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -6280,6 +6633,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "running_style==3&is_finalcorner==1&corner!=0&is_behind_in==1&change_order_onetime<0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -6298,6 +6652,7 @@
         "pt_ratio": 1.07,
         "rarity": 1,
         "condition": "distance_rate_after_random==50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -6316,6 +6671,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==3&phase_random==1&order<=3",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -6334,6 +6690,7 @@
         "pt_ratio": 1.85,
         "rarity": 2,
         "condition": "running_style==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [],
@@ -6350,6 +6707,7 @@
         "pt_ratio": -2.62,
         "rarity": 1,
         "condition": "accumulatetime>=2&order==1&bashin_diff_behind>=1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [],
@@ -6366,6 +6724,7 @@
         "pt_ratio": 1.49,
         "rarity": 2,
         "condition": "straight_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -6384,6 +6743,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "phase==1&corner==0&order<=2&bashin_diff_behind<=1",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -6400,6 +6760,7 @@
         "pt_ratio": -0.65,
         "rarity": 1,
         "condition": "track_id==10001",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -6419,6 +6780,7 @@
         "pt_ratio": 1.84,
         "rarity": 1,
         "condition": "track_id==10001",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -6438,6 +6800,7 @@
         "pt_ratio": 1.09,
         "rarity": 1,
         "condition": "track_id==10001",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -6457,6 +6820,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "temptation_count==0&order>=3&is_last_straight==1&order_rate_in80_continue==1&order_rate_out40_continue==1",
+        "precondition": "",
         "inherited": true,
         "community_tier": 2,
         "versions": [],
@@ -6473,6 +6837,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "running_style==1&phase_random==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -6491,6 +6856,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "behind_near_lane_time>=3&accumulatetime>=10",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -6509,6 +6875,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "running_style==4&infront_near_lane_time>=1&accumulatetime>=10",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -6527,6 +6894,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_finalcorner==1&order>=2&order_rate<=75&is_behind_in==1&change_order_onetime<0",
+        "precondition": "phase==1&blocked_side_continuetime>=2",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -6543,6 +6911,7 @@
         "pt_ratio": 2.17,
         "rarity": 1,
         "condition": "activate_count_end_after>=3",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [],
@@ -6559,6 +6928,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "running_style==3&phase_random==2&order_rate>50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -6577,6 +6947,7 @@
         "pt_ratio": 1.39,
         "rarity": 2,
         "condition": "running_style==2&phase_random==1&order_rate>40",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -6595,6 +6966,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==2&phase_random==1&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -6613,6 +6985,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "phase>=2&order>=1&order_rate<=50&change_order_onetime<0",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -6629,6 +7002,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_last_straight==1&distance_diff_top>=5&order_rate<80",
+        "precondition": "",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -6645,6 +7019,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_finalcorner_laterhalf==1&corner!=0&order>=3&order_rate<=40",
+        "precondition": "",
         "inherited": true,
         "community_tier": 0,
         "versions": [],
@@ -6661,6 +7036,7 @@
         "pt_ratio": 1.81,
         "rarity": 1,
         "condition": "running_style==2&is_move_lane==1@running_style==2&is_move_lane==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -6679,6 +7055,7 @@
         "pt_ratio": 1.52,
         "rarity": 2,
         "condition": "running_style==1&phase==0&blocked_front_continuetime>=1@running_style==1&phase==0&blocked_side_continuetime>=1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -6697,6 +7074,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_last_straight==1",
+        "precondition": "phase>=2&order<=3&bashin_diff_infront<=1&is_overtake==1",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -6713,6 +7091,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "running_style==4&phase_random==1&distance_diff_rate>=75",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -6731,6 +7110,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "running_style==3&phase_firsthalf_random==2&order_rate>=40",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -6749,6 +7129,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "infront_near_lane_time>=3&accumulatetime>=10",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -6767,6 +7148,7 @@
         "pt_ratio": 1.17,
         "rarity": 1,
         "condition": "distance_type==4&phase_random==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -6785,6 +7167,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "weather==4",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -6803,6 +7186,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "weather==4",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -6821,6 +7205,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==3&is_move_lane==1&accumulatetime>=10@distance_type==3&is_move_lane==2&accumulatetime>=10",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -6839,6 +7224,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==2&phase_random==1&order<=3",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -6857,6 +7243,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "running_style==2&is_finalcorner_random==1&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -6875,6 +7262,7 @@
         "pt_ratio": -0.34,
         "rarity": 1,
         "condition": "season==1@season==5",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -6895,6 +7283,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "season==1@season==5",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -6915,6 +7304,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "season==1@season==5",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -6935,6 +7325,7 @@
         "pt_ratio": 1.4,
         "rarity": 2,
         "condition": "season==1@season==5",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -6955,6 +7346,7 @@
         "pt_ratio": 2.17,
         "rarity": 1,
         "condition": "distance_type==1&all_corner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -6974,6 +7366,7 @@
         "pt_ratio": 1.25,
         "rarity": 1,
         "condition": "distance_type==1&all_corner_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -6993,6 +7386,7 @@
         "pt_ratio": 2.17,
         "rarity": 1,
         "condition": "distance_type==1&straight_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -7012,6 +7406,7 @@
         "pt_ratio": 1.25,
         "rarity": 1,
         "condition": "distance_type==1&straight_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -7031,6 +7426,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==1&phase_random==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -7049,6 +7445,7 @@
         "pt_ratio": 1.49,
         "rarity": 2,
         "condition": "distance_type==1&phase==1&bashin_diff_behind>=3&order==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -7067,6 +7464,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==4&phase_random==1&order>=5",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -7085,6 +7483,7 @@
         "pt_ratio": 1.44,
         "rarity": 2,
         "condition": "distance_type==4&phase_random==1&order>=5",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -7103,6 +7502,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "running_style==2&phase_laterhalf_random==0&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -7121,6 +7521,7 @@
         "pt_ratio": -0.52,
         "rarity": 1,
         "condition": "is_basis_distance==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -7140,6 +7541,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "is_basis_distance==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -7159,6 +7561,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "is_basis_distance==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -7178,6 +7581,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "running_style==4&phase_random==1&distance_diff_rate>=75",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -7196,6 +7600,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==3&is_finalcorner==1&overtake_target_time>=2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -7214,6 +7619,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==2&distance_rate>=50&change_order_onetime<0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -7232,6 +7638,7 @@
         "pt_ratio": 1.54,
         "rarity": 1,
         "condition": "distance_type==1&phase_random==0&order_rate>50&accumulatetime>=5",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -7250,6 +7657,7 @@
         "pt_ratio": 1.81,
         "rarity": 1,
         "condition": "running_style==2&down_slope_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -7268,6 +7676,7 @@
         "pt_ratio": 1.28,
         "rarity": 1,
         "condition": "straight_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -7286,6 +7695,7 @@
         "pt_ratio": 1.28,
         "rarity": 1,
         "condition": "straight_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -7304,6 +7714,7 @@
         "pt_ratio": 1.28,
         "rarity": 1,
         "condition": "phase==1&corner==0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -7322,6 +7733,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "running_style==4&is_lastspurt==1&corner==0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -7340,6 +7752,7 @@
         "pt_ratio": 0.77,
         "rarity": 1,
         "condition": "running_style==4&phase_random==2&order_rate>50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -7358,6 +7771,7 @@
         "pt_ratio": 0.71,
         "rarity": 1,
         "condition": "running_style==3&phase_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -7376,6 +7790,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "running_style==4&phase_firsthalf_random==3&is_lastspurt==1",
+        "precondition": "phase==2&distance_diff_rate>=50",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -7394,6 +7809,7 @@
         "pt_ratio": 1.67,
         "rarity": 1,
         "condition": "running_style_count_oikomi_otherself>=1&phase_random==0&accumulatetime>=5",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [],
@@ -7410,6 +7826,7 @@
         "pt_ratio": 1.67,
         "rarity": 1,
         "condition": "running_style_count_nige_otherself>=1&phase_random==0&accumulatetime>=5",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [],
@@ -7426,6 +7843,7 @@
         "pt_ratio": 1.67,
         "rarity": 1,
         "condition": "running_style_count_sashi_otherself>=1&phase_random==0&accumulatetime>=5",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [],
@@ -7442,6 +7860,7 @@
         "pt_ratio": 1.67,
         "rarity": 1,
         "condition": "running_style_count_senko_otherself>=1&phase_random==0&accumulatetime>=5",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [],
@@ -7458,6 +7877,7 @@
         "pt_ratio": -0.34,
         "rarity": 1,
         "condition": "season==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -7478,6 +7898,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "season==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -7498,6 +7919,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "season==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -7518,6 +7940,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "weather==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -7536,6 +7959,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "weather==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -7554,6 +7978,7 @@
         "pt_ratio": 1.52,
         "rarity": 2,
         "condition": "random_lot==50&post_number==7",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -7572,6 +7997,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_finalcorner==1&corner!=0&order_rate>50&near_count>=1",
+        "precondition": "",
         "inherited": true,
         "community_tier": 3,
         "versions": [],
@@ -7588,6 +8014,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_finalcorner==1&corner!=0&order_rate>50&near_count>=1",
+        "precondition": "",
         "inherited": true,
         "community_tier": 3,
         "versions": [],
@@ -7604,6 +8031,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "phase==1&change_order_onetime>0&order_rate>=40",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -7620,6 +8048,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "near_count>=3&accumulatetime>=5",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -7638,6 +8067,7 @@
         "pt_ratio": 1.49,
         "rarity": 2,
         "condition": "corner_random==1@corner_random==2@corner_random==3@corner_random==4",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -7657,6 +8087,7 @@
         "pt_ratio": 1.84,
         "rarity": 1,
         "condition": "same_skill_horse_count>=5",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -7675,6 +8106,7 @@
         "pt_ratio": 1.81,
         "rarity": 1,
         "condition": "running_style==2&phase_random==1&order_rate>40",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -7693,6 +8125,7 @@
         "pt_ratio": 2.17,
         "rarity": 1,
         "condition": "activate_count_middle>=3",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -7711,6 +8144,7 @@
         "pt_ratio": 1.81,
         "rarity": 2,
         "condition": "activate_count_middle>=3",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -7729,6 +8163,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==3&phase_firsthalf_random==2&order_rate>=40",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -7747,6 +8182,7 @@
         "pt_ratio": 1.39,
         "rarity": 2,
         "condition": "running_style==1&phase==0",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -7765,6 +8201,7 @@
         "pt_ratio": 1.81,
         "rarity": 2,
         "condition": "phase==1&order_rate<=50&temptation_opponent_count_behind>=1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -7783,6 +8220,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "running_style_equal_popularity_one==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -7801,6 +8239,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "running_style_equal_popularity_one==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -7819,6 +8258,7 @@
         "pt_ratio": 1.39,
         "rarity": 2,
         "condition": "running_style==2&is_move_lane==1@running_style==2&is_move_lane==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -7837,6 +8277,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==3&phase_random==2&order_rate>50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -7855,6 +8296,7 @@
         "pt_ratio": 1.39,
         "rarity": 2,
         "condition": "running_style==3&phase_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -7873,6 +8315,7 @@
         "pt_ratio": 1.52,
         "rarity": 2,
         "condition": "running_style==4&is_move_lane==1@running_style==4&is_move_lane==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -7891,6 +8334,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_finalcorner==1&corner!=0&distance_diff_rate<=30&distance_type==4&lastspurt==2",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -7907,6 +8351,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "distance_rate>=50&order==1&bashin_diff_behind>=1",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -7923,6 +8368,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_finalcorner==1&bashin_diff_behind<=1&order<=4@is_finalcorner==1&bashin_diff_infront<=1&order<=4",
+        "precondition": "",
         "inherited": true,
         "community_tier": 2,
         "versions": [],
@@ -7939,6 +8385,7 @@
         "pt_ratio": 1.24,
         "rarity": 1,
         "condition": "distance_type==3&phase_random==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -7957,6 +8404,7 @@
         "pt_ratio": -0.34,
         "rarity": 1,
         "condition": "track_id==10006",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -7977,6 +8425,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "track_id==10006",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -7997,6 +8446,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "track_id==10006",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -8017,6 +8467,7 @@
         "pt_ratio": 1.21,
         "rarity": 1,
         "condition": "ground_type==2&phase==1&blocked_side_continuetime>=2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -8035,6 +8486,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "running_style==1&phase<=1&change_order_onetime>0&accumulatetime>=5@running_style==1&phase<=1&blocked_side_continuetime>=2&accumulatetime>=5",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -8053,6 +8505,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==3&phase_random==1&order<=3",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -8071,6 +8524,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "ground_type==2&phase==1&blocked_side_continuetime>=2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -8089,6 +8543,7 @@
         "pt_ratio": 1.55,
         "rarity": 1,
         "condition": "phase==1&order_rate<=50&temptation_opponent_count_behind>=1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -8107,6 +8562,7 @@
         "pt_ratio": 1.55,
         "rarity": 1,
         "condition": "phase==1&order_rate>50&temptation_opponent_count_infront>=1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [],
@@ -8123,6 +8579,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "remain_distance<=778&remain_distance>=776",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [],
@@ -8139,6 +8596,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "order>=2&order<=5&order_rate<=50&remain_distance<=201&remain_distance>=199",
+        "precondition": "",
         "inherited": true,
         "community_tier": 0,
         "versions": [],
@@ -8155,6 +8613,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==1&phase_random==2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -8173,6 +8632,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "distance_rate>=50&corner!=0&order>=3&order_rate<=40",
+        "precondition": "",
         "inherited": true,
         "community_tier": 0,
         "versions": [],
@@ -8189,6 +8649,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "near_count>=3&accumulatetime>=5",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -8207,6 +8668,7 @@
         "pt_ratio": 1.41,
         "rarity": 2,
         "condition": "running_style==1&is_finalcorner_random==1&order==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -8225,6 +8687,7 @@
         "pt_ratio": 1.49,
         "rarity": 2,
         "condition": "phase==1&is_surrounded==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -8243,6 +8706,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==3&is_finalcorner==1&overtake_target_time>=2",
+        "precondition": "",
         "inherited": false,
         "community_tier": 3,
         "versions": [
@@ -8261,6 +8725,7 @@
         "pt_ratio": 1.81,
         "rarity": 1,
         "condition": "distance_type==2&is_overtake==1&accumulatetime>=5",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -8279,6 +8744,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==3&phase_random==1&order_rate<=50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -8297,6 +8763,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==2&phase_random==2&order_rate>50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -8315,6 +8782,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_last_straight==1&order<=5",
+        "precondition": "is_finalcorner==1&blocked_side_continuetime>=2",
         "inherited": true,
         "community_tier": 3,
         "versions": [],
@@ -8331,6 +8799,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==4&is_overtake==1&accumulatetime>=5",
+        "precondition": "",
         "inherited": false,
         "community_tier": 0,
         "versions": [
@@ -8349,6 +8818,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==4&phase_random==1&bashin_diff_behind>=1&order==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -8367,6 +8837,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_last_straight==1&hp_per>=30&order<=2",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -8383,6 +8854,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "phase==2&straight_front_type==2&order<=2",
+        "precondition": "",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -8399,6 +8871,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "remain_distance<=300",
+        "precondition": "order_rate_out50_continue==1&temptation_count==0&is_finalcorner==1",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -8415,6 +8888,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==1&phase_random==1&order_rate>50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [],
@@ -8431,6 +8905,7 @@
         "pt_ratio": -0.52,
         "rarity": 1,
         "condition": "running_style_count_same_rate>=40",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -8450,6 +8925,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "distance_rate>=50&distance_rate<=60&order_rate>50",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -8466,6 +8942,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==2&phase_laterhalf_random==0&order_rate>50",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -8484,6 +8961,7 @@
         "pt_ratio": -0.34,
         "rarity": 1,
         "condition": "ground_condition==2@ground_condition==3@ground_condition==4",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -8504,6 +8982,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "ground_condition==2@ground_condition==3@ground_condition==4",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -8524,6 +9003,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "ground_condition==2@ground_condition==3@ground_condition==4",
+        "precondition": "",
         "inherited": false,
         "community_tier": 1,
         "versions": [
@@ -8544,6 +9024,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_last_straight==1&change_order_onetime<0&order>=3",
+        "precondition": "",
         "inherited": true,
         "community_tier": 2,
         "versions": [],
@@ -8560,6 +9041,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "distance_rate>=60&slope==2&phase==1&order_rate>=40&order_rate<=80&remain_distance>=500",
+        "precondition": "",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -8576,6 +9058,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "distance_rate>=50&corner==0&order_rate>=70&order_rate<=75&is_overtake==1@distance_rate>=50&corner==0&order_rate<=30&order_rate>=20",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -8592,6 +9075,7 @@
         "pt_ratio": 1.59,
         "rarity": 2,
         "condition": "distance_type==3&phase_random==1&order<=3",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -8610,6 +9094,7 @@
         "pt_ratio": -0.34,
         "rarity": 1,
         "condition": "season==4",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -8630,6 +9115,7 @@
         "pt_ratio": 1.43,
         "rarity": 1,
         "condition": "season==4",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -8650,6 +9136,7 @@
         "pt_ratio": 0.87,
         "rarity": 1,
         "condition": "season==4",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -8670,6 +9157,7 @@
         "pt_ratio": 1.36,
         "rarity": 1,
         "condition": "distance_type==3&phase_random==1&order<=3",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -8688,6 +9176,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "order>=3&order_rate<=50&remain_distance<=200&bashin_diff_infront<=1@order>=3&order_rate<=50&remain_distance<=200&bashin_diff_behind<=1",
+        "precondition": "",
         "inherited": true,
         "community_tier": 1,
         "versions": [],
@@ -8704,6 +9193,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "distance_rate>=45&distance_rate<=60&order>=2&order_rate<=50&is_overtake==1&distance_type==1",
+        "precondition": "",
         "inherited": true,
         "community_tier": 2,
         "versions": [],
@@ -8720,6 +9210,7 @@
         "pt_ratio": 1.4,
         "rarity": 2,
         "condition": "track_id==10008",
+        "precondition": "",
         "inherited": false,
         "community_tier": 2,
         "versions": [
@@ -8740,6 +9231,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_last_straight==1",
+        "precondition": "is_finalcorner==1&is_behind_in==1&change_order_onetime<0&order_rate>=40",
         "inherited": true,
         "community_tier": 2,
         "versions": [],
@@ -8756,6 +9248,7 @@
         "pt_ratio": 0.0,
         "rarity": 1,
         "condition": "always==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [],
@@ -8772,6 +9265,7 @@
         "pt_ratio": 1.49,
         "rarity": 2,
         "condition": "distance_type==1&phase_random==0&order_rate>50&accumulatetime>=5",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [
@@ -8790,6 +9284,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "is_last_straight==1",
+        "precondition": "is_finalcorner==1&order_rate>=40&order_rate<=75&lane_type==0",
         "inherited": true,
         "community_tier": null,
         "versions": [],
@@ -8806,6 +9301,7 @@
         "pt_ratio": 0.9,
         "rarity": 1,
         "condition": "phase>=2&is_finalcorner==1&order<=4&temptation_count==0",
+        "precondition": "",
         "inherited": true,
         "community_tier": 2,
         "versions": [],
@@ -8822,6 +9318,7 @@
         "pt_ratio": -2.58,
         "rarity": 1,
         "condition": "ground_condition==1",
+        "precondition": "",
         "inherited": false,
         "community_tier": null,
         "versions": [],
