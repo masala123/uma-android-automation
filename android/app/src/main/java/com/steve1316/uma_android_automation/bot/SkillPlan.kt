@@ -20,6 +20,9 @@ import com.steve1316.uma_android_automation.utils.types.RunningStyle
 import com.steve1316.uma_android_automation.utils.types.Aptitude
 
 private const val USE_MOCK_DATA: Boolean = true
+private val MOCK_RUNNING_STYLE: RunningStyle? = RunningStyle.END_CLOSER
+private val MOCK_TRACK_DISTANCE: TrackDistance? = TrackDistance.LONG
+private val MOCK_SKILL_POINTS: Int = 350//1495
 
 class SkillPlan (private val game: Game) {
     private val TAG: String = "[${MainActivity.loggerTag}]SkillPlan"
@@ -273,21 +276,22 @@ class SkillPlan (private val game: Game) {
         return result.toMap()
     }
 
+    /**
+     *
+     * NOTE: Currently doesn't do anything but it's here since we have a strategy
+     * option for DEFAULT so it'd be weird to not have a function ready for it.
+     */
     private fun getSkillsToBuyDefaultStrategy(
         skillPlanSettings: SkillPlanSettings,
         skillList: SkillList,
+        skillsToBuy: List<String>,
         availableSkillPoints: Int,
     ): Map<String, Int> {
         if (skillPlanSettings.spendingStrategy != SpendingStrategy.DEFAULT) {
             return emptyMap()
         }
 
-        val result: MutableMap<String, Int> = getSkillsToBuyCommon(
-            skillPlanSettings = skillPlanSettings,
-            skillList = skillList,
-            skillsToBuy = emptyList(),
-            availableSkillPoints = availableSkillPoints,
-        ).toMutableMap()
+        val result: MutableMap<String, Int> = mutableMapOf()
 
         return result.toMap()
     }
@@ -295,32 +299,36 @@ class SkillPlan (private val game: Game) {
     private fun getSkillsToBuyOptimizeSkillsStrategy(
         skillPlanSettings: SkillPlanSettings,
         skillList: SkillList,
+        skillsToBuy: List<String>,
         availableSkillPoints: Int,
     ): Map<String, Int> {
         if (skillPlanSettings.spendingStrategy != SpendingStrategy.OPTIMIZE_SKILLS) {
             return emptyMap()
         }
 
-        val result: MutableMap<String, Int> = getSkillsToBuyCommon(
-            skillPlanSettings = skillPlanSettings,
-            skillList = skillList,
-            skillsToBuy = emptyList(),
-            availableSkillPoints = availableSkillPoints,
-        ).toMutableMap()
-        var remainingSkillPoints: Int = result.values.sum()
+        val result: MutableMap<String, Int> = mutableMapOf()
+        var remainingSkillPoints: Int = availableSkillPoints
 
         // Get user specified running style.
-        val preferredRunningStyle: RunningStyle? = when (skillSettingRunningStyleString.lowercase()) {
-            "disabled" -> null
-            "inherit" -> RunningStyle.fromName(racingSettingRunningStyleString) ?: game.trainee.runningStyle
-            else -> game.trainee.runningStyle
+        var preferredRunningStyle: RunningStyle? = if (USE_MOCK_DATA) {
+            MOCK_RUNNING_STYLE
+        } else {
+            when (skillSettingRunningStyleString.lowercase()) {
+                "disabled" -> null
+                "inherit" -> RunningStyle.fromName(racingSettingRunningStyleString) ?: game.trainee.runningStyle
+                else -> game.trainee.runningStyle
+            }
         }
 
         // Get user specified track distance.
-        val preferredTrackDistance: TrackDistance? = when (skillSettingTrackDistanceString.lowercase()) {
-            "disabled" -> null
-            "inherit" -> TrackDistance.fromName(trainingSettingTrackDistanceString) ?: game.trainee.trackDistance
-            else -> game.trainee.trackDistance
+        var preferredTrackDistance: TrackDistance? = if (USE_MOCK_DATA) {
+            MOCK_TRACK_DISTANCE
+        } else {
+            when (skillSettingTrackDistanceString.lowercase()) {
+                "disabled" -> null
+                "inherit" -> TrackDistance.fromName(trainingSettingTrackDistanceString) ?: game.trainee.trackDistance
+                else -> game.trainee.trackDistance
+            }
         }
 
         // Get only skills which match our aptitudes or user-specified styles or
@@ -343,11 +351,14 @@ class SkillPlan (private val game: Game) {
                 continue
             }
 
+            MessageLog.e("REMOVEME", "============ TIER $communityTier =============")
+
             // Sort the tier by its point ratio.
             val sortedByPointRatio: List<SkillListEntry> = group.sortedByDescending { it.evaluationPointRatio }
             for (entry in sortedByPointRatio) {
+                MessageLog.e("REMOVEME", "\t${entry.name}: ${entry.price}(${entry.screenPrice}) -> ${entry.evaluationPoints}(${entry.evaluationPointRatio})")
                 // Don't add duplicate entries.
-                if (entry.name in result) {
+                if (entry.name in result || entry.name in skillsToBuy) {
                     continue
                 }
 
@@ -374,19 +385,15 @@ class SkillPlan (private val game: Game) {
     private fun getSkillsToBuyOptimizeRankStrategy(
         skillPlanSettings: SkillPlanSettings,
         skillList: SkillList,
+        skillsToBuy: List<String>,
         availableSkillPoints: Int,
     ): Map<String, Int> {
         if (skillPlanSettings.spendingStrategy != SpendingStrategy.OPTIMIZE_RANK) {
             return emptyMap()
         }
 
-        val result: MutableMap<String, Int> = getSkillsToBuyCommon(
-            skillPlanSettings = skillPlanSettings,
-            skillList = skillList,
-            skillsToBuy = emptyList(),
-            availableSkillPoints = availableSkillPoints,
-        ).toMutableMap()
-        var remainingSkillPoints: Int = result.values.sum()
+        val result: MutableMap<String, Int> = mutableMapOf()
+        var remainingSkillPoints: Int = availableSkillPoints
 
         // Infinite loop protection.
         val maxIterations: Int = 10
@@ -397,7 +404,7 @@ class SkillPlan (private val game: Game) {
                 .sortedByDescending { it.evaluationPointRatio }
             for (entry in sortedByPointRatio) {
                 // Don't add duplicate entries.
-                if (entry.name in result) {
+                if (entry.name in result || entry.name in skillsToBuy) {
                     continue
                 }
 
@@ -439,21 +446,35 @@ class SkillPlan (private val game: Game) {
         }
         MessageLog.d(TAG, "========================================")
 
-        val result: Map<String, Int> = when (skillPlanSettings.spendingStrategy) {
+        val result: MutableMap<String, Int> = mutableMapOf()
+
+        // We always perform these common operations.
+        // Other strategies only add on top of these results.
+        result += getSkillsToBuyCommon(
+            skillPlanSettings = skillPlanSettings,
+            skillList = skillList,
+            skillsToBuy = result.keys.toList(),
+            availableSkillPoints = availableSkillPoints - result.values.sum(),
+        )
+
+        result += when (skillPlanSettings.spendingStrategy) {
             SpendingStrategy.DEFAULT -> getSkillsToBuyDefaultStrategy(
                 skillPlanSettings = skillPlanSettings,
                 skillList = skillList,
-                availableSkillPoints = availableSkillPoints,
+                skillsToBuy = result.keys.toList(),
+                availableSkillPoints = availableSkillPoints - result.values.sum(),
             )
             SpendingStrategy.OPTIMIZE_SKILLS -> getSkillsToBuyOptimizeSkillsStrategy(
                 skillPlanSettings = skillPlanSettings,
                 skillList = skillList,
-                availableSkillPoints = availableSkillPoints ,
+                skillsToBuy = result.keys.toList(),
+                availableSkillPoints = availableSkillPoints - result.values.sum(),
             )
             SpendingStrategy.OPTIMIZE_RANK -> getSkillsToBuyOptimizeRankStrategy(
                 skillPlanSettings = skillPlanSettings,
                 skillList = skillList,
-                availableSkillPoints = availableSkillPoints,
+                skillsToBuy = result.keys.toList(),
+                availableSkillPoints = availableSkillPoints - result.values.sum(),
             )
         }
 
@@ -461,7 +482,7 @@ class SkillPlan (private val game: Game) {
         for ((name, price) in result) {
             MessageLog.d(TAG, "\t$name: $price")
         }
-        MessageLog.d(TAG, "\n\tTOTAL: ${result.values.sum()} / ${skillList.skillPoints} pts")
+        MessageLog.d(TAG, "\n\tTOTAL: ${result.values.sum()} / ${if (USE_MOCK_DATA) MOCK_SKILL_POINTS else skillList.skillPoints} pts")
         MessageLog.d(TAG, "===========================================")
 
         return result.toMap()
@@ -592,11 +613,15 @@ class SkillPlan (private val game: Game) {
         // If we haven't acquired them yet, then we need to force check them.
         // This can happen if we start the bot at the skill list screen
         // or at the end of a career.
-        if (!game.trainee.bHasUpdatedAptitudes) {
+        if (!USE_MOCK_DATA && !game.trainee.bHasUpdatedAptitudes) {
             skillList.checkStats()
         }
 
-        val skillPoints: Int = skillList.detectSkillPoints(bitmap) ?: 0
+        val skillPoints: Int = if (USE_MOCK_DATA) {
+            MOCK_SKILL_POINTS
+        } else {
+            skillList.detectSkillPoints(bitmap) ?: 0
+        }
         // The cheapest skills are all 70 points and with discounts
         // can be as low as 42 points. If anything is less than this, then
         // we should update this.
