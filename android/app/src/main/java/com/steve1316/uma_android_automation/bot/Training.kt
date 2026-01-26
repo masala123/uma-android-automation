@@ -1190,47 +1190,82 @@ class Training(private val game: Game) {
 			val selectedScore = scoreRanked.firstOrNull { it.first == selected }?.second ?: 0.0
 			val secondBest = scoreRanked.getOrNull(1)
 
-			// If a second best training exists, provide specific reasoning.
+			// Provide specific reasoning based on mode and training properties.
+			val keyFactors = mutableListOf<String>()
+
+			// Mode-specific key factors.
+			when (scoringMode) {
+				"Unity Cup (Spirit Gauge)" -> {
+					if (selected.numSpiritGaugesReadyToBurst > 0) {
+						keyFactors.add("Has ${selected.numSpiritGaugesReadyToBurst} Spirit Gauge(s) ready to burst (highest priority).")
+					} else if (selected.numSpiritGaugesCanFill > 0) {
+						keyFactors.add("Can fill ${selected.numSpiritGaugesCanFill} Spirit Gauge(s).")
+					}
+				}
+				"Friendship (Junior Year)" -> {
+					val blueCount = selected.relationshipBars.count { it.dominantColor == "blue" }
+					val greenCount = selected.relationshipBars.count { it.dominantColor == "green" }
+					if (blueCount > 0 || greenCount > 0) {
+						keyFactors.add("Has ${blueCount} blue and ${greenCount} green relationship bar(s) to build.")
+					}
+				}
+				else -> {
+					// Stat Efficiency mode.
+					if (selected.numRainbow > 0) {
+						keyFactors.add("Rainbow training detected (multiplier applied).")
+					}
+					val mainGain = selected.statGains[selected.name] ?: 0
+					val currentVal = config.currentStats[selected.name] ?: 0
+					val targetVal = config.statTargets[selected.name] ?: 600
+					val completion = if (targetVal > 0) (currentVal.toDouble() / targetVal * 100.0) else 100.0
+					if (completion < 70.0) {
+						keyFactors.add("${selected.name} stat is at ${String.format("%.0f", completion)}% of target (behind, higher priority).")
+					}
+					if (mainGain >= 30 && selected.numRainbow == 0) {
+						keyFactors.add("High main stat gain of $mainGain (potential undetected rainbow bonus).")
+					}
+
+					// High secondary stat gains.
+					for ((statName, gain) in selected.statGains) {
+						if (statName != selected.name && gain >= 20) {
+							keyFactors.add("High secondary ${statName} gain of $gain.")
+						}
+					}
+				}
+			}
+
+			// Global key factors.
+			if (selected.numSkillHints > 0) {
+				keyFactors.add("Provides ${selected.numSkillHints} skill hint(s).")
+			}
+
+			selected.relationshipBars.forEach { bar ->
+				if (bar.isTrainerSupport && bar.trainerName != null) {
+					keyFactors.add("${bar.trainerName} is present (special trainer bonus).")
+				}
+			}
+
+			if (selected.relationshipBars.size >= 3) {
+				keyFactors.add("Multiple relationship bars present (${selected.relationshipBars.size}).")
+			}
+
+			val isSparkStat = selected.name in config.focusOnSparkStatTarget
+			val currentVal = config.currentStats[selected.name] ?: 0
+			if (isSparkStat && currentVal < 600) {
+				keyFactors.add("${selected.name} is prioritized for potential 3* spark (under 600).")
+			}
+
+			if (selected.failureChance > maximumFailureChance) {
+				keyFactors.add("Selected despite ${selected.failureChance}% failure chance (Risky Training enabled or Finals).")
+			}
+
+			// Output beat reasoning if second best exists.
 			if (secondBest != null) {
 				val scoreDiff = selectedScore - secondBest.second
 				val pctDiff = if (secondBest.second > 0) (scoreDiff / secondBest.second * 100.0) else 0.0
 				sb.appendLine("${selected.name} beat ${secondBest.first.name} by ${String.format("%.2f", scoreDiff)} points (${String.format("%.1f", pctDiff)}% higher)")
-
-				// Provide specific reasoning based on mode.
-				when (scoringMode) {
-					"Unity Cup (Spirit Gauge)" -> {
-						if (selected.numSpiritGaugesReadyToBurst > 0) {
-							sb.appendLine("Key factor: Has ${selected.numSpiritGaugesReadyToBurst} Spirit Gauge(s) ready to burst (highest priority).")
-						} else if (selected.numSpiritGaugesCanFill > 0) {
-							sb.appendLine("Key factor: Can fill ${selected.numSpiritGaugesCanFill} Spirit Gauge(s).")
-						}
-					}
-					"Friendship (Junior Year)" -> {
-						val blueCount = selected.relationshipBars.count { it.dominantColor == "blue" }
-						val greenCount = selected.relationshipBars.count { it.dominantColor == "green" }
-						if (blueCount > 0 || greenCount > 0) {
-							sb.appendLine("Key factor: Has ${blueCount} blue and ${greenCount} green relationship bar(s) to build.")
-						}
-					}
-					else -> {
-						// Stat Efficiency mode.
-						if (selected.numRainbow > 0) {
-							sb.appendLine("Key factor: Rainbow training detected (multiplier applied).")
-						}
-						val mainGain = selected.statGains[selected.name] ?: 0
-						val currentVal = currentStats[selected.name] ?: 0
-						val targetVal = targets[selected.name] ?: 600
-						val completion = if (targetVal > 0) (currentVal.toDouble() / targetVal * 100.0) else 100.0
-						if (completion < 70.0) {
-							sb.appendLine("Key factor: ${selected.name} stat is at ${String.format("%.0f", completion)}% of target (behind, higher priority).")
-						}
-						if (mainGain >= 30 && selected.numRainbow == 0) {
-							sb.appendLine("Key factor: High main stat gain of $mainGain (potential undetected rainbow bonus).")
-						}
-					}
-				}
 			} else {
-				// Only one training available - explain why it was selected.
+				// Only one training available - clarify reasons.
 				val numSkipped = skippedScores.size
 				val numBlacklisted = config.blacklist.filterNotNull().size
 				val reasons = mutableListOf<String>()
@@ -1241,6 +1276,11 @@ class Training(private val game: Game) {
 				} else {
 					sb.appendLine("${selected.name} was the only available training.")
 				}
+			}
+
+			// Output all collected key factors.
+			keyFactors.forEach { factor ->
+				sb.appendLine("Key factor: $factor")
 			}
 		}
 
