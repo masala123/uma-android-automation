@@ -16,6 +16,7 @@ import com.steve1316.uma_android_automation.bot.SkillDatabase
 
 import com.steve1316.uma_android_automation.utils.types.BoundingBox
 import com.steve1316.uma_android_automation.utils.types.TrackDistance
+import com.steve1316.uma_android_automation.utils.types.TrackSurface
 import com.steve1316.uma_android_automation.utils.types.RunningStyle
 import com.steve1316.uma_android_automation.utils.types.SkillData
 
@@ -1052,11 +1053,6 @@ class SkillList (private val game: Game) {
      */
     fun parseMockSkillListEntries(): Map<String, SkillListEntry> {
         val mockSkills: Map<String, Int> = mapOf(
-            "Tactical Tweak" to 120,
-            "Shatterproof" to 240,
-        )
-
-        val mockSkills2: Map<String, Int> = mapOf(
             "Warning Shot!" to -1,
             "Triumphant Pulse" to 120,
             "Kyoto Racecourse ○" to 63,
@@ -1072,8 +1068,6 @@ class SkillList (private val game: Game) {
             "Calm in a Crowd" to 153,
             "Nimble Navigator" to 135,
             "Homestretch Haste" to 153,
-            "Shatterproof" to 240, // REMOVEME
-            "Tactical Tweak" to 96, // REMOVEME
             "Up-Tempo" to 104,
             "Steadfast" to 144,
             "Extra Tank" to 96,
@@ -1164,7 +1158,7 @@ class SkillList (private val game: Game) {
         verbose: Boolean = false,
     ) {
         val skillListEntries: Map<String, SkillListEntry> = skillListEntries ?: getAvailableSkills()
-        MessageLog.d(TAG, "================= Skill List Entries =================")
+        MessageLog.v(TAG, "================= Skill List Entries =================")
         for ((name, entry) in skillListEntries) {
             val entryString: String = if (verbose) {
                 "${entry}"
@@ -1172,13 +1166,12 @@ class SkillList (private val game: Game) {
                 val extraString: String = if (entry.bIsVirtual) " (virtual)" else ""
                 "${entry.price}${extraString}"
             }
-            MessageLog.d(TAG, "\t${name}: ${entryString}")
+            MessageLog.v(TAG, "\t${name}: ${entryString}")
         }
-        MessageLog.d(TAG, "======================================================")
+        MessageLog.v(TAG, "======================================================")
     }
 
     fun buySkill(name: String, skillUpButtonLocation: Point): SkillListEntry? {
-        MessageLog.e("REMOVEME", "buySkill: $name")
         val entry: SkillListEntry? = entries[name]
         if (entry == null) {
             MessageLog.w(TAG, "buySkill: \"$name\" not found.")
@@ -1241,6 +1234,29 @@ class SkillList (private val game: Game) {
             return getAvailableSkills().filterValues { it.trackDistance != null }
         }
         return getAvailableSkills().filterValues { it.trackDistance == trackDistance }
+    }
+
+    fun getTrackSurfaceSkills(trackSurface: TrackSurface?): Map<String, SkillListEntry> {
+        // If null, then we want to return all skills that have any track surface.
+        if (trackSurface == null) {
+            return getAvailableSkills().filterValues { it.trackSurface != null }
+        }
+        return getAvailableSkills().filterValues { it.trackSurface == trackSurface }
+    }
+
+    fun getInferredRunningStyleSkills(runningStyle: RunningStyle?): Map<String, SkillListEntry> {
+        // Get normal running style skills so we can filter them out later.
+        val runningStyleSkills: Map<String, SkillListEntry> = getRunningStyleSkills(runningStyle)
+
+        // If null, then we want to return all skills that have any inferred running style.
+        if (runningStyle == null) {
+            return getAvailableSkills()
+                .filterValues { it.inferredRunningStyles.isNotEmpty() }
+                .filterKeys { it !in runningStyleSkills }
+        }
+        return getAvailableSkills()
+            .filterValues { runningStyle in it.inferredRunningStyles }
+            .filterKeys { it !in runningStyleSkills }
     }
 
     fun getAvailableWithVirtualUpgradeSkills(): Map<String, SkillListEntry> {

@@ -17,8 +17,9 @@ import com.steve1316.uma_android_automation.components.ButtonSkillUp
 import com.steve1316.uma_android_automation.utils.types.BoundingBox
 import com.steve1316.uma_android_automation.utils.types.SkillData
 import com.steve1316.uma_android_automation.utils.types.SkillType
-import com.steve1316.uma_android_automation.utils.types.TrackDistance
 import com.steve1316.uma_android_automation.utils.types.RunningStyle
+import com.steve1316.uma_android_automation.utils.types.TrackDistance
+import com.steve1316.uma_android_automation.utils.types.TrackSurface
 import com.steve1316.uma_android_automation.utils.types.Aptitude
 
 class SkillListEntry(
@@ -94,26 +95,21 @@ class SkillListEntry(
     
     // Wrappers around commonly used SkillData values
     // so we don't have to directly reference skillData.
-    val bIsGold: Boolean
-        get() = skillData.bIsGold
-    val bIsUnique: Boolean
-        get() = skillData.bIsUnique
-    val bIsInheritedUnique: Boolean
-        get() = skillData.bIsInheritedUnique
-    val bIsNegative: Boolean
-        get() = skillData.bIsNegative
-    val bIsInPlace: Boolean
-        get() = skillData.bIsInPlace
-    val skillType: SkillType
-        get() = skillData.type
-    val runningStyle: RunningStyle?
-        get() = skillData.runningStyle
-    val trackDistance: TrackDistance?
-        get() = skillData.trackDistance
-    val communityTier: Int?
-        get() = skillData.communityTier
-    val baseCost: Int
-        get() = skillData.cost
+    val bIsGold: Boolean = skillData.bIsGold
+    val bIsUnique: Boolean = skillData.bIsUnique
+    val bIsInheritedUnique: Boolean = skillData.bIsInheritedUnique
+    val bIsNegative: Boolean = skillData.bIsNegative
+    val bIsInPlace: Boolean = skillData.bIsInPlace
+    val skillType: SkillType = skillData.type
+
+    val runningStyle: RunningStyle? = skillData.runningStyle
+    val trackDistance: TrackDistance? = skillData.trackDistance
+    val trackSurface: TrackSurface? = skillData.trackSurface
+    val inferredRunningStyles: List<RunningStyle> = skillData.inferredRunningStyles
+
+    val communityTier: Int? = skillData.communityTier
+    val baseCost: Int = skillData.cost
+
 
     init {
         // Update linked list pointers if they were passed in.
@@ -180,6 +176,12 @@ class SkillListEntry(
         return EVALUATION_POINT_APTITUDE_RATIO_MAP[aptitude]
     }
 
+    private fun getTrackSurfaceAptitudeEvaluationModifier(): Double? {
+        val trackSurface: TrackSurface = trackSurface ?: return null
+        val aptitude: Aptitude = game.trainee.checkTrackSurfaceAptitude(trackSurface)
+        return EVALUATION_POINT_APTITUDE_RATIO_MAP[aptitude]
+    }
+
     private fun calculateEvaluationPoints(): Int {
         var res: Int = skillData.evalPt
 
@@ -190,6 +192,7 @@ class SkillListEntry(
 
         val modifier: Double = getRunningStyleAptitudeEvaluationModifier() ?:
             getTrackDistanceAptitudeEvaluationModifier() ?:
+            getTrackSurfaceAptitudeEvaluationModifier() ?:
             1.0
 
         return (res * modifier).roundToInt()

@@ -15,14 +15,13 @@ import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.bot.SkillList
 
-import com.steve1316.uma_android_automation.utils.types.TrackDistance
 import com.steve1316.uma_android_automation.utils.types.RunningStyle
+import com.steve1316.uma_android_automation.utils.types.TrackDistance
+import com.steve1316.uma_android_automation.utils.types.TrackSurface
 import com.steve1316.uma_android_automation.utils.types.Aptitude
 
-private const val USE_MOCK_DATA: Boolean = true
-private val MOCK_RUNNING_STYLE: RunningStyle? = RunningStyle.END_CLOSER
-private val MOCK_TRACK_DISTANCE: TrackDistance? = TrackDistance.LONG
-private val MOCK_SKILL_POINTS: Int = 350//1495
+private const val USE_MOCK_DATA: Boolean = false
+private const val MOCK_SKILL_POINTS: Int = 1495
 
 class SkillPlan (private val game: Game) {
     private val TAG: String = "[${MainActivity.loggerTag}]SkillPlan"
@@ -30,6 +29,7 @@ class SkillPlan (private val game: Game) {
     // Get user settings for skill plans.
     val skillSettingRunningStyleString = SettingsHelper.getStringSetting("skills", "preferredRunningStyle")
     val skillSettingTrackDistanceString = SettingsHelper.getStringSetting("skills", "preferredTrackDistance")
+    val skillSettingTrackSurfaceString = SettingsHelper.getStringSetting("skills", "preferredTrackSurface")
 
     val enablePreFinalsSkillPlan = SettingsHelper.getBooleanSetting("skills", "enablePreFinalsSkillPlan")
     val preFinalsSpendingStrategy = SettingsHelper.getStringSetting("skills", "preFinalsSpendingStrategy")
@@ -287,10 +287,6 @@ class SkillPlan (private val game: Game) {
         skillsToBuy: List<String>,
         availableSkillPoints: Int,
     ): Map<String, Int> {
-        if (skillPlanSettings.spendingStrategy != SpendingStrategy.DEFAULT) {
-            return emptyMap()
-        }
-
         val result: MutableMap<String, Int> = mutableMapOf()
 
         return result.toMap()
@@ -302,41 +298,42 @@ class SkillPlan (private val game: Game) {
         skillsToBuy: List<String>,
         availableSkillPoints: Int,
     ): Map<String, Int> {
-        if (skillPlanSettings.spendingStrategy != SpendingStrategy.OPTIMIZE_SKILLS) {
-            return emptyMap()
-        }
-
         val result: MutableMap<String, Int> = mutableMapOf()
         var remainingSkillPoints: Int = availableSkillPoints
 
         // Get user specified running style.
-        var preferredRunningStyle: RunningStyle? = if (USE_MOCK_DATA) {
-            MOCK_RUNNING_STYLE
-        } else {
-            when (skillSettingRunningStyleString.lowercase()) {
-                "disabled" -> null
-                "inherit" -> RunningStyle.fromName(racingSettingRunningStyleString) ?: game.trainee.runningStyle
-                else -> game.trainee.runningStyle
-            }
+        var preferredRunningStyle: RunningStyle? = when (skillSettingRunningStyleString.lowercase()) {
+            "disabled" -> null
+            "inherit" -> RunningStyle.fromShortName(racingSettingRunningStyleString) ?: game.trainee.runningStyle
+            else -> RunningStyle.fromName(skillSettingRunningStyleString)
         }
 
+
         // Get user specified track distance.
-        var preferredTrackDistance: TrackDistance? = if (USE_MOCK_DATA) {
-            MOCK_TRACK_DISTANCE
-        } else {
-            when (skillSettingTrackDistanceString.lowercase()) {
-                "disabled" -> null
-                "inherit" -> TrackDistance.fromName(trainingSettingTrackDistanceString) ?: game.trainee.trackDistance
-                else -> game.trainee.trackDistance
-            }
+        var preferredTrackDistance: TrackDistance? = when (skillSettingTrackDistanceString.lowercase()) {
+            "disabled" -> null
+            "inherit" -> TrackDistance.fromName(trainingSettingTrackDistanceString) ?: game.trainee.trackDistance
+            else -> TrackDistance.fromName(skillSettingTrackDistanceString)
         }
+
+        // Get user specified track surface.
+        var preferredTrackSurface: TrackSurface? = when (skillSettingTrackSurfaceString.lowercase()) {
+            "disabled" -> null
+            else -> TrackSurface.fromName(skillSettingTrackSurfaceString)
+        }
+
+        MessageLog.d(TAG, "Using preferred running style: $preferredRunningStyle")
+        MessageLog.d(TAG, "Using preferred track distance: $preferredTrackDistance")
+        MessageLog.d(TAG, "Using preferred track surface: $preferredTrackSurface")
 
         // Get only skills which match our aptitudes or user-specified styles or
         // are agnostic of style or track variables.
         val filteredSkills: Map<String, SkillListEntry> =
             skillList.getAptitudeIndependentSkills() +
             skillList.getRunningStyleSkills(preferredRunningStyle) +
-            skillList.getTrackDistanceSkills(preferredTrackDistance)
+            skillList.getTrackDistanceSkills(preferredTrackDistance) +
+            skillList.getTrackSurfaceSkills(preferredTrackSurface) +
+            skillList.getInferredRunningStyleSkills(preferredRunningStyle)
 
         // Group the remaining entries by their communityTier. Higher values are better.
         // This can contain a NULL group for skills that are not in the tier list.
@@ -351,12 +348,12 @@ class SkillPlan (private val game: Game) {
                 continue
             }
 
-            MessageLog.e("REMOVEME", "============ TIER $communityTier =============")
+            MessageLog.v(TAG, "============ SKILL COMMUNITY TIER $communityTier =============")
 
             // Sort the tier by its point ratio.
             val sortedByPointRatio: List<SkillListEntry> = group.sortedByDescending { it.evaluationPointRatio }
             for (entry in sortedByPointRatio) {
-                MessageLog.e("REMOVEME", "\t${entry.name}: ${entry.price}(${entry.screenPrice}) -> ${entry.evaluationPoints}(${entry.evaluationPointRatio})")
+                MessageLog.v(TAG, "\t${entry.name} -> price [real(shown)]: ${entry.price}(${entry.screenPrice}), rank(ratio): ${entry.evaluationPoints}(" + "%.2f".format(entry.evaluationPointRatio) + ")")
                 // Don't add duplicate entries.
                 if (entry.name in result || entry.name in skillsToBuy) {
                     continue
@@ -377,7 +374,17 @@ class SkillPlan (private val game: Game) {
                 remainingSkillPoints -= entry.screenPrice
                 entry.buy()
             }
+            MessageLog.v(TAG, "=================================================")
         }
+
+        // We may still have skill points after buying all aptitude-based skills.
+        // Spend remaining points to optimize rank.
+        result += getSkillsToBuyOptimizeRankStrategy(
+            skillPlanSettings = skillPlanSettings,
+            skillList = skillList,
+            skillsToBuy = skillsToBuy + result.keys.toList(),
+            availableSkillPoints = remainingSkillPoints,
+        )
 
         return result.toMap()
     }
@@ -388,10 +395,6 @@ class SkillPlan (private val game: Game) {
         skillsToBuy: List<String>,
         availableSkillPoints: Int,
     ): Map<String, Int> {
-        if (skillPlanSettings.spendingStrategy != SpendingStrategy.OPTIMIZE_RANK) {
-            return emptyMap()
-        }
-
         val result: MutableMap<String, Int> = mutableMapOf()
         var remainingSkillPoints: Int = availableSkillPoints
 
@@ -440,11 +443,15 @@ class SkillPlan (private val game: Game) {
             return emptyMap()
         }
 
-        MessageLog.d(TAG, "============== Skill Plan ==============")
+        MessageLog.d(TAG, "======================= Skill Plan =======================")
+        MessageLog.d(TAG, "Spending Strategy: ${skillPlanSettings.spendingStrategy}")
+        MessageLog.d(TAG, "Buy Inherited Skills: ${skillPlanSettings.buyInheritedSkills}")
+        MessageLog.d(TAG, "Buy Negative Skills: ${skillPlanSettings.buyNegativeSkills}")
+        MessageLog.d(TAG, "User-Specified Skills:" + if (skillPlanSettings.skillPlan.isEmpty()) " None" else "")
         for (name in skillPlanSettings.skillPlan) {
             MessageLog.d(TAG, "\t$name")
         }
-        MessageLog.d(TAG, "========================================")
+        MessageLog.d(TAG, "==========================================================")
 
         val result: MutableMap<String, Int> = mutableMapOf()
 
@@ -653,8 +660,6 @@ class SkillPlan (private val game: Game) {
             skillList.cancelAndExit()
             return true
         }
-
-        return true // REMOVEME
 
         // Go back through skill list and purchase skills.
         skillList.parseSkillListEntries() { _, entry: SkillListEntry, point: Point ->

@@ -287,6 +287,8 @@ data class SkillData(
     val evalPt: Int,
     val ptRatio: Double,
     val rarity: Int,
+    val condition: String,
+    val precondition: String,
     val bIsInheritedUnique: Boolean,
     val communityTier: Int?,
     val versions: List<Int>,
@@ -302,12 +304,22 @@ data class SkillData(
         bIsNegative ||
         name.dropLast(2).endsWith("straightaways", ignoreCase = true) ||
         name.dropLast(2).endsWith("corners", ignoreCase = true)
-    // Some skills are for specific running styles or track distances.
-    // This information is appeneded to the end of the description
-    // string inside parentheses.
-    // We extract this and store it in a nullable property.
-    val runningStyle: RunningStyle? = RunningStyle.entries.find { description.contains("(${it.name.replace('_', ' ')})", ignoreCase = true) }
-    val trackDistance: TrackDistance? = TrackDistance.entries.find { description.contains("($it)", ignoreCase = true) }
+
+    // &=AND, @=OR. Split groupings of AND conditions into separate strings.
+    // Then each one of those is converted to a mapping of the
+    // condition to the effect string.
+    val conditions: Conditions = Conditions.fromString(condition + "@" + precondition)
+
+    // Some skills are for specific running styles or track distances/surfaces.
+    // We want to extract this from the scraped data.
+    val runningStyle: RunningStyle? = conditions.runningStyle
+    val trackDistance: TrackDistance? = conditions.trackDistance
+    val trackSurface: TrackSurface? = conditions.trackSurface
+
+    // These running styles are calculated based on a skill's activation conditions.
+    // However since these might not actually be specific to a running style,
+    // the skill will not give any rank bonus based on aptitudes.
+    val inferredRunningStyles: List<RunningStyle> = conditions.inferredRunningStyles
 
     constructor(
         id: Int,
@@ -318,6 +330,8 @@ data class SkillData(
         evalPt: Int,
         ptRatio: Double,
         rarity: Int,
+        condition: String,
+        precondition: String,
         bIsInheritedUnique: Boolean,
         communityTier: Int?,
         versions: String,
@@ -332,6 +346,8 @@ data class SkillData(
         evalPt,
         ptRatio,
         rarity,
+        condition,
+        precondition,
         bIsInheritedUnique,
         communityTier,
         versions
@@ -344,4 +360,276 @@ data class SkillData(
         upgrade,
         downgrade,
     )
+
+    enum class Operator(val opString: String) {
+        EQ("=="),
+        NE("!="),
+        GT(">"),
+        GE(">="),
+        LT("<"),
+        LE("<=");
+
+        companion object {
+            private val nameMap = entries.associateBy { it.name }
+            private val ordinalMap = entries.associateBy { it.ordinal }
+
+            fun fromName(value: String): Operator? = nameMap[value]
+            fun fromOrdinal(ordinal: Int): Operator? = ordinalMap[ordinal]
+            fun fromString(value: String): Operator? = entries.find { value == it.opString }
+        }
+    }
+
+    data class Condition(
+        val name: String,
+        val op: Operator,
+        val value: Int,
+    ) {
+        companion object {
+            fun fromString(input: String): Condition? {
+                // Regex explanation:
+                // (\\s*\\S+?): Captures the left operand (non-whitespace characters, non-greedy, with optional surrounding whitespace).
+                // (==|!=|>=|<=|>|<): Captures the operator from a set of possible conditional operators.
+                // (\\s*\\S+): Captures the right operand (non-whitespace characters, with optional surrounding whitespace).
+                val pattern = "(\\s*\\S+?) *(==|!=|>=|<=|>|\\<) *(\\S+)\\s*".toRegex()
+                val matchResult = pattern.find(input.trim())
+                if (matchResult != null && matchResult.groupValues.size == 4) {
+                    // groupValues[0] is the whole match.
+                    val name: String = matchResult.groupValues[1].trim()
+                    val op: Operator = Operator.fromString(matchResult.groupValues[2].trim()) ?: return null
+                    val value: Int = matchResult.groupValues[3].trim().toIntOrNull() ?: return null
+                    return Condition(name, op, value)
+                } else {
+                    return null
+                }
+            }
+        }
+
+        fun check(name: String? = null, op: Operator, value: Int): Boolean {
+            if (name != null) {
+                return this.name == name && this.op == op && this.value == value
+            } else {
+                return this.op == op && this.value == value
+            }
+        }
+
+        override fun toString(): String {
+            return "$name $op $value"
+        }
+    }
+
+    // Condition group conditions are evaluated using AND logic.
+    // These entries are separated by an "&".
+    class ConditionGroup(val conditions: List<Condition>) {
+        val bIsLeading: Boolean = isLeading()
+        val bIsWellPositioned: Boolean = isWellPositioned()
+        val bIsOffThePace: Boolean = isOffThePace()
+        val bIsMidPack: Boolean = isMidPack()
+        val bIsTowardTheBack: Boolean = isTowardTheBack()
+        val bIsTowardTheFront: Boolean = isTowardTheFront()
+
+        companion object {
+            fun fromString(input: String): ConditionGroup {
+                return ConditionGroup(
+                    input.split("&").mapNotNull { Condition.fromString(it) }
+                )
+            }
+        }
+
+        private fun isLeading(): Boolean {
+            return check(Condition("order", Operator.EQ, 1))
+        }
+
+        private fun isWellPositioned(): Boolean {
+            return (
+                checkInRange("order", 2, 5) ||
+                checkInRange("order_rate", 20, 60)
+            )
+        }
+
+        private fun isOffThePace(): Boolean {
+            return (
+                check(Condition("order", Operator.GE, 3)) &&
+                checkInRange("order_rate", 0, 50)
+            )
+        }
+
+        private fun isMidPack(): Boolean {
+            return (
+                (check(Condition("order", Operator.GE, 3)) && checkInRange("order_rate", 30, 80)) ||
+                checkInRange("order_rate", 30, 80)
+            )
+        }
+
+        private fun isTowardTheBack(): Boolean {
+            return (
+                checkInRange("order", 5, 50) ||
+                checkInRange("order_rate", 51, 100) ||
+                check(Condition("order_rate_out50_continue", Operator.EQ, 1)) ||
+                check(Condition("order_rate_out70_continue", Operator.EQ, 1))
+            )
+
+        }
+
+        private fun isTowardTheFront(): Boolean {
+            return (
+                checkInRange("order", 0, 5) ||
+                checkInRange("order_rate", 0, 50) ||
+                check(Condition("order_rate_in20_continue", Operator.EQ, 1)) ||
+                check(Condition("order_rate_in40_continue", Operator.EQ, 1)) ||
+                check(Condition("order_rate_in50_continue", Operator.EQ, 1))
+            )
+        }
+
+        fun check(condition: Condition): Boolean {
+            return conditions.any {
+                it.name == condition.name &&
+                it.op == condition.op &&
+                it.value == condition.value
+            }
+        }
+
+        fun check(conditions: List<Condition>): Boolean {
+            return conditions.all { check(it) }
+        }
+
+        fun checkInRange(name: String, minVal: Int, maxVal: Int): Boolean {
+            return conditions.any { it.name == name && it.value in minVal..maxVal }
+        }
+
+        fun getRunningStyle(): RunningStyle? {
+            for (condition in conditions) {
+                if (condition.name == "running_style") {
+                    return RunningStyle.fromOrdinal(condition.value - 1)
+                }
+            }
+            return null
+        }
+
+        fun getTrackDistance(): TrackDistance? {
+            for (condition in conditions) {
+                if (condition.name == "distance_type") {
+                    return TrackDistance.fromOrdinal(condition.value - 1)
+                }
+            }
+            return null
+        }
+
+        fun getTrackSurface(): TrackSurface? {
+            for (condition in conditions) {
+                if (condition.name == "ground_type") {
+                    return TrackSurface.fromOrdinal(condition.value - 1)
+                }
+            }
+            return null
+        }
+
+        override fun toString(): String {
+            return conditions.joinToString()
+        }
+    }
+
+    class Conditions(val groups: List<ConditionGroup>) {
+        val bIsLeading: Boolean = groups.any { it.bIsLeading }
+        val bIsWellPositioned: Boolean = groups.any { it.bIsWellPositioned }
+        val bIsOffThePace: Boolean = groups.any { it.bIsOffThePace }
+        val bIsMidPack: Boolean = groups.any { it.bIsMidPack }
+        val bIsTowardTheBack: Boolean = groups.any { it.bIsTowardTheBack }
+        val bIsTowardTheFront: Boolean = groups.any { it.bIsTowardTheFront }
+
+        val runningStyle: RunningStyle? = calculateRunningStyle()
+        val trackDistance: TrackDistance? = calculateTrackDistance()
+        val trackSurface: TrackSurface? = calculateTrackSurface()
+        val inferredRunningStyles: List<RunningStyle> = calculateInferredRunningStyles()
+
+        companion object {
+            fun fromString(input: String): Conditions {
+                return Conditions(
+                    input.split("@").mapNotNull { ConditionGroup.fromString(input) }
+                )
+            }
+        }
+
+        private fun calculateRunningStyle(): RunningStyle? {
+            for (group in groups) {
+                val result: RunningStyle? = group.getRunningStyle()
+                if (result != null) {
+                    return result
+                }
+            }
+            return null
+        }
+
+        private fun calculateTrackDistance(): TrackDistance? {
+            for (group in groups) {
+                val result: TrackDistance? = group.getTrackDistance()
+                if (result != null) {
+                    return result
+                }
+            }
+            return null
+        }
+
+        private fun calculateTrackSurface(): TrackSurface? {
+            for (group in groups) {
+                val result: TrackSurface? = group.getTrackSurface()
+                if (result != null) {
+                    return result
+                }
+            }
+            return null
+        }
+
+        private fun calculateInferredRunningStyles(): List<RunningStyle> {
+            val result: MutableList<RunningStyle> = mutableListOf()
+            if (bIsLeading) {
+                result.add(RunningStyle.FRONT_RUNNER)
+            }
+
+            if (bIsTowardTheFront) {
+                result.add(RunningStyle.FRONT_RUNNER)
+                result.add(RunningStyle.PACE_CHASER)
+            }
+            
+            if (bIsWellPositioned) {
+                result.add(RunningStyle.PACE_CHASER)
+            }
+
+            if (bIsMidPack) {
+                result.add(RunningStyle.PACE_CHASER)
+                result.add(RunningStyle.LATE_SURGER)
+            }
+
+            if (bIsOffThePace) {
+                result.add(RunningStyle.PACE_CHASER)
+                result.add(RunningStyle.LATE_SURGER)
+            }
+
+            if (bIsTowardTheBack) {
+                result.add(RunningStyle.LATE_SURGER)
+                result.add(RunningStyle.END_CLOSER)
+            }
+
+            return result.distinct()
+        }
+
+        override fun toString(): String {
+            return groups.joinToString()
+        }
+    }
+
+    fun checkInferredRunningStyleAptitude(runningStyle: RunningStyle): Boolean {
+        return runningStyle in inferredRunningStyles
+    }
+
+    fun checkRunningStyleAptitude(runningStyle: RunningStyle): Boolean {
+        return this.runningStyle == runningStyle
+    }
+
+    fun checkTrackDistanceAptitude(trackDistance: TrackDistance): Boolean {
+        return this.trackDistance == trackDistance
+    }
+
+    fun checkTrackSurfaceAptitude(trackSurface: TrackSurface): Boolean {
+        return this.trackSurface == trackSurface
+    }
 }
