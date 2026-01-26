@@ -87,13 +87,13 @@ class SkillList (private val game: Game) {
                 if (name in result) {
                     continue
                 }
-                // Because we're building this mapping before we've scanned
-                // the skill list, all entries are virtual.
                 val skillData: SkillData? = skillDatabase.getSkillData(name)
                 if (skillData == null) {
                     MessageLog.e(TAG, "Failed to get skill data for \"$name\".")
                     continue
                 }
+                // Because we're building this mapping before we've scanned
+                // the skill list, all entries are virtual.
                 val entry = SkillListEntry(game, skillData, bIsVirtual = true, prev = prevEntry)
 
                 // Now add to our mapping.
@@ -670,6 +670,7 @@ class SkillList (private val game: Game) {
         // Update the entry with our new data.
         entry.bIsObtained = bIsObtained
         entry.bIsVirtual = false
+        // Very important we call this otherwise prices wont be accurate.
         entry.updateScreenPrice(skillPrice)
 
         return entry
@@ -718,6 +719,7 @@ class SkillList (private val game: Game) {
         // Update the entry with our new data.
         entry.bIsObtained = bIsObtained
         entry.bIsVirtual = false
+        // Very important we call this otherwise prices wont be accurate.
         entry.updateScreenPrice(skillPrice)
 
         return entry
@@ -1050,6 +1052,11 @@ class SkillList (private val game: Game) {
      */
     fun parseMockSkillListEntries(): Map<String, SkillListEntry> {
         val mockSkills: Map<String, Int> = mapOf(
+            "Tactical Tweak" to 120,
+            "Shatterproof" to 240,
+        )
+
+        val mockSkills2: Map<String, Int> = mapOf(
             "Warning Shot!" to -1,
             "Triumphant Pulse" to 120,
             "Kyoto Racecourse ○" to 63,
@@ -1065,6 +1072,8 @@ class SkillList (private val game: Game) {
             "Calm in a Crowd" to 153,
             "Nimble Navigator" to 135,
             "Homestretch Haste" to 153,
+            "Shatterproof" to 240, // REMOVEME
+            "Tactical Tweak" to 96, // REMOVEME
             "Up-Tempo" to 104,
             "Steadfast" to 144,
             "Extra Tank" to 96,
@@ -1083,22 +1092,39 @@ class SkillList (private val game: Game) {
             "Ignited Spirit SPD" to 180,
         )
 
+        val fixedSkills: MutableMap<String, Int> = mutableMapOf()
         for ((name, price) in mockSkills) {
-            val entry: SkillListEntry? = entries[name]
+            val fixedName: String? = skillDatabase.checkSkillName(name, fuzzySearch = true)
+            if (fixedName == null) {
+                MessageLog.e(TAG, "parseMockSkillListEntries: \"$name\" not in database.")
+                return emptyMap()
+            }
             // In case of error, we don't want to give back partial data so
             // we just immediately return an empty list.
+            val entry: SkillListEntry? = entries[fixedName]
             if (entry == null) {
                 MessageLog.e(TAG, "parseMockSkillListEntries: \"$name\" not in entries.")
                 return emptyMap()
             }
+            fixedSkills[fixedName] = price
+        }
 
+        val result: MutableMap<String, SkillListEntry> = mutableMapOf()
+        for ((name, price) in fixedSkills) {
+            val entry: SkillListEntry? = entries[name]
+            if (entry == null) {
+                MessageLog.e(TAG, "parseMockSkillListEntries: \"$name\" not in entries.")
+                return emptyMap()
+            }
             // Manually update entries with data.
             entry.bIsObtained = price <= 0
             entry.bIsVirtual = false
+            // Very important we call this otherwise prices wont be accurate.
             entry.updateScreenPrice(price)
+            result[name] = entry
         }
 
-        return entries
+        return result.toMap()
     }
 
     /** Checks whether we are at any skill list screen.
