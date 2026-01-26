@@ -45,6 +45,7 @@ export interface Settings {
     skills: {
         preferredRunningStyle: string
         preferredTrackDistance: string
+        preferredTrackSurface: string
         enablePreFinalsSkillPlan: boolean
         preFinalsSpendingStrategy: string
         enablePreFinalsBuyInheritedSkills: boolean

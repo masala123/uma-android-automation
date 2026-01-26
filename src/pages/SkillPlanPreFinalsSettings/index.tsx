@@ -23,6 +23,8 @@ interface Skill {
     eval_pt: number
     pt_ratio: number
     rarity: number
+    condition: string
+    precondition: string
     inherited: boolean
     community_tier: number | null
     versions: number[]

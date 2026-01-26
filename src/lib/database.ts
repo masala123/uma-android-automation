@@ -39,6 +39,8 @@ export interface DatabaseSkill {
     eval_pt: number
     pt_ratio: number
     rarity: number
+    condition: string
+    precondition: string
     inherited: boolean
     community_tier: number | null
     versions: number[] | null
@@ -217,6 +219,8 @@ export class DatabaseManager {
                     eval_pt INTEGER NOT NULL,
                     pt_ratio REAL NOT NULL,
                     rarity INTEGER NOT NULL,
+                    condition TEXT NOT NULL,
+                    precondition TEXT NOT NULL,
                     inherited BOOLEAN NOT NULL DEFAULT 0,
                     community_tier INTEGER,
                     versions TEXT NOT NULL,
@@ -703,8 +707,8 @@ export class DatabaseManager {
 
                 await this.db!.runAsync("BEGIN TRANSACTION")
                 const stmt = await this.db!.prepareAsync(
-                    `INSERT OR REPLACE INTO ${this.TABLE_SKILLS} (key, skill_id, name_en, desc_en, icon_id, cost, eval_pt, pt_ratio, rarity, inherited, community_tier, versions, upgrade, downgrade)
-                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+                    `INSERT OR REPLACE INTO ${this.TABLE_SKILLS} (key, skill_id, name_en, desc_en, icon_id, cost, eval_pt, pt_ratio, rarity, condition, precondition, inherited, community_tier, versions, upgrade, downgrade)
+                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
                 )
 
                 // Execute all skills in batch using prepared statement.
@@ -723,6 +727,8 @@ export class DatabaseManager {
                         skill.eval_pt,
                         skill.pt_ratio,
                         skill.rarity,
+                        skill.condition,
+                        skill.precondition,
                         skill.inherited,
                         skill.community_tier,
                         versions,

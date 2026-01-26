@@ -47,6 +47,8 @@ class SkillDatabase (private val game: Game) {
         private val SKILLS_COLUMN_EVAL_PT = "eval_pt"
         private val SKILLS_COLUMN_PT_RATIO = "pt_ratio"
         private val SKILLS_COLUMN_RARITY = "rarity"
+        private val SKILLS_COLUMN_CONDITION = "condition"
+        private val SKILLS_COLUMN_PRECONDITION = "precondition"
         private val SKILLS_COLUMN_INHERITED = "inherited"
         private val SKILLS_COLUMN_COMMUNITY_TIER = "community_tier"
         private val SKILLS_COLUMN_VERSIONS = "versions"
@@ -86,6 +88,8 @@ class SkillDatabase (private val game: Game) {
                         val evalPtIndex: Int = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_EVAL_PT)
                         val ptRatioIndex: Int = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_PT_RATIO)
                         val rarityIndex: Int = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_RARITY)
+                        val conditionIndex: Int = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_CONDITION)
+                        val preconditionIndex: Int = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_PRECONDITION)
                         val inheritedIndex: Int = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_INHERITED)
                         val communityTierIndex: Int = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_COMMUNITY_TIER)
                         val versionsIndex: Int = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_VERSIONS)
@@ -101,6 +105,8 @@ class SkillDatabase (private val game: Game) {
                             evalPt = it.getInt(evalPtIndex),
                             ptRatio = it.getDouble(ptRatioIndex),
                             rarity = it.getInt(rarityIndex),
+                            condition = it.getString(conditionIndex),
+                            precondition = it.getString(preconditionIndex),
                             bIsInheritedUnique = it.getInt(inheritedIndex) == 1,
                             communityTier = if (it.isNull(communityTierIndex)) null else it.getInt(communityTierIndex),
                             versions = it.getString(versionsIndex),
