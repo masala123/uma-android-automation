@@ -486,13 +486,14 @@ class Training(private val game: Game) {
 
             val currentStat: Int = config.currentStats.getOrDefault(training.name, 0)
             val potentialStat: Int = currentStat + training.statGains.getOrElse(training.name) { 0 }
+            val effectiveStatCap = config.currentStatCap - 100
 
-			// Don't score for stats that are maxed or would be maxed.
-			if (config.disableTrainingOnMaxedStat && currentStat >= config.currentStatCap) {
+			// Don't score for stats that are close to the cap or would be close to it.
+			if (config.disableTrainingOnMaxedStat && currentStat >= effectiveStatCap) {
 				return 0.0
 			}
 
-            if (potentialStat >= config.currentStatCap) {
+            if (potentialStat >= effectiveStatCap) {
                 return 0.0
             }
 
