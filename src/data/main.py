@@ -643,6 +643,36 @@ class SkillScraper(BaseScraper):
         # Then we return it as a dictionary.
         skill_data = driver.execute_script("let tmp = { exports: null }; window.webpackChunk_N_E.find(arr => arr[0][0] == 4318)[1][60930](tmp); return tmp.exports")
         
+        def get_conditions(s, get_preconditions = False):
+            # Prioritize getting the english version of the condition group since it
+            # should be the current global patch data.
+            # Always try the gene_version first.
+            groups = s.get("loc", {}).get("en", {}).get("gene_version", None)
+            if groups is not None:
+                groups = s.get("loc", {}).get("en", {}).get("gene_version", {}).get("condition_groups", None)
+            else:
+                groups = s.get("loc", {}).get("en", {}).get("condition_groups", None)
+            
+            # Fall back to main condition_groups field.
+            if groups is None:
+                if "gene_version" in s:
+                    groups = s["gene_version"].get("condition_groups", None)
+                else:
+                    groups = s.get("condition_groups", None)
+    
+            # Just return now if we still havent found anything.
+            if groups is None:
+                return ""
+            
+            res = []
+            for group in groups:
+                condition = group.get("precondition" if get_preconditions else "condition", None)
+                if condition is not None:
+                    res.append(condition)
+
+            return "@".join(res)
+
+        
         skill_id_to_name = {}
         for skill in skill_data:
             try:
@@ -655,8 +685,6 @@ class SkillScraper(BaseScraper):
                 skill_desc_en = skill["desc_en"]
                 skill_iconid = skill["iconid"]
                 skill_rarity = skill["rarity"]
-                skill_condition = skill.get("condition_groups", [{}])[0].get("condition", "")
-                skill_precondition = skill.get("condition_groups", [{}])[0].get("precondition", "")
                 skill_inherited = False
                 skill_cost = skill.get("cost", None)
                 # For inherited unique skills, we actually want the
@@ -667,14 +695,16 @@ class SkillScraper(BaseScraper):
                     skill_desc_en = skill["gene_version"]["desc_en"]
                     skill_iconid = skill["gene_version"]["iconid"]
                     skill_rarity = skill["gene_version"]["rarity"]
-                    skill_condition = skill["gene_version"].get("condition_groups", [{}])[0].get("condition", "")
-                    skill_precondition = skill["gene_version"].get("condition_groups", [{}])[0].get("precondition", "")
                     skill_inherited = skill["gene_version"].get("inherited", False)
                     skill_cost = skill["gene_version"].get("cost", None)
 
                 if skill_cost is None:
                     logging.warning(f"Dropping skill with invalid COST: {skill_name_en}")
                     continue
+
+                # Get the skill activation conditions.
+                skill_condition = get_conditions(skill)
+                skill_precondition = get_conditions(skill, get_preconditions=True)
 
                 extra_data = skill_evaluation_points.get(
                     skill_id,
@@ -993,7 +1023,7 @@ if __name__ == "__main__":
 
     skill_scraper = SkillScraper()
     skill_scraper.start_webpack_method()
-
+    """
     after_race_events = load_after_race_events()
     character_scraper = CharacterScraper(after_race_events)
     character_scraper.start()
@@ -1003,6 +1033,6 @@ if __name__ == "__main__":
 
     race_scraper = RaceScraper()
     race_scraper.start()
-
+    """
     end_time = round(time.time() - start_time, 2)
     logging.info(f"Total time for processing all applications: {end_time} seconds or {round(end_time / 60, 2)} minutes.")
