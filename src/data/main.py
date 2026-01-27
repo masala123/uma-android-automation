@@ -1023,7 +1023,7 @@ if __name__ == "__main__":
 
     skill_scraper = SkillScraper()
     skill_scraper.start_webpack_method()
-    """
+
     after_race_events = load_after_race_events()
     character_scraper = CharacterScraper(after_race_events)
     character_scraper.start()
@@ -1033,6 +1033,6 @@ if __name__ == "__main__":
 
     race_scraper = RaceScraper()
     race_scraper.start()
-    """
+
     end_time = round(time.time() - start_time, 2)
     logging.info(f"Total time for processing all applications: {end_time} seconds or {round(end_time / 60, 2)} minutes.")
