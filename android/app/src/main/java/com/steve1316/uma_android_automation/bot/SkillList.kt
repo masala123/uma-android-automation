@@ -5,8 +5,6 @@ import android.graphics.Bitmap
 import org.opencv.core.Point
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
-//import java.util.Collections
-//import kotlinx.coroutines.*
 
 import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.automation_library.utils.MessageLog
@@ -22,19 +20,30 @@ import com.steve1316.uma_android_automation.utils.types.SkillData
 
 import com.steve1316.uma_android_automation.components.*
 
-typealias OnEntryDetectedCallback = (SkillList, SkillListEntry, Point) -> Unit
+/** A callback that fires whenever we detect an entry in the skill list.
+ *
+ * @param skillList A reference to the SkillList instance which fired this callback.
+ * @param entry: The SkillListEntry instance which was detected.
+ * @param skillUpButtonLocation The screen location of the SkillUpButton for this entry.
+ */
+typealias OnEntryDetectedCallback = (
+    skillList: SkillList,
+    entry: SkillListEntry,
+    skillUpButtonLocation: Point,
+) -> Unit
 
 /**
+ * @property skillDatabase A SkillDatabase instance used for querying skill info.
  * @property entries Mapping of SkillListEntry objects.
  * @property skillPoints The current remaining skill points.
  * Defaults to NULL if not yet detected.
+ * The value is set in the `detectSkillPoints` function.
  */
 class SkillList (private val game: Game) {
     private val TAG: String = "[${MainActivity.loggerTag}]SkillList"
 
     private val skillDatabase: SkillDatabase = SkillDatabase(game)
-
-    var entries: Map<String, SkillListEntry> = generateSkillListEntries()
+    private var entries: Map<String, SkillListEntry> = generateSkillListEntries()
     var skillPoints: Int = 0
         private set
 
@@ -78,6 +87,15 @@ class SkillList (private val game: Game) {
         return Pair(true, dialog)
     }
 
+    /** Creates a mapping of skill names to SkillListEntry objects.
+     *
+     * This function uses the skill database to populate our `entries` object.
+     * While building the `entries` object, we also make sure to preserve the
+     * structure of skill upgrade chains by linking them together when
+     * instantiating the SkillListEntry object (`prev` parameter).
+     *
+     * @return A mapping of skill names to SkillListEntry objects.
+     */
     private fun generateSkillListEntries(): Map<String, SkillListEntry> {
         // Get list of unique upgrade chains.
         val upgradeChains: List<List<String>> = skillDatabase.skillUpgradeChains
@@ -160,7 +178,7 @@ class SkillList (private val game: Game) {
             (bbox.y + (bbox.h / 2)).toFloat(),
             (bbox.x + (bbox.w / 2)).toFloat(),
             // high value here ensures we go all the way to top of list
-            (bbox.y + (bbox.h * 100)).toFloat(),
+            (bbox.y + (bbox.h * 1000)).toFloat(),
         )
         // Small delay for list to stabilize.
         game.wait(1.0, skipWaitingForLoading = true)
@@ -487,6 +505,9 @@ class SkillList (private val game: Game) {
      * This allows our dialog handler to update aptitudes for the trainee.
      * This is useful for when we start the bot at the skills list or at
      * the end of a career when aptitudes are unknown.
+     *
+     * Evaluating skills relies on these aptitudes being known since many
+     * skills are dependent on things such as running style or track distance.
      */
     fun checkStats() {
         ButtonSkillListFullStats.click(game.imageUtils)
@@ -552,9 +573,10 @@ class SkillList (private val game: Game) {
         }
         skillName += iconChar
 
-        // Negative skills have "Remove" in front of their skill name in the title.
-        // The actual skill itself in the database does not have this prefix.
-        // Get rid of this prefix as it causes fuzzy matching to fail.
+        // Most negative skills have "Remove" in front of their skill
+        // name in the title. The actual skill itself in the database does
+        // not have this prefix. We need to get rid of this prefix as it
+        // causes fuzzy matching to fail.
         skillName = if (skillName.startsWith("remove", ignoreCase = true)) {
             skillName.drop("remove".length)
         } else {
@@ -991,19 +1013,9 @@ class SkillList (private val game: Game) {
 
             // If the scrollbar hasn't changed after scrolling,
             // that means we've reached the end of the list.
-            /*
-            if (prevScrollBarBitmap != null) {
-                val similarity: Double = game.imageUtils.compareBitmapSSIM(scrollBarBitmap, prevScrollBarBitmap)
-                if (similarity >= 0.95) {
-                    break
-                }
-            }
-            */
-            ///*
             if (prevScrollBarBitmap != null && scrollBarBitmap.sameAs(prevScrollBarBitmap)) {
                 break
             }
-            //*/
 
             prevScrollBarBitmap = scrollBarBitmap
 
@@ -1054,6 +1066,9 @@ class SkillList (private val game: Game) {
 
     /** Gets skill list entries using mocked data.
      *
+     * NOTE: This is just useful for debugging purposes.
+     * The data was taken from a real run so these values are all valid.
+     *
      * @return A mapping of skill names to SkillListEntry objects.
      */
     fun parseMockSkillListEntries(): Map<String, SkillListEntry> {
@@ -1091,6 +1106,7 @@ class SkillList (private val game: Game) {
             "Ignited Spirit SPD" to 180,
         )
 
+        // Fix skill names in case any have been typed incorrectly.
         val fixedSkills: MutableMap<String, Int> = mutableMapOf()
         for ((name, price) in mockSkills) {
             val fixedName: String? = skillDatabase.checkSkillName(name, fuzzySearch = true)
@@ -1126,7 +1142,7 @@ class SkillList (private val game: Game) {
         return result.toMap()
     }
 
-    /** Checks whether we are at any skill list screen.
+    /** Checks whether we are at a skill list screen.
      *
      * @param bitmap Optional bitmap to use when detecting whether we are at
      * the skill list screen. If not specified, a screenshot will be taken
@@ -1171,6 +1187,12 @@ class SkillList (private val game: Game) {
         )
     }
 
+    /** Prints all skill list entries to the MessageLog.
+     *
+     * @param skillListEntries Optional mapping to use when printing.
+     * If not specified, then this class instance's `entries` map is used instead.
+     * @param verbose Whether to print extra entry information.
+     */
     fun printSkillListEntries(
         skillListEntries: Map<String, SkillListEntry>? = null,
         verbose: Boolean = false,
@@ -1189,6 +1211,11 @@ class SkillList (private val game: Game) {
         MessageLog.v(TAG, "======================================================")
     }
 
+    /** Purchases a skill.
+     *
+     * @param name The name of the skill to purchase.
+     * @param skillUpButtonLocation The screen location of the SkillUpButton.
+     */
     fun buySkill(name: String, skillUpButtonLocation: Point): SkillListEntry? {
         val entry: SkillListEntry? = entries[name]
         if (entry == null) {
@@ -1207,33 +1234,77 @@ class SkillList (private val game: Game) {
         return entry
     }
 
+    /** Returns all skill list entries.
+     *
+     * NOTE: This returns ALL entries, including ones that do not exist
+     * in the actual skill list.
+     */
     fun getAllSkills(): Map<String, SkillListEntry> {
         return entries
     }
-    
-    fun getUnobtainedSkills(): Map<String, SkillListEntry> {
-        return entries.filterValues { !it.bIsObtained }
-    }
 
+    /** Returns skills that actually exist in the skill list (not virtual). */
     fun getAvailableSkills(): Map<String, SkillListEntry> {
         return entries.filterValues { it.bIsAvailable }
     }
-    
+
+    /** Returns skills that do not exist in the skill list.  */
     fun getVirtualSkills(): Map<String, SkillListEntry> {
         return getUnobtainedSkills().filterValues { it.bIsVirtual }
     }
 
-    fun getNegativeSkills(): Map<String, SkillListEntry> {
-        return getAvailableSkills().filterValues { it.bIsNegative }
+    /** Returns all skills that not been purchased.
+     *
+     * @param includeVirtual Whether to include virtual skills in the result.
+     * By default, only available skills will be included.
+     */
+    fun getUnobtainedSkills(includeVirtual: Boolean = false): Map<String, SkillListEntry> {
+        val src: Map<String, SkillListEntry> = if (includeVirtual) getAllSkills() else getAvailableSkills()
+        return src.filterValues { !it.bIsObtained }
     }
 
-    fun getInheritedUniqueSkills(): Map<String, SkillListEntry> {
-        return getAvailableSkills().filterValues { it.bIsInheritedUnique }
+    /** Returns all negative skills (purple skills).
+     *
+     * @param includeVirtual Whether to include virtual skills in the result.
+     * By default, only available skills will be included.
+     */
+    fun getNegativeSkills(includeVirtual: Boolean = false): Map<String, SkillListEntry> {
+        val src: Map<String, SkillListEntry> = if (includeVirtual) getAllSkills() else getAvailableSkills()
+        return src.filterValues { it.bIsNegative }
     }
 
-    fun getAptitudeIndependentSkills(runningStyle: RunningStyle? = null): Map<String, SkillListEntry> {
-        val inferredRunningStyleSkills: Map<String, SkillListEntry> = getInferredRunningStyleSkills(runningStyle)
-        return getAvailableSkills().filterValues {
+    /** Returns all inherited unique skills.
+     *
+     * @param includeVirtual Whether to include virtual skills in the result.
+     * By default, only available skills will be included.
+     */
+    fun getInheritedUniqueSkills(includeVirtual: Boolean = false): Map<String, SkillListEntry> {
+        val src: Map<String, SkillListEntry> = if (includeVirtual) getAllSkills() else getAvailableSkills()
+        return src.filterValues { it.bIsInheritedUnique }
+    }
+
+    /** Returns all skills that are not affected by a trainee's aptitudes.
+     *
+     * These skills are dependent on a running style, track distance, or track surface.
+     * For example, the skill `Front Runner Savvy ○` specifies in its description
+     * that it is for "(Front Runner)".
+     *
+     * This function also filters by skills whose running style is inferred and not
+     * explicitly stated. See `getInferredRunningStyleSkills` for more details.
+     *
+     * @param runningStyle The optional RunningStyle to use when filtering the
+     * inferred running styles. If not specified, then skills with ANY
+     * inferred running styles are included in the results.
+     * @param includeVirtual Whether to include virtual skills in the result.
+     * By default, only available skills will be included.
+     */
+    fun getAptitudeIndependentSkills(
+        runningStyle: RunningStyle? = null,
+        includeVirtual: Boolean = false,
+    ): Map<String, SkillListEntry> {
+        val src: Map<String, SkillListEntry> = if (includeVirtual) getAllSkills() else getAvailableSkills()
+        val inferredRunningStyleSkills: Map<String, SkillListEntry> = getInferredRunningStyleSkills(runningStyle, includeVirtual)
+        return src.filterValues {
             it.runningStyle == null &&
             it.trackDistance == null &&
             it.trackSurface == null &&
@@ -1241,46 +1312,108 @@ class SkillList (private val game: Game) {
         }
     }
 
-    fun getRunningStyleSkills(runningStyle: RunningStyle? = null): Map<String, SkillListEntry> {
+    /** Returns all skills for a RunningStyle.
+     *
+     * @param runningStyle The optional RunningStyle to use when filtering.
+     * If not specified, then skills with ANY running style will be returned.
+     * @param includeVirtual Whether to include virtual skills in the result.
+     * By default, only available skills will be included.
+     */
+    fun getRunningStyleSkills(
+        runningStyle: RunningStyle? = null,
+        includeVirtual: Boolean = false,
+    ): Map<String, SkillListEntry> {
+        val src: Map<String, SkillListEntry> = if (includeVirtual) getAllSkills() else getAvailableSkills()
         // If null, then we want to return all skills that have any running style.
         if (runningStyle == null) {
-            return getAvailableSkills().filterValues { it.runningStyle != null }
+            return src.filterValues { it.runningStyle != null }
         }
-        return getAvailableSkills().filterValues { it.runningStyle == runningStyle }
+        return src.filterValues { it.runningStyle == runningStyle }
     }
 
-    fun getTrackDistanceSkills(trackDistance: TrackDistance? = null): Map<String, SkillListEntry> {
+    /** Returns all skills for a TrackDistance.
+     *
+     * @param trackDistance The optional TrackDistance to use when filtering.
+     * If not specified, then skills with ANY track distance will be returned.
+     * @param includeVirtual Whether to include virtual skills in the result.
+     * By default, only available skills will be included.
+     */
+    fun getTrackDistanceSkills(
+        trackDistance: TrackDistance? = null,
+        includeVirtual: Boolean = false,
+    ): Map<String, SkillListEntry> {
+        val src: Map<String, SkillListEntry> = if (includeVirtual) getAllSkills() else getAvailableSkills()
         // If null, then we want to return all skills that have any track distance.
         if (trackDistance == null) {
-            return getAvailableSkills().filterValues { it.trackDistance != null }
+            return src.filterValues { it.trackDistance != null }
         }
-        return getAvailableSkills().filterValues { it.trackDistance == trackDistance }
+        return src.filterValues { it.trackDistance == trackDistance }
     }
 
-    fun getTrackSurfaceSkills(trackSurface: TrackSurface? = null): Map<String, SkillListEntry> {
+    /** Returns all skills for a TrackSurface.
+     *
+     * @param trackSurface The optional TrackSurface to use when filtering.
+     * If not specified, then skills with ANY track surface will be returned.
+     * @param includeVirtual Whether to include virtual skills in the result.
+     * By default, only available skills will be included.
+     */
+    fun getTrackSurfaceSkills(
+        trackSurface: TrackSurface? = null,
+        includeVirtual: Boolean = false,
+    ): Map<String, SkillListEntry> {
+        val src: Map<String, SkillListEntry> = if (includeVirtual) getAllSkills() else getAvailableSkills()
         // If null, then we want to return all skills that have any track surface.
         if (trackSurface == null) {
-            return getAvailableSkills().filterValues { it.trackSurface != null }
+            return src.filterValues { it.trackSurface != null }
         }
-        return getAvailableSkills().filterValues { it.trackSurface == trackSurface }
+        return src.filterValues { it.trackSurface == trackSurface }
     }
 
-    fun getInferredRunningStyleSkills(runningStyle: RunningStyle? = null): Map<String, SkillListEntry> {
+    /** Returns all skills that have an inferred RunningStyle.
+     *
+     * Unlike some skills which can only activate if a specific RunningStyle
+     * is selected, inferred running style skills are skills which can be
+     * activated when using ANY RunningStyle but require the trainee to be
+     * in a specific positioning during the race. We refer to these kinds of
+     * skills as "inferred running style skills". ...or at least I do.
+     *
+     * For example, some skills only activate if the trainee is in the lead or
+     * well-positioned. These skills are typically only useful for specific
+     * running styles however they technically CAN be activated by any style
+     * under hyper-specific circumstances. We don't want to rely on ultra rare cases
+     * so we only include inferred styles that match the passed runningStyle.
+     *
+     * @param runningStyle The optional RunningStyle to use when filtering.
+     * If not specified, then skills with ANY running style will be returned.
+     * @param includeVirtual Whether to include virtual skills in the result.
+     * By default, only available skills will be included.
+     */
+    fun getInferredRunningStyleSkills(
+        runningStyle: RunningStyle? = null,
+        includeVirtual: Boolean = false,
+    ): Map<String, SkillListEntry> {
+        val src: Map<String, SkillListEntry> = if (includeVirtual) getAllSkills() else getAvailableSkills()
+
         // Get normal running style skills so we can filter them out later.
-        val runningStyleSkills: Map<String, SkillListEntry> = getRunningStyleSkills(runningStyle)
+        val runningStyleSkills: Map<String, SkillListEntry> = getRunningStyleSkills(runningStyle, includeVirtual)
 
         // If null, then we want to return all skills that have any inferred running style.
         if (runningStyle == null) {
-            return getAvailableSkills()
+            return src
                 .filterValues { it.inferredRunningStyles.isNotEmpty() }
                 .filterKeys { it !in runningStyleSkills }
         }
-        return getAvailableSkills()
+        return src
             .filterValues { runningStyle in it.inferredRunningStyles }
             .filterKeys { it !in runningStyleSkills }
     }
 
-    fun getAvailableWithVirtualUpgradeSkills(): Map<String, SkillListEntry> {
+    /** Gets all available skills their virtual upgrades.
+     *
+     * This effectively only adds virtual skills that have an in-place
+     * downgrade in the available skill results.
+     */
+    fun getAvailableSkillsWithVirtualUpgrades(): Map<String, SkillListEntry> {
         val result: Map<String, SkillListEntry> = getAvailableSkills().toMap()
         val entriesToAdd: MutableMap<String, SkillListEntry> = mutableMapOf()
         for ((name, entry) in result) {
@@ -1292,6 +1425,12 @@ class SkillList (private val game: Game) {
         return result + entriesToAdd.toMap()
     }
 
+    /** Returns a SkillListEntry for a given skill name.
+     *
+     * @param name The name to look up.
+     *
+     * @return If the `name` is found, its SkillListEntry is returned. Otherwise, NULL.
+     */
     fun getEntry(name: String): SkillListEntry? {
         val result: SkillListEntry? = entries[name]
         if (result == null) {
