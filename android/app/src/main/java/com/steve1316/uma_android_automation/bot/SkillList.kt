@@ -25,12 +25,15 @@ import com.steve1316.uma_android_automation.components.*
  * @param skillList A reference to the SkillList instance which fired this callback.
  * @param entry: The SkillListEntry instance which was detected.
  * @param skillUpButtonLocation The screen location of the SkillUpButton for this entry.
+ *
+ * @return Early exit flag. A value of True is used to exit from the entry detection
+ * loop early.
  */
 typealias OnEntryDetectedCallback = (
     skillList: SkillList,
     entry: SkillListEntry,
     skillUpButtonLocation: Point,
-) -> Unit
+) -> Boolean
 
 /**
  * @property skillDatabase A SkillDatabase instance used for querying skill info.
@@ -760,42 +763,38 @@ class SkillList (private val game: Game) {
      * @param bboxSkillList The bounding region for the skill list in the bitmap.
      * If not specified, this region will be detected automatically.
      * @param debugString A string used in logging and saved bitmap filenames.
-     * @param onEntry A callback function that is called for each
-     * SkillListEntry that we detect. This can be useful if we want to perform
-     * an operation immediately upon detecting an entry.
      *
-     * @return A mapping of skill names to SkillListEntry objects.
+     * @return A mapping of skill names to SkillListEntry objects and the SkillUpButton location.
      */
     fun processSkillList(
         bitmap: Bitmap? = null,
         bboxSkillList: BoundingBox? = null,
         debugString: String = "",
-        onEntry: OnEntryDetectedCallback? = null,
-    ): List<String> {
+    ): Map<String, Pair<SkillListEntry, Point>> {
         val bitmap = bitmap ?: game.imageUtils.getSourceBitmap()
 
         val bboxSkillList: BoundingBox? = bboxSkillList ?: getSkillListBoundingRegion(bitmap, debugString)
         if (bboxSkillList == null) {
             MessageLog.e(TAG, "[SKILLS] analyzeSkillList: getSkillListBoundingRegion() returned NULL.")
-            return emptyList()
+            return emptyMap()
         }
 
         val bboxSkillListEntries = getSkillListEntriesBoundingRegion(bitmap, bboxSkillList, debugString)
         if (bboxSkillListEntries == null) {
             MessageLog.e(TAG, "[SKILLS] analyzeSkillList: getSkillListEntriesBoundingRegion() returned NULL.")
-            return emptyList()
+            return emptyMap()
         }
 
         val bboxSkillUpRegion = getSkillListSkillUpBoundingRegion(bitmap, bboxSkillListEntries, debugString)
         if (bboxSkillUpRegion == null) {
             MessageLog.e(TAG, "[SKILLS] analyzeSkillList: getSkillListSkillUpBoundingRegion() returned NULL.")
-            return emptyList()
+            return emptyMap()
         }
 
         val bboxObtainedPillRegion = getSkillListObtainedPillBoundingRegion(bitmap, bboxSkillListEntries, debugString)
         if (bboxObtainedPillRegion == null) {
             MessageLog.e(TAG, "[SKILLS] analyzeSkillList: getSkillListObtainedPillBoundingRegion() returned NULL.")
-            return emptyList()
+            return emptyMap()
         }
 
         val skillUpLocs: List<Pair<String, Point>> = ButtonSkillUp.findAllWithBitmap(
@@ -810,10 +809,10 @@ class SkillList (private val game: Game) {
             region = bboxObtainedPillRegion.toIntArray(),
         ).map { point -> Pair("obtained", point) }
 
+        val result: MutableMap<String, Pair<SkillListEntry, Point>> = mutableMapOf()
+
         // Combine the sets of locations and sort by their height on the screen.
         val points = skillUpLocs.plus(obtainedPillLocs).sortedBy { it.second.y }
-        val entryNames: MutableList<String> = mutableListOf()
-
         var i: Int = 0
         for ((index, pair) in points.withIndex()) {
             val (pointType, point) = pair
@@ -839,7 +838,7 @@ class SkillList (private val game: Game) {
             val croppedSkillBox = game.imageUtils.createSafeBitmap(bitmap, bboxSkillBox, "bboxSkillBox_$index")
             if (croppedSkillBox == null) {
                 MessageLog.e(TAG, "[SKILLS] analyzeSkillList: createSafeBitmap for skillBoxBitmap returned NULL.")
-                return emptyList()
+                return emptyMap()
             }
             if (game.debugMode) {
                 game.imageUtils.saveBitmap(croppedSkillBox, filename = "bboxSkillBox_$index")
@@ -852,14 +851,10 @@ class SkillList (private val game: Game) {
                 continue
             }
 
-            if (onEntry != null) {
-                onEntry(this, entry, point)
-            }
-
-            entryNames.add(entry.name)
+            result[entry.name] = Pair<SkillListEntry, Point>(entry, point)
         }
 
-        return entryNames.toList()
+        return result.toMap()
     }
 
     /** Parses the skill list entries currently visible on screen in a thread-safe manner.
@@ -868,35 +863,30 @@ class SkillList (private val game: Game) {
      * @param bboxSkillList The bounding region for the skill list in the bitmap.
      * @param debugString A string to append to logging messages and any
      * potential saved bitmaps.
-     * @param onEntry A callback function that is called for each
-     * SkillListEntry that we detect. This can be useful if we want to perform
-     * an operation immediately upon detecting an entry.
-     * NOTE: This function MUST be thread safe.
      *
-     * @return A mapping of skill names to SkillListEntry objects.
+     * @return A mapping of skill names to SkillListEntry objects and the SkillUpButton location.
      */
     fun processSkillListThreadSafe(
         bitmap: Bitmap,
         bboxSkillList: BoundingBox,
         debugString: String = "",
-        onEntry: OnEntryDetectedCallback? = null,
-    ): List<String> {
+    ): Map<String, Pair<SkillListEntry, Point>> {
         val bboxSkillListEntries = getSkillListEntriesBoundingRegion(bitmap, bboxSkillList, debugString)
         if (bboxSkillListEntries == null) {
             MessageLog.e(TAG, "[SKILLS] analyzeSkillList: getSkillListEntriesBoundingRegion() returned NULL.")
-            return emptyList()
+            return emptyMap()
         }
 
         val bboxSkillUpRegion = getSkillListSkillUpBoundingRegion(bitmap, bboxSkillListEntries, debugString)
         if (bboxSkillUpRegion == null) {
             MessageLog.e(TAG, "[SKILLS] analyzeSkillList: getSkillListSkillUpBoundingRegion() returned NULL.")
-            return emptyList()
+            return emptyMap()
         }
 
         val bboxObtainedPillRegion = getSkillListObtainedPillBoundingRegion(bitmap, bboxSkillListEntries, debugString)
         if (bboxObtainedPillRegion == null) {
             MessageLog.e(TAG, "[SKILLS] analyzeSkillList: getSkillListObtainedPillBoundingRegion() returned NULL.")
-            return emptyList()
+            return emptyMap()
         }
 
         val skillUpLocs: List<Pair<String, Point>> = ButtonSkillUp.findAllWithBitmap(
@@ -911,10 +901,10 @@ class SkillList (private val game: Game) {
             region = bboxObtainedPillRegion.toIntArray(),
         ).map { point -> Pair("obtained", point) }
 
+        val result: MutableMap<String, Pair<SkillListEntry, Point>> = mutableMapOf()
+
         // Combine the sets of locations and sort by their height on the screen.
         val points = skillUpLocs.plus(obtainedPillLocs).sortedBy { it.second.y }
-        val entryNames: MutableList<String> = mutableListOf()
-
         var i: Int = 0
         for ((index, pair) in points.withIndex()) {
             val (pointType, point) = pair
@@ -940,7 +930,7 @@ class SkillList (private val game: Game) {
             val croppedSkillBox = game.imageUtils.createSafeBitmap(bitmap, bboxSkillBox, "bboxSkillBox_$index")
             if (croppedSkillBox == null) {
                 MessageLog.e(TAG, "[SKILLS] analyzeSkillList: createSafeBitmap for skillBoxBitmap returned NULL.")
-                return emptyList()
+                return emptyMap()
             }
             if (game.debugMode) {
                 game.imageUtils.saveBitmap(croppedSkillBox, filename = "bboxSkillBox_$index")
@@ -953,14 +943,10 @@ class SkillList (private val game: Game) {
                 continue
             }
 
-            if (onEntry != null) {
-                onEntry(this, entry, point)
-            }
-
-            entryNames.add(entry.name)
+            result[entry.name] = Pair<SkillListEntry, Point>(entry, point)
         }
 
-        return entryNames.toList()
+        return result.toMap()
     }
 
     /** Scrolls through the entire skill list and extracts info from entries.
@@ -971,9 +957,7 @@ class SkillList (private val game: Game) {
      * SkillListEntry that we detect. This can be useful if we want to perform
      * an operation immediately upon detecting an entry.
      */
-    fun iterateOverSkillList(
-        onEntry: OnEntryDetectedCallback? = null,
-    ) {
+    fun iterateOverSkillList(onEntry: OnEntryDetectedCallback? = null) {
         var bitmap = game.imageUtils.getSourceBitmap()
         val bboxSkillList: BoundingBox? = getSkillListBoundingRegion(bitmap)
         if (bboxSkillList == null) {
@@ -1019,18 +1003,27 @@ class SkillList (private val game: Game) {
 
             prevScrollBarBitmap = scrollBarBitmap
 
-            val processedNames: List<String> = processSkillList(
+            val processed: Map<String, Pair<SkillListEntry, Point>> = processSkillList(
                 bitmap = bitmap,
                 bboxSkillList = bboxSkillList,
                 debugString = "iterateOverSkillList",
-                onEntry = onEntry,
             )
+
             // Another exit condition. If there are no new entries after
             // scrolling, then we're at the bottom of the list.
-            if (prevNames == processedNames.toSet()) {
+            if (prevNames == processed.keys.toSet()) {
                 break
             }
-            prevNames = processedNames.toSet()
+            prevNames = processed.keys.toSet()
+
+            // Now iterate over the processed entries and pass each to our callback.
+            for ((name, pair) in processed) {
+                val (entry, point) = pair
+                // Use the callback's return as an early exit condition.
+                if (onEntry != null && onEntry(this, entry, point)) {
+                    return
+                }
+            }
 
             scrollDown(bboxSkillList)
             // Slight delay to allow screen to settle before next loop.
@@ -1056,9 +1049,7 @@ class SkillList (private val game: Game) {
 
         iterateOverSkillList() { _, entry: SkillListEntry, point: Point ->
             // Bubble the event up.
-            if (onEntry != null) {
-                onEntry(this, entry, point)
-            }
+            if (onEntry != null) onEntry(this, entry, point) else false
         }
 
         return entries
@@ -1234,6 +1225,13 @@ class SkillList (private val game: Game) {
         return entry
     }
 
+    /** Resets all skills back to their original states prior to purchasing. */
+    fun sellAllSkills() {
+        for ((name, entry) in getObtainedSkills()) {
+            entry.sell()
+        }
+    }
+
     /** Returns all skill list entries.
      *
      * NOTE: This returns ALL entries, including ones that do not exist
@@ -1253,7 +1251,12 @@ class SkillList (private val game: Game) {
         return getUnobtainedSkills().filterValues { it.bIsVirtual }
     }
 
-    /** Returns all skills that not been purchased.
+    /** Returns all skills that have been purchased. */
+    fun getObtainedSkills(): Map<String, SkillListEntry> {
+        return getAllSkills().filterValues { it.bIsObtained }
+    }
+
+    /** Returns all skills that have not been purchased.
      *
      * @param includeVirtual Whether to include virtual skills in the result.
      * By default, only available skills will be included.

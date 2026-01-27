@@ -586,18 +586,28 @@ class SkillPlan (private val game: Game) {
         }
     }
 
+    /** Handles SkillListEntry objects as they are detected.
+     *
+     * @param entry The SkillListEntry object that we detected.
+     * @param point The location of the SkillUpButton for this entry.
+     * @param skillsToBuy The list of skill names that we want to purchase.
+     * @param skillList The SkillList instance which triggered this event.
+     *
+     * @return True if all `skillsToBuy` have been purchased. Otherwise, False.
+     * SkillList uses a return of True to trigger an early exit of its loop.
+     */
     private fun onSkillListEntryDetected(
         entry: SkillListEntry,
         point: Point,
         skillsToBuy: List<String>,
         skillList: SkillList,
-    ) {
+    ): Boolean {
         if (entry.bIsObtained || entry.bIsVirtual) {
-            return
+            return false
         }
 
         if (entry.name !in skillsToBuy) {
-            return
+            return false
         }
 
         // Determine if there are other in-place versions of this skill that
@@ -618,6 +628,17 @@ class SkillPlan (private val game: Game) {
                 MessageLog.i(TAG, "Buying \"${result.name}\" for ${result.price} pts")
             }
         }
+
+        // Now check if we are done purchasing skills.
+        val obtained: Map<String, SkillListEntry> = skillList.getObtainedSkills()
+        // If we've purchased all planned skills, we return True to force
+        // the skill list to exit early from its loop.
+        if (skillsToBuy.all { it in obtained }) {
+            MessageLog.i(TAG, "All skills purchased. Exiting loop early...")
+            return true
+        }
+
+        return false
     }
 
     fun start(): Boolean {
@@ -696,8 +717,12 @@ class SkillPlan (private val game: Game) {
             return true
         }
 
+        // Sell all skills so we can use the `skillList.getObtainedSkills`
+        // to determine if we've finished buying all skills.
+        skillList.sellAllSkills()
+
         // Go back through skill list and purchase skills.
-        skillList.parseSkillListEntries() { _, entry: SkillListEntry, point: Point ->
+        skillList.parseSkillListEntries() { skillList: SkillList, entry: SkillListEntry, point: Point ->
             onSkillListEntryDetected(
                 entry = entry,
                 point = point,

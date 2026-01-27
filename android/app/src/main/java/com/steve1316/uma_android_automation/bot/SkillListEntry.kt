@@ -22,6 +22,39 @@ import com.steve1316.uma_android_automation.utils.types.TrackDistance
 import com.steve1316.uma_android_automation.utils.types.TrackSurface
 import com.steve1316.uma_android_automation.utils.types.Aptitude
 
+/**
+ *
+ * @param skillData The SkillData instance containing static skill information.
+ * @param bIsObtained Whether this entry has been purchased.
+ * @param bIsVirtual Whether this entry is considered a virtual entry in the skill list.
+ * Virtual entries are in-place upgrades to skills that currently exist in the list.
+ * Since these in-place upgrades do not appear in the list until all previous
+ * versions have been purchased, we consider them to be "virtual" entries.
+ * @param prev A pointer to this skill's downgrade SkillListEntry.
+ * @param next A pointer to this skill's upgrade SkillListEntry.
+ *
+ * @property name The skill name (from skillData).
+ * @property screenPrice The current price of the skill as it is shown in the game.
+ * @property price The actual price of just this skill, ignoring previous version prices.
+ * @property rawPrice The actual price but without any discounts applied.
+ * @property discount The current discount percentage / 100.
+ * @property evaluationPoints The amount of rank gained upon purchasing this skill.
+ * @property evaluationPointRatio The ratio of rank to `price`.
+ * @property bIsAvailable Whether this skill is available for purchase.
+ * @property bIsInheritedUnique Whether this skill is a unique skill inherited from a legacy uma.
+ * @property bIsNegative Whether this is a negative (purple icon) skill.
+ * @property bIsInPlace Whether this skill can be upgraded in-place.
+ * @property runningStyle The RunningStyle associated with this skill.
+ * If no RunningStyle applies, then this value will be NULL.
+ * @property trackDistance The TrackDistance associated with this skill.
+ * If no TrackDistance applies, then this value will be NULL.
+ * @property trackSurface The TrackSurface associated with this skill.
+ * If no TrackSurface applies, then this value will be NULL.
+ * @property inferredRunningStyles The inferred RunningStyles associated with this skill.
+ * Can be empty if none apply.
+ * @property communityTier The community ranking of this skill where lower values are better.
+ * @property baseCost The base price of this skill without any discounts applied from SkillData.
+ */
 class SkillListEntry(
     private val game: Game,
     val skillData: SkillData,
@@ -95,12 +128,9 @@ class SkillListEntry(
     
     // Wrappers around commonly used SkillData values
     // so we don't have to directly reference skillData.
-    val bIsGold: Boolean = skillData.bIsGold
-    val bIsUnique: Boolean = skillData.bIsUnique
     val bIsInheritedUnique: Boolean = skillData.bIsInheritedUnique
     val bIsNegative: Boolean = skillData.bIsNegative
     val bIsInPlace: Boolean = skillData.bIsInPlace
-    val skillType: SkillType = skillData.type
 
     val runningStyle: RunningStyle? = skillData.runningStyle
     val trackDistance: TrackDistance? = skillData.trackDistance
@@ -280,6 +310,25 @@ class SkillListEntry(
         }
     }
 
+    fun onDowngradeSold(entry: SkillListEntry) {
+        // We can't sell the previous version of an in-place skill without
+        // first selling this version. So do nothing here.
+        if (bIsInPlace) {
+            return
+        }
+
+        bIsVirtual = false
+        bIsObtained = false
+
+        screenPrice = originalScreenPrice
+
+        // Propagate forward.
+        val next: SkillListEntry? = next
+        if (next != null) {
+            next.onDowngradeSold(this)
+        }
+    }
+
     fun buy(skillUpLocation: Point? = null) {
         if (skillUpLocation != null) {
             game.tap(
@@ -301,6 +350,36 @@ class SkillListEntry(
         val next: SkillListEntry? = next
         if (next != null) {
             next.onDowngradePurchased(this)
+        }
+    }
+
+    /** "Sell" this skill.
+     *
+     * This doesn't actually sell a skill since that isn't a thing you can do
+     * after a skill has been obtained and confirmed.
+     *
+     * What this does is it resets the `bIsObtained` variable to false and propagates
+     * this change to the other versions of this skill.
+     * This will bring this entry back to its original state in the skill list
+     * before this or the direct downgrade to this skill have been modified.
+     * This also means that the upgraded versions of this skill will have their
+     * prices updated to reflect this change.
+     */
+    fun sell() {
+        // Can't sell a skill we don't have.
+        if (!bIsObtained) {
+            return
+        }
+
+        bIsObtained = false
+
+        // Selling a skill has no effect on lower versions so we don't need
+        // to propagate changes backward.
+
+        // Propagate changes forward.
+        val next: SkillListEntry? = next
+        if (next != null) {
+            next.onDowngradeSold(this)
         }
     }
 
