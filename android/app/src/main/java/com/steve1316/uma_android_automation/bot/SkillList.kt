@@ -1136,9 +1136,22 @@ class SkillList (private val game: Game) {
      */
     fun checkSkillListScreen(bitmap: Bitmap? = null): Boolean {
         val bitmap: Bitmap = bitmap ?: game.imageUtils.getSourceBitmap()
-        return (
+        if (
             ButtonSkillListFullStats.check(game.imageUtils, sourceBitmap = bitmap) &&
             LabelSkillListScreenSkillPoints.check(game.imageUtils, sourceBitmap = bitmap)
+        ) {
+            return true
+        }
+
+        // Try to handle any skill list specific dialogs that may be up.
+        if (!handleDialogs().first) {
+            return false
+        }
+
+        // Now we can check again if we're at the skill list.
+        return (
+            ButtonSkillListFullStats.check(game.imageUtils) &&
+            LabelSkillListScreenSkillPoints.check(game.imageUtils)
         )
     }
 
