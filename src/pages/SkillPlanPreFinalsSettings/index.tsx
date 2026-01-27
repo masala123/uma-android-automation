@@ -223,6 +223,7 @@ const SkillPlanPreFinalsSettings = () => {
                             { value: "optimize_rank", label: "Optimize Rank" },
                         ]}
                         value={preFinalsSpendingStrategy}
+                        defaultValue={defaultSettings.skills.preFinalsSpendingStrategy}
                         onValueChange={(value) => updateSkillsSetting("preFinalsSpendingStrategy", value)}
                         placeholder="Select Strategy"
                     />

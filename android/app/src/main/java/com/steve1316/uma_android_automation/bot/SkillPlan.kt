@@ -299,22 +299,21 @@ class SkillPlan (private val game: Game) {
 
         // Get user specified running style.
         var preferredRunningStyle: RunningStyle? = when (skillSettingRunningStyleString.lowercase()) {
-            "disabled" -> null
+            "no_preference" -> null
             "inherit" -> RunningStyle.fromShortName(racingSettingRunningStyleString) ?: game.trainee.runningStyle
             else -> RunningStyle.fromName(skillSettingRunningStyleString)
         }
 
-
         // Get user specified track distance.
         var preferredTrackDistance: TrackDistance? = when (skillSettingTrackDistanceString.lowercase()) {
-            "disabled" -> null
+            "no_preference" -> null
             "inherit" -> TrackDistance.fromName(trainingSettingTrackDistanceString) ?: game.trainee.trackDistance
             else -> TrackDistance.fromName(skillSettingTrackDistanceString)
         }
 
         // Get user specified track surface.
         var preferredTrackSurface: TrackSurface? = when (skillSettingTrackSurfaceString.lowercase()) {
-            "disabled" -> null
+            "no_preference" -> null
             else -> TrackSurface.fromName(skillSettingTrackSurfaceString)
         }
 

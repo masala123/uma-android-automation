@@ -223,6 +223,7 @@ const SkillPlanCareerCompleteSettings = () => {
                             { value: "optimize_rank", label: "Optimize Rank" },
                         ]}
                         value={careerCompleteSpendingStrategy}
+                        defaultValue={defaultSettings.skills.careerCompleteSpendingStrategy}
                         onValueChange={(value) => updateSkillsSetting("careerCompleteSpendingStrategy", value)}
                         placeholder="Select Strategy"
                     />

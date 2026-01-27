@@ -128,51 +128,54 @@ const RacingSettings = () => {
                     <CustomSelect
                         options={[
                             { value: "inherit", label: "Use Racing Setting" },
+                            { value: "no_preference", label: "No Preference" },
                             { value: "front_runner", label: "Front Runner" },
                             { value: "pace_chaser", label: "Pace Chaser" },
                             { value: "late_surger", label: "Late Surger" },
                             { value: "end_closer", label: "End Closer" },
-                            { value: "disabled", label: "Disabled" },
                         ]}
                         value={preferredRunningStyle}
+                        defaultValue={defaultSettings.skills.preferredRunningStyle}
                         onValueChange={(value) => updateSkillsSetting("preferredRunningStyle", value)}
                         placeholder="Select Running Style"
                     />
                     <Text style={styles.inputDescription}>Overrides the preferred running style when determining which skills to purchase.</Text>
-                    <Text style={styles.inputDescription}>When disabled, the bot will buy skills with no regard for whether they match our trainee's aptitudes or the user-specified settings. Otherwise, the bot will only attempt to purchase skills that are running style dependent if they match this setting.</Text>
+                    <Text style={styles.inputDescription}>When No Preference is selected, the bot will buy skills regardless of whether they match our trainee's aptitudes or the user-specified settings. Otherwise, the bot will only attempt to purchase skills that are running style dependent if they match this setting.</Text>
                 </View>
                 <View style={styles.inputContainer}>
                     <Text style={styles.inputLabel}>Track Distance Override</Text>
                     <CustomSelect
                         options={[
                             { value: "inherit", label: "Use Training Setting" },
+                            { value: "no_preference", label: "No Preference" },
                             { value: "sprint", label: "Sprint" },
                             { value: "mile", label: "Mile" },
                             { value: "medium", label: "Medium" },
                             { value: "long", label: "Long" },
-                            { value: "disabled", label: "Disabled" },
                         ]}
                         value={preferredTrackDistance}
+                        defaultValue={defaultSettings.skills.preferredTrackDistance}
                         onValueChange={(value) => updateSkillsSetting("preferredTrackDistance", value)}
                         placeholder="Select Track Distance"
                     />
                     <Text style={styles.inputDescription}>Overrides the preferred track distance when determining which skills to purchase.</Text>
-                    <Text style={styles.inputDescription}>When disabled, the bot will buy skills with no regard for whether they match our trainee's aptitudes or the user-specified settings. Otherwise, the bot will only attempt to purchase skills that are track distance dependent if they match this setting.</Text>
+                    <Text style={styles.inputDescription}>When No Preference is selected, the bot will buy skills regardless of whether they match our trainee's aptitudes or the user-specified settings. Otherwise, the bot will only attempt to purchase skills that are track distance dependent if they match this setting.</Text>
                 </View>
                 <View style={styles.inputContainer}>
                     <Text style={styles.inputLabel}>Track Surface Override</Text>
                     <CustomSelect
                         options={[
+                            { value: "no_preference", label: "No Preference" },
                             { value: "turf", label: "Turf" },
                             { value: "dirt", label: "Dirt" },
-                            { value: "disabled", label: "Disabled" },
                         ]}
                         value={preferredTrackSurface}
+                        defaultValue={defaultSettings.skills.preferredTrackSurface}
                         onValueChange={(value) => updateSkillsSetting("preferredTrackSurface", value)}
                         placeholder="Select Track Surface"
                     />
                     <Text style={styles.inputDescription}>Overrides the preferred track surface when determining which skills to purchase.</Text>
-                    <Text style={styles.inputDescription}>When disabled, the bot will buy skills with no regard for whether they match our trainee's aptitudes or the user-specified settings. Otherwise, the bot will only attempt to purchase skills that are track surface dependent if they match this setting.</Text>
+                    <Text style={styles.inputDescription}>When No Preference is selected, the bot will buy skills regardless of whether they match our trainee's aptitudes or the user-specified settings. Otherwise, the bot will only attempt to purchase skills that are track surface dependent if they match this setting.</Text>
                 </View>
                 <Divider style={{ marginBottom: 16 }} />
                 <View className="m-1">
