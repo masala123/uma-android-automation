@@ -308,7 +308,11 @@ data class SkillData(
     // &=AND, @=OR. Split groupings of AND conditions into separate strings.
     // Then each one of those is converted to a mapping of the
     // condition to the effect string.
-    val conditions: Conditions = Conditions.fromString(condition + "@" + precondition)
+    val conditions: Conditions = Conditions.fromString(
+        listOf(condition, precondition)
+            .filter { it.isNotEmpty() }
+            .joinToString("@")
+        )
 
     // Some skills are for specific running styles or track distances/surfaces.
     // We want to extract this from the scraped data.
@@ -430,9 +434,7 @@ data class SkillData(
 
         companion object {
             fun fromString(input: String): ConditionGroup {
-                return ConditionGroup(
-                    input.split("&").mapNotNull { Condition.fromString(it) }
-                )
+                return ConditionGroup(input.split("&").mapNotNull { Condition.fromString(it) })
             }
         }
 
@@ -544,9 +546,7 @@ data class SkillData(
 
         companion object {
             fun fromString(input: String): Conditions {
-                return Conditions(
-                    input.split("@").mapNotNull { ConditionGroup.fromString(input) }
-                )
+                return Conditions(input.split("@").mapNotNull { ConditionGroup.fromString(it) })
             }
         }
 
@@ -643,6 +643,12 @@ data class SkillData(
     }
 
     fun calculateInferredRunningStyles(): List<RunningStyle> {
+        // If a running style is specified, then we do not want to infer
+        // any other styles since they won't apply.
+        if (runningStyle != null) {
+            return emptyList()
+        }
+
         val result: MutableList<RunningStyle> = mutableListOf()
 
         if ("order==1" in condition) {

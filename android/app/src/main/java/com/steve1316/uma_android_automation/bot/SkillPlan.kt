@@ -324,12 +324,20 @@ class SkillPlan (private val game: Game) {
 
         // Get only skills which match our aptitudes or user-specified styles or
         // are agnostic of style or track variables.
-        val filteredSkills: Map<String, SkillListEntry> =
-            skillList.getAptitudeIndependentSkills() +
-            skillList.getRunningStyleSkills(preferredRunningStyle) +
-            skillList.getTrackDistanceSkills(preferredTrackDistance) +
-            skillList.getTrackSurfaceSkills(preferredTrackSurface) +
-            skillList.getInferredRunningStyleSkills(preferredRunningStyle)
+        val filteredSkills: MutableMap<String, SkillListEntry> = mutableMapOf()
+
+        filteredSkills.putAll(skillList.getAptitudeIndependentSkills(preferredRunningStyle))
+
+        if (preferredRunningStyle != null) {
+                filteredSkills.putAll(skillList.getRunningStyleSkills(preferredRunningStyle))
+                filteredSkills.putAll(skillList.getInferredRunningStyleSkills(preferredRunningStyle))
+        }
+        if (preferredTrackDistance != null) {
+            filteredSkills.putAll(skillList.getTrackDistanceSkills(preferredTrackDistance))
+        }
+        if (preferredTrackSurface != null) {
+            filteredSkills.putAll(skillList.getTrackSurfaceSkills(preferredTrackSurface))
+        }
 
         // Group the remaining entries by their communityTier. Higher values are better.
         // This can contain a NULL group for skills that are not in the tier list.

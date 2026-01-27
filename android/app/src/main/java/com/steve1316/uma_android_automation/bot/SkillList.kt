@@ -57,7 +57,12 @@ class SkillList (private val game: Game) {
         }
 
         when (dialog.name) {
-            "skill_list_confirmation" -> dialog.ok(game.imageUtils)
+            "skill_list_confirmation" -> {
+                dialog.ok(game.imageUtils)
+                // This dialog takes longer to close than others.
+                // Add an extra delay to make sure we don't skip anything.
+                game.wait(1.0)
+            }
             "skill_list_confirm_exit" -> dialog.ok(game.imageUtils)
             "skills_learned" -> dialog.close(game.imageUtils)
             "umamusume_details" -> {
@@ -1213,10 +1218,13 @@ class SkillList (private val game: Game) {
         return getAvailableSkills().filterValues { it.bIsInheritedUnique }
     }
 
-    fun getAptitudeIndependentSkills(): Map<String, SkillListEntry> {
+    fun getAptitudeIndependentSkills(runningStyle: RunningStyle? = null): Map<String, SkillListEntry> {
+        val inferredRunningStyleSkills: Map<String, SkillListEntry> = getInferredRunningStyleSkills(runningStyle)
         return getAvailableSkills().filterValues {
             it.runningStyle == null &&
-            it.trackDistance == null
+            it.trackDistance == null &&
+            it.trackSurface == null &&
+            it.name !in inferredRunningStyleSkills
         }
     }
 
