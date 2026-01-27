@@ -15,6 +15,7 @@ import com.steve1316.uma_android_automation.utils.types.RunningStyle
 import com.steve1316.uma_android_automation.utils.types.TrackDistance
 import com.steve1316.uma_android_automation.utils.types.TrackSurface
 import com.steve1316.uma_android_automation.utils.types.Aptitude
+import com.steve1316.uma_android_automation.utils.types.SkillCommunityTier
 
 private const val USE_MOCK_DATA: Boolean = false
 private const val MOCK_SKILL_POINTS: Int = 1495
@@ -321,64 +322,86 @@ class SkillPlan (private val game: Game) {
         MessageLog.d(TAG, "Using preferred track distance: $preferredTrackDistance")
         MessageLog.d(TAG, "Using preferred track surface: $preferredTrackSurface")
 
-        // Get only skills which match our aptitudes or user-specified styles or
-        // are agnostic of style or track variables.
-        val filteredSkills: MutableMap<String, SkillListEntry> = mutableMapOf()
+        fun getFilteredSkills(remainingSkillPoints: Int): Map<String, SkillListEntry> {
+            // Get only skills which match our aptitudes or user-specified styles or
+            // are agnostic of style or track variables.
+            val result: MutableMap<String, SkillListEntry> = mutableMapOf()
 
-        filteredSkills.putAll(skillList.getAptitudeIndependentSkills(preferredRunningStyle))
+            result.putAll(skillList.getAptitudeIndependentSkills(preferredRunningStyle))
 
-        if (preferredRunningStyle != null) {
-                filteredSkills.putAll(skillList.getRunningStyleSkills(preferredRunningStyle))
-                filteredSkills.putAll(skillList.getInferredRunningStyleSkills(preferredRunningStyle))
-        }
-        if (preferredTrackDistance != null) {
-            filteredSkills.putAll(skillList.getTrackDistanceSkills(preferredTrackDistance))
-        }
-        if (preferredTrackSurface != null) {
-            filteredSkills.putAll(skillList.getTrackSurfaceSkills(preferredTrackSurface))
-        }
-
-        // Group the remaining entries by their communityTier. Higher values are better.
-        // This can contain a NULL group for skills that are not in the tier list.
-        val groupedByCommunityTier: Map<Int?, List<SkillListEntry>> = filteredSkills.values
-            .groupBy { it.communityTier }
-            .toSortedMap(compareByDescending { it })
-
-        // Iterate from highest tier to lowest.
-        for ((communityTier, group) in groupedByCommunityTier) {
-            // Ignore the NULL entries since they aren't ranked.
-            if (communityTier == null) {
-                continue
+            if (preferredRunningStyle != null) {
+                    result.putAll(skillList.getRunningStyleSkills(preferredRunningStyle))
+                    result.putAll(skillList.getInferredRunningStyleSkills(preferredRunningStyle))
+            }
+            if (preferredTrackDistance != null) {
+                result.putAll(skillList.getTrackDistanceSkills(preferredTrackDistance))
+            }
+            if (preferredTrackSurface != null) {
+                result.putAll(skillList.getTrackSurfaceSkills(preferredTrackSurface))
             }
 
-            MessageLog.v(TAG, "============ SKILL COMMUNITY TIER $communityTier =============")
+            result.values.removeAll { it.price > remainingSkillPoints }
 
-            // Sort the tier by its point ratio.
-            val sortedByPointRatio: List<SkillListEntry> = group.sortedByDescending { it.evaluationPointRatio }
-            for (entry in sortedByPointRatio) {
-                MessageLog.v(TAG, "\t${entry.name} -> price [real(shown)]: ${entry.price}(${entry.screenPrice}), rank(ratio): ${entry.evaluationPoints}(" + "%.2f".format(entry.evaluationPointRatio) + ")")
-                // Don't add duplicate entries.
-                if (entry.name in result || entry.name in skillsToBuy) {
-                    continue
-                }
-
-                // If this skill isnt an in-place upgrade and we have already
-                // added its upgraded version to the list, then don't add it.
-                if (!entry.bIsAvailable) {
-                    continue
-                }
-
-                // If we can't afford this skill, continue to the next.
-                if (entry.screenPrice > remainingSkillPoints) {
-                    continue
-                }
-
-                result[entry.name] = entry.screenPrice
-                remainingSkillPoints -= entry.screenPrice
-                entry.buy()
-            }
-            MessageLog.v(TAG, "=================================================")
+            return result.toMap()
         }
+
+        // Purchasing skills can cause others to become available, so we need to
+        // loop over current skills then update the current skills at the end
+        // of the loop until we run out of affordable skills.
+
+        // Infinite loop protection.
+        val maxIterations: Int = 10
+        var i: Int = 0
+        var remainingSkills: Map<String, SkillListEntry> = getFilteredSkills(remainingSkillPoints)
+        while (remainingSkills.any { it.value.screenPrice <= remainingSkillPoints}) {
+            MessageLog.v(TAG, "\nChecking skills. Iteration #$i.\n")
+            // Group the remaining entries by their communityTier. Higher values are better.
+            // This can contain a NULL group for skills that are not in the tier list.
+            val groupedByCommunityTier: Map<Int?, List<SkillListEntry>> = remainingSkills.values
+                .groupBy { it.communityTier }
+                .toSortedMap(compareBy { it })
+
+            // Iterate from highest tier to lowest.
+            for ((communityTier, group) in groupedByCommunityTier) {
+                // Ignore the NULL entries since they aren't ranked.
+                if (communityTier == null) {
+                    continue
+                }
+
+                MessageLog.v(TAG, "============ SKILL COMMUNITY TIER ${SkillCommunityTier.fromOrdinal(communityTier)} =============")
+
+                // Sort the tier by its point ratio.
+                val sortedByPointRatio: List<SkillListEntry> = group.sortedByDescending { it.evaluationPointRatio }
+                for (entry in sortedByPointRatio) {
+                    MessageLog.v(TAG, "\t${entry.name} -> price(shown): ${entry.price}(${entry.screenPrice}), rank(ratio): ${entry.evaluationPoints}(" + "%.2f".format(entry.evaluationPointRatio) + ")")
+                    // Don't add duplicate entries.
+                    if (entry.name in result || entry.name in skillsToBuy) {
+                        continue
+                    }
+
+                    // If this skill isnt an in-place upgrade and we have already
+                    // added its upgraded version to the list, then don't add it.
+                    if (!entry.bIsAvailable) {
+                        continue
+                    }
+
+                    // If we can't afford this skill, continue to the next.
+                    if (entry.screenPrice > remainingSkillPoints) {
+                        continue
+                    }
+
+                    result[entry.name] = entry.screenPrice
+                    remainingSkillPoints -= entry.screenPrice
+                    entry.buy()
+                }
+            }
+
+            remainingSkills = getFilteredSkills(remainingSkillPoints)
+            if (i++ > maxIterations) {
+                break
+            }
+        }
+        MessageLog.v(TAG, "-------------------------------------------------")
 
         // We may still have skill points after buying all aptitude-based skills.
         // Spend remaining points to optimize rank.
@@ -401,14 +424,22 @@ class SkillPlan (private val game: Game) {
         val result: MutableMap<String, Int> = mutableMapOf()
         var remainingSkillPoints: Int = availableSkillPoints
 
+        // Purchasing skills can cause others to become available, so we need to
+        // loop over current skills then update the current skills at the end
+        // of the loop until we run out of affordable skills.
+
         // Infinite loop protection.
         val maxIterations: Int = 10
         var i: Int = 0 
         var remainingSkills: Map<String, SkillListEntry> = skillList.getAvailableSkills()
         while (remainingSkills.any { it.value.screenPrice <= remainingSkillPoints}) {
+            MessageLog.v(TAG, "\nChecking skills. Iteration #$i.\n")
             var sortedByPointRatio: List<SkillListEntry> = remainingSkills.values
                 .sortedByDescending { it.evaluationPointRatio }
+
+            MessageLog.v(TAG, "========= SKILLS SORTED BY POINT RATIO ==========")
             for (entry in sortedByPointRatio) {
+                MessageLog.v(TAG, "\t${entry.name} -> price(shown): ${entry.price}(${entry.screenPrice}), rank(ratio): ${entry.evaluationPoints}(" + "%.2f".format(entry.evaluationPointRatio) + ")")
                 // Don't add duplicate entries.
                 if (entry.name in result || entry.name in skillsToBuy) {
                     continue
@@ -430,6 +461,7 @@ class SkillPlan (private val game: Game) {
                 break
             }
         }
+        MessageLog.v(TAG, "-------------------------------------------------")
 
         return result.toMap()
     }
@@ -454,7 +486,7 @@ class SkillPlan (private val game: Game) {
         for (name in skillPlanSettings.skillPlan) {
             MessageLog.d(TAG, "\t$name")
         }
-        MessageLog.d(TAG, "==========================================================")
+        MessageLog.d(TAG, "----------------------------------------------------------")
 
         val result: MutableMap<String, Int> = mutableMapOf()
 
