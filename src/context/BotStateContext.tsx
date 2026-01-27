@@ -198,6 +198,7 @@ export const defaultSettings: Settings = {
     skills: {
         preferredRunningStyle: "inherit",
         preferredTrackDistance: "inherit",
+        preferredTrackSurface: "disabled",
         enablePreFinalsSkillPlan: false,
         preFinalsSpendingStrategy: "default",
         enablePreFinalsBuyInheritedSkills: false,
