@@ -427,6 +427,10 @@ class Racing (private val game: Game) {
             bIgnoreConsecutiveRaceWarning = false
             return handleMaidenRace()
         } else if ((!game.currentDate.bIsPreDebut && ButtonRaceSelectExtra.click(imageUtils = game.imageUtils)) || isScheduledRace) {
+            if (hasFanRequirement || hasTrophyRequirement) {
+                MessageLog.i(TAG, "[RACE] Racing requirement is active. Ignoring consecutive race warning.")
+                bIgnoreConsecutiveRaceWarning = true
+            }
             game.wait(0.5, skipWaitingForLoading = true)
             // Check for the consecutive race dialog before proceeding.
             val (bWasDialogHandled, dialog) = handleDialogs()
@@ -724,7 +728,13 @@ class Racing (private val game: Game) {
         // If there is a scheduled race pending, proceed to run it immediately.
         if (!isScheduledRace) {
             // Check for mandatory racing plan mode before any screen detection.
-            val (_, mandatoryExtraRaceData) = findMandatoryExtraRaceForCurrentTurn()
+            // Bypass this check if a fan or trophy requirement is active.
+            val (_, mandatoryExtraRaceData) = if (hasFanRequirement || hasTrophyRequirement) {
+                Pair(null, null)
+            } else {
+                findMandatoryExtraRaceForCurrentTurn()
+            }
+
             if (mandatoryExtraRaceData != null) {
                 // Check if aptitudes match (both track surface and distance must be B or greater) for double predictions.
                 val aptitudesMatch = checkRaceAptitudeMatch(mandatoryExtraRaceData)
@@ -1041,9 +1051,9 @@ class Racing (private val game: Game) {
         }
 
         // Evaluate whether the bot should race now using Opportunity Cost logic.
-        // If trophy requirement is active, bypass opportunity cost to prioritize clearing the requirement.
-        if (hasTrophyRequirement) {
-            MessageLog.i(TAG, "[RACE] Bypassing opportunity cost analysis to prioritize G1 race due to trophy requirement.")
+        // If fan or trophy requirement is active, bypass opportunity cost to prioritize clearing the requirement.
+        if (hasFanRequirement || hasTrophyRequirement) {
+            MessageLog.i(TAG, "[RACE] Bypassing opportunity cost analysis to prioritize satisfying the current requirement.")
         } else if (!evaluateOpportunityCost(allFilteredRaces, lookAheadDays)) {
             MessageLog.i(TAG, "[RACE] Smart racing suggests waiting for better opportunities. Canceling racing process.")
             return false
@@ -1618,6 +1628,37 @@ class Racing (private val game: Game) {
             return false
         }
 
+        // If fan or trophy requirement is detected, bypass smart racing logic to force racing.
+        // Both requirements are independent of racing plan and farming fans settings.
+        if (hasFanRequirement) {
+            MessageLog.i(TAG, "[RACE] Fan requirement detected. Bypassing smart racing logic to fulfill requirement.")
+            return !raceRepeatWarningCheck
+        } else if (hasTrophyRequirement) {
+            if (hasPreOpOrAboveRequirement) {
+                MessageLog.i(TAG, "[RACE] Trophy requirement with Pre-OP or above criteria detected. Proceeding to racing screen.")
+                return !raceRepeatWarningCheck
+            }
+
+            // Check if G1 races exist at current turn before proceeding.
+            // If no G1 races are available, it will still allow regular racing if it's a regular race day or smart racing day.
+            if (!hasG1RacesAtTurn(game.currentDate.day)) {
+                // Skip interval check if Racing Plan is enabled.
+                val isRegularRacingDay = enableFarmingFans && !enableRacingPlan && (turnsRemaining % daysToRunExtraRaces == 0)
+                val isSmartRacingDay = enableRacingPlan && enableFarmingFans && nextSmartRaceDay == turnsRemaining
+
+                if (isRegularRacingDay || isSmartRacingDay) {
+                    MessageLog.i(TAG, "[RACE] Trophy requirement detected but no G1 races at turn ${game.currentDate.day}. Allowing regular racing on eligible day.")
+                } else {
+                    MessageLog.i(TAG, "[RACE] Trophy requirement detected but no G1 races available at turn ${game.currentDate.day} and not a regular/smart racing day. Skipping racing.")
+                    return false
+                }
+            } else {
+                MessageLog.i(TAG, "[RACE] Trophy requirement detected. G1 races available at turn ${game.currentDate.day}. Proceeding to racing screen.")
+            }
+
+            return !raceRepeatWarningCheck
+        }
+
         // Check for mandatory racing plan mode (before opportunity cost analysis and while still on the main screen).
         if (enableRacingPlan && enableMandatoryRacingPlan) {
             val currentTurnNumber = game.currentDate.day
@@ -1679,37 +1720,6 @@ class Racing (private val game: Game) {
             } else {
                 MessageLog.i(TAG, "[RACE] No user-selected races configured. Continuing with other checks.")
             }
-        }
-
-        // If fan or trophy requirement is detected, bypass smart racing logic to force racing.
-        // Both requirements are independent of racing plan and farming fans settings.
-        if (hasFanRequirement) {
-            MessageLog.i(TAG, "[RACE] Fan requirement detected. Bypassing smart racing logic to fulfill requirement.")
-            return !raceRepeatWarningCheck
-        } else if (hasTrophyRequirement) {
-            if (hasPreOpOrAboveRequirement) {
-                MessageLog.i(TAG, "[RACE] Trophy requirement with Pre-OP or above criteria detected. Proceeding to racing screen.")
-                return !raceRepeatWarningCheck
-            }
-
-            // Check if G1 races exist at current turn before proceeding.
-            // If no G1 races are available, it will still allow regular racing if it's a regular race day or smart racing day.
-            if (!hasG1RacesAtTurn(game.currentDate.day)) {
-                // Skip interval check if Racing Plan is enabled.
-                val isRegularRacingDay = enableFarmingFans && !enableRacingPlan && (turnsRemaining % daysToRunExtraRaces == 0)
-                val isSmartRacingDay = enableRacingPlan && enableFarmingFans && nextSmartRaceDay == turnsRemaining
-
-                if (isRegularRacingDay || isSmartRacingDay) {
-                    MessageLog.i(TAG, "[RACE] Trophy requirement detected but no G1 races at turn ${game.currentDate.day}. Allowing regular racing on eligible day.")
-                } else {
-                    MessageLog.i(TAG, "[RACE] Trophy requirement detected but no G1 races available at turn ${game.currentDate.day} and not a regular/smart racing day. Skipping racing.")
-                    return false
-                }
-            } else {
-                MessageLog.i(TAG, "[RACE] Trophy requirement detected. G1 races available at turn ${game.currentDate.day}. Proceeding to racing screen.")
-            }
-
-            return !raceRepeatWarningCheck
         } else if (enableRacingPlan && !enableMandatoryRacingPlan && enableFarmingFans) {
             // Smart racing: Check turn-based eligibility before screen checks.
             // Only run opportunity cost analysis with smartRacingCheckInterval.
@@ -2404,10 +2414,11 @@ class Racing (private val game: Game) {
         else Log.d(TAG, "[DEBUG] Filter criteria: Min fans: $minFansThreshold, trackSurface: $preferredTrackSurfaceString, grades: $preferredGrades, distances: $preferredDistances")
 
         val filteredRaces = races.filter { race ->
-            val meetsFansThreshold = bypassMinFans || race.fans >= minFansThreshold
-            val meetsTrackSurfacePreference = preferredTrackSurfaceString == "Any" || race.trackSurface == TrackSurface.fromName(preferredTrackSurfaceString)
-            val meetsGradePreference = preferredGrades.isEmpty() || preferredGrades.contains(race.grade.name)
-            val meetsTrackDistancePreference = preferredDistances.isEmpty() || preferredDistances.contains(race.trackDistance.name)
+            val isRequirementActive = hasFanRequirement || hasTrophyRequirement
+            val meetsFansThreshold = bypassMinFans || isRequirementActive || race.fans >= minFansThreshold
+            val meetsTrackSurfacePreference = isRequirementActive || preferredTrackSurfaceString == "Any" || race.trackSurface == TrackSurface.fromName(preferredTrackSurfaceString)
+            val meetsGradePreference = isRequirementActive || preferredGrades.isEmpty() || preferredGrades.contains(race.grade.name)
+            val meetsTrackDistancePreference = isRequirementActive || preferredDistances.isEmpty() || preferredDistances.contains(race.trackDistance.name)
 
             val passes = meetsFansThreshold && meetsTrackSurfacePreference && meetsGradePreference && meetsTrackDistancePreference
 

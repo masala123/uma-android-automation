@@ -723,32 +723,52 @@ open class Campaign(val game: Game) {
                 game.recoverEnergy(sourceBitmap)
                 bHasCheckedDateThisTurn = false
             } else {
-                val hasInjury = game.checkInjury(sourceBitmap)
+                val isRacingRequirementActive = game.racing.hasFanRequirement || game.racing.hasTrophyRequirement
+                val isFinals = game.checkFinals()
 
-                if (hasInjury && !game.checkFinals()) {
-                    game.findAndTapImage("ok", sourceBitmap = sourceBitmap, region = game.imageUtils.regionMiddle)
-                    game.wait(3.0)
-                    bHasCheckedDateThisTurn = false
+                if (isRacingRequirementActive) {
+                    MessageLog.i(TAG, "[INFO] Racing requirement is active. Bypassing health and mood checks.")
+                    needToRace = true
                 } else {
-                    val didRecoverMood = game.recoverMood(sourceBitmap)
-
-                    if (didRecoverMood && !game.checkFinals()) {
-                        bHasCheckedDateThisTurn = false
-                    } else if (game.currentDate.day >= 16) {
-                        val eligibleForExtraRace = game.racing.checkEligibilityToStartExtraRacingProcess()
-
-                        if (eligibleForExtraRace) {
-                            MessageLog.i(TAG, "[INFO] Bot has no injuries, mood is sufficient and extra races can be run today. Setting the needToRace flag to true.")
-                            needToRace = true
-                        } else {
-                            MessageLog.i(TAG, "[INFO] Training due to it not being an extra race day.")
-                            game.training.handleTraining()
-                            bHasCheckedDateThisTurn = false
-                        }
+                    val hasInjury = if (isFinals) {
+                        MessageLog.i(TAG, "[INFO] Skipping injury check due to it being the Finals.")
+                        false
                     } else {
-                        MessageLog.i(TAG, "[INFO] Training due to it not being an extra race day.")
-                        game.training.handleTraining()
+                        game.checkInjury(sourceBitmap)
+                    }
+
+                    if (hasInjury) {
+                        game.findAndTapImage("ok", sourceBitmap = sourceBitmap, region = game.imageUtils.regionMiddle)
+                        game.wait(3.0)
                         bHasCheckedDateThisTurn = false
+                    } else {
+                        val didRecoverMood = if (isFinals) {
+                            MessageLog.i(TAG, "[INFO] Skipping mood recovery due to it being the Finals.")
+                            false
+                        } else {
+                            game.recoverMood(sourceBitmap)
+                        }
+
+                        if (didRecoverMood) {
+                            bHasCheckedDateThisTurn = false
+                        } else {
+                            val eligibleForExtraRace = game.racing.checkEligibilityToStartExtraRacingProcess()
+                            
+                            if (eligibleForExtraRace) {
+                                MessageLog.i(TAG, "[INFO] Bot has no injuries, mood is sufficient and extra races can be run today. Setting the needToRace flag to true.")
+                                needToRace = true
+                            } else if (game.currentDate.day >= 16) {
+                                // If not eligible for an extra race but we passed the day threshold, we train.
+                                MessageLog.i(TAG, "[INFO] Training due to it not being an extra race day.")
+                                game.training.handleTraining()
+                                bHasCheckedDateThisTurn = false
+                            } else {
+                                // Fallback to training for early game.
+                                MessageLog.i(TAG, "[INFO] Training due to it not being an extra race day.")
+                                game.training.handleTraining()
+                                bHasCheckedDateThisTurn = false
+                            }
+                        }
                     }
                 }
             }

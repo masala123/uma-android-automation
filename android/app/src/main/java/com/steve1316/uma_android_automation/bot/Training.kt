@@ -196,17 +196,15 @@ class Training(private val game: Game) {
 		}
 
 		/**
-		 * Scores training options for Unity Cup based on Spirit Explosion Gauge priority system.
-		 *
-		 * Priority order:
-		 * 1. Highest Priority: Trainings with Spirit Explosion Gauges ready to burst.
-		 * 2. Second Priority: Trainings that can fill Spirit Explosion Gauges (not at 100% yet).
-		 * 3. Third Priority: Trainings that fill relationship bars.
-		 * 4. Lowest Priority: Stat prioritization (only if no gauge/relationship opportunities).
+		 * Scores training options for Unity Cup based on redirected priority system.
+		 * 
+		 * New priority order:
+		 * 1. Highest Priority: Raw stat gains (Stat Efficiency toward targets).
+		 * 2. Second Priority: Trainings with Spirit Explosion Gauges ready to burst.
+		 * 3. Third Priority: Trainings that can fill Spirit Explosion Gauges (not at 100% yet).
+		 * 4. Lowest Priority: Relationship building.
 		 *
 		 * Additional considerations:
-		 * - If gauges can be filled for deprioritized stat trainings, ignore stat prioritization (early game).
-		 * - Sometimes worth doing training with no relationship bar gains if building up several bursts.
 		 * - Ideally doing unity training at the same time as triggering regular rainbow trainings.
 		 * - Good facilities to burst: Speed (increased speed stat gains), Wit (energy recovery + speed stat gain).
 		 * - Stamina and Power can be bursted if lacking stats.
@@ -218,92 +216,74 @@ class Training(private val game: Game) {
 		 * @return A score representing Unity Cup training value.
 		 */
         fun scoreUnityCupTraining(config: TrainingConfig, training: TrainingOption): Double {
-			MessageLog.i(TAG, "\n[TRAINING] Starting process to score ${training.name} Training for Unity Cup with Spirit Explosion Gauge priority.")
+			MessageLog.i(TAG, "\n[TRAINING] Starting process to score ${training.name} Training for Unity Cup with redirected priority: Stats > Burst > Filling.")
 
-			// 1. Highest Priority: Trainings with Spirit Explosion Gauges ready to burst.
-            var score = 0.0
+			// 1. Primary Priority: Stat Efficiency.
+			var score = calculateStatEfficiencyScore(config, training)
+			MessageLog.i(TAG, "[TRAINING] [${training.name}] Base stat efficiency score: ${String.format("%.2f", score)}")
+
+			// 2. Second Priority: Trainings with Spirit Explosion Gauges ready to burst.
 			if (training.numSpiritGaugesReadyToBurst > 0) {
-				// Score increases with number of gauges ready to burst.
-				score += 1000.0 + (training.numSpiritGaugesReadyToBurst * 1000.0)
-				MessageLog.i(TAG, "[TRAINING] [${training.name}] Training has ${training.numSpiritGaugesReadyToBurst} Spirit Explosion Gauge(s) ready to burst. Highest priority.")
+				// We give a significant bonus for bursting, but not so much that it always overrides huge stat gains elsewhere.
+				val burstBonus = 800.0 + (training.numSpiritGaugesReadyToBurst * 400.0)
+				score += burstBonus
+				MessageLog.i(TAG, "[TRAINING] [${training.name}] Adding burst bonus for ${training.numSpiritGaugesReadyToBurst} gauge(s): $burstBonus")
 
 				// Facility preference bonuses for bursting.
 				when (training.name) {
-					StatName.SPEED -> score += 500.0 // Best for increased speed stat gains.
-					StatName.WIT -> score += 500.0 // Best for energy recovery and slightly increased speed stat gain.
+					StatName.SPEED -> score += 200.0 // Best for increased speed stat gains.
+					StatName.WIT -> score += 200.0 // Best for energy recovery and slightly increased speed stat gain.
 					StatName.STAMINA, StatName.POWER -> {
                         val currentStat = config.currentStats[training.name] ?: 0
                         val targetStat = config.statTargets[training.name] ?: 600
 						// Can be bursted if lacking stats.
 						if (currentStat < targetStat * 0.8) {
-							score += 300.0
+							score += 150.0
 						}
 					}
 					StatName.GUTS -> {
 						// Guts is not ideal, but can be worth it if building up gauges to max them out for bursting.
 						if (training.numSpiritGaugesCanFill >= 2) {
-							score += 200.0 // Building up multiple gauges to allow for bursting.
+							score += 100.0 // Building up multiple gauges to allow for bursting.
 						} else {
-							score -= 100.0 // Not ideal without building up multiple gauges.
+							score -= 50.0 // Not ideal without building up multiple gauges.
 						}
 					}
 				}
+			}
 
-				// Bonus for rainbow training while bursting.
+			// 3. Third Priority: Trainings that can fill Spirit Explosion Gauges (not at 100% yet).
+			if (training.numSpiritGaugesCanFill > 0) {
+				// Score increases with number of gauges that can be filled.
+				// Each gauge fills by 25% per training execution.
+				val fillBonus = 300.0 + (training.numSpiritGaugesCanFill * 100.0)
+				score += fillBonus
+				MessageLog.i(TAG, "[TRAINING] [${training.name}] Training can fill ${training.numSpiritGaugesCanFill} Spirit Explosion Gauge(s). Adding fill bonus: $fillBonus")
+
+				// Early game: If gauges can be filled for deprioritized stat trainings, ignore stat prioritization.
+				if (config.currentDate.year == DateYear.JUNIOR) {
+					score += 200.0
+					MessageLog.i(TAG, "[TRAINING] [${training.name}] Early game bonus for gauge filling.")
+				}
+			}
+
+			// 4. Fourth Priority: Relationship bars.
+			if (training.relationshipBars.isNotEmpty()) {
+				val relationshipScore = calculateRelationshipScore(config, training)
+				val scaledRelationshipScore = relationshipScore * 1.5 // Scaled to be a significant bonus but below bursting.
+				score += scaledRelationshipScore
+				MessageLog.i(TAG, "[TRAINING] [${training.name}] Adding relationship bonus: ${String.format("%.2f", scaledRelationshipScore)}.")
+			}
+
+			// Rainbow Training Bonus synergy.
+			if (training.numRainbow > 0 && config.currentDate.year > DateYear.JUNIOR) {
                 var rainbowBonusScore = 0.0
                 for (i in 1 until training.numRainbow + 1) {
-                    // Curve that weighs each subsequent rainbow less.
-                    // Helps to prevent score from exploding with multiple rainbows.
-                    rainbowBonusScore += 400 * (0.5).pow(i)
+                    rainbowBonusScore += 200 * (0.5).pow(i)
                 }
 				if (rainbowBonusScore > 0) {
 					MessageLog.i(TAG, "[TRAINING] [${training.name}] Adding bonus score for ${training.numRainbow} rainbow trainings: $rainbowBonusScore")
                     score += rainbowBonusScore
-				}
-			}
-
-			// 2. Second Priority: Trainings that can fill Spirit Explosion Gauges (not at 100% yet).
-			if (training.numSpiritGaugesCanFill > 0) {
-				// Score increases with number of gauges that can be filled.
-				// Each gauge fills by 25% per training execution.
-				score += 1000.0 + (training.numSpiritGaugesCanFill * 200.0)
-				MessageLog.i(TAG, "[TRAINING] [${training.name}] Training can fill ${training.numSpiritGaugesCanFill} Spirit Explosion Gauge(s).")
-
-				// Early game: If gauges can be filled for deprioritized stat trainings, ignore stat prioritization.
-				if (config.currentDate.year == DateYear.JUNIOR) {
-					score += 500.0
-					MessageLog.i(TAG, "[TRAINING] [${training.name}] Early game: Prioritizing gauge filling over stat prioritization.")
-				}
-			}
-
-			// 3. Third Priority: Trainings that fill relationship bars.
-			if (training.relationshipBars.isNotEmpty()) {
-				var relationshipScore = 0.0
-				for (bar in training.relationshipBars) {
-					val contribution = when (bar.dominantColor) {
-						"orange" -> 0.0
-						"green" -> 1.0
-						"blue" -> 2.5
-						else -> 0.0
-					}
-					relationshipScore += contribution
-				}
-				score += 100.0 + (relationshipScore * 200.0) // High multiplier so we fill relationship bars early.
-                val scoreString: String = String.format("%.2f", relationshipScore)
-				MessageLog.i(TAG, "[TRAINING] ${training.name} Training fills relationship bars. Score: ${scoreString}.")
-			}
-
-			// 4. Lowest Priority: Stat prioritization.
-			val statGain = training.statGains[training.name] ?: 0
-			score += statGain.toDouble() * 0.1
-			MessageLog.i(TAG, "[TRAINING] [${training.name}] Training stat gain contribution: $statGain.")
-
-			// Sometimes worth doing training with no relationship bar gains if building up several bursts.
-			if (training.relationshipBars.isEmpty() && training.numSpiritGaugesCanFill > 0) {
-				val otherBurstsBuilding = config.trainingOptions.sumOf { it.numSpiritGaugesCanFill } - training.numSpiritGaugesCanFill
-				if (otherBurstsBuilding >= 2) {
-					score += 300.0 // Building up several bursts is worth it.
-					Log.d(TAG, "[DEBUG] [${training.name}] Training has no relationship bars but is building up ${training.numSpiritGaugesCanFill} gauge(s) along with $otherBurstsBuilding other gauges being built.")
 				}
 			}
 
@@ -506,13 +486,14 @@ class Training(private val game: Game) {
 
             val currentStat: Int = config.currentStats.getOrDefault(training.name, 0)
             val potentialStat: Int = currentStat + training.statGains.getOrElse(training.name) { 0 }
+            val effectiveStatCap = config.currentStatCap - 100
 
-			// Don't score for stats that are maxed or would be maxed.
-			if (config.disableTrainingOnMaxedStat && currentStat >= config.currentStatCap) {
+			// Don't score for stats that are close to the cap or would be close to it.
+			if (config.disableTrainingOnMaxedStat && currentStat >= effectiveStatCap) {
 				return 0.0
 			}
 
-            if (potentialStat >= config.currentStatCap) {
+            if (potentialStat >= effectiveStatCap) {
                 return 0.0
             }
 
@@ -713,9 +694,12 @@ class Training(private val game: Game) {
         }
         val isWithinRegularThreshold = failureChance <= maximumFailureChance
         val isWithinRiskyThreshold = enableRiskyTraining && failureChance <= riskyTrainingMaxFailureChance
-        if (test || isWithinRegularThreshold || isWithinRiskyThreshold) {
+        val isFinals = game.checkFinals()
+        if (test || isWithinRegularThreshold || isWithinRiskyThreshold || isFinals) {
             if (!test) {
-                if (isWithinRegularThreshold) {
+                if (isFinals) {
+                    MessageLog.i(TAG, "[TRAINING] $failureChance% exceeds thresholds but it is the Finals. Ignoring and proceeding to acquire all other percentages and total stat increases...")
+                } else if (isWithinRegularThreshold) {
                     MessageLog.i(TAG, "[TRAINING] $failureChance% within acceptable range of ${maximumFailureChance}%. Proceeding to acquire all other percentages and total stat increases...")
                 } else if (isWithinRiskyThreshold) {
                     MessageLog.i(TAG, "[TRAINING] $failureChance% exceeds regular threshold (${maximumFailureChance}%) but is within risky training threshold (${riskyTrainingMaxFailureChance}%). Proceeding to acquire all other percentages and total stat increases...")
@@ -1206,47 +1190,82 @@ class Training(private val game: Game) {
 			val selectedScore = scoreRanked.firstOrNull { it.first == selected }?.second ?: 0.0
 			val secondBest = scoreRanked.getOrNull(1)
 
-			// If a second best training exists, provide specific reasoning.
+			// Provide specific reasoning based on mode and training properties.
+			val keyFactors = mutableListOf<String>()
+
+			// Mode-specific key factors.
+			when (scoringMode) {
+				"Unity Cup (Spirit Gauge)" -> {
+					if (selected.numSpiritGaugesReadyToBurst > 0) {
+						keyFactors.add("Has ${selected.numSpiritGaugesReadyToBurst} Spirit Gauge(s) ready to burst (highest priority).")
+					} else if (selected.numSpiritGaugesCanFill > 0) {
+						keyFactors.add("Can fill ${selected.numSpiritGaugesCanFill} Spirit Gauge(s).")
+					}
+				}
+				"Friendship (Junior Year)" -> {
+					val blueCount = selected.relationshipBars.count { it.dominantColor == "blue" }
+					val greenCount = selected.relationshipBars.count { it.dominantColor == "green" }
+					if (blueCount > 0 || greenCount > 0) {
+						keyFactors.add("Has ${blueCount} blue and ${greenCount} green relationship bar(s) to build.")
+					}
+				}
+				else -> {
+					// Stat Efficiency mode.
+					if (selected.numRainbow > 0) {
+						keyFactors.add("Rainbow training detected (multiplier applied).")
+					}
+					val mainGain = selected.statGains[selected.name] ?: 0
+					val currentVal = config.currentStats[selected.name] ?: 0
+					val targetVal = config.statTargets[selected.name] ?: 600
+					val completion = if (targetVal > 0) (currentVal.toDouble() / targetVal * 100.0) else 100.0
+					if (completion < 70.0) {
+						keyFactors.add("${selected.name} stat is at ${String.format("%.0f", completion)}% of target (behind, higher priority).")
+					}
+					if (mainGain >= 30 && selected.numRainbow == 0) {
+						keyFactors.add("High main stat gain of $mainGain (potential undetected rainbow bonus).")
+					}
+
+					// High secondary stat gains.
+					for ((statName, gain) in selected.statGains) {
+						if (statName != selected.name && gain >= 20) {
+							keyFactors.add("High secondary ${statName} gain of $gain.")
+						}
+					}
+				}
+			}
+
+			// Global key factors.
+			if (selected.numSkillHints > 0) {
+				keyFactors.add("Provides ${selected.numSkillHints} skill hint(s).")
+			}
+
+			selected.relationshipBars.forEach { bar ->
+				if (bar.isTrainerSupport && bar.trainerName != null) {
+					keyFactors.add("${bar.trainerName} is present (special trainer bonus).")
+				}
+			}
+
+			if (selected.relationshipBars.size >= 3) {
+				keyFactors.add("Multiple relationship bars present (${selected.relationshipBars.size}).")
+			}
+
+			val isSparkStat = selected.name in config.focusOnSparkStatTarget
+			val currentVal = config.currentStats[selected.name] ?: 0
+			if (isSparkStat && currentVal < 600) {
+				keyFactors.add("${selected.name} is prioritized for potential 3* spark (under 600).")
+			}
+
+			if (selected.failureChance > maximumFailureChance) {
+				keyFactors.add("Selected despite ${selected.failureChance}% failure chance (Risky Training enabled or Finals).")
+			}
+
+			// Output beat reasoning if second best exists.
 			if (secondBest != null) {
 				val scoreDiff = selectedScore - secondBest.second
 				val pctDiff = if (secondBest.second > 0) (scoreDiff / secondBest.second * 100.0) else 0.0
 				sb.appendLine("${selected.name} beat ${secondBest.first.name} by ${String.format("%.2f", scoreDiff)} points (${String.format("%.1f", pctDiff)}% higher)")
-
-				// Provide specific reasoning based on mode.
-				when (scoringMode) {
-					"Unity Cup (Spirit Gauge)" -> {
-						if (selected.numSpiritGaugesReadyToBurst > 0) {
-							sb.appendLine("Key factor: Has ${selected.numSpiritGaugesReadyToBurst} Spirit Gauge(s) ready to burst (highest priority).")
-						} else if (selected.numSpiritGaugesCanFill > 0) {
-							sb.appendLine("Key factor: Can fill ${selected.numSpiritGaugesCanFill} Spirit Gauge(s).")
-						}
-					}
-					"Friendship (Junior Year)" -> {
-						val blueCount = selected.relationshipBars.count { it.dominantColor == "blue" }
-						val greenCount = selected.relationshipBars.count { it.dominantColor == "green" }
-						if (blueCount > 0 || greenCount > 0) {
-							sb.appendLine("Key factor: Has ${blueCount} blue and ${greenCount} green relationship bar(s) to build.")
-						}
-					}
-					else -> {
-						// Stat Efficiency mode.
-						if (selected.numRainbow > 0) {
-							sb.appendLine("Key factor: Rainbow training detected (multiplier applied).")
-						}
-						val mainGain = selected.statGains[selected.name] ?: 0
-						val currentVal = currentStats[selected.name] ?: 0
-						val targetVal = targets[selected.name] ?: 600
-						val completion = if (targetVal > 0) (currentVal.toDouble() / targetVal * 100.0) else 100.0
-						if (completion < 70.0) {
-							sb.appendLine("Key factor: ${selected.name} stat is at ${String.format("%.0f", completion)}% of target (behind, higher priority).")
-						}
-						if (mainGain >= 30 && selected.numRainbow == 0) {
-							sb.appendLine("Key factor: High main stat gain of $mainGain (potential undetected rainbow bonus).")
-						}
-					}
-				}
 			} else {
-				// Only one training available - explain why it was selected.
+				// Only one training available - clarify reasons.
 				val numSkipped = skippedScores.size
 				val numBlacklisted = config.blacklist.filterNotNull().size
 				val reasons = mutableListOf<String>()
@@ -1257,6 +1276,11 @@ class Training(private val game: Game) {
 				} else {
 					sb.appendLine("${selected.name} was the only available training.")
 				}
+			}
+
+			// Output all collected key factors.
+			keyFactors.forEach { factor ->
+				sb.appendLine("Key factor: $factor")
 			}
 		}
 
