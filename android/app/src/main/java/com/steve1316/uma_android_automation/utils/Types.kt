@@ -319,7 +319,8 @@ data class SkillData(
     // These running styles are calculated based on a skill's activation conditions.
     // However since these might not actually be specific to a running style,
     // the skill will not give any rank bonus based on aptitudes.
-    val inferredRunningStyles: List<RunningStyle> = conditions.inferredRunningStyles
+    //val inferredRunningStyles: List<RunningStyle> = conditions.inferredRunningStyles
+    val inferredRunningStyles: List<RunningStyle> = calculateInferredRunningStyles()
 
     constructor(
         id: Int,
@@ -463,7 +464,7 @@ data class SkillData(
         private fun isTowardTheBack(): Boolean {
             return (
                 checkInRange("order", 5, 50) ||
-                checkInRange("order_rate", 51, 100) ||
+                checkInRange("order_rate", 50, 100) ||
                 check(Condition("order_rate_out50_continue", Operator.EQ, 1)) ||
                 check(Condition("order_rate_out70_continue", Operator.EQ, 1))
             )
@@ -579,6 +580,14 @@ data class SkillData(
             return null
         }
 
+        /**
+         * NOTE: Not currently working due to gametora's seemingly inaccurate
+         * conditions. Too many conditions cause overlapping running styles that
+         * don't make any sense. For example they have some data that defines
+         * "toward the back" as being any lower than 5th place which doesn't make
+         * any sense in larger fields. Other things conflict as well so I'm not sure
+         * if many of the positional conditions are accurate.
+         */
         private fun calculateInferredRunningStyles(): List<RunningStyle> {
             val result: MutableList<RunningStyle> = mutableListOf()
             if (bIsLeading) {
@@ -631,5 +640,40 @@ data class SkillData(
 
     fun checkTrackSurfaceAptitude(trackSurface: TrackSurface): Boolean {
         return this.trackSurface == trackSurface
+    }
+
+    fun calculateInferredRunningStyles(): List<RunningStyle> {
+        val result: MutableList<RunningStyle> = mutableListOf()
+
+        if ("order==1" in condition) {
+            result.add(RunningStyle.FRONT_RUNNER)
+        }
+
+        if ("well-positioned" in description) {
+            result.add(RunningStyle.PACE_CHASER)
+            result.add(RunningStyle.LATE_SURGER)
+        }
+
+        if ("toward the front" in description) {
+            result.add(RunningStyle.FRONT_RUNNER)
+            result.add(RunningStyle.PACE_CHASER)
+        }
+
+        if ("midpack" in description) {
+            result.add(RunningStyle.PACE_CHASER)
+            result.add(RunningStyle.LATE_SURGER)
+        }
+
+        if ("off the pace" in description) {
+            result.add(RunningStyle.PACE_CHASER)
+            result.add(RunningStyle.LATE_SURGER)
+        }
+
+        if ("toward the back" in description) {
+            result.add(RunningStyle.LATE_SURGER)
+            result.add(RunningStyle.END_CLOSER)
+        }
+
+        return result.distinct().toList()
     }
 }

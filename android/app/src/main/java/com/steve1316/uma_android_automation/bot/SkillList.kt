@@ -1220,7 +1220,7 @@ class SkillList (private val game: Game) {
         }
     }
 
-    fun getRunningStyleSkills(runningStyle: RunningStyle?): Map<String, SkillListEntry> {
+    fun getRunningStyleSkills(runningStyle: RunningStyle? = null): Map<String, SkillListEntry> {
         // If null, then we want to return all skills that have any running style.
         if (runningStyle == null) {
             return getAvailableSkills().filterValues { it.runningStyle != null }
@@ -1228,7 +1228,7 @@ class SkillList (private val game: Game) {
         return getAvailableSkills().filterValues { it.runningStyle == runningStyle }
     }
 
-    fun getTrackDistanceSkills(trackDistance: TrackDistance?): Map<String, SkillListEntry> {
+    fun getTrackDistanceSkills(trackDistance: TrackDistance? = null): Map<String, SkillListEntry> {
         // If null, then we want to return all skills that have any track distance.
         if (trackDistance == null) {
             return getAvailableSkills().filterValues { it.trackDistance != null }
@@ -1236,7 +1236,7 @@ class SkillList (private val game: Game) {
         return getAvailableSkills().filterValues { it.trackDistance == trackDistance }
     }
 
-    fun getTrackSurfaceSkills(trackSurface: TrackSurface?): Map<String, SkillListEntry> {
+    fun getTrackSurfaceSkills(trackSurface: TrackSurface? = null): Map<String, SkillListEntry> {
         // If null, then we want to return all skills that have any track surface.
         if (trackSurface == null) {
             return getAvailableSkills().filterValues { it.trackSurface != null }
@@ -1244,7 +1244,7 @@ class SkillList (private val game: Game) {
         return getAvailableSkills().filterValues { it.trackSurface == trackSurface }
     }
 
-    fun getInferredRunningStyleSkills(runningStyle: RunningStyle?): Map<String, SkillListEntry> {
+    fun getInferredRunningStyleSkills(runningStyle: RunningStyle? = null): Map<String, SkillListEntry> {
         // Get normal running style skills so we can filter them out later.
         val runningStyleSkills: Map<String, SkillListEntry> = getRunningStyleSkills(runningStyle)
 

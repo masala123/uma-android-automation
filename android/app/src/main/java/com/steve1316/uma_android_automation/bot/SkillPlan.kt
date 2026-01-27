@@ -4,10 +4,6 @@ import android.graphics.Bitmap
 import org.opencv.core.Point
 import org.json.JSONArray
 import org.json.JSONObject
-//import java.util.concurrent.CountDownLatch
-//import java.util.concurrent.TimeUnit
-//import java.util.Collections
-//import kotlinx.coroutines.*
 
 import com.steve1316.automation_library.utils.SettingsHelper
 import com.steve1316.automation_library.utils.MessageLog
