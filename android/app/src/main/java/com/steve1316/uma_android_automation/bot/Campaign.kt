@@ -652,9 +652,6 @@ open class Campaign(val game: Game) {
                     if (!handleSkillListScreen()) {
                         MessageLog.w(TAG, "handleMainScreen:: handleSkillList() failed.")
                     }
-                    // Return to main screen.
-                    ButtonBack.click(game.imageUtils)
-                    game.wait(0.5, skipWaitingForLoading = true)
                 }
             }
 
@@ -844,9 +841,6 @@ open class Campaign(val game: Game) {
                         if (!handleSkillListScreen()) {
                             MessageLog.w(TAG, "Career End Screen: handleSkillList() failed.")
                         }
-                        // Return to main screen.
-                        ButtonBack.click(game.imageUtils)
-                        game.wait(0.5, skipWaitingForLoading = true)
                     }
                     throw InterruptedException("Bot had reached end of run. Stopping bot...")
                 } else if (checkCampaignSpecificConditions()) {
