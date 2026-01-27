@@ -271,6 +271,21 @@ enum class SkillType {
     }
 }
 
+enum class SkillCommunityTier {
+        SS,
+        S,
+        A,
+        B;
+
+        companion object {
+            private val nameMap = entries.associateBy { it.name }
+            private val ordinalMap = entries.associateBy { it.ordinal }
+
+            fun fromName(value: String): SkillCommunityTier? = nameMap[value]
+            fun fromOrdinal(ordinal: Int): SkillCommunityTier? = ordinalMap[ordinal]
+        }
+    }
+
 /**
  * @property bIsInPlace Whether this skill chain has an in-place upgrade system.
  * Only certain types of skills can have in-place upgrades:
@@ -304,6 +319,14 @@ data class SkillData(
         bIsNegative ||
         name.dropLast(2).endsWith("straightaways", ignoreCase = true) ||
         name.dropLast(2).endsWith("corners", ignoreCase = true)
+
+    private val communityTierNameMap: Map<Int, String> = mapOf(
+        0 to "SS",
+        1 to "S",
+        2 to "A",
+        3 to "B",
+    )
+    val communityTierName: String? = communityTierNameMap[communityTier]
 
     // &=AND, @=OR. Split groupings of AND conditions into separate strings.
     // Then each one of those is converted to a mapping of the
