@@ -22,7 +22,13 @@ import com.steve1316.uma_android_automation.utils.DoublyLinkedListNode
 
 import com.steve1316.uma_android_automation.components.*
 
-
+/** Handles communication with the skills database.
+ *
+ * @property skillUpgradeChains A mapping of all skill names in the database to
+ * lists of their upgrade chains. An upgrade chain is just all versions of the skill
+ * in order from lowest to highest. See `SkillList.kt::generateSkillListEntries`
+ * for an example implementation.
+ */
 class SkillDatabase (private val game: Game) {
     private val TAG: String = "[${MainActivity.loggerTag}]SkillDatabase"
 
@@ -191,6 +197,12 @@ class SkillDatabase (private val game: Game) {
         return result.toMap()
     }
 
+    /** Uses fuzzy matching to find a skill name in the loaded skill data.
+     *
+     * @param name The skill name to search.
+     *
+     * @return On success, the corrected skill name. On fail, NULL.
+     */
     fun fuzzySearchSkillName(name: String): String? {
         return TextUtils.matchStringInList(
             query = name,
@@ -199,6 +211,16 @@ class SkillDatabase (private val game: Game) {
         )
     }
 
+    /** Checks if a skill name exists in our skill data.
+     *
+     * @param name The skill name to search.
+     * @param fuzzySearch Whether to use fuzzy matching to broaden our search results.
+     * If not specified, then only exact matches will be returned.
+     *
+     * @return On success, if `fuzzySearch` is enabled then the corrected skill
+     * name is returned. If `fuzzySearch` is not enabled then the exact match is
+     * returned. On fail, NULL is returned.
+     */
     fun checkSkillName(name: String, fuzzySearch: Boolean = false): String? {
         // Check for an exact match first.
         if (name in skillData) {
@@ -212,7 +234,7 @@ class SkillDatabase (private val game: Game) {
      *
      * @param name The name to get.
      *
-     * @return If name was found, the SkillData object. Otherwise, NULL.
+     * @return If `name` was found, the SkillData object. Otherwise, NULL.
      */
     fun getSkillData(name: String): SkillData? {
         var res: SkillData? = skillData[name]
@@ -246,6 +268,12 @@ class SkillDatabase (private val game: Game) {
         return res.toList()
     }
 
+    /** Returns the skill name for a skill ID.
+     *
+     * @param id The ID of the skill to lookup.
+     *
+     * @return On success, the name of the skill. On failure, NULL.
+     */
     fun getSkillName(id: Int): String? {
         if (id !in skillIdToName) {
             MessageLog.w(TAG, "getSkillName: Skill ID ($id) not found.")
@@ -253,6 +281,12 @@ class SkillDatabase (private val game: Game) {
         return skillIdToName[id]
     }
 
+    /** Returns the skill ID for a skill name.
+     *
+     * @param name The name of the skill to lookup.
+     *
+     * @return On success, the ID of the skill. On failure, NULL.
+     */
     fun getSkillId(name: String): Int? {
         var res: Int? = skillNameToId[name]
         if (res == null) {
@@ -497,6 +531,14 @@ class SkillDatabase (private val game: Game) {
         return indexA - indexB
     }
 
+    /** Returns a slice of the versions of a skill.
+     *
+     * @param a The start version of the slice.
+     * @param b The end version of the slice.
+     *
+     * @return The list of versions, ordered from lowest to highest.
+     * If no full slice could be generated, then an empty list is returned.
+     */
     fun getVersionRange(a: String, b: String): List<String> {
         val higherVersionName: String? = compareVersions(a, b)
         if (higherVersionName == null) {

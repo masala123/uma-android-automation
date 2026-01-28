@@ -35,9 +35,8 @@ typealias OnEntryDetectedCallback = (
     skillUpButtonLocation: Point,
 ) -> Boolean
 
-/**
- * @property skillDatabase A SkillDatabase instance used for querying skill info.
- * @property entries Mapping of SkillListEntry objects.
+/** Handles interaction with the skill list and manages skill list entries.
+ *
  * @property skillPoints The current remaining skill points.
  * Defaults to NULL if not yet detected.
  * The value is set in the `detectSkillPoints` function.

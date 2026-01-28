@@ -20,6 +20,7 @@ import com.steve1316.uma_android_automation.utils.types.SkillCommunityTier
 private const val USE_MOCK_DATA: Boolean = false
 private const val MOCK_SKILL_POINTS: Int = 1495
 
+/** Handles operations based on the user's Skill Plan Settings. */
 class SkillPlan (private val game: Game) {
     private val TAG: String = "[${MainActivity.loggerTag}]SkillPlan"
 
@@ -100,6 +101,17 @@ class SkillPlan (private val game: Game) {
         )
     }
 
+    /** Gets all available negative skills in the skill list.
+     *
+     * @param skillPlanSettings The SkillPlanSettings to use when purchasing.
+     * @param skillList A reference to the SkillList instance.
+     * @param skillsToBuy The current list of skill names that we plan to buy.
+     * @param availableSkillPoints The amount of remaining skill points.
+     *
+     * @return A mapping of the new skill names and their prices that we want to buy.
+     * This only includes the skills that we calculated in this function.
+     * It does not include anything from `skillsToBuy`.
+     */
     private fun getNegativeSkills(
         skillPlanSettings: SkillPlanSettings,
         skillList: SkillList,
@@ -130,6 +142,17 @@ class SkillPlan (private val game: Game) {
         return result.toMap()
     }
 
+    /** Gets all available inherited unique skills in the skill list.
+     *
+     * @param skillPlanSettings The SkillPlanSettings to use when purchasing.
+     * @param skillList A reference to the SkillList instance.
+     * @param skillsToBuy The current list of skill names that we plan to buy.
+     * @param availableSkillPoints The amount of remaining skill points.
+     *
+     * @return A mapping of the new skill names and their prices that we want to buy.
+     * This only includes the skills that we calculated in this function.
+     * It does not include anything from `skillsToBuy`.
+     */
     private fun getInheritedUniqueSkills(
         skillPlanSettings: SkillPlanSettings,
         skillList: SkillList,
@@ -159,6 +182,17 @@ class SkillPlan (private val game: Game) {
         return result.toMap()
     }
 
+    /** Gets all available skills from the user's skill plan in the skill list.
+     *
+     * @param skillPlanSettings The SkillPlanSettings to use when purchasing.
+     * @param skillList A reference to the SkillList instance.
+     * @param skillsToBuy The current list of skill names that we plan to buy.
+     * @param availableSkillPoints The amount of remaining skill points.
+     *
+     * @return A mapping of the new skill names and their prices that we want to buy.
+     * This only includes the skills that we calculated in this function.
+     * It does not include anything from `skillsToBuy`.
+     */
     private fun getUserPlannedSkills(
         skillPlanSettings: SkillPlanSettings,
         skillList: SkillList,
@@ -241,6 +275,19 @@ class SkillPlan (private val game: Game) {
         return result.toMap()
     }
 
+    /** Gets all available negative, inherited unique, and user planned skills.
+     *
+     * These are used in every skill plan so these functions were grouped together.
+     *
+     * @param skillPlanSettings The SkillPlanSettings to use when purchasing.
+     * @param skillList A reference to the SkillList instance.
+     * @param skillsToBuy The current list of skill names that we plan to buy.
+     * @param availableSkillPoints The amount of remaining skill points.
+     *
+     * @return A mapping of the new skill names and their prices that we want to buy.
+     * This only includes the skills that we calculated in this function.
+     * It does not include anything from `skillsToBuy`.
+     */
     private fun getSkillsToBuyCommon(
         skillPlanSettings: SkillPlanSettings,
         skillList: SkillList,
@@ -273,10 +320,19 @@ class SkillPlan (private val game: Game) {
         return result.toMap()
     }
 
-    /**
+    /** Gets all available skills to buy following the default strategy.
      *
      * NOTE: Currently doesn't do anything but it's here since we have a strategy
      * option for DEFAULT so it'd be weird to not have a function ready for it.
+     *
+     * @param skillPlanSettings The SkillPlanSettings to use when purchasing.
+     * @param skillList A reference to the SkillList instance.
+     * @param skillsToBuy The current list of skill names that we plan to buy.
+     * @param availableSkillPoints The amount of remaining skill points.
+     *
+     * @return A mapping of the new skill names and their prices that we want to buy.
+     * This only includes the skills that we calculated in this function.
+     * It does not include anything from `skillsToBuy`.
      */
     private fun getSkillsToBuyDefaultStrategy(
         skillPlanSettings: SkillPlanSettings,
@@ -289,6 +345,24 @@ class SkillPlan (private val game: Game) {
         return result.toMap()
     }
 
+    /** Gets all available skills to buy following the OptimizeSkills strategy.
+     *
+     * This function attempts to calculate the optimal skills to purchase based
+     * on a community made skill tier list. Skills within each tier are just in
+     * alphabetical order, so within each tier we optimize the evaluated rank.
+     *
+     * We also filter skills to only include those that match the user-specified
+     * aptitudes for running style, track distance, and track surface.
+     *
+     * @param skillPlanSettings The SkillPlanSettings to use when purchasing.
+     * @param skillList A reference to the SkillList instance.
+     * @param skillsToBuy The current list of skill names that we plan to buy.
+     * @param availableSkillPoints The amount of remaining skill points.
+     *
+     * @return A mapping of the new skill names and their prices that we want to buy.
+     * This only includes the skills that we calculated in this function.
+     * It does not include anything from `skillsToBuy`.
+     */
     private fun getSkillsToBuyOptimizeSkillsStrategy(
         skillPlanSettings: SkillPlanSettings,
         skillList: SkillList,
@@ -415,6 +489,22 @@ class SkillPlan (private val game: Game) {
         return result.toMap()
     }
 
+    /** Gets all available skills to buy following the OptimizeRank strategy.
+     *
+     * This function attempts to maximize the trainee's total rank by purchasing
+     * skills with the highest evaluated points (rank) to price ratio.
+     *
+     * The user-specified skill aptitude overrides are ignored in this strategy.
+     *
+     * @param skillPlanSettings The SkillPlanSettings to use when purchasing.
+     * @param skillList A reference to the SkillList instance.
+     * @param skillsToBuy The current list of skill names that we plan to buy.
+     * @param availableSkillPoints The amount of remaining skill points.
+     *
+     * @return A mapping of the new skill names and their prices that we want to buy.
+     * This only includes the skills that we calculated in this function.
+     * It does not include anything from `skillsToBuy`.
+     */
     private fun getSkillsToBuyOptimizeRankStrategy(
         skillPlanSettings: SkillPlanSettings,
         skillList: SkillList,
@@ -466,6 +556,17 @@ class SkillPlan (private val game: Game) {
         return result.toMap()
     }
 
+    /** Gets all available skills to buy for the user-specified spending strategy.
+     *
+     * @param skillPlanSettings The SkillPlanSettings to use when purchasing.
+     * @param skillList A reference to the SkillList instance.
+     * @param skillsToBuy The current list of skill names that we plan to buy.
+     * @param availableSkillPoints The amount of remaining skill points.
+     *
+     * @return A mapping of the new skill names and their prices that we want to buy.
+     * This only includes the skills that we calculated in this function.
+     * It does not include anything from `skillsToBuy`.
+     */
     private fun getSkillsToBuy(
         skillPlanSettings: SkillPlanSettings,
         skillList: SkillList,
@@ -530,6 +631,10 @@ class SkillPlan (private val game: Game) {
         return result.toMap()
     }
 
+    /** Loads the user's Pre-Finals planned skills.
+     *
+     * @return A list of planned skill names.
+     */
     private fun loadUserPlannedPreFinalsSkills(): List<String> {
         if (!enablePreFinalsSkillPlan) {
             MessageLog.i(TAG, "[SKILLS] Pre-Finals skill plan is disabled, returning empty planned skills list...")
@@ -558,6 +663,10 @@ class SkillPlan (private val game: Game) {
         }
     }
 
+    /** Loads the user's Career Complete planned skills.
+     *
+     * @return A list of planned skill names.
+     */
     private fun loadUserPlannedCareerCompleteSkills(): List<String> {
         if (!enableCareerCompleteSkillPlan) {
             MessageLog.i(TAG, "[SKILLS] Career complete skill plan is disabled, returning empty planned skills list...")
@@ -641,6 +750,10 @@ class SkillPlan (private val game: Game) {
         return false
     }
 
+    /** Main function for handling all skill plan purchasing logic.
+     *
+     * @return Whether the planned operations were successful.
+     */
     fun start(): Boolean {
         val bitmap: Bitmap = game.imageUtils.getSourceBitmap()
 
