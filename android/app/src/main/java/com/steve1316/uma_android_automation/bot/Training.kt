@@ -541,6 +541,7 @@ class Training(private val game: Game) {
 
 	private val trainingMap: MutableMap<StatName, TrainingOption> = mutableMapOf()
 	private val skippedTrainingMap: MutableMap<StatName, TrainingOption> = mutableMapOf()
+	private val restrictedTrainingNames: MutableSet<StatName> = mutableSetOf()
 	private val blacklist: List<StatName?> = SettingsHelper.getStringArraySetting("training", "trainingBlacklist").map { StatName.fromName(it) }
 	private val statPrioritizationRaw: List<StatName> = SettingsHelper.getStringArraySetting("training", "statPrioritization").map { StatName.fromName(it)!! }
 	
@@ -749,6 +750,13 @@ class Training(private val game: Game) {
                     }
                     // Slight delay for UI to update after clicking button.
                     game.wait(0.2, skipWaitingForLoading = true)
+                }
+
+                // Check if the currently selected training is restricted.
+                if (game.imageUtils.findImage("training_cannot_perform", tries = 1, region = game.imageUtils.regionMiddle).first != null) {
+                    MessageLog.i(TAG, "[TRAINING] The currently selected $statName training is restricted and cannot be performed.")
+                    restrictedTrainingNames.add(statName)
+                    continue
                 }
 
                 // Get bitmaps and locations before starting threads to make them safe for parallel processing.
