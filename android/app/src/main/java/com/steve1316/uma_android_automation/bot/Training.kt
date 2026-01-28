@@ -628,7 +628,11 @@ class Training(private val game: Game) {
 					game.wait(1.0)
 
 					if (game.checkMainScreen()) {
-						MessageLog.i(TAG, "[TRAINING] Will recover energy due to either failure chance was high enough to do so or no failure chances were detected via OCR.")
+						if (restrictedTrainingNames.size == StatName.entries.size || (restrictedTrainingNames.size + blacklist.size) >= StatName.entries.size) {
+							MessageLog.i(TAG, "[TRAINING] Will recover energy due to all available trainings being restricted or blacklisted.")
+						} else {
+							MessageLog.i(TAG, "[TRAINING] Will recover energy due to either failure chance was high enough to do so or no failure chances were detected via OCR.")
+						}
 						game.recoverEnergy()
 					} else {
 						MessageLog.w(TAG, "[WARNING] Could not head back to the Main screen in order to recover energy.")
