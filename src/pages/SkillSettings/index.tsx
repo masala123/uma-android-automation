@@ -9,7 +9,7 @@ import CustomTitle from "../../components/CustomTitle"
 import PageHeader from "../../components/PageHeader"
 import { BotStateContext, defaultSettings } from "../../context/BotStateContext"
 
-const RacingSettings = () => {
+const SkillSettings = () => {
     const { colors } = useTheme()
     const navigation = useNavigation()
     const bsc = useContext(BotStateContext)
@@ -252,4 +252,4 @@ const RacingSettings = () => {
     )
 }
 
-export default RacingSettings
+export default SkillSettings
