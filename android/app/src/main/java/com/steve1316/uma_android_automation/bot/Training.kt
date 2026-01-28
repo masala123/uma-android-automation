@@ -118,7 +118,8 @@ class Training(private val game: Game) {
 		val currentStatCap: Int = 1200,
 		val trainingOptions: List<TrainingOption>,
 		val skillHintsPerLocation: Map<StatName, Int> = StatName.entries.associateWith { 0 },
-		val enablePrioritizeSkillHints: Boolean = false
+		val enablePrioritizeSkillHints: Boolean = false,
+		val statsTrainedOverBuffer: Set<StatName> = emptySet()
 	) {
 		override fun equals(other: Any?): Boolean {
 			if (this === other) return true
@@ -139,6 +140,7 @@ class Training(private val game: Game) {
 			if (trainingOptions != other.trainingOptions) return false
 			if (!skillHintsPerLocation.equals(other.skillHintsPerLocation)) return false
 			if (enablePrioritizeSkillHints != other.enablePrioritizeSkillHints) return false
+			if (statsTrainedOverBuffer != other.statsTrainedOverBuffer) return false
 
 			return true
 		}
@@ -157,6 +159,7 @@ class Training(private val game: Game) {
 			result = 31 * result + trainingOptions.hashCode()
 			result = 31 * result + skillHintsPerLocation.hashCode()
 			result = 31 * result + enablePrioritizeSkillHints.hashCode()
+			result = 31 * result + statsTrainedOverBuffer.hashCode()
 			return result
 		}
 	}
@@ -488,13 +491,29 @@ class Training(private val game: Game) {
             val potentialStat: Int = currentStat + training.statGains.getOrElse(training.name) { 0 }
             val effectiveStatCap = config.currentStatCap - 100
 
-			// Don't score for stats that are close to the cap or would be close to it.
-			if (config.disableTrainingOnMaxedStat && currentStat >= effectiveStatCap) {
+			// Don't score for stats that are close to the absolute cap.
+			if (currentStat >= config.currentStatCap) {
 				return 0.0
 			}
 
+			// Don't score for stats that are already above the buffer, unless it's a rainbow training 
+			// and this stat haven't used its one-time allowance yet.
+			if (config.disableTrainingOnMaxedStat && currentStat >= effectiveStatCap) {
+				val canUseAllowance = training.numRainbow > 0 && training.name !in config.statsTrainedOverBuffer
+				if (!canUseAllowance) {
+					return 0.0
+				} else {
+					MessageLog.i(TAG, "[TRAINING] [${training.name}] Current stat ($currentStat) is at or over buffer ($effectiveStatCap), but allowing one-time rainbow training.")
+				}
+			}
+
             if (potentialStat >= effectiveStatCap) {
-                return 0.0
+				val canUseAllowance = training.numRainbow > 0 && training.name !in config.statsTrainedOverBuffer
+				if (!canUseAllowance) {
+					return 0.0
+				} else {
+					MessageLog.i(TAG, "[TRAINING] [${training.name}] Potential stat ($potentialStat) would be over buffer ($effectiveStatCap), but allowing one-time rainbow training.")
+				}
             }
 
 			var totalScore = 0.0
@@ -542,6 +561,7 @@ class Training(private val game: Game) {
 	private val trainingMap: MutableMap<StatName, TrainingOption> = mutableMapOf()
 	private val skippedTrainingMap: MutableMap<StatName, TrainingOption> = mutableMapOf()
 	private val restrictedTrainingNames: MutableSet<StatName> = mutableSetOf()
+	private val statsTrainedOverBuffer: MutableSet<StatName> = mutableSetOf()
 	private val blacklist: List<StatName?> = SettingsHelper.getStringArraySetting("training", "trainingBlacklist").map { StatName.fromName(it) }
 	private val statPrioritizationRaw: List<StatName> = SettingsHelper.getStringArraySetting("training", "statPrioritization").map { StatName.fromName(it)!! }
 	
@@ -1089,7 +1109,8 @@ class Training(private val game: Game) {
 			currentStatCap = currentStatCap,
 			trainingOptions = trainingMap.values.toList(),
 			skillHintsPerLocation = skillHintsPerLocation,
-			enablePrioritizeSkillHints = enablePrioritizeSkillHints
+			enablePrioritizeSkillHints = enablePrioritizeSkillHints,
+			statsTrainedOverBuffer = statsTrainedOverBuffer
 		)
 
 		// Compute scores and determine the best training option.
@@ -1134,6 +1155,20 @@ class Training(private val game: Game) {
 
 		if (trainingSelected != null) {
 			MessageLog.i(TAG, "[TRAINING] Executing the $trainingSelected Training.")
+			
+			// Check if this training is a rainbow training that exceeds the stat cap buffer.
+			val training = trainingMap[trainingSelected]
+			if (training != null && training.numRainbow > 0) {
+				val currentStat = game.trainee.stats.asMap()[trainingSelected] ?: 0
+				val potentialStat = currentStat + (training.statGains[trainingSelected] ?: 0)
+				val effectiveStatCap = currentStatCap - 100
+				
+				if ((currentStat >= effectiveStatCap || potentialStat >= effectiveStatCap) && trainingSelected !in statsTrainedOverBuffer) {
+					MessageLog.i(TAG, "[TRAINING] [${trainingSelected}] One-time stat cap buffer allowance used for this stat.")
+					statsTrainedOverBuffer.add(trainingSelected)
+				}
+			}
+
 			game.findAndTapImage("training_${trainingSelected.name.lowercase()}", region = game.imageUtils.regionBottomHalf, taps = 3)
             game.wait(1.0)
 
