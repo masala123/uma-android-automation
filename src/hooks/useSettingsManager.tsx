@@ -320,7 +320,6 @@ export const useSettingsManager = () => {
 
             // Remove unnecessary fields before export.
             delete settingsForExport.racing.racingPlanData
-            delete settingsForExport.skills.skillPlanData
             delete settingsForExport.trainingEvent.characterEventData
             delete settingsForExport.trainingEvent.supportEventData
             delete settingsForExport.misc.formattedSettingsString

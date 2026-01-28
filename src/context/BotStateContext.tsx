@@ -1,7 +1,6 @@
 import { createContext, useState } from "react"
 import { startTiming } from "../lib/performanceLogger"
 import racesData from "../data/races.json"
-import skillsData from "../data/skills.json"
 
 export interface Settings {
     // General settings
@@ -56,7 +55,6 @@ export interface Settings {
         enableCareerCompleteBuyInheritedSkills: boolean
         enableCareerCompleteBuyNegativeSkills: boolean
         careerCompleteSkillPlan: string
-        skillPlanData: string
     }
 
     // Training Event settings
@@ -209,7 +207,6 @@ export const defaultSettings: Settings = {
         enableCareerCompleteBuyInheritedSkills: false,
         enableCareerCompleteBuyNegativeSkills: false,
         careerCompleteSkillPlan: "",
-        skillPlanData: JSON.stringify(skillsData),
     },
     trainingEvent: {
         enablePrioritizeEnergyOptions: false,

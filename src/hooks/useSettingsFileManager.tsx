@@ -72,7 +72,6 @@ const compareSettings = (current: Settings, imported: Settings) => {
             // Skip large settings fields that shouldn't be shown in preview.
             if (
                 (category === "racing" && key === "racingPlanData") ||
-                (category === "skills" && key === "skillPlanData") ||
                 (category === "misc" && key === "formattedSettingsString")
             ) {
                 continue
