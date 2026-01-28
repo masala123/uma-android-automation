@@ -1,21 +1,18 @@
 import { useContext } from "react"
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity } from "react-native"
-import { useNavigation, DrawerActions } from "@react-navigation/native"
+import { View, Text, ScrollView, StyleSheet } from "react-native"
+import { useNavigation } from "@react-navigation/native"
 import { Divider } from "react-native-paper"
-import { Ionicons } from "@expo/vector-icons"
 import { useTheme } from "../../context/ThemeContext"
 import NavigationLink from "../../components/NavigationLink"
 import CustomSelect from "../../components/CustomSelect"
+import CustomTitle from "../../components/CustomTitle"
+import PageHeader from "../../components/PageHeader"
 import { BotStateContext, defaultSettings } from "../../context/BotStateContext"
 
 const RacingSettings = () => {
     const { colors } = useTheme()
     const navigation = useNavigation()
     const bsc = useContext(BotStateContext)
-
-    const openDrawer = () => {
-        navigation.dispatch(DrawerActions.openDrawer())
-    }
 
     const { settings, setSettings } = bsc
 
@@ -65,6 +62,13 @@ const RacingSettings = () => {
             fontWeight: "bold",
             color: colors.foreground,
         },
+        description: {
+            fontSize: 14,
+            color: colors.foreground,
+            opacity: 0.7,
+            marginBottom: 16,
+            lineHeight: 20,
+        },
         section: {
             marginBottom: 24,
         },
@@ -97,6 +101,12 @@ const RacingSettings = () => {
             opacity: 0.7,
             marginTop: 4,
         },
+        titleDescription: {
+            fontSize: 14,
+            color: colors.foreground,
+            opacity: 0.7,
+            marginBottom: 4,
+        },
         warningContainer: {
             backgroundColor: colors.warningBg,
             borderLeftWidth: 4,
@@ -114,83 +124,128 @@ const RacingSettings = () => {
 
     return (
         <View style={styles.root}>
-            <View style={styles.header}>
-                <View style={styles.headerLeft}>
-                    <TouchableOpacity onPress={openDrawer} style={styles.menuButton} activeOpacity={0.7}>
-                        <Ionicons name="menu" size={28} color={colors.foreground} />
-                    </TouchableOpacity>
-                    <Text style={styles.title}>Skill Settings</Text>
-                </View>
-            </View>
+            <PageHeader title="Skill Settings" />
+            <Text style={styles.description}>
+                Allows configuration of automated skill point spending.
+            </Text>
+            <Text style={styles.description}>
+                This feature is not made of magic. If you wish to train an uma
+                up for TT or CM, then you should buy your skills manually. The
+                main purpose of this feature is to make the process of farming
+                rank in events less of a hassle.
+            </Text>
+            <Divider style={{ marginBottom: 16 }} />
             <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
-                <View style={styles.inputContainer}>
-                    <Text style={styles.inputLabel}>Running Style Override</Text>
-                    <CustomSelect
-                        options={[
-                            { value: "inherit", label: "Use Racing Setting" },
-                            { value: "no_preference", label: "No Preference" },
-                            { value: "front_runner", label: "Front Runner" },
-                            { value: "pace_chaser", label: "Pace Chaser" },
-                            { value: "late_surger", label: "Late Surger" },
-                            { value: "end_closer", label: "End Closer" },
-                        ]}
-                        value={preferredRunningStyle}
-                        defaultValue={defaultSettings.skills.preferredRunningStyle}
-                        onValueChange={(value) => updateSkillsSetting("preferredRunningStyle", value)}
-                        placeholder="Select Running Style"
-                    />
-                    <Text style={styles.inputDescription}>Overrides the preferred running style when determining which skills to purchase.</Text>
-                    <Text style={styles.inputDescription}>When No Preference is selected, the bot will buy skills regardless of whether they match our trainee's aptitudes or the user-specified settings. Otherwise, the bot will only attempt to purchase skills that are running style dependent if they match this setting.</Text>
-                </View>
-                <View style={styles.inputContainer}>
-                    <Text style={styles.inputLabel}>Track Distance Override</Text>
-                    <CustomSelect
-                        options={[
-                            { value: "inherit", label: "Use Training Setting" },
-                            { value: "no_preference", label: "No Preference" },
-                            { value: "sprint", label: "Sprint" },
-                            { value: "mile", label: "Mile" },
-                            { value: "medium", label: "Medium" },
-                            { value: "long", label: "Long" },
-                        ]}
-                        value={preferredTrackDistance}
-                        defaultValue={defaultSettings.skills.preferredTrackDistance}
-                        onValueChange={(value) => updateSkillsSetting("preferredTrackDistance", value)}
-                        placeholder="Select Track Distance"
-                    />
-                    <Text style={styles.inputDescription}>Overrides the preferred track distance when determining which skills to purchase.</Text>
-                    <Text style={styles.inputDescription}>When No Preference is selected, the bot will buy skills regardless of whether they match our trainee's aptitudes or the user-specified settings. Otherwise, the bot will only attempt to purchase skills that are track distance dependent if they match this setting.</Text>
-                </View>
-                <View style={styles.inputContainer}>
-                    <Text style={styles.inputLabel}>Track Surface Override</Text>
-                    <CustomSelect
-                        options={[
-                            { value: "no_preference", label: "No Preference" },
-                            { value: "turf", label: "Turf" },
-                            { value: "dirt", label: "Dirt" },
-                        ]}
-                        value={preferredTrackSurface}
-                        defaultValue={defaultSettings.skills.preferredTrackSurface}
-                        onValueChange={(value) => updateSkillsSetting("preferredTrackSurface", value)}
-                        placeholder="Select Track Surface"
-                    />
-                    <Text style={styles.inputDescription}>Overrides the preferred track surface when determining which skills to purchase.</Text>
-                    <Text style={styles.inputDescription}>When No Preference is selected, the bot will buy skills regardless of whether they match our trainee's aptitudes or the user-specified settings. Otherwise, the bot will only attempt to purchase skills that are track surface dependent if they match this setting.</Text>
+                <CustomTitle
+                    title="Skill Style Overrides"
+                    description="Override which types of skills the bot can purchase."
+                />
+                <Text style={styles.description}>
+                    Any skills whose activation condition does not match the
+                    selected override will be filtered out of the list of
+                    available skills that the bot can consider for purchasing.
+                    Skills that have no activation conditions will still be
+                    available.
+                </Text>
+
+                <View style={styles.section}>
+                    
+                    <View style={styles.inputContainer}>
+                        <Text style={styles.inputLabel}>Running Style</Text>
+                        <CustomSelect
+                            options={[
+                                { value: "inherit", label: "Use [Racing Settings] -> [Original Race Strategy]" },
+                                { value: "no_preference", label: "Any" },
+                                { value: "front_runner", label: "Front Runner" },
+                                { value: "pace_chaser", label: "Pace Chaser" },
+                                { value: "late_surger", label: "Late Surger" },
+                                { value: "end_closer", label: "End Closer" },
+                            ]}
+                            value={preferredRunningStyle}
+                            defaultValue={defaultSettings.skills.preferredRunningStyle}
+                            onValueChange={(value) => updateSkillsSetting("preferredRunningStyle", value)}
+                            placeholder="Select Running Style"
+                        />
+                        <Text style={styles.inputDescription}>
+                            There are two different groups of Running Style skills.
+                        </Text>
+                        <Text style={styles.inputDescription}>
+                            The first are skills that specifically say in their
+                            description that they are for a specific running style.
+                            These cannot be activated unless the trainee is using
+                            that running style.
+                        </Text>
+                        <Text style={styles.inputDescription}>
+                            The second are skills that do not say they are for a
+                            running style, but have activation conditions which
+                            limit which styles would actually be able to activate
+                            them (ignoring rare cases).
+                        </Text>
+                        <Text style={styles.inputDescription}>
+                            This setting will filter skills based on both of these
+                            conditions.
+                            This helps us avoid having situations like an
+                            End Closer purchasing a skill like "Keeping the Lead".
+                            This skill doesn't require using the Front Runner style
+                            to activate, but it does require the runner to be in the
+                            lead mid-race which is very unlikely for an End Closer.
+                        </Text>
+                    </View>
+                    <View style={styles.inputContainer}>
+                        <Text style={styles.inputLabel}>Track Distance</Text>
+                        <CustomSelect
+                            options={[
+                                { value: "inherit", label: "Use [Training Settings] -> [Preferred Distance Override]" },
+                                { value: "no_preference", label: "Any" },
+                                { value: "sprint", label: "Sprint" },
+                                { value: "mile", label: "Mile" },
+                                { value: "medium", label: "Medium" },
+                                { value: "long", label: "Long" },
+                            ]}
+                            value={preferredTrackDistance}
+                            defaultValue={defaultSettings.skills.preferredTrackDistance}
+                            onValueChange={(value) => updateSkillsSetting("preferredTrackDistance", value)}
+                            placeholder="Select Track Distance"
+                        />
+                    </View>
+                    <View style={styles.inputContainer}>
+                        <Text style={styles.inputLabel}>Track Surface</Text>
+                        <CustomSelect
+                            options={[
+                                { value: "no_preference", label: "Any" },
+                                { value: "turf", label: "Turf" },
+                                { value: "dirt", label: "Dirt" },
+                            ]}
+                            value={preferredTrackSurface}
+                            defaultValue={defaultSettings.skills.preferredTrackSurface}
+                            onValueChange={(value) => updateSkillsSetting("preferredTrackSurface", value)}
+                            placeholder="Select Track Surface"
+                        />
+                        <Text style={styles.inputDescription}>
+                            At the time of writing, there are no skills that only
+                            apply to the Turf surface type. The only track surface
+                            specific skills are ones for Dirt surfaces. So if you
+                            choose Dirt, all skills will still be available for purchase. However if you choose Turf,
+                            then all the Dirt skills will be ignored.
+                        </Text>
+                    </View>
                 </View>
                 <Divider style={{ marginBottom: 16 }} />
-                <View className="m-1">
-                    <NavigationLink
-                        title="Go to Pre-Finals Skill Plan Settings"
-                        description="Configure prioritized skills for purchasing just before the finale season."
-                        onPress={() => navigation.navigate("SkillPlanPreFinalsSettings" as never)}
-                        style={{ ...styles.section, marginTop: 0 }}
-                    />
-                    <NavigationLink
-                        title="Go to Career Complete Skill Plan Settings"
-                        description="Configure prioritized skills for purchasing upon career completion."
-                        onPress={() => navigation.navigate("SkillPlanCareerCompleteSettings" as never)}
-                        style={{ ...styles.section, marginTop: 0 }}
-                    />
+                <View style={styles.section}>
+                    <View className="m-1">
+                        <NavigationLink
+                            title="Go to Pre-Finals Skill Plan Settings"
+                            description="Configure the skills to buy just before the finale season."
+                            onPress={() => navigation.navigate("SkillPlanPreFinalsSettings" as never)}
+                            style={{ ...styles.section, marginTop: 0 }}
+                        />
+                        <NavigationLink
+                            title="Go to Career Complete Skill Plan Settings"
+                            description="Configure the skills to buy upon career completion."
+                            onPress={() => navigation.navigate("SkillPlanCareerCompleteSettings" as never)}
+                            style={{ ...styles.section, marginTop: 0 }}
+                        />
+                    </View>
                 </View>
             </ScrollView>
         </View>

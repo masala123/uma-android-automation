@@ -1,7 +1,5 @@
-import { useContext, useState, useEffect } from "react"
+import { useContext, useState } from "react"
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, Image } from "react-native"
-import { useNavigation, DrawerActions } from "@react-navigation/native"
-import { Ionicons } from "@expo/vector-icons"
 import { Divider } from "react-native-paper"
 import { useTheme } from "../../context/ThemeContext"
 import { BotStateContext, defaultSettings } from "../../context/BotStateContext"
@@ -9,6 +7,7 @@ import CustomSelect from "../../components/CustomSelect"
 import CustomCheckbox from "../../components/CustomCheckbox"
 import CustomButton from "../../components/CustomButton"
 import CustomScrollView from "../../components/CustomScrollView"
+import PageHeader from "../../components/PageHeader"
 import { Input } from "../../components/ui/input"
 import { CircleCheckBig, Trash2 } from "lucide-react-native"
 import skillsData from "../../data/skills.json"
@@ -39,12 +38,7 @@ interface PlannedSkill {
 
 const SkillPlanCareerCompleteSettings = () => {
     const { colors } = useTheme()
-    const navigation = useNavigation()
     const bsc = useContext(BotStateContext)
-
-    const openDrawer = () => {
-        navigation.dispatch(DrawerActions.openDrawer())
-    }
 
     const { settings, setSettings } = bsc
 
@@ -68,7 +62,7 @@ const SkillPlanCareerCompleteSettings = () => {
 
     // Filter skills based on search and preferences.
     const filteredSkills = allSkills.filter((skill) => {
-        const matchesSearch = skill.name_en.toLowerCase().includes(searchQuery.toLowerCase()) || skill.id.toString().includes(searchQuery.toLowerCase())
+        const matchesSearch = skill.name_en.toLowerCase().includes(searchQuery.toLowerCase())
 
         return matchesSearch
     })
@@ -215,7 +209,25 @@ const SkillPlanCareerCompleteSettings = () => {
         return (
             <>
                 <View style={styles.inputContainer}>
-                    <Text style={styles.inputLabel}>Skill Point Spending Strategy</Text>
+                    <CustomCheckbox
+                        id="enable-career-complete-buy-inherited-skills"
+                        checked={enableCareerCompleteBuyInheritedSkills}
+                        onCheckedChange={(checked) => updateSkillsSetting("enableCareerCompleteBuyInheritedSkills", checked)}
+                        label="Purchase All Inherited Unique Skills"
+                        description={"When enabled, the bot will attempt to purchase all inherited unique skills regardless of their evaluated rating or community tier list rating."}
+                        style={{ marginTop: 16 }}
+                    />
+                    <CustomCheckbox
+                        id="enable-career-complete-buy-negative-skills"
+                        checked={enableCareerCompleteBuyNegativeSkills}
+                        onCheckedChange={(checked) => updateSkillsSetting("enableCareerCompleteBuyNegativeSkills", checked)}
+                        label="Purchase All Negative Skills"
+                        description={"When enabled, the bot will attempt to purchase all negative skills (i.e. Firm Conditions ×)."}
+                        style={{ marginTop: 16 }}
+                    />
+                </View>
+                <View style={styles.inputContainer}>
+                    <Text style={styles.inputLabel}>Automated Skill Point Spending Strategy</Text>
                     <CustomSelect
                         options={[
                             { value: "default", label: "Do Not Spend Remaining Points" },
@@ -227,26 +239,24 @@ const SkillPlanCareerCompleteSettings = () => {
                         onValueChange={(value) => updateSkillsSetting("careerCompleteSpendingStrategy", value)}
                         placeholder="Select Strategy"
                     />
-                    <Text style={styles.inputDescription}>The strategy to use when spending skill points.</Text>
-                    <Text style={styles.inputDescription}>Best Skills First will use a community skill tier list to purchase better skills first and then within each tier it will attempt to optimize rank.</Text>
-                    <Text style={styles.inputDescription}>Optimize Rank will purchase skills in a way which will result in the highest trainee rank. Avoid this option since it will likely make a bad PvP trainee.</Text>
+                    <Text style={styles.inputDescription}>
+                        This option determines what the bot does with any
+                        remaining skill points after it has purchased all of
+                        the skills from the Planned Skills section and the
+                        other options on this page.
+                    </Text>
+                    <Text style={styles.inputDescription}>
+                        Best Skills First will use a community skill tier list
+                        to purchase better skills first and then within each
+                        tier it will attempt to optimize rank since the skills
+                        within each tier are not ordered.
+                    </Text>
+                    <Text style={styles.inputDescription}>
+                        Optimize Rank will purchase skills in a way which will
+                        result in the highest trainee rank. Avoid this option
+                        if you wish to train an uma up for TT or CM.
+                    </Text>
                 </View>
-                <CustomCheckbox
-                    id="enable-career-complete-buy-inherited-skills"
-                    checked={enableCareerCompleteBuyInheritedSkills}
-                    onCheckedChange={(checked) => updateSkillsSetting("enableCareerCompleteBuyInheritedSkills", checked)}
-                    label="Purchase All Inherited Unique Skills"
-                    description={"When enabled, the bot will attempt to purchase all inherited unique skills regardless of their evaluated rating or community tier list rating."}
-                    style={{ marginTop: 16 }}
-                />
-                <CustomCheckbox
-                    id="enable-career-complete-buy-negative-skills"
-                    checked={enableCareerCompleteBuyNegativeSkills}
-                    onCheckedChange={(checked) => updateSkillsSetting("enableCareerCompleteBuyNegativeSkills", checked)}
-                    label="Purchase All Negative Skills"
-                    description={"When enabled, the bot will attempt to purchase all negative skills (i.e. Firm Conditions ×)."}
-                    style={{ marginTop: 16 }}
-                />
             </>
         )
     }
@@ -270,12 +280,14 @@ const SkillPlanCareerCompleteSettings = () => {
 
                 <View style={{ flexDirection: "row", marginBottom: 12 }}>
                     <View style={{ flex: 1 }}>
-                        <Text style={[styles.inputDescription, { marginTop: 0 }]}>Be sure to double check your selected skills after making changes to the filters.</Text>
+                        <Text style={[styles.inputDescription, { marginTop: 0 }]}>
+                            Select skills that the bot will always attempt to buy.
+                        </Text>
                     </View>
                 </View>
 
                 <View style={{ marginBottom: 16 }}>
-                    <Input style={styles.input} value={searchQuery} onChangeText={setSearchQuery} placeholder="Search skills by name or ID..." />
+                    <Input style={styles.input} value={searchQuery} onChangeText={setSearchQuery} placeholder="Search skills by name..." />
                     <View style={{ height: 700 }}>
                         <CustomScrollView
                             targetProps={{
@@ -317,35 +329,24 @@ const SkillPlanCareerCompleteSettings = () => {
 
     return (
         <View style={styles.root}>
-            <View style={styles.header}>
-                <View style={styles.headerLeft}>
-                    <TouchableOpacity onPress={openDrawer} style={styles.menuButton} activeOpacity={0.7}>
-                        <Ionicons name="menu" size={28} color={colors.foreground} />
-                    </TouchableOpacity>
-                    <Text style={styles.title}>Career Complete Skill Plan</Text>
-                </View>
-            </View>
+            <PageHeader title="Career Complete Skill Plan" />
             <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
                 <View className="m-1">
-                    <View style={styles.section}>
-                        <Text style={styles.description}>
-                            {"Purchases skills automatically after the career is completed."}
-                        </Text>
-
-                        <Divider style={{ marginBottom: 16 }} />
-
-                        <CustomCheckbox
-                            id="enable-career-complete-skill-plan"
-                            checked={enableCareerCompleteSkillPlan}
-                            onCheckedChange={(checked) => updateSkillsSetting("enableCareerCompleteSkillPlan", checked)}
-                            label="Enable Career Complete Skill Plan (Beta)"
-                            description={"When enabled, the bot will attempt to purchase skills based on the following configuration."}
-                        />
-                    </View>
-
+                    <Text style={styles.description}>
+                        Purchases skills automatically after the career is completed.
+                    </Text>
+                    <Divider style={{ marginBottom: 16 }} />
+                    <CustomCheckbox
+                        id="enable-career-complete-skill-plan"
+                        checked={enableCareerCompleteSkillPlan}
+                        onCheckedChange={(checked) => updateSkillsSetting("enableCareerCompleteSkillPlan", checked)}
+                        label="Enable Career Complete Skill Plan (Beta)"
+                        description={"When enabled, the bot will attempt to purchase skills based on the following configuration."}
+                    />
                     {enableCareerCompleteSkillPlan && (
                         <>
                             {renderOptions()}
+                            <Divider style={{ marginBottom: 16 }} />
                             {renderSkillList()}
                         </>
                     )}
