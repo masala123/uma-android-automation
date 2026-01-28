@@ -1324,6 +1324,10 @@ class Training(private val game: Game) {
 				skippedTrainingMap.containsKey(statName) -> {
 					appendSingleTrainingDetails(sb, statName, skippedTrainingMap[statName]!!, selected)
 				}
+				// Check if training is restricted.
+				statName in restrictedTrainingNames -> {
+					sb.appendLine("$statName Training: (RESTRICTED)")
+				}
 				// Check if training is blacklisted.
 				statName in blacklistedStatNames -> {
 					sb.appendLine("$statName Training: (BLACKLISTED)")
