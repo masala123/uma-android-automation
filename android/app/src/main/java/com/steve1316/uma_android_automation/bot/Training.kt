@@ -541,6 +541,7 @@ class Training(private val game: Game) {
 
 	private val trainingMap: MutableMap<StatName, TrainingOption> = mutableMapOf()
 	private val skippedTrainingMap: MutableMap<StatName, TrainingOption> = mutableMapOf()
+	private val restrictedTrainingNames: MutableSet<StatName> = mutableSetOf()
 	private val blacklist: List<StatName?> = SettingsHelper.getStringArraySetting("training", "trainingBlacklist").map { StatName.fromName(it) }
 	private val statPrioritizationRaw: List<StatName> = SettingsHelper.getStringArraySetting("training", "statPrioritization").map { StatName.fromName(it)!! }
 	
@@ -602,6 +603,7 @@ class Training(private val game: Game) {
 			// Acquire the percentages and stat gains for each training.
 			game.wait(0.5)
 			analyzeTrainings()
+			val trainingSelected: StatName? = recommendTraining()
 
 			if (trainingMap.isEmpty()) {
 				// Check if we should force Wit training during the Finale instead of recovering energy.
@@ -627,7 +629,11 @@ class Training(private val game: Game) {
 					game.wait(1.0)
 
 					if (game.checkMainScreen()) {
-						MessageLog.i(TAG, "[TRAINING] Will recover energy due to either failure chance was high enough to do so or no failure chances were detected via OCR.")
+						if (restrictedTrainingNames.size == StatName.entries.size || (restrictedTrainingNames.size + blacklist.size) >= StatName.entries.size) {
+							MessageLog.i(TAG, "[TRAINING] Will recover energy due to all available trainings being restricted or blacklisted.")
+						} else {
+							MessageLog.i(TAG, "[TRAINING] Will recover energy due to either failure chance was high enough to do so or no failure chances were detected via OCR.")
+						}
 						game.recoverEnergy()
 					} else {
 						MessageLog.w(TAG, "[WARNING] Could not head back to the Main screen in order to recover energy.")
@@ -635,7 +641,7 @@ class Training(private val game: Game) {
 				}
 			} else {
 				// Now select the training option with the highest weight.
-				executeTraining()
+				executeTraining(trainingSelected)
 				firstTrainingCheck = false
 			}
 
@@ -749,6 +755,13 @@ class Training(private val game: Game) {
                     }
                     // Slight delay for UI to update after clicking button.
                     game.wait(0.2, skipWaitingForLoading = true)
+                }
+
+                // Check if the currently selected training is restricted.
+                if (game.imageUtils.findImage("training_cannot_perform", tries = 1, region = game.imageUtils.regionMiddle).first != null) {
+                    MessageLog.i(TAG, "[TRAINING] The currently selected $statName training is restricted and cannot be performed.")
+                    restrictedTrainingNames.add(statName)
+                    continue
                 }
 
                 // Get bitmaps and locations before starting threads to make them safe for parallel processing.
@@ -1113,10 +1126,11 @@ class Training(private val game: Game) {
 
 	/**
 	 * Execute the training with the highest stat weight.
+	 * 
+	 * @param trainingSelected The stat name of the training to execute.
 	 */
-	private fun executeTraining() {
+	private fun executeTraining(trainingSelected: StatName?) {
 		MessageLog.i(TAG, "[TRAINING] Now starting process to execute training...")
-		val trainingSelected: StatName? = recommendTraining()
 
 		if (trainingSelected != null) {
 			MessageLog.i(TAG, "[TRAINING] Executing the $trainingSelected Training.")
@@ -1131,9 +1145,10 @@ class Training(private val game: Game) {
 			MessageLog.i(TAG, "[TRAINING] Conditions have not been met so training will not be done.")
 		}
 
-		// Now reset the Training map.
+		// Now reset the Training maps.
 		trainingMap.clear()
 		skippedTrainingMap.clear()
+		restrictedTrainingNames.clear()
 	}
 
 	/**
@@ -1308,6 +1323,10 @@ class Training(private val game: Game) {
 				// Check if training was skipped.
 				skippedTrainingMap.containsKey(statName) -> {
 					appendSingleTrainingDetails(sb, statName, skippedTrainingMap[statName]!!, selected)
+				}
+				// Check if training is restricted.
+				statName in restrictedTrainingNames -> {
+					sb.appendLine("$statName Training: (RESTRICTED)")
 				}
 				// Check if training is blacklisted.
 				statName in blacklistedStatNames -> {
