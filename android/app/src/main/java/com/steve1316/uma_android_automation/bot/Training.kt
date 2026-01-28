@@ -118,7 +118,8 @@ class Training(private val game: Game) {
 		val currentStatCap: Int = 1200,
 		val trainingOptions: List<TrainingOption>,
 		val skillHintsPerLocation: Map<StatName, Int> = StatName.entries.associateWith { 0 },
-		val enablePrioritizeSkillHints: Boolean = false
+		val enablePrioritizeSkillHints: Boolean = false,
+		val statsTrainedOverBuffer: Set<StatName> = emptySet()
 	) {
 		override fun equals(other: Any?): Boolean {
 			if (this === other) return true
@@ -139,6 +140,7 @@ class Training(private val game: Game) {
 			if (trainingOptions != other.trainingOptions) return false
 			if (!skillHintsPerLocation.equals(other.skillHintsPerLocation)) return false
 			if (enablePrioritizeSkillHints != other.enablePrioritizeSkillHints) return false
+			if (statsTrainedOverBuffer != other.statsTrainedOverBuffer) return false
 
 			return true
 		}
@@ -157,6 +159,7 @@ class Training(private val game: Game) {
 			result = 31 * result + trainingOptions.hashCode()
 			result = 31 * result + skillHintsPerLocation.hashCode()
 			result = 31 * result + enablePrioritizeSkillHints.hashCode()
+			result = 31 * result + statsTrainedOverBuffer.hashCode()
 			return result
 		}
 	}
@@ -488,13 +491,29 @@ class Training(private val game: Game) {
             val potentialStat: Int = currentStat + training.statGains.getOrElse(training.name) { 0 }
             val effectiveStatCap = config.currentStatCap - 100
 
-			// Don't score for stats that are close to the cap or would be close to it.
-			if (config.disableTrainingOnMaxedStat && currentStat >= effectiveStatCap) {
+			// Don't score for stats that are close to the absolute cap.
+			if (currentStat >= config.currentStatCap) {
 				return 0.0
 			}
 
+			// Don't score for stats that are already above the buffer, unless it's a rainbow training 
+			// and this stat haven't used its one-time allowance yet.
+			if (config.disableTrainingOnMaxedStat && currentStat >= effectiveStatCap) {
+				val canUseAllowance = training.numRainbow > 0 && training.name !in config.statsTrainedOverBuffer
+				if (!canUseAllowance) {
+					return 0.0
+				} else {
+					MessageLog.i(TAG, "[TRAINING] [${training.name}] Current stat ($currentStat) is at or over buffer ($effectiveStatCap), but allowing one-time rainbow training.")
+				}
+			}
+
             if (potentialStat >= effectiveStatCap) {
-                return 0.0
+				val canUseAllowance = training.numRainbow > 0 && training.name !in config.statsTrainedOverBuffer
+				if (!canUseAllowance) {
+					return 0.0
+				} else {
+					MessageLog.i(TAG, "[TRAINING] [${training.name}] Potential stat ($potentialStat) would be over buffer ($effectiveStatCap), but allowing one-time rainbow training.")
+				}
             }
 
 			var totalScore = 0.0
@@ -541,6 +560,8 @@ class Training(private val game: Game) {
 
 	private val trainingMap: MutableMap<StatName, TrainingOption> = mutableMapOf()
 	private val skippedTrainingMap: MutableMap<StatName, TrainingOption> = mutableMapOf()
+	private val restrictedTrainingNames: MutableSet<StatName> = mutableSetOf()
+	private val statsTrainedOverBuffer: MutableSet<StatName> = mutableSetOf()
 	private val blacklist: List<StatName?> = SettingsHelper.getStringArraySetting("training", "trainingBlacklist").map { StatName.fromName(it) }
 	private val statPrioritizationRaw: List<StatName> = SettingsHelper.getStringArraySetting("training", "statPrioritization").map { StatName.fromName(it)!! }
 	
@@ -602,6 +623,7 @@ class Training(private val game: Game) {
 			// Acquire the percentages and stat gains for each training.
 			game.wait(0.5)
 			analyzeTrainings()
+			val trainingSelected: StatName? = recommendTraining()
 
 			if (trainingMap.isEmpty()) {
 				// Check if we should force Wit training during the Finale instead of recovering energy.
@@ -627,7 +649,11 @@ class Training(private val game: Game) {
 					game.wait(1.0)
 
 					if (game.checkMainScreen()) {
-						MessageLog.i(TAG, "[TRAINING] Will recover energy due to either failure chance was high enough to do so or no failure chances were detected via OCR.")
+						if (restrictedTrainingNames.size == StatName.entries.size || (restrictedTrainingNames.size + blacklist.size) >= StatName.entries.size) {
+							MessageLog.i(TAG, "[TRAINING] Will recover energy due to all available trainings being restricted or blacklisted.")
+						} else {
+							MessageLog.i(TAG, "[TRAINING] Will recover energy due to either failure chance was high enough to do so or no failure chances were detected via OCR.")
+						}
 						game.recoverEnergy()
 					} else {
 						MessageLog.w(TAG, "[WARNING] Could not head back to the Main screen in order to recover energy.")
@@ -635,7 +661,7 @@ class Training(private val game: Game) {
 				}
 			} else {
 				// Now select the training option with the highest weight.
-				executeTraining()
+				executeTraining(trainingSelected)
 				firstTrainingCheck = false
 			}
 
@@ -749,6 +775,13 @@ class Training(private val game: Game) {
                     }
                     // Slight delay for UI to update after clicking button.
                     game.wait(0.2, skipWaitingForLoading = true)
+                }
+
+                // Check if the currently selected training is restricted.
+                if (game.imageUtils.findImage("training_cannot_perform", tries = 1, region = game.imageUtils.regionMiddle).first != null) {
+                    MessageLog.i(TAG, "[TRAINING] The currently selected $statName training is restricted and cannot be performed.")
+                    restrictedTrainingNames.add(statName)
+                    continue
                 }
 
                 // Get bitmaps and locations before starting threads to make them safe for parallel processing.
@@ -1076,7 +1109,8 @@ class Training(private val game: Game) {
 			currentStatCap = currentStatCap,
 			trainingOptions = trainingMap.values.toList(),
 			skillHintsPerLocation = skillHintsPerLocation,
-			enablePrioritizeSkillHints = enablePrioritizeSkillHints
+			enablePrioritizeSkillHints = enablePrioritizeSkillHints,
+			statsTrainedOverBuffer = statsTrainedOverBuffer
 		)
 
 		// Compute scores and determine the best training option.
@@ -1113,13 +1147,28 @@ class Training(private val game: Game) {
 
 	/**
 	 * Execute the training with the highest stat weight.
+	 * 
+	 * @param trainingSelected The stat name of the training to execute.
 	 */
-	private fun executeTraining() {
+	private fun executeTraining(trainingSelected: StatName?) {
 		MessageLog.i(TAG, "[TRAINING] Now starting process to execute training...")
-		val trainingSelected: StatName? = recommendTraining()
 
 		if (trainingSelected != null) {
 			MessageLog.i(TAG, "[TRAINING] Executing the $trainingSelected Training.")
+			
+			// Check if this training is a rainbow training that exceeds the stat cap buffer.
+			val training = trainingMap[trainingSelected]
+			if (training != null && training.numRainbow > 0) {
+				val currentStat = game.trainee.stats.asMap()[trainingSelected] ?: 0
+				val potentialStat = currentStat + (training.statGains[trainingSelected] ?: 0)
+				val effectiveStatCap = currentStatCap - 100
+				
+				if ((currentStat >= effectiveStatCap || potentialStat >= effectiveStatCap) && trainingSelected !in statsTrainedOverBuffer) {
+					MessageLog.i(TAG, "[TRAINING] [${trainingSelected}] One-time stat cap buffer allowance used for this stat.")
+					statsTrainedOverBuffer.add(trainingSelected)
+				}
+			}
+
 			game.findAndTapImage("training_${trainingSelected.name.lowercase()}", region = game.imageUtils.regionBottomHalf, taps = 3)
             game.wait(1.0)
 
@@ -1131,9 +1180,10 @@ class Training(private val game: Game) {
 			MessageLog.i(TAG, "[TRAINING] Conditions have not been met so training will not be done.")
 		}
 
-		// Now reset the Training map.
+		// Now reset the Training maps.
 		trainingMap.clear()
 		skippedTrainingMap.clear()
+		restrictedTrainingNames.clear()
 	}
 
 	/**
@@ -1308,6 +1358,10 @@ class Training(private val game: Game) {
 				// Check if training was skipped.
 				skippedTrainingMap.containsKey(statName) -> {
 					appendSingleTrainingDetails(sb, statName, skippedTrainingMap[statName]!!, selected)
+				}
+				// Check if training is restricted.
+				statName in restrictedTrainingNames -> {
+					sb.appendLine("$statName Training: (RESTRICTED)")
 				}
 				// Check if training is blacklisted.
 				statName in blacklistedStatNames -> {

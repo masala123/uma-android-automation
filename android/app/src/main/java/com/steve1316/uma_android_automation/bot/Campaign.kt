@@ -192,14 +192,12 @@ open class Campaign(val game: Game) {
                 if (templateBitmap == null) {
                     MessageLog.e(TAG, "[DIALOG] umamusume_class: Could not get template bitmap for LabelUmamusumeClassFans: ${LabelUmamusumeClassFans.template.path}.")
                     dialog.close(imageUtils = game.imageUtils)
-                    game.wait(0.5, skipWaitingForLoading = true)
                     return Pair(true, dialog)
                 }
                 val point: Point? = LabelUmamusumeClassFans.find(imageUtils = game.imageUtils).first
                 if (point == null) {
                     MessageLog.w(TAG, "[DIALOG] umamusume_class: Could not find LabelUmamusumeClassFans.")
                     dialog.close(imageUtils = game.imageUtils)
-                    game.wait(0.5, skipWaitingForLoading = true)
                     return Pair(true, dialog)
                 }
 
@@ -222,7 +220,6 @@ open class Campaign(val game: Game) {
                 if (croppedBitmap == null) {
                     MessageLog.e(TAG, "[DIALOG] umamusume_class: Failed to crop bitmap.")
                     dialog.close(imageUtils = game.imageUtils)
-                    game.wait(0.5, skipWaitingForLoading = true)
                     return Pair(true, dialog)
                 }
                 val fans = game.imageUtils.getUmamusumeClassDialogFanCount(croppedBitmap)
@@ -279,7 +276,7 @@ open class Campaign(val game: Game) {
     fun openAptitudesDialog() {
         MessageLog.d(TAG, "Opening aptitudes dialog...")
         ButtonHomeFullStats.click(imageUtils = game.imageUtils)
-        game.wait(1.0, skipWaitingForLoading = true)
+        game.wait(0.25, skipWaitingForLoading = true)
     }
 
     /**
@@ -297,6 +294,7 @@ open class Campaign(val game: Game) {
         }
 
         bHasTriedCheckingFansToday = true
+        game.wait(0.25, skipWaitingForLoading = true)
     }
 
     /**
