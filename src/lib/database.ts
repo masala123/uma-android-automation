@@ -62,7 +62,7 @@ export interface DatabaseProfile {
  */
 export class DatabaseManager {
     private DATABASE_NAME = "settings.db"
-    private STRING_ONLY_SETTINGS = ["racingPlan", "racingPlanData", "preFinalsSkillPlan", "careerCompleteSkillPlan"]
+    private STRING_ONLY_SETTINGS = ["racingPlan", "racingPlanData"]
     private TABLE_SETTINGS = "settings"
     private TABLE_RACES = "races"
     private TABLE_SKILLS = "skills"

@@ -8,6 +8,7 @@ import CustomSelect from "../../components/CustomSelect"
 import CustomTitle from "../../components/CustomTitle"
 import PageHeader from "../../components/PageHeader"
 import { BotStateContext, defaultSettings } from "../../context/BotStateContext"
+import { skillPlanSettingsPages } from "../SkillPlanSettings"
 
 const SkillSettings = () => {
     const { colors } = useTheme()
@@ -233,18 +234,14 @@ const SkillSettings = () => {
                 <Divider style={{ marginBottom: 16 }} />
                 <View style={styles.section}>
                     <View className="m-1">
-                        <NavigationLink
-                            title="Go to Pre-Finals Skill Plan Settings"
-                            description="Configure the skills to buy just before the finale season."
-                            onPress={() => navigation.navigate("SkillPlanPreFinalsSettings" as never)}
-                            style={{ ...styles.section, marginTop: 0 }}
-                        />
-                        <NavigationLink
-                            title="Go to Career Complete Skill Plan Settings"
-                            description="Configure the skills to buy upon career completion."
-                            onPress={() => navigation.navigate("SkillPlanCareerCompleteSettings" as never)}
-                            style={{ ...styles.section, marginTop: 0 }}
-                        />
+                        {Object.values(skillPlanSettingsPages).map(value => (
+                            <NavigationLink
+                                title={`Go to ${value.title} Skill Plan Settings`}
+                                description={value.description}
+                                onPress={() => navigation.navigate(value.name as never)}
+                                style={{ ...styles.section, marginTop: 0 }}
+                            />
+                        ))}
                     </View>
                 </View>
             </ScrollView>
