@@ -1145,9 +1145,10 @@ class Training(private val game: Game) {
 			MessageLog.i(TAG, "[TRAINING] Conditions have not been met so training will not be done.")
 		}
 
-		// Now reset the Training map.
+		// Now reset the Training maps.
 		trainingMap.clear()
 		skippedTrainingMap.clear()
+		restrictedTrainingNames.clear()
 	}
 
 	/**
