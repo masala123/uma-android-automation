@@ -485,11 +485,11 @@ class Racing (private val game: Game) {
         }
 
         // If there is a popup warning about racing too many times, confirm the popup to continue as this is a mandatory race.
-        game.findAndTapImage("ok", tries = 1, region = game.imageUtils.regionMiddle, suppressError = true)
-        game.wait(1.0)
+        if (game.imageUtils.findImage("ok", tries = 1, region = game.imageUtils.regionMiddle).first != null) {
+            game.findAndTapImage("ok", tries = 1, region = game.imageUtils.regionMiddle, suppressError = true)
+            game.wait(2.0)
+        }
 
-        // There is a mandatory race. Now confirm the selection and the resultant popup and then wait for the game to load.
-        game.wait(2.0)
         MessageLog.i(TAG, "[RACE] Confirming the mandatory race selection.")
         game.findAndTapImage("race_confirm", tries = 3, region = game.imageUtils.regionBottomHalf)
         game.wait(1.0)
