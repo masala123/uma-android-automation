@@ -603,6 +603,7 @@ class Training(private val game: Game) {
 			// Acquire the percentages and stat gains for each training.
 			game.wait(0.5)
 			analyzeTrainings()
+			val trainingSelected: StatName? = recommendTraining()
 
 			if (trainingMap.isEmpty()) {
 				// Check if we should force Wit training during the Finale instead of recovering energy.
@@ -640,7 +641,7 @@ class Training(private val game: Game) {
 				}
 			} else {
 				// Now select the training option with the highest weight.
-				executeTraining()
+				executeTraining(trainingSelected)
 				firstTrainingCheck = false
 			}
 
@@ -1125,10 +1126,11 @@ class Training(private val game: Game) {
 
 	/**
 	 * Execute the training with the highest stat weight.
+	 * 
+	 * @param trainingSelected The stat name of the training to execute.
 	 */
-	private fun executeTraining() {
+	private fun executeTraining(trainingSelected: StatName?) {
 		MessageLog.i(TAG, "[TRAINING] Now starting process to execute training...")
-		val trainingSelected: StatName? = recommendTraining()
 
 		if (trainingSelected != null) {
 			MessageLog.i(TAG, "[TRAINING] Executing the $trainingSelected Training.")
