@@ -29,6 +29,7 @@ import com.steve1316.uma_android_automation.components.IconTrainingHeaderPower
 import com.steve1316.uma_android_automation.components.IconTrainingHeaderGuts
 import com.steve1316.uma_android_automation.components.IconTrainingHeaderWit
 import com.steve1316.uma_android_automation.components.LabelTrainingFailureChance
+import com.steve1316.uma_android_automation.components.LabelTrainingCannotPerform
 import com.steve1316.uma_android_automation.components.LabelStatTableHeaderSkillPoints
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -778,7 +779,7 @@ class Training(private val game: Game) {
                 }
 
                 // Check if the currently selected training is restricted.
-                if (game.imageUtils.findImage("training_cannot_perform", tries = 1, region = game.imageUtils.regionMiddle).first != null) {
+                if (LabelTrainingCannotPerform.check(game.imageUtils)) {
                     MessageLog.i(TAG, "[TRAINING] The currently selected $statName training is restricted and cannot be performed.")
                     restrictedTrainingNames.add(statName)
                     continue

@@ -74,3 +74,9 @@ object LabelScheduledRace : ComponentInterface {
     override val TAG: String = "[${MainActivity.loggerTag}]LabelScheduledRace"
     override val template = Template("components/label/scheduled_race", region = Region.bottomHalf)
 }
+
+
+object LabelTrainingCannotPerform : ComponentInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]LabelTrainingCannotPerform"
+    override val template = Template("components/label/training_cannot_perform", region = Region.middle)
+}
