@@ -1,5 +1,5 @@
 import React, { useMemo } from "react"
-import { View, Text, ScrollView, StyleSheet } from "react-native"
+import { View, Text, StyleSheet } from "react-native"
 import { useTheme } from "../../context/ThemeContext"
 import CustomButton from "../CustomButton"
 import { SettingsCategory } from "../../hooks/useProfileManager"
@@ -37,6 +37,12 @@ const ProfileComparison: React.FC<ProfileComparisonProps> = ({ comparison, onCon
 
     const buttonLabel = useMemo(() => (actionType === "overwrite" ? "Overwrite Settings" : "Apply Profile"), [actionType])
 
+    /**
+     * NOTE: This component no longer contains its own ScrollView.
+     * It is designed to be a pure presentation component rendered within
+     * the unified ScrollView of the ProfileManagerModal. This simplifies
+     * the layout and prevents nested scroll conflicts.
+     */
     const styles = StyleSheet.create({
         container: {
             marginTop: 16,
@@ -60,9 +66,6 @@ const ProfileComparison: React.FC<ProfileComparisonProps> = ({ comparison, onCon
             fontWeight: "600",
             color: colors.foreground,
             marginBottom: 8,
-        },
-        scrollView: {
-            maxHeight: 300,
         },
         changeItem: {
             marginBottom: 8,
@@ -100,22 +103,20 @@ const ProfileComparison: React.FC<ProfileComparisonProps> = ({ comparison, onCon
         <View style={styles.container}>
             <Text style={styles.title}>{title}</Text>
 
-            <ScrollView style={styles.scrollView} nestedScrollEnabled={true}>
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>{sectionTitle}</Text>
-                    {Object.entries(comparison).map(([key, { current, profile }]) => (
-                        <View key={key} style={styles.changeItem}>
-                            <Text style={styles.changeKey}>{key}:</Text>
-                            <View style={styles.changeRow}>
-                                <Text style={[styles.changeValue, { color: colors.destructive }]}>Current: {formatValue(current)}</Text>
-                            </View>
-                            <View style={styles.changeRow}>
-                                <Text style={[styles.changeValue, { color: colors.primary }]}>→ Profile: {formatValue(profile)}</Text>
-                            </View>
+            <View style={styles.section}>
+                <Text style={styles.sectionTitle}>{sectionTitle}</Text>
+                {Object.entries(comparison).map(([key, { current, profile }]) => (
+                    <View key={key} style={styles.changeItem}>
+                        <Text style={styles.changeKey}>{key}:</Text>
+                        <View style={styles.changeRow}>
+                            <Text style={[styles.changeValue, { color: colors.destructive }]}>Current: {formatValue(current)}</Text>
                         </View>
-                    ))}
-                </View>
-            </ScrollView>
+                        <View style={styles.changeRow}>
+                            <Text style={[styles.changeValue, { color: colors.primary }]}>→ Profile: {formatValue(profile)}</Text>
+                        </View>
+                    </View>
+                ))}
+            </View>
 
             <View style={styles.buttonRow}>
                 <CustomButton onPress={onCancel} variant="outline">
