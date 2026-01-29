@@ -29,40 +29,40 @@ class SkillPlan (private val game: Game) {
     val skillSettingTrackDistanceString = SettingsHelper.getStringSetting("skills", "preferredTrackDistance")
     val skillSettingTrackSurfaceString = SettingsHelper.getStringSetting("skills", "preferredTrackSurface")
 
-    val enablePreFinalsSkillPlan = SettingsHelper.getBooleanSetting("skills", "enablePreFinalsSkillPlan")
-    val preFinalsSpendingStrategy = SettingsHelper.getStringSetting("skills", "preFinalsSpendingStrategy")
-    val enablePreFinalsBuyInheritedSkills = SettingsHelper.getBooleanSetting("skills", "enablePreFinalsBuyInheritedSkills")
-    val enablePreFinalsBuyNegativeSkills = SettingsHelper.getBooleanSetting("skills", "enablePreFinalsBuyNegativeSkills")
-    private val preFinalsSkillPlanJson = SettingsHelper.getStringSetting("skills", "preFinalsSkillPlan")
-    
-    val enableCareerCompleteSkillPlan = SettingsHelper.getBooleanSetting("skills", "enableCareerCompleteSkillPlan")
-    val careerCompleteSpendingStrategy = SettingsHelper.getStringSetting("skills", "careerCompleteSpendingStrategy")
-    val enableCareerCompleteBuyInheritedSkills = SettingsHelper.getBooleanSetting("skills", "enableCareerCompleteBuyInheritedSkills")
-    val enableCareerCompleteBuyNegativeSkills = SettingsHelper.getBooleanSetting("skills", "enableCareerCompleteBuyNegativeSkills")
-    private val careerCompleteSkillPlanJson = SettingsHelper.getStringSetting("skills", "careerCompleteSkillPlan")
-
-    private val userPlannedPreFinalsSkills: List<String> = loadUserPlannedPreFinalsSkills()
-    private val userPlannedCareerCompleteSkills: List<String> = loadUserPlannedCareerCompleteSkills()
-
-    private val skillPlanSettingsPreFinals: SkillPlanSettings = SkillPlanSettings(
-        enablePreFinalsSkillPlan,
-        userPlannedPreFinalsSkills,
-        preFinalsSpendingStrategy,
-        enablePreFinalsBuyInheritedSkills,
-        enablePreFinalsBuyNegativeSkills,
-    )
-
-    private val skillPlanSettingsCareerComplete: SkillPlanSettings = SkillPlanSettings(
-        enableCareerCompleteSkillPlan,
-        userPlannedCareerCompleteSkills,
-        careerCompleteSpendingStrategy,
-        enableCareerCompleteBuyInheritedSkills,
-        enableCareerCompleteBuyNegativeSkills,
-    )
-
-    // Other settings.
     private val trainingSettingTrackDistanceString = SettingsHelper.getStringSetting("training", "preferredDistanceOverride")
     private val racingSettingRunningStyleString = SettingsHelper.getStringSetting("racing", "originalRaceStrategy")
+
+    // Load the skill plans from settings.
+    val skillPlans: Map<String, SkillPlanSettings> = try {
+        val plansString = SettingsHelper.getStringSetting("skills", "plans")
+        if (plansString.isNotEmpty()) {
+            val jsonObject = JSONObject(plansString)
+            val plansMap = mutableMapOf<String, SkillPlanSettings>()
+            jsonObject.keys().forEach { planName ->
+                val planData = jsonObject.getJSONObject(planName)
+                val strategyString: String = planData.getString("strategy")
+                val skillIds: List<Int> = planData
+                    .getString("plan")
+                    .split(",")
+                    .map { it.trim() }
+                    .mapNotNull { it.toIntOrNull() }
+                val skillNames: List<String> = skillIds.mapNotNull { game.skillDatabase.getSkillName(it) }
+                plansMap[planName] = SkillPlanSettings(
+                    bIsEnabled = planData.getBoolean("enabled"),
+                    strategy = SpendingStrategy.fromName(strategyString) ?: SpendingStrategy.DEFAULT,
+                    bEnableBuyInheritedUniqueSkills = planData.getBoolean("enableBuyInheritedUniqueSkills"),
+                    bEnableBuyNegativeSkills = planData.getBoolean("enableBuyNegativeSkills"),
+                    skillNames = skillNames,
+                )
+            }
+            plansMap
+        } else {
+            emptyMap()
+        }
+    } catch (e: Exception) {
+        MessageLog.w(TAG, "Could not parse skill plan settings: ${e.message}")
+        emptyMap()
+    }
 
     enum class SpendingStrategy {
         DEFAULT,
@@ -80,26 +80,12 @@ class SkillPlan (private val game: Game) {
 
     /** Data class used to store all skill plan settings for easier access. */
     data class SkillPlanSettings(
-        val enabled: Boolean,
-        val skillPlan: List<String>,
-        val spendingStrategy: SpendingStrategy,
-        val buyInheritedSkills: Boolean,
-        val buyNegativeSkills: Boolean,
-    ) {
-        constructor(
-            enabled: Boolean,
-            skillPlan: List<String>,
-            spendingStrategy: String,
-            buyInheritedSkills: Boolean,
-            buyNegativeSkills: Boolean,
-        ) : this(
-            enabled,
-            skillPlan,
-            SpendingStrategy.fromName(spendingStrategy) ?: SpendingStrategy.DEFAULT,
-            buyInheritedSkills,
-            buyNegativeSkills,
-        )
-    }
+        val bIsEnabled: Boolean,
+        val strategy: SpendingStrategy,
+        val bEnableBuyInheritedUniqueSkills: Boolean,
+        val bEnableBuyNegativeSkills: Boolean,
+        val skillNames: List<String>,
+    )
 
     /** Gets all available negative skills in the skill list.
      *
@@ -118,7 +104,7 @@ class SkillPlan (private val game: Game) {
         skillsToBuy: List<String>,
         availableSkillPoints: Int,
     ): Map<String, Int> {
-        if (!skillPlanSettings.buyNegativeSkills) {
+        if (!skillPlanSettings.bEnableBuyNegativeSkills) {
             return emptyMap()
         }
 
@@ -159,7 +145,7 @@ class SkillPlan (private val game: Game) {
         skillsToBuy: List<String>,
         availableSkillPoints: Int,
     ): Map<String, Int> {
-        if (!skillPlanSettings.buyInheritedSkills) {
+        if (!skillPlanSettings.bEnableBuyInheritedUniqueSkills) {
             return emptyMap()
         }
 
@@ -199,7 +185,7 @@ class SkillPlan (private val game: Game) {
         skillsToBuy: List<String>,
         availableSkillPoints: Int,
     ): Map<String, Int> {
-        if (skillPlanSettings.skillPlan.isEmpty()) {
+        if (skillPlanSettings.skillNames.isEmpty()) {
             return emptyMap()
         }
 
@@ -212,7 +198,7 @@ class SkillPlan (private val game: Game) {
         // plan, and both entries are in the skill list, then we want to buy Swinging Maestro.
         // However, if we do not have enough points for Swinging Maestro, then attempt to
         // buy Corner Recovery O instead.
-        for (name in skillPlanSettings.skillPlan) {
+        for (name in skillPlanSettings.skillNames) {
             // Don't add duplicate entries.
             if (name in skillsToBuy || name in result) {
                 continue
@@ -574,17 +560,17 @@ class SkillPlan (private val game: Game) {
     ): Map<String, Int> {
         MessageLog.d(TAG, "[SKILLS] Beginning process of calculating skills to purchase...")
 
-        if(!skillPlanSettings.enabled) {
+        if(!skillPlanSettings.bIsEnabled) {
             MessageLog.i(TAG, "[SKILLS] Skill plan is disabled. No skills will be purchased.")
             return emptyMap()
         }
 
         MessageLog.d(TAG, "======================= Skill Plan =======================")
-        MessageLog.d(TAG, "Spending Strategy: ${skillPlanSettings.spendingStrategy}")
-        MessageLog.d(TAG, "Buy Inherited Skills: ${skillPlanSettings.buyInheritedSkills}")
-        MessageLog.d(TAG, "Buy Negative Skills: ${skillPlanSettings.buyNegativeSkills}")
-        MessageLog.d(TAG, "User-Specified Skills:" + if (skillPlanSettings.skillPlan.isEmpty()) " None" else "")
-        for (name in skillPlanSettings.skillPlan) {
+        MessageLog.d(TAG, "Spending Strategy: ${skillPlanSettings.strategy}")
+        MessageLog.d(TAG, "Buy Inherited Skills: ${skillPlanSettings.bEnableBuyInheritedUniqueSkills}")
+        MessageLog.d(TAG, "Buy Negative Skills: ${skillPlanSettings.bEnableBuyNegativeSkills}")
+        MessageLog.d(TAG, "User-Specified Skills:" + if (skillPlanSettings.skillNames.isEmpty()) " None" else "")
+        for (name in skillPlanSettings.skillNames) {
             MessageLog.d(TAG, "\t$name")
         }
         MessageLog.d(TAG, "----------------------------------------------------------")
@@ -600,7 +586,7 @@ class SkillPlan (private val game: Game) {
             availableSkillPoints = availableSkillPoints - result.values.sum(),
         )
 
-        result += when (skillPlanSettings.spendingStrategy) {
+        result += when (skillPlanSettings.strategy) {
             SpendingStrategy.DEFAULT -> getSkillsToBuyDefaultStrategy(
                 skillPlanSettings = skillPlanSettings,
                 skillList = skillList,
@@ -629,70 +615,6 @@ class SkillPlan (private val game: Game) {
         MessageLog.d(TAG, "===========================================")
 
         return result.toMap()
-    }
-
-    /** Loads the user's Pre-Finals planned skills.
-     *
-     * @return A list of planned skill names.
-     */
-    private fun loadUserPlannedPreFinalsSkills(): List<String> {
-        if (!enablePreFinalsSkillPlan) {
-            MessageLog.i(TAG, "[SKILLS] Pre-Finals skill plan is disabled, returning empty planned skills list...")
-            return emptyList()
-        }
-
-        return try {
-            if (preFinalsSkillPlanJson.isEmpty() || preFinalsSkillPlanJson == "[]") {
-                MessageLog.i(TAG, "[SKILLS] User-selected pre-finals skill plan is empty. Returning empty planned skills list...")
-                return emptyList()
-            }
-
-            val jsonArray = JSONArray(preFinalsSkillPlanJson)
-            val plannedSkills = mutableListOf<String>()
-
-            for (i in 0 until jsonArray.length()) {
-                val skillObj = jsonArray.getJSONObject(i)
-                plannedSkills.add(skillObj.getString("name"))
-            }
-
-            MessageLog.i(TAG, "[SKILLS] Successfully loaded ${plannedSkills.size} user-selected pre-finals planned skills from settings.")
-            plannedSkills
-        } catch (e: Exception) {
-            MessageLog.e(TAG, "[SKILLS] Failed to parse user-selected pre-finals skill plan JSON: ${e.message}. Returning empty list...")
-            emptyList()
-        }
-    }
-
-    /** Loads the user's Career Complete planned skills.
-     *
-     * @return A list of planned skill names.
-     */
-    private fun loadUserPlannedCareerCompleteSkills(): List<String> {
-        if (!enableCareerCompleteSkillPlan) {
-            MessageLog.i(TAG, "[SKILLS] Career complete skill plan is disabled, returning empty planned skills list...")
-            return emptyList()
-        }
-
-        return try {
-            if (careerCompleteSkillPlanJson.isEmpty() || careerCompleteSkillPlanJson == "[]") {
-                MessageLog.i(TAG, "[SKILLS] User-selected career complete skill plan is empty. Returning empty planned skills list...")
-                return emptyList()
-            }
-
-            val jsonArray = JSONArray(careerCompleteSkillPlanJson)
-            val plannedSkills = mutableListOf<String>()
-
-            for (i in 0 until jsonArray.length()) {
-                val skillObj = jsonArray.getJSONObject(i)
-                plannedSkills.add(skillObj.getString("name"))
-            }
-
-            MessageLog.i(TAG, "[SKILLS] Successfully loaded ${plannedSkills.size} user-selected career complete planned skills from settings.")
-            plannedSkills
-        } catch (e: Exception) {
-            MessageLog.e(TAG, "[SKILLS] Failed to parse user-selected career complete skill plan JSON: ${e.message}. Returning empty list...")
-            emptyList()
-        }
     }
 
     /** Handles SkillListEntry objects as they are detected.
@@ -766,19 +688,21 @@ class SkillPlan (private val game: Game) {
             return false
         }
 
+        // These skill plan names are manually set in the app settings.
+        // If they are missing, this indicates a programmer error.
         val skillPlanSettings: SkillPlanSettings = if (bIsCareerComplete) {
-            skillPlanSettingsCareerComplete
+            skillPlans["careerComplete"]!!
         } else {
-            skillPlanSettingsPreFinals
+            skillPlans["preFinals"]!!
         }
 
         // If no options are enabled for purchasing skills, then we should
         // exit early to avoid having to scan the whole skill list.
         if (
-            skillPlanSettings.skillPlan.isEmpty() &&
-            skillPlanSettings.spendingStrategy == SpendingStrategy.DEFAULT &&
-            !skillPlanSettings.buyInheritedSkills &&
-            !skillPlanSettings.buyNegativeSkills
+            skillPlanSettings.skillNames.isEmpty() &&
+            skillPlanSettings.strategy == SpendingStrategy.DEFAULT &&
+            !skillPlanSettings.bEnableBuyInheritedUniqueSkills &&
+            !skillPlanSettings.bEnableBuyNegativeSkills
         ) {
             MessageLog.w(TAG, "[SKILLS] Skill Plan is empty and no options to purchase any skills are enabled. Aborting...")
             skillList.cancelAndExit()
