@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react"
 import { View, LayoutChangeEvent, ViewStyle } from "react-native"
-import { Option, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../ui/select"
+import { Option, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue, NativeSelectScrollView } from "../ui/select"
 
 interface SelectOption {
     value: string
@@ -60,15 +60,17 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
                 </SelectTrigger>
             </View>
             <SelectContent style={{ width: triggerWidth }} portalHost={portalHost}>
-                <SelectGroup>
-                    {groupLabel && <SelectLabel>{groupLabel}</SelectLabel>}
-                    {options &&
-                        options.map((option) => (
-                            <SelectItem key={option.value} label={option.label} value={option.value} disabled={option.disabled}>
-                                {option.label}
-                            </SelectItem>
-                        ))}
-                </SelectGroup>
+                <NativeSelectScrollView>
+                    <SelectGroup>
+                        {groupLabel && <SelectLabel>{groupLabel}</SelectLabel>}
+                        {options &&
+                            options.map((option) => (
+                                <SelectItem key={option.value} label={option.label} value={option.value} disabled={option.disabled}>
+                                    {option.label}
+                                </SelectItem>
+                            ))}
+                    </SelectGroup>
+                </NativeSelectScrollView>
             </SelectContent>
         </Select>
     )
