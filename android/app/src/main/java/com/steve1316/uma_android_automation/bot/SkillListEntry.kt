@@ -27,6 +27,7 @@ import com.steve1316.uma_android_automation.utils.types.Aptitude
  * This class acts as a doubly linked list node, with references to both its direct
  * upgrade and downgraded versions.
  *
+ * @param game Reference to the bot's Game instance.
  * @param skillData The SkillData instance containing static skill information.
  * @param bIsObtained Whether this entry has been purchased.
  * @param bIsVirtual Whether this entry is considered a virtual entry in the skill list.
@@ -39,10 +40,10 @@ import com.steve1316.uma_android_automation.utils.types.Aptitude
  * @property name The skill name (from skillData).
  * @property screenPrice The current price of the skill as it is shown in the game.
  * @property price The actual price of just this skill, ignoring previous version prices.
- * @property rawPrice `price` but without any discounts applied.
+ * @property rawPrice [price] but without any discounts applied.
  * @property discount The current discount percentage / 100.
  * @property evaluationPoints The amount of rank gained upon purchasing this skill.
- * @property evaluationPointRatio The ratio of rank to `price`.
+ * @property evaluationPointRatio The ratio of rank to [price].
  * @property bIsAvailable Whether this skill is available for purchase.
  * @property bIsInheritedUnique Whether this skill is a unique skill inherited from a legacy uma.
  * @property bIsNegative Whether this is a negative (purple icon) skill.
@@ -103,10 +104,10 @@ class SkillListEntry(
     // NOTE: We need to make sure to call updateScreenPrice() after fully
     // setting up the entire upgrade chain linked list.
     var screenPrice: Int = maxScreenPrice
-    // Copy of the screen price that is only ever modified in `updateScreenPrice`.
+    // Copy of the screen price that is only ever modified in [updateScreenPrice].
     // We use this so that we have a baseline for what the screen price was
     // when we originally read it with OCR.
-    // This is necessary for some calculations since `screenPrice` is modified
+    // This is necessary for some calculations since [screenPrice] is modified
     // in multiple functions.
     private var originalScreenPrice: Int = screenPrice
 
@@ -172,7 +173,7 @@ class SkillListEntry(
      *
      * @return The discount as a float between 0.0 and 1.0.
      * The discount is rounded to one of the valid discount amounts.
-     * See: `Double.roundDiscount()`
+     * See: [Double.roundDiscount]
      */
     private fun calculateDiscount(): Double {
         if (screenPrice <= 0) {
@@ -199,7 +200,7 @@ class SkillListEntry(
         // For skills that have downgrades as separate entries in the skill list,
         // we need to subtract the downgrade's price from our screenPrice.
         // We need to calculate this adjusted value in order for
-        // `calculateDiscount()` to be accurate.
+        // [calculateDiscount] to be accurate.
         // This is because the skills in this type of upgrade chain can have
         // different hint levels and thus different discount values.
         if (!bIsInPlace && !prev.bIsObtained && !prev.bIsVirtual) {
@@ -270,15 +271,20 @@ class SkillListEntry(
         return (res * modifier).roundToInt()
     }
 
-    /** Calculates the ratio of evaluation points to the price of this skill. */
+    /** Calculates the ratio of evaluation points to the price of this skill.
+     *
+     * @return The ratio of evaluation points to price.
+     */
     private fun calculateEvaluationPointRatio(): Double {
         return evaluationPoints.toDouble() / screenPrice.toDouble()
     }
 
     /** Clamps a value to a valid range for the screen price of this skill.
      *
-     * The `screenPrice` of a skill can only ever be within a specific range
+     * The [screenPrice] of a skill can only ever be within a specific range
      * of values based on the discounts and purchased downgrade versions.
+     *
+     * @param value The value to clamp.
      *
      * @return The clamped value.
      */
@@ -297,7 +303,7 @@ class SkillListEntry(
 
     /** Manually set the screen price.
      *
-     * This also updates the `originalScreenPrice` which is not modified
+     * This also updates the [originalScreenPrice] which is not modified
      * anywhere else.
      *
      * @param value The new screen price.
@@ -382,7 +388,7 @@ class SkillListEntry(
 
     /** Handler for when a downgraded version of this skill has been sold.
      *
-     * NOTE: See the `sell()` function for more information.
+     * NOTE: See the [sell] function for more information.
      *
      * @param entry The downgraded version of this skill that was sold.
      */
@@ -449,7 +455,7 @@ class SkillListEntry(
      * This doesn't actually sell a skill since that isn't a thing you can do
      * after a skill has been obtained and confirmed.
      *
-     * What this does is it resets the `bIsObtained` variable to false and propagates
+     * What this does is it resets the [bIsObtained] variable to false and propagates
      * this change to the other versions of this skill.
      * This will bring this entry back to its original state in the skill list
      * before this or the direct downgrade to this skill have been modified.
@@ -499,7 +505,10 @@ class SkillListEntry(
         return null
     }
 
-    /** Returns a list of all of this skill's downgraded entries. */
+    /** Returns a list of all of this skill's downgraded entries.
+     *
+     * @return The ordered list of this skill's downgraded version SkillListEntry objects.
+     */
     fun getDowngrades(): List<SkillListEntry> {
         val result: MutableList<SkillListEntry> = mutableListOf()
         var entry: SkillListEntry? = this
@@ -514,7 +523,10 @@ class SkillListEntry(
         return result.reversed().toList()
     }
 
-    /** Returns a list of all of this skill's downgraded entry names. */
+    /** Returns a list of all of this skill's downgraded entry names.
+     *
+     * @return The ordered list of this skill's downgraded version names.
+     */
     fun getDowngradeNames(): List<String> {
         return getDowngrades().map { it.name }
     }
@@ -548,12 +560,23 @@ class SkillListEntry(
         return emptyList()
     }
 
-    /** Returns just the entry names from `getDowngradesUntil` */
+    /** Returns just the entry names from [getDowngradesUntil].
+     *
+     * This is effectively a custom linked list slicing function
+     *
+     * @param name The stopping point for the list of downgrades.
+     *
+     * @return The list of downgraded entry names from the stopping point
+     * to the current entry.
+     */
     fun getDowngradeNamesUntil(name: String): List<String> {
         return getDowngradesUntil(name).map { it.name }
     }
 
-    /** Returns a list of all of this skill's upgraded entries. */
+    /** Returns a list of all of this skill's upgraded entries.
+     *
+     * @return The ordered list of this skill's upgraded version SkillListEntry objects.
+     */
     fun getUpgrades(): List<SkillListEntry> {
         val result: MutableList<SkillListEntry> = mutableListOf()
         var entry: SkillListEntry? = this
@@ -567,7 +590,10 @@ class SkillListEntry(
         return result.toList()
     }
 
-    /** Returns a list of all of this skill's upgraded entry names. */
+    /** Returns a list of all of this skill's upgraded entry names.
+     *
+     * @return The ordered list of this skill's upgraded version names.
+     */
     fun getUpgradeNames(): List<String> {
         return getUpgrades().map { it.name }
     }
@@ -600,22 +626,39 @@ class SkillListEntry(
         return emptyList()
     }
 
-    /** Returns just the entry names from `getUpgradesUntil` */
-    fun getUpgradeNamesUntil(lastName: String): List<String> {
-        return getUpgradesUntil(lastName).map { it.name }
+    /** Returns just the entry names from [getUpgradesUntil].
+     *
+     * This is effectively a custom linked list slicing function
+     *
+     * @param name The stopping point for the list of upgrades.
+     *
+     * @return The list of upgraded entry names from the current entry to
+     * the stopping point.
+     */
+    fun getUpgradeNamesUntil(name: String): List<String> {
+        return getUpgradesUntil(name).map { it.name }
     }
 
-    /** Returns the ordered list of all entries in this skill's upgrade chain. */
+    /** Returns the ordered list of all entries in this skill's upgrade chain.
+     *
+     * @return The ordered list of all SkillListEntries in the upgrade chain.
+     */
     fun getVersions(): List<SkillListEntry> {
         return getDowngrades() + this + getUpgrades()
     }
 
-    /** Returns the ordered list of all entry names in this skill's upgrade chain. */
+    /** Returns the ordered list of all entry names in this skill's upgrade chain.
+     *
+     * @return The ordered list of skill names.
+     */
     fun getVersionNames(): List<String> {
         return getVersions().map { it.name }
     }
 
-    /** Returns a (slightly) user friendly string of this class's key properties. */
+    /** Returns a (slightly) user friendly string of this class's key properties.
+     *
+     * @return A formatted string containing this instance's information.
+     */
     override fun toString(): String {
         val evaluationPointRatioString: String = "%.2f".format(evaluationPointRatio)
         return "{" +

@@ -24,9 +24,11 @@ import com.steve1316.uma_android_automation.components.*
 
 /** Handles communication with the skills database.
  *
+ * @param game Reference to the bot's Game instance.
+ *
  * @property skillUpgradeChains A mapping of all skill names in the database to
  * lists of their upgrade chains. An upgrade chain is just all versions of the skill
- * in order from lowest to highest. See `SkillList.kt::generateSkillListEntries`
+ * in order from lowest to highest. See [SkillList.kt::generateSkillListEntries]
  * for an example implementation.
  */
 class SkillDatabase (private val game: Game) {
@@ -217,8 +219,8 @@ class SkillDatabase (private val game: Game) {
      * @param fuzzySearch Whether to use fuzzy matching to broaden our search results.
      * If not specified, then only exact matches will be returned.
      *
-     * @return On success, if `fuzzySearch` is enabled then the corrected skill
-     * name is returned. If `fuzzySearch` is not enabled then the exact match is
+     * @return On success, if [fuzzySearch] is enabled then the corrected skill
+     * name is returned. If [fuzzySearch] is not enabled then the exact match is
      * returned. On fail, NULL is returned.
      */
     fun checkSkillName(name: String, fuzzySearch: Boolean = false): String? {
@@ -234,7 +236,7 @@ class SkillDatabase (private val game: Game) {
      *
      * @param name The name to get.
      *
-     * @return If `name` was found, the SkillData object. Otherwise, NULL.
+     * @return If [name] was found, the SkillData object. Otherwise, NULL.
      */
     fun getSkillData(name: String): SkillData? {
         var res: SkillData? = skillData[name]
