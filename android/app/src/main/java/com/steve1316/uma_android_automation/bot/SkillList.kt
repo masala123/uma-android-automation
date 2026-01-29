@@ -653,7 +653,7 @@ class SkillList (private val game: Game) {
             } finally {
                 latch.countDown()
             }
-        }.start()
+        }.apply { isDaemon = true }.start()
 
         // PRICE
         Thread {
@@ -670,7 +670,7 @@ class SkillList (private val game: Game) {
             } finally {
                 latch.countDown()
             }
-        }.start()
+        }.apply { isDaemon = true }.start()
 
         try {
             latch.await(3, TimeUnit.SECONDS)
