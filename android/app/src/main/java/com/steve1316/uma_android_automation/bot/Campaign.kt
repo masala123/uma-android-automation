@@ -35,6 +35,15 @@ open class Campaign(val game: Game) {
     // Flag used to prevent us from attempting to check fans multiple times in a day.
     // This helps us avoid infinite loops.
     protected var bHasTriedCheckingFansToday: Boolean = false
+    // Flag for whether we have handled the skill point check conditions
+    // during this run.
+    // This is necessary since the user may have enabled the skill point check
+    // skill spending plan. If their plan ends up not purchasing many skills,
+    // then it is possible that we could get stuck in a loop of hitting the
+    // skill point threshold and attempting to buy skills every single turn.
+    // To resolve this, we only allow the skill point check to be handled
+    // once per run.
+    protected var bHasHandledSkillPointCheck: Boolean = false
 
     // Flag for only checking for maiden races once per day.
     var bHasCheckedForMaidenRaceToday: Boolean = false
@@ -657,8 +666,14 @@ open class Campaign(val game: Game) {
             bHasCheckedDateThisTurn = true
         }
 
-        // If the required skill points has been reached, stop the bot.
-        if (game.enableSkillPointCheck && game.trainee.skillPoints >= game.skillPointsRequired) {
+        // If we haven't already handled the skill point check this run and
+        // if the required skill points has been reached,
+        // stop the bot or run the skill plan if it is enabled.
+        if (
+            !bHasHandledSkillPointCheck &&
+            game.enableSkillPointCheck &&
+            game.trainee.skillPoints >= game.skillPointsRequired &&
+        ) {
             if (game.skillPlan.skillPlans["skillPointCheck"]?.bIsEnabled ?: false) {
                 ButtonSkills.click(game.imageUtils)
                 game.wait(1.0)
@@ -666,6 +681,7 @@ open class Campaign(val game: Game) {
                     MessageLog.w(TAG, "handleMainScreen:: handleSkillList() for Skill Point Check failed.")
                     throw InterruptedException("handleMainScreen:: handleSkillList() for Skill Point Check failed. Stopping bot...")
                 }
+                bHasHandledSkillPointCheck = true
             } else {
                 throw InterruptedException("Bot reached skill point check threshold. Stopping bot...")
             }
