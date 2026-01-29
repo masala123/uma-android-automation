@@ -36,6 +36,8 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
     const [triggerWidth, setTriggerWidth] = useState<number>(0)
     const triggerRef = useRef<View>(null)
 
+    const currentLabel = options.find(item => item.value === (value || defaultValue))?.label
+
     const onTriggerLayout = (event: LayoutChangeEvent) => {
         const { width: measuredWidth } = event.nativeEvent.layout
         setTriggerWidth(measuredWidth)
@@ -56,11 +58,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
                 <SelectTrigger style={{ backgroundColor: "white" }}>
                     <SelectValue
                         placeholder={
-                            (
-                                options.find(item => item.value === value)?.label ??
-                                options.find(item => item.value === defaultValue)?.label ??
-                                "ERROR"
-                            ) || placeholder
+                            (value || defaultValue) ? (currentLabel ?? "ERROR") : placeholder
                         }
                         style={{ color: "black" }}
                     />
