@@ -59,8 +59,8 @@ class Game(val myContext: Context) {
 	// SQLite Settings
 	val scenario: String = SettingsHelper.getStringSetting("general", "scenario")
 	val debugMode: Boolean = SettingsHelper.getBooleanSetting("debug", "enableDebugMode")
-    val enableSkillPointCheck: Boolean = SettingsHelper.getBooleanSetting("general", "enableSkillPointCheck")
-	val skillPointsRequired: Int = SettingsHelper.getIntSetting("general", "skillPointCheck")
+    val enableSkillPointCheck: Boolean = SettingsHelper.getBooleanSetting("skills", "enableSkillPointCheck")
+	val skillPointsRequired: Int = SettingsHelper.getIntSetting("skills", "skillPointCheck")
 	private val enablePopupCheck: Boolean = SettingsHelper.getBooleanSetting("general", "enablePopupCheck")
     private val enableCraneGameAttempt: Boolean = SettingsHelper.getBooleanSetting("general", "enableCraneGameAttempt")
     private val enableStopBeforeFinals: Boolean = SettingsHelper.getBooleanSetting("general", "enableStopBeforeFinals")

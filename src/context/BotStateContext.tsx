@@ -15,8 +15,6 @@ export interface Settings {
     // General settings
     general: {
         scenario: string
-        enableSkillPointCheck: boolean
-        skillPointCheck: number
         enablePopupCheck: boolean
         enableCraneGameAttempt: boolean
         enableStopBeforeFinals: boolean
@@ -51,6 +49,8 @@ export interface Settings {
 
     // Skill Settings
     skills: {
+        enableSkillPointCheck: boolean
+        skillPointCheck: number
         preferredRunningStyle: string
         preferredTrackDistance: string
         preferredTrackSurface: string
@@ -156,8 +156,6 @@ export interface Settings {
 export const defaultSettings: Settings = {
     general: {
         scenario: "",
-        enableSkillPointCheck: false,
-        skillPointCheck: 750,
         enablePopupCheck: false,
         enableCraneGameAttempt: false,
         enableStopBeforeFinals: false,
@@ -194,6 +192,8 @@ export const defaultSettings: Settings = {
         improvementThreshold: 25.0,
     },
     skills: {
+        enableSkillPointCheck: false,
+        skillPointCheck: 750,
         preferredRunningStyle: "inherit",
         preferredTrackDistance: "inherit",
         preferredTrackSurface: "no_preference",

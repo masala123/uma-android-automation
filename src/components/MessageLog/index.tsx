@@ -296,8 +296,23 @@ ${longTargetsString}
 ⏱️ Time Decay Factor: ${settings.racing.timeDecayFactor}
 📈 Improvement Threshold: ${settings.racing.improvementThreshold}
 
+---------- Skill Options ----------
+🔍 Skill Point Check: ${settings.skills.enableSkillPointCheck ? `Stop on ${settings.skills.skillPointCheck} Skill Points or more` : "❌"}
+🏃 Running Style Override: ${settings.skills.preferredRunningStyle}
+🛣️ Track Distance Override: ${settings.skills.preferredTrackDistance}
+🛣️ Track Surface Override: ${settings.skills.preferredTrackSurface}
+📅 Pre-Finals Skill Plan: ${settings.skills.plans.preFinals.enabled ? "✅" : "❌"}${
+    settings.skills.plans.preFinals.enabled
+        ? `\n\t💲 Buy All Inherited Unique Skills: ${settings.skills.plans.preFinals.enableBuyInheritedUniqueSkills ? "✅" : "❌"}\n\t💲 Buy All Negative Skills: ${settings.skills.plans.preFinals.enableBuyNegativeSkills ? "✅" : "❌"}\n\t💸 Spending Strategy: ${settings.skills.plans.preFinals.strategy ? "✅" : "❌"}`
+        : ""
+}
+📅 CareerComplete Skill Plan: ${settings.skills.plans.careerComplete.enabled ? "✅" : "❌"}${
+    settings.skills.plans.careerComplete.enabled
+        ? `\n\t💲 Buy All Inherited Unique Skills: ${settings.skills.plans.careerComplete.enableBuyInheritedUniqueSkills ? "✅" : "❌"}\n\t💲 Buy All Negative Skills: ${settings.skills.plans.careerComplete.enableBuyNegativeSkills ? "✅" : "❌"}\n\t💸 Spending Strategy: ${settings.skills.plans.careerComplete.strategy ? "✅" : "❌"}`
+        : ""
+}
+
 ---------- Misc Options ----------
-🔍 Skill Point Check: ${settings.general.enableSkillPointCheck ? `Stop on ${settings.general.skillPointCheck} Skill Points or more` : "❌"}
 🔍 Popup Check: ${settings.general.enablePopupCheck ? "✅" : "❌"}
 🔍 Enable Crane Game Attempt: ${settings.general.enableCraneGameAttempt ? "✅" : "❌"}
 🛑 Stop Before Finals: ${settings.general.enableStopBeforeFinals ? "✅" : "❌"}

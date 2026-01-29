@@ -5,6 +5,8 @@ import { Divider } from "react-native-paper"
 import { useTheme } from "../../context/ThemeContext"
 import NavigationLink from "../../components/NavigationLink"
 import CustomSelect from "../../components/CustomSelect"
+import CustomCheckbox from "../../components/CustomCheckbox"
+import CustomSlider from "../../components/CustomSlider"
 import CustomTitle from "../../components/CustomTitle"
 import PageHeader from "../../components/PageHeader"
 import { BotStateContext, defaultSettings } from "../../context/BotStateContext"
@@ -20,6 +22,8 @@ const SkillSettings = () => {
     // Merge current skills settings with defaults to handle missing properties.
     const skillSettings = { ...defaultSettings.skills, ...settings.skills }
     const {
+        enableSkillPointCheck,
+        skillPointCheck,
         preferredRunningStyle,
         preferredTrackDistance,
         preferredTrackSurface,
@@ -138,6 +142,52 @@ const SkillSettings = () => {
             <Divider style={{ marginBottom: 16 }} />
             <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
                 <CustomTitle
+                    title="General Skill Settings"
+                />
+                <View style={styles.section}>
+                    <View style={styles.inputContainer}>
+                        <CustomCheckbox
+                            checked={bsc.settings.skills.enableSkillPointCheck}
+                            onCheckedChange={(checked) => {
+                                bsc.setSettings({
+                                    ...bsc.settings,
+                                    skills: { ...bsc.settings.skills, enableSkillPointCheck: checked },
+                                })
+                            }}
+                            label="Enable Skill Point Check"
+                            description="Enables check for a certain skill point threshold. If reached, the bot will stop so you can spend the skill points."
+                        />
+
+                        {bsc.settings.skills.enableSkillPointCheck && (
+                            <View style={{ marginTop: 8, marginLeft: 20 }}>
+                                <CustomSlider
+                                    value={bsc.settings.skills.skillPointCheck}
+                                    placeholder={bsc.defaultSettings.skills.skillPointCheck}
+                                    onValueChange={(value) => {
+                                        bsc.setSettings({
+                                            ...bsc.settings,
+                                            skills: { ...bsc.settings.skills, skillPointCheck: value },
+                                        })
+                                    }}
+                                    onSlidingComplete={(value) => {
+                                        bsc.setSettings({
+                                            ...bsc.settings,
+                                            skills: { ...bsc.settings.skills, skillPointCheck: value },
+                                        })
+                                    }}
+                                    min={100}
+                                    max={2000}
+                                    step={10}
+                                    label="Skill Point Threshold"
+                                    labelUnit=""
+                                    showValue={true}
+                                    showLabels={true}
+                                />
+                            </View>
+                        )}
+                    </View>
+                </View>
+                <CustomTitle
                     title="Skill Style Overrides"
                     description="Override which types of skills the bot can purchase."
                 />
@@ -148,9 +198,7 @@ const SkillSettings = () => {
                     Skills that have no activation conditions will still be
                     available.
                 </Text>
-
                 <View style={styles.section}>
-                    
                     <View style={styles.inputContainer}>
                         <Text style={styles.inputLabel}>Running Style</Text>
                         <CustomSelect

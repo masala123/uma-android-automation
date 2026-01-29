@@ -176,46 +176,6 @@ const Settings = () => {
                 <CustomTitle title="Misc Settings" description="General settings for the bot that don't fit into the other categories." />
 
                 <CustomCheckbox
-                    checked={bsc.settings.general.enableSkillPointCheck}
-                    onCheckedChange={(checked) => {
-                        bsc.setSettings({
-                            ...bsc.settings,
-                            general: { ...bsc.settings.general, enableSkillPointCheck: checked },
-                        })
-                    }}
-                    label="Enable Skill Point Check"
-                    description="Enables check for a certain skill point threshold. If reached, the bot will stop so you can spend the skill points."
-                />
-
-                {bsc.settings.general.enableSkillPointCheck && (
-                    <View style={{ marginTop: 8, marginLeft: 20 }}>
-                        <CustomSlider
-                            value={bsc.settings.general.skillPointCheck}
-                            placeholder={bsc.defaultSettings.general.skillPointCheck}
-                            onValueChange={(value) => {
-                                bsc.setSettings({
-                                    ...bsc.settings,
-                                    general: { ...bsc.settings.general, skillPointCheck: value },
-                                })
-                            }}
-                            onSlidingComplete={(value) => {
-                                bsc.setSettings({
-                                    ...bsc.settings,
-                                    general: { ...bsc.settings.general, skillPointCheck: value },
-                                })
-                            }}
-                            min={100}
-                            max={2000}
-                            step={10}
-                            label="Skill Point Threshold"
-                            labelUnit=""
-                            showValue={true}
-                            showLabels={true}
-                        />
-                    </View>
-                )}
-
-                <CustomCheckbox
                     checked={bsc.settings.general.enablePopupCheck}
                     onCheckedChange={(checked) => {
                         bsc.setSettings({
