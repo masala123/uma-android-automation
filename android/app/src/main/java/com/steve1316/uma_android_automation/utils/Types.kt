@@ -346,7 +346,6 @@ data class SkillData(
     // These running styles are calculated based on a skill's activation conditions.
     // However since these might not actually be specific to a running style,
     // the skill will not give any rank bonus based on aptitudes.
-    //val inferredRunningStyles: List<RunningStyle> = conditions.inferredRunningStyles
     val inferredRunningStyles: List<RunningStyle> = calculateInferredRunningStyles()
 
     constructor(
