@@ -185,11 +185,11 @@ function SelectScrollDownButton({ className, ...props }: React.ComponentProps<ty
  * @platform Native only
  * Returns the children on the web
  */
-function NativeSelectScrollView({ className, ...props }: React.ComponentProps<typeof ScrollView>) {
+function NativeSelectScrollView({ className, style, ...props }: React.ComponentProps<typeof ScrollView>) {
     if (Platform.OS === "web") {
         return <>{props.children}</>
     }
-    return <ScrollView className={cn("max-h-52", className)} {...props} />
+    return <ScrollView className={cn("max-h-52", className)} style={style} {...props} />
 }
 
 export { NativeSelectScrollView, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, SelectValue, type Option }
