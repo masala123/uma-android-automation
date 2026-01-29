@@ -265,7 +265,7 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
             newExpanded.add("RacingSettings")
         }
 
-        // Auto-expact Skill Settings if Skill Plan Settings is active.
+        // Auto-expand Skill Settings if Skill Plan Settings is active.
         if (Object.values(skillPlanSettingsPages).map(item => item.name).includes(currentScreen)) {
             newExpanded.add("SkillSettings")
         }
