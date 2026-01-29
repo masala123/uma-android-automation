@@ -1,4 +1,4 @@
-import { useContext } from "react"
+import { useContext, useEffect } from "react"
 import { View, Text, ScrollView, StyleSheet } from "react-native"
 import { useNavigation } from "@react-navigation/native"
 import { Divider } from "react-native-paper"
@@ -28,6 +28,18 @@ const SkillSettings = () => {
         preferredTrackDistance,
         preferredTrackSurface,
     } = skillSettings
+
+    useEffect(() => {
+        if (bsc.settings.skills.plans.skillPointCheck.enabled) {
+            bsc.setSettings({
+                ...bsc.settings,
+                skills: {
+                    ...bsc.settings.skills,
+                    enableSkillPointCheck: true
+                },
+            })
+        }
+    }, [bsc.settings.skills.plans.skillPointCheck.enabled])
 
     const updateSkillsSetting = (key: string, value: any) => {
         setSettings({
@@ -144,48 +156,66 @@ const SkillSettings = () => {
                 <CustomTitle
                     title="General Skill Settings"
                 />
-                <View style={styles.section}>
-                    <View style={styles.inputContainer}>
-                        <CustomCheckbox
-                            checked={bsc.settings.skills.enableSkillPointCheck}
-                            onCheckedChange={(checked) => {
-                                bsc.setSettings({
-                                    ...bsc.settings,
-                                    skills: { ...bsc.settings.skills, enableSkillPointCheck: checked },
-                                })
-                            }}
-                            label="Enable Skill Point Check"
-                            description="Enables check for a certain skill point threshold. If reached, the bot will stop so you can spend the skill points."
-                        />
+                <View style={styles.inputContainer}>
+                    <CustomCheckbox
+                        checked={bsc.settings.skills.enableSkillPointCheck}
+                        onCheckedChange={(checked) => {
+                            bsc.setSettings({
+                                ...bsc.settings,
+                                skills: { ...bsc.settings.skills, enableSkillPointCheck: checked },
+                            })
+                        }}
+                        label="Enable Skill Point Check"
+                        description="Enables check for a certain skill point threshold. When the threshold is reached, the bot is stopped. If the Skill Point Check skill plan is enabled, then that skill plan will be run instead of stopping the bot."
+                    />
 
-                        {bsc.settings.skills.enableSkillPointCheck && (
-                            <View style={{ marginTop: 8, marginLeft: 20 }}>
-                                <CustomSlider
-                                    value={bsc.settings.skills.skillPointCheck}
-                                    placeholder={bsc.defaultSettings.skills.skillPointCheck}
-                                    onValueChange={(value) => {
-                                        bsc.setSettings({
-                                            ...bsc.settings,
-                                            skills: { ...bsc.settings.skills, skillPointCheck: value },
-                                        })
-                                    }}
-                                    onSlidingComplete={(value) => {
-                                        bsc.setSettings({
-                                            ...bsc.settings,
-                                            skills: { ...bsc.settings.skills, skillPointCheck: value },
-                                        })
-                                    }}
-                                    min={100}
-                                    max={2000}
-                                    step={10}
-                                    label="Skill Point Threshold"
-                                    labelUnit=""
-                                    showValue={true}
-                                    showLabels={true}
-                                />
-                            </View>
-                        )}
-                    </View>
+                    {bsc.settings.skills.enableSkillPointCheck && (
+                        <View style={{ marginTop: 8, marginLeft: 20 }}>
+                            <CustomSlider
+                                value={bsc.settings.skills.skillPointCheck}
+                                placeholder={bsc.defaultSettings.skills.skillPointCheck}
+                                onValueChange={(value) => {
+                                    bsc.setSettings({
+                                        ...bsc.settings,
+                                        skills: { ...bsc.settings.skills, skillPointCheck: value },
+                                    })
+                                }}
+                                onSlidingComplete={(value) => {
+                                    bsc.setSettings({
+                                        ...bsc.settings,
+                                        skills: { ...bsc.settings.skills, skillPointCheck: value },
+                                    })
+                                }}
+                                min={100}
+                                max={2000}
+                                step={10}
+                                label="Skill Point Threshold"
+                                labelUnit=""
+                                showValue={true}
+                                showLabels={true}
+                            />
+                            <CustomCheckbox
+                                checked={bsc.settings.skills.plans.skillPointCheck.enabled}
+                                onCheckedChange={(checked) => {
+                                    bsc.setSettings({
+                                        ...bsc.settings,
+                                        skills: {
+                                            ...bsc.settings.skills,
+                                            plans: {
+                                                ...bsc.settings.skills.plans,
+                                                skillPointCheck: {
+                                                    ...bsc.settings.skills.plans.skillPointCheck,
+                                                    enabled: checked
+                                                },
+                                            },
+                                        },
+                                    })
+                                }}
+                                label="Enable Skill Plan at Threshold"
+                                description="Instead of stopping the bot, this will run the Skill Point Check skill plan when the skill point threshold is met."
+                            />
+                        </View>
+                    )}
                 </View>
                 <CustomTitle
                     title="Skill Style Overrides"

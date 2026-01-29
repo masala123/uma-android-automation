@@ -676,7 +676,7 @@ class SkillPlan (private val game: Game) {
      *
      * @return Whether the planned operations were successful.
      */
-    fun start(): Boolean {
+    fun start(skillPlanName: String? = null): Boolean {
         val bitmap: Bitmap = game.imageUtils.getSourceBitmap()
 
         val skillList: SkillList = SkillList(game)
@@ -690,10 +690,19 @@ class SkillPlan (private val game: Game) {
 
         // These skill plan names are manually set in the app settings.
         // If they are missing, this indicates a programmer error.
-        val skillPlanSettings: SkillPlanSettings = if (bIsCareerComplete) {
-            skillPlans["careerComplete"]!!
+        val skillPlanSettings: SkillPlanSettings = if (skillPlanName == null) {
+            if (bIsCareerComplete) {
+                skillPlans["careerComplete"]!!
+            } else {
+                skillPlans["preFinals"]!!
+            }
         } else {
-            skillPlans["preFinals"]!!
+            val tmpPlan: SkillPlanSettings? = skillPlans[skillPlanName]
+            if (tmpPlan == null) {
+                MessageLog.e(TAG, "Invalid skill plan name: $skillPlanName")
+                return false
+            }
+            tmpPlan
         }
 
         // If no options are enabled for purchasing skills, then we should

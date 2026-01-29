@@ -30,7 +30,7 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
         "RacingSettings",
         "RacingPlanSettings",
         "SkillSettings",
-        ...Object.values(skillPlanSettingsPages).map(item => item.name),
+        ...Object.values(skillPlanSettingsPages).flatMap(item => item.name),
         "DebugSettings",
     ]
 

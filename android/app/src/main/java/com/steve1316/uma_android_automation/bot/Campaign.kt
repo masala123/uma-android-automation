@@ -261,10 +261,10 @@ open class Campaign(val game: Game) {
         return Pair(true, dialog)
     }
 
-    fun handleSkillListScreen(): Boolean {
+    fun handleSkillListScreen(skillPlanName: String? = null): Boolean {
         MessageLog.i(TAG, "Beginning process to purchase skills...")
 
-        return game.skillPlan.start()
+        return game.skillPlan.start(skillPlanName)
     }
 
     /**
@@ -648,7 +648,7 @@ open class Campaign(val game: Game) {
                     ButtonSkills.click(game.imageUtils)
                     game.wait(1.0)
                     if (!handleSkillListScreen()) {
-                        MessageLog.w(TAG, "handleMainScreen:: handleSkillList() failed.")
+                        MessageLog.w(TAG, "handleMainScreen:: handleSkillList() for Pre-Finals failed.")
                     }
                 }
             }
@@ -659,7 +659,16 @@ open class Campaign(val game: Game) {
 
         // If the required skill points has been reached, stop the bot.
         if (game.enableSkillPointCheck && game.trainee.skillPoints >= game.skillPointsRequired) {
-            throw InterruptedException("Bot reached skill point check threshold. Stopping bot...")
+            if (game.skillPlan.skillPlans["skillPointCheck"]?.bIsEnabled ?: false) {
+                ButtonSkills.click(game.imageUtils)
+                game.wait(1.0)
+                if (!handleSkillListScreen("skillPointCheck")) {
+                    MessageLog.w(TAG, "handleMainScreen:: handleSkillList() for Skill Point Check failed.")
+                    throw InterruptedException("handleMainScreen:: handleSkillList() for Skill Point Check failed. Stopping bot...")
+                }
+            } else {
+                throw InterruptedException("Bot reached skill point check threshold. Stopping bot...")
+            }
         }
 
         // Since we're at the main screen, we don't need to worry about this

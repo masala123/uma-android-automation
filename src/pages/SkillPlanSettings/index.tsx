@@ -43,6 +43,12 @@ export interface DynamicSkillPlanSettingsProps {
 }
 
 export const skillPlanSettingsPages: DynamicSkillPlanSettingsProps = {
+    skillPointCheck: {
+        planKey: "skillPointCheck",
+        name: "SkillPlanSettingsSkillPointCheck",
+        title: "Skill Point Check",
+        description: "Configure the skills to buy when the skill point threshold has been reached.",
+    },
     preFinals: {
         planKey: "preFinals",
         name: "SkillPlanSettingsPreFinals",
