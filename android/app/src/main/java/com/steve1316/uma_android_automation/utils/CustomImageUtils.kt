@@ -2088,6 +2088,12 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		return result
     }
 
+    /** Saves a bitmap for debugging purposes.
+     *
+     * @param bitmap The optional bitmap to save.
+     * If not specified, then a screenshot is taken and saved instead.
+     * @param filename The filename for the saved bitmap.
+     */
     fun saveBitmap(bitmap: Bitmap? = null, filename: String) {
         val bitmap = bitmap ?: getSourceBitmap()
         val tempImage = Mat()
@@ -2096,6 +2102,13 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         tempImage.release()
     }
 
+    /** Saves a bitmap for debugging purposes.
+     *
+     * @param bitmap The optional bitmap to save.
+     * If not specified, then a screenshot is taken and saved instead.
+     * @param filename The filename for the saved bitmap.
+     * @bbox A bounding region to crop the [bitmap] to before saving.
+     */
     fun saveBitmap(bitmap: Bitmap? = null, filename: String, bbox: BoundingBox) {
         val bitmap = bitmap ?: getSourceBitmap()
         val croppedBitmap = createSafeBitmap(
@@ -2109,6 +2122,18 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         saveBitmap(bitmap = croppedBitmap, filename = filename)
     }
 
+    /** Crops a bitmap to the specified region.
+     *
+     * This is a wrapper around [ImageUtils::createSafeBitmap] that allows
+     * us to pass a BoundingBox for the cropping region instead of passing
+     * each parameter separately.
+     *
+     * @param sourceBitmap The bitmap to crop.
+     * @param bbox The BoundingBox specifying the crop region.
+     * @param context The debugging context string.
+     *
+     * @return The cropped bitmap.
+     */
     fun createSafeBitmap(sourceBitmap: Bitmap, bbox: BoundingBox, context: String): Bitmap? {
         return createSafeBitmap(
             sourceBitmap,
@@ -2120,6 +2145,19 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         )
     }
 
+    /** Takes a screenshot of the specified region on the screen.
+     *
+     * This is a wrapper around [ImageUtils::getRegionBitmap] that allows
+     * us to pass a BoundingBox for the cropping region instead of passing
+     * each parameter separately.
+     *
+     * This is faster than calling [getSourceBitmap] since it crops the
+     * screenshot prior to converting it to a Bitmap.
+     *
+     * @param bbox The BoundingBox specifying the crop region.
+     *
+     * @return The cropped screenshot.
+     */
     fun getRegionBitmap(bbox: BoundingBox): Bitmap? {
         return getRegionBitmap(
             x = bbox.x,
@@ -2129,6 +2167,14 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         )
     }
 
+    /** Compares two bitmaps using Structural Similarity Index (SSIM).
+     *
+     * @param bitmap1 The first bitmap to compare.
+     * @param bitmap2 The bitmap to compare against.
+     *
+     * @return The similarity score between the two bitmaps between 0.0 and 1.0.
+     * Higher values are more similar.
+     */
     fun compareBitmapsSSIM(bitmap1: Bitmap, bitmap2: Bitmap): Double {
         // Ensure bitmaps are same size for SSIM comparison
         if (bitmap1.width != bitmap2.width || bitmap1.height != bitmap2.height) {
