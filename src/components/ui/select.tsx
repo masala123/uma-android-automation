@@ -48,7 +48,7 @@ function SelectTrigger({
                 }),
                 props.disabled && "opacity-50",
                 size === "sm" && "h-8 py-2 sm:py-1.5",
-                className
+                className,
             )}
             {...props}
         >
@@ -135,7 +135,7 @@ function SelectItem({ className, children, ...props }: SelectPrimitive.ItemProps
                     web: "focus:bg-accent focus:text-accent-foreground *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2 cursor-default outline-none data-[disabled]:pointer-events-none [&_svg]:pointer-events-none",
                 }),
                 props.disabled && "opacity-50",
-                className
+                className,
             )}
             {...props}
         >
