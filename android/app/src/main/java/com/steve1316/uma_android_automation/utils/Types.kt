@@ -287,11 +287,25 @@ enum class SkillCommunityTier {
     }
 
 /**
+ * @property bIsGold Whether this skill is an upgraded version of another skill.
+ * This is calculated using the Icon ID. If the last digit is a 2, then it is gold.
+ * @property bIsUnique Whether this skill is considered a unique skill.
+ * This is calculated using the Icon ID. If the last digit is a 3, then it is unique.
+ * @property bIsNegative Whether this skill is considered a negative skill.
+ * This is calculated using the Icon ID. If the last digit is a 4, then it is negative.
+ * @proprty type The type of this skill (i.e. Green, Blue, Red, Yellow).
  * @property bIsInPlace Whether this skill chain has an in-place upgrade system.
  * Only certain types of skills can have in-place upgrades:
  *      Negative Skills (purple)
  *      Green Skills
  *      Distance-based Skills (i.e. [Distance/Style] Straightaway/Corners)
+ * @property communityTierName The name of the community tier for this skill (SS, S, A, or B).
+ * @property conditions The activation conditions for this skill.
+ * @property runningStyle The Running Style required to activate this skill. Can be NULL.
+ * @property trackDistance The Track Distance required to activate this skill. Can be NULL.
+ * @property trackSurface The Track Surface required to activate this skill. Can be NULL.
+ * @property inferredRunningStyles The list of Running Styles that best suit this skill.
+ * Can be empty.
  */
 data class SkillData(
     val id: Int,
@@ -406,12 +420,28 @@ data class SkillData(
         }
     }
 
+    /** A single condition for skill activation.
+     *
+     * See: https://gametora.com/umamusume/skill-condition-viewer
+     *
+     * @param name The condition name.
+     * @param op The operator for the condition.
+     * @param value The condition's value.
+     */
     data class Condition(
         val name: String,
         val op: Operator,
         val value: Int,
     ) {
         companion object {
+            /** Parses a single condition string and splits it into its three consituent parts.
+             *
+             * For example, the string "order==1" will be split into "order", "==", and 1.
+             *
+             * @param input The condition string.
+             *
+             * @return A Condition instance generated using the split condition.
+             */
             fun fromString(input: String): Condition? {
                 // Regex explanation:
                 // (\\s*\\S+?): Captures the left operand (non-whitespace characters, non-greedy, with optional surrounding whitespace).
@@ -431,6 +461,15 @@ data class SkillData(
             }
         }
 
+        /** Checks whether this condition matches the passed conditions.
+         *
+         * @param name The condition name.
+         * If not specified, then only the [op] and [value] are checked against.
+         * @param op The operator for the condition.
+         * @param value The condition value.
+         *
+         * @return Whether this condition matches the passed parameters.
+         */
         fun check(name: String? = null, op: Operator, value: Int): Boolean {
             if (name != null) {
                 return this.name == name && this.op == op && this.value == value
@@ -444,8 +483,13 @@ data class SkillData(
         }
     }
 
-    // Condition group conditions are evaluated using AND logic.
-    // These entries are separated by an "&".
+    /** Represents a group of Condition objects joined together with "&" symbols.
+     *
+     * Condition group conditions are evaluated using AND logic.
+     * These entries are separated by an "&" in the condition string.
+     *
+     * @param conditions The list of Condition objects in the group.
+     */
     class ConditionGroup(val conditions: List<Condition>) {
         val bIsLeading: Boolean = isLeading()
         val bIsWellPositioned: Boolean = isWellPositioned()
@@ -553,6 +597,7 @@ data class SkillData(
         }
     }
 
+    /** Parses the activation conditions string scraped from skill data. */
     class Conditions(val groups: List<ConditionGroup>) {
         val bIsLeading: Boolean = groups.any { it.bIsLeading }
         val bIsWellPositioned: Boolean = groups.any { it.bIsWellPositioned }
@@ -648,22 +693,50 @@ data class SkillData(
         }
     }
 
+    /** Checks whether this skill prefers a specific RunningStyle to activate.
+     *
+     * @param runningStyle The RunningStyle to check against.
+     *
+     * @return Whether this skill prefers the [runningStyle] to activate.
+     */
     fun checkInferredRunningStyleAptitude(runningStyle: RunningStyle): Boolean {
         return runningStyle in inferredRunningStyles
     }
 
+    /** Checks whether this skill requires a specific RunningStyle to activate.
+     *
+     * @param runningStyle The RunningStyle to check against.
+     *
+     * @return Whether this skill requires the [runningStyle] to activate.
+     */
     fun checkRunningStyleAptitude(runningStyle: RunningStyle): Boolean {
         return this.runningStyle == runningStyle
     }
 
+    /** Checks whether this skill requires a specific TrackDistance to activate.
+     *
+     * @param trackDistance The TrackDistance to check against.
+     *
+     * @return Whether this skill requires the [trackDistance] to activate.
+     */
     fun checkTrackDistanceAptitude(trackDistance: TrackDistance): Boolean {
         return this.trackDistance == trackDistance
     }
 
+    /** Checks whether this skill requires a specific TrackSurface to activate.
+     *
+     * @param trackSurface The TrackSurface to check against.
+     *
+     * @return Whether this skill requires the [trackSurface] to activate.
+     */
     fun checkTrackSurfaceAptitude(trackSurface: TrackSurface): Boolean {
         return this.trackSurface == trackSurface
     }
 
+    /** Calculates a list of inferred running styles for this skill.
+     *
+     * @return A list of inferred running styles.
+     */
     fun calculateInferredRunningStyles(): List<RunningStyle> {
         // If a running style is specified, then we do not want to infer
         // any other styles since they won't apply.
