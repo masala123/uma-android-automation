@@ -1,6 +1,6 @@
 import React, { useRef, useState } from "react"
 import { View, LayoutChangeEvent, ViewStyle } from "react-native"
-import { Option, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "../ui/select"
+import { Option, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue, NativeSelectScrollView } from "../ui/select"
 
 interface SelectOption {
     value: string
@@ -19,6 +19,7 @@ interface CustomSelectProps {
     value?: string
     disabled?: boolean
     style?: ViewStyle
+    portalHost?: string
 }
 
 const CustomSelect: React.FC<CustomSelectProps> = ({
@@ -32,6 +33,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
     value,
     disabled = false,
     style,
+    portalHost,
 }) => {
     const [triggerWidth, setTriggerWidth] = useState<number>(0)
     const triggerRef = useRef<View>(null)
@@ -64,16 +66,18 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
                     />
                 </SelectTrigger>
             </View>
-            <SelectContent style={{ width: triggerWidth }}>
-                <SelectGroup>
-                    {groupLabel && <SelectLabel>{groupLabel}</SelectLabel>}
-                    {options &&
-                        options.map((option) => (
-                            <SelectItem key={option.value} label={option.label} value={option.value} disabled={option.disabled}>
-                                {option.label}
-                            </SelectItem>
-                        ))}
-                </SelectGroup>
+            <SelectContent style={{ width: triggerWidth }} portalHost={portalHost}>
+                <NativeSelectScrollView>
+                    <SelectGroup>
+                        {groupLabel && <SelectLabel>{groupLabel}</SelectLabel>}
+                        {options &&
+                            options.map((option) => (
+                                <SelectItem key={option.value} label={option.label} value={option.value} disabled={option.disabled}>
+                                    {option.label}
+                                </SelectItem>
+                            ))}
+                    </SelectGroup>
+                </NativeSelectScrollView>
             </SelectContent>
         </Select>
     )
