@@ -1,6 +1,15 @@
 import { createContext, useState } from "react"
 import { startTiming } from "../lib/performanceLogger"
 import racesData from "../data/races.json"
+import { skillPlanSettingsPages } from "../pages/SkillPlanSettings"
+
+interface SkillPlanSettingsConfig {
+    enabled: boolean
+    strategy: string
+    enableBuyInheritedUniqueSkills: boolean
+    enableBuyNegativeSkills: boolean
+    plan: string
+}
 
 export interface Settings {
     // General settings
@@ -45,16 +54,7 @@ export interface Settings {
         preferredRunningStyle: string
         preferredTrackDistance: string
         preferredTrackSurface: string
-        enablePreFinalsSkillPlan: boolean
-        preFinalsSpendingStrategy: string
-        enablePreFinalsBuyInheritedSkills: boolean
-        enablePreFinalsBuyNegativeSkills: boolean
-        preFinalsSkillPlan: string
-        enableCareerCompleteSkillPlan: boolean
-        careerCompleteSpendingStrategy: string
-        enableCareerCompleteBuyInheritedSkills: boolean
-        enableCareerCompleteBuyNegativeSkills: boolean
-        careerCompleteSkillPlan: string
+        plans: Record<string, SkillPlanSettingsConfig>
     }
 
     // Training Event settings
@@ -197,16 +197,16 @@ export const defaultSettings: Settings = {
         preferredRunningStyle: "inherit",
         preferredTrackDistance: "inherit",
         preferredTrackSurface: "no_preference",
-        enablePreFinalsSkillPlan: false,
-        preFinalsSpendingStrategy: "default",
-        enablePreFinalsBuyInheritedSkills: false,
-        enablePreFinalsBuyNegativeSkills: false,
-        preFinalsSkillPlan: "",
-        enableCareerCompleteSkillPlan: false,
-        careerCompleteSpendingStrategy: "default",
-        enableCareerCompleteBuyInheritedSkills: false,
-        enableCareerCompleteBuyNegativeSkills: false,
-        careerCompleteSkillPlan: "",
+        plans: Object.keys(skillPlanSettingsPages).reduce((acc, curr) => {
+            acc[curr] = {
+                enabled: false,
+                strategy: "default",
+                enableBuyInheritedUniqueSkills: false,
+                enableBuyNegativeSkills: false,
+                plan: "",
+            }
+            return acc
+        }, {} as Record<string, SkillPlanSettingsConfig>),
     },
     trainingEvent: {
         enablePrioritizeEnergyOptions: false,

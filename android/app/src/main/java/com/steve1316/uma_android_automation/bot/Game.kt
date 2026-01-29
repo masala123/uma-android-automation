@@ -15,6 +15,7 @@ import com.steve1316.automation_library.utils.SettingsHelper
 import com.steve1316.uma_android_automation.utils.GameDate
 import com.steve1316.uma_android_automation.bot.Trainee
 import com.steve1316.uma_android_automation.bot.SkillPlan
+import com.steve1316.uma_android_automation.bot.SkillDatabase
 
 import com.steve1316.uma_android_automation.utils.types.BoundingBox
 import com.steve1316.uma_android_automation.utils.types.Aptitude
@@ -49,6 +50,7 @@ class Game(val myContext: Context) {
 
 	val imageUtils: CustomImageUtils = CustomImageUtils(myContext, this)
 	val gestureUtils: MyAccessibilityService = MyAccessibilityService.getInstance()
+    val skillDatabase: SkillDatabase = SkillDatabase(this)
 
 	val decimalFormat = DecimalFormat("#.##")
 

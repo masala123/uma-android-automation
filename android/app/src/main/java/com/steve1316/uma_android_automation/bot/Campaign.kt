@@ -644,7 +644,7 @@ open class Campaign(val game: Game) {
                 if (game.trainee.bHasUpdatedAptitudes) game.trainee.logInfo()
 
                 // Now check if we need to handle skills before finals.
-                if (game.currentDate.day == 72 && game.skillPlan.enablePreFinalsSkillPlan) {
+                if (game.currentDate.day == 72 && game.skillPlan.skillPlans["preFinals"]?.bIsEnabled ?: false) {
                     ButtonSkills.click(game.imageUtils)
                     game.wait(1.0)
                     if (!handleSkillListScreen()) {
@@ -833,7 +833,7 @@ open class Campaign(val game: Game) {
                     game.racing.handleStandaloneRace()
                 } else if (game.checkEndScreen()) {
                     // Stop when the bot has reached the screen where it details the overall result of the run.
-                    if (game.skillPlan.enableCareerCompleteSkillPlan) {
+                    if (game.skillPlan.skillPlans["careerComplete"]?.bIsEnabled ?: false) {
                         ButtonCareerEndSkills.click(game.imageUtils)
                         game.wait(1.0)
                         if (!handleSkillListScreen()) {

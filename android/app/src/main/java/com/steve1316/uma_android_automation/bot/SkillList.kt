@@ -10,8 +10,6 @@ import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.automation_library.data.SharedData
 
-import com.steve1316.uma_android_automation.bot.SkillDatabase
-
 import com.steve1316.uma_android_automation.utils.types.BoundingBox
 import com.steve1316.uma_android_automation.utils.types.TrackDistance
 import com.steve1316.uma_android_automation.utils.types.TrackSurface
@@ -44,7 +42,6 @@ typealias OnEntryDetectedCallback = (
 class SkillList (private val game: Game) {
     private val TAG: String = "[${MainActivity.loggerTag}]SkillList"
 
-    private val skillDatabase: SkillDatabase = SkillDatabase(game)
     private var entries: Map<String, SkillListEntry> = generateSkillListEntries()
     var skillPoints: Int = 0
         private set
@@ -100,7 +97,7 @@ class SkillList (private val game: Game) {
      */
     private fun generateSkillListEntries(): Map<String, SkillListEntry> {
         // Get list of unique upgrade chains.
-        val upgradeChains: List<List<String>> = skillDatabase.skillUpgradeChains
+        val upgradeChains: List<List<String>> = game.skillDatabase.skillUpgradeChains
             .values.toList()
             .toSet()
             .toList()
@@ -113,7 +110,7 @@ class SkillList (private val game: Game) {
                 if (name in result) {
                     continue
                 }
-                val skillData: SkillData? = skillDatabase.getSkillData(name)
+                val skillData: SkillData? = game.skillDatabase.getSkillData(name)
                 if (skillData == null) {
                     MessageLog.e(TAG, "Failed to get skill data for \"$name\".")
                     continue
@@ -650,7 +647,7 @@ class SkillList (private val game: Game) {
                     Log.e(TAG, "[SKILLS] getSkillListEntryTitle() returned NULL.")
                     return@Thread
                 }
-                skillName = skillDatabase.checkSkillName(tmpSkillName, fuzzySearch = true)
+                skillName = game.skillDatabase.checkSkillName(tmpSkillName, fuzzySearch = true)
             } catch (e: Exception) {
                 Log.e(TAG, "[ERROR] Error processing skill name: ${e.stackTraceToString()}")
             } finally {
@@ -730,7 +727,7 @@ class SkillList (private val game: Game) {
             MessageLog.e(TAG, "analyzeSkillListEntryThreadSafe: getSkillListEntryTitle() returned NULL.")
             return null
         }
-        skillName = skillDatabase.checkSkillName(skillName, fuzzySearch = true)
+        skillName = game.skillDatabase.checkSkillName(skillName, fuzzySearch = true)
 
 
         // If the skill is already obtained, don't bother trying to get the price.
@@ -1099,7 +1096,7 @@ class SkillList (private val game: Game) {
         // Fix skill names in case any have been typed incorrectly.
         val fixedSkills: MutableMap<String, Int> = mutableMapOf()
         for ((name, price) in mockSkills) {
-            val fixedName: String? = skillDatabase.checkSkillName(name, fuzzySearch = true)
+            val fixedName: String? = game.skillDatabase.checkSkillName(name, fuzzySearch = true)
             if (fixedName == null) {
                 MessageLog.e(TAG, "parseMockSkillListEntries: \"$name\" not in database.")
                 return emptyMap()
