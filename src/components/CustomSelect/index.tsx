@@ -19,6 +19,7 @@ interface CustomSelectProps {
     value?: string
     disabled?: boolean
     style?: ViewStyle
+    portalHost?: string
 }
 
 const CustomSelect: React.FC<CustomSelectProps> = ({
@@ -32,6 +33,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
     value,
     disabled = false,
     style,
+    portalHost,
 }) => {
     const [triggerWidth, setTriggerWidth] = useState<number>(0)
     const triggerRef = useRef<View>(null)
@@ -57,7 +59,7 @@ const CustomSelect: React.FC<CustomSelectProps> = ({
                     <SelectValue placeholder={value || placeholder} style={{ color: "black" }} />
                 </SelectTrigger>
             </View>
-            <SelectContent style={{ width: triggerWidth }}>
+            <SelectContent style={{ width: triggerWidth }} portalHost={portalHost}>
                 <SelectGroup>
                     {groupLabel && <SelectLabel>{groupLabel}</SelectLabel>}
                     {options &&
