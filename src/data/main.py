@@ -1,5 +1,4 @@
 from deprecated import deprecated
-import undetected_chromedriver as uc
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
@@ -92,7 +91,6 @@ def create_chromedriver():
     chrome_options.add_argument("--no-sandbox") # Bypass OS security model (needed for some environments like Docker)
     chrome_options.add_argument("--window-size=1920,1080") # Set a default window size for consistent rendering
     driver = webdriver.Chrome(options=chrome_options)
-    #driver = uc.Chrome(headless=True, use_subprocess=True)
     return driver
 
 
@@ -226,11 +224,11 @@ class BaseScraper:
         self.initial_data_count = len(self.data) if IS_DELTA else 0
         self.cookie_accepted = False
 
-    def safe_click(self, driver: uc.Chrome, element: WebElement, retries: int = 3, delay: float = 0.5):
+    def safe_click(self, driver: webdriver.Chrome, element: WebElement, retries: int = 3, delay: float = 0.5):
         """Try clicking an element normally and falls back to JS click if blocked by ads/overlays.
 
         Args:
-            driver (uc.Chrome): The Chrome driver.
+            driver (webdriver.Chrome): The Chrome driver.
             element (WebElement): The web element to interact with.
             retries (int, optional): How many times to retry if intercepted.
             delay (float, optional): Seconds to wait between retries
@@ -291,11 +289,11 @@ class BaseScraper:
         else:
             logging.info(f"Saved {len(self.data)} items to {self.output_filename}.")
 
-    def handle_cookie_consent(self, driver: uc.Chrome):
+    def handle_cookie_consent(self, driver: webdriver.Chrome):
         """Handles the cookie consent.
 
         Args:
-            driver (uc.Chrome): The Chrome driver.
+            driver (webdriver.Chrome): The Chrome driver.
         """
         if not self.cookie_accepted:
             try:
@@ -309,7 +307,7 @@ class BaseScraper:
                 logging.info("No cookie consent button found.")
                 self.cookie_accepted = True
 
-    def handle_ad_banner(self, driver: uc.Chrome, skip=False):
+    def handle_ad_banner(self, driver: webdriver.Chrome, skip=False):
         if not skip:
             try:
                 ad_banner_button = driver.find_element(By.XPATH, "//div[contains(@class, 'publift-widget-sticky_footer-button')]")
@@ -363,11 +361,11 @@ class BaseScraper:
             options.append(option_text)
         return options
 
-    def process_training_events(self, driver: uc.Chrome, item_name: str, data_dict: Dict[str, List[str]], include_after_race_events: bool = False):
+    def process_training_events(self, driver: webdriver.Chrome, item_name: str, data_dict: Dict[str, List[str]], include_after_race_events: bool = False):
         """Processes the training events for the given item.
 
         Args:
-            driver (uc.Chrome): The Chrome driver.
+            driver (webdriver.Chrome): The Chrome driver.
             item_name (str): The name of the item.
             data_dict (Dict[str, List[str]]): The data dictionary to modify.
             include_after_race_events (bool): Whether to include 'After a Race' events (only for characters).
@@ -449,11 +447,11 @@ class BaseScraper:
 
             ad_banner_closed = self.handle_ad_banner(driver, ad_banner_closed)
 
-    def _sort_by_value(self, driver: uc.Chrome, value_key: str):
+    def _sort_by_value(self, driver: webdriver.Chrome, value_key: str):
         """Sorts the list elements by the given value key.
 
         Args:
-            driver (uc.Chrome): The Chrome driver.
+            driver (webdriver.Chrome): The Chrome driver.
             value_key (str): The key to sort by.
         """
         # Click on the "Sort by" dropdown and select the value key.
