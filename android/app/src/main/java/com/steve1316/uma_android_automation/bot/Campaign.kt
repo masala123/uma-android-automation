@@ -672,7 +672,7 @@ open class Campaign(val game: Game) {
         if (
             !bHasHandledSkillPointCheck &&
             game.enableSkillPointCheck &&
-            game.trainee.skillPoints >= game.skillPointsRequired &&
+            game.trainee.skillPoints >= game.skillPointsRequired
         ) {
             if (game.skillPlan.skillPlans["skillPointCheck"]?.bIsEnabled ?: false) {
                 ButtonSkills.click(game.imageUtils)
