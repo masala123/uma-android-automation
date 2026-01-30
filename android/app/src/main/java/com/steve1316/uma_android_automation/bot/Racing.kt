@@ -208,7 +208,6 @@ class Racing (private val game: Game) {
                         MessageLog.i(TAG, "[DIALOG] strategy:: Using the default running style.")
                         dialog.ok(imageUtils = game.imageUtils)
                         game.trainee.bHasSetRunningStyle = true
-                        game.wait(0.5, skipWaitingForLoading = true)
                         return Pair(true, dialog)
                     }
                     // Auto-select the optimal running style based on trainee aptitudes.
@@ -232,7 +231,6 @@ class Racing (private val game: Game) {
                         MessageLog.e(TAG, "[DIALOG] strategy:: Invalid running style: $runningStyle")
                         dialog.close(imageUtils = game.imageUtils)
                         game.trainee.bHasSetRunningStyle = false
-                        game.wait(0.5, skipWaitingForLoading = true)
                         return Pair(true, dialog)
                     }
                 }
@@ -282,7 +280,6 @@ class Racing (private val game: Game) {
             }
         }
 
-        game.wait(0.5, skipWaitingForLoading = true)
         return Pair(true, dialog)
     }
 

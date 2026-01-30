@@ -129,6 +129,7 @@ class Game(val myContext: Context) {
 
                 connectionErrorRetryAttempts++
                 dialog.ok(imageUtils = imageUtils)
+                wait(0.5)
             }
             "display_settings" -> dialog.close(imageUtils = imageUtils)
             "help_and_glossary" -> dialog.close(imageUtils = imageUtils)
@@ -140,7 +141,6 @@ class Game(val myContext: Context) {
             }
         }
 
-        wait(0.5, skipWaitingForLoading = true)
         return Pair(true, dialog)
     }
 

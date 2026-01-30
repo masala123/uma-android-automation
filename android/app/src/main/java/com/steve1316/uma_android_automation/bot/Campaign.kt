@@ -239,7 +239,6 @@ open class Campaign(val game: Game) {
             }
         }
 
-        game.wait(0.5, skipWaitingForLoading = true)
         return Pair(true, dialog)
     }
 
