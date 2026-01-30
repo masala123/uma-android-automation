@@ -705,7 +705,14 @@ class Training(private val game: Game) {
             StatName.WIT to IconTrainingHeaderWit,
         )
 
-        fun gotoStat(statName: StatName, retries: Int = 3): Boolean {
+        /** Changes the active (selected) training stat in the training screen.
+         *
+         * @param statName The stat to switch to.
+         * @param retries The number of times to attempt to switch to the [statName].
+         *
+         * @return Whether the operation was successful.
+         */
+        fun goToStat(statName: StatName, retries: Int = 3): Boolean {
             // KeyError indicates programmer error.
             val header: ComponentInterface = iconTrainingHeaders[statName]!!
             val button: ComponentInterface = trainingButtons[statName]!!
@@ -732,7 +739,7 @@ class Training(private val game: Game) {
         }
 
         // If not doing single training and speed training isn't active, make it active.
-        if (!singleTraining && !gotoStat(StatName.SPEED)) {
+        if (!singleTraining && !goToStat(StatName.SPEED)) {
             MessageLog.w(TAG, "Skipping training due to not being able to confirm whether the bot is at the training screen.")
             return
         }
@@ -795,7 +802,7 @@ class Training(private val game: Game) {
                 }
 
                 // Only go to a different stat if we aren't doing single training.
-                if (!singleTraining && !gotoStat(statName)) {
+                if (!singleTraining && !goToStat(statName)) {
                     MessageLog.e(TAG, "[TRAINING] Failed to click training button for $statName. Aborting training...")
                     return
                 }
