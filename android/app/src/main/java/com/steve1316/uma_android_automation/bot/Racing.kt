@@ -247,16 +247,16 @@ class Racing (private val game: Game) {
             }
             "trophy_won" -> dialog.close(imageUtils = game.imageUtils)
             "try_again" -> {
-                if (enableFreeRaceRetry && IconOneFreePerDayTooltip.check(game.imageUtils)) {
-                    MessageLog.i(TAG, "[RACE] Failed mandatory race. Using daily free race retry...")
-                    dialog.ok(game.imageUtils)
-                    return Pair(true, dialog)
-                }
-
                 if (disableRaceRetries) {
+                    if (enableFreeRaceRetry && IconOneFreePerDayTooltip.check(game.imageUtils)) {
+                        MessageLog.i(TAG, "[RACE] Failed mandatory race. Using daily free race retry...")
+                        raceRetries--
+                        dialog.ok(game.imageUtils)
+                        return Pair(true, dialog)
+                    }
                     if (enableCompleteCareerOnFailure) {
                         MessageLog.i(TAG, "[RACE] Failed a mandatory race and no retries remaining. Completing career...")
-                        // Manually set retries to 0 to break the race retry loop.
+                        // Manually set retries to -1 to break the race retry loop.
                         raceRetries = -1
                         dialog.close(game.imageUtils)
                         return Pair(true, dialog)
