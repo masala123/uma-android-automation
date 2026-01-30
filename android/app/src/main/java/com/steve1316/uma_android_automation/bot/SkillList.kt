@@ -424,7 +424,6 @@ class SkillList (private val game: Game) {
                 ocrEngine = "mlKit",
                 debugName = "analyzeSkillListEntry::extractText"
             )
-            MessageLog.d(TAG, "Extracted text: \"$detectedText\"")
             return detectedText
         } catch (e: Exception) {
             MessageLog.e(TAG, "Exception during text extraction: ${e.message}")
