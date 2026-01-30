@@ -1923,7 +1923,7 @@ class Racing (private val game: Game) {
             MessageLog.i(TAG, "[RACE] Unable to skip the race. Proceeding to handle the race manually...")
         }
         
-        while (raceRetries >= 0) {
+        do {
             if (game.tryHandleAllDialogs()) {
                 continue
             }
@@ -1964,7 +1964,9 @@ class Racing (private val game: Game) {
                     else -> game.tap(350.0, 450.0, "ok", taps = 3)
                 }
             }
-        }
+        } while (raceRetries >= 0)
+
+        MessageLog.d(TAG, "runRaceWithRetries: No retries remaining ($raceRetries). Returning FALSE.")
         return false
     }
 
