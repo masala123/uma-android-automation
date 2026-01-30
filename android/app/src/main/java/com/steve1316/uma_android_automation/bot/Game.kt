@@ -768,9 +768,6 @@ class Game(val myContext: Context) {
         ) {
             ButtonCraneGameOk.click(imageUtils = imageUtils, sourceBitmap = sourceBitmap)
             MessageLog.i(TAG, "[CRANE GAME] Event exited.")
-		} else if (scenario != "Unity Cup" && findAndTapImage("close", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
-			MessageLog.i(TAG, "[MISC] There is a possible popup to accept a trophy.")
-			racing.finalizeRaceResults(true, isExtra = true)
 		} else if (findAndTapImage("race_end", sourceBitmap, tries = 1, region = imageUtils.regionBottomHalf, suppressError = true)) {
 			MessageLog.i(TAG, "[MISC] Ended a leftover race.")
 		} else if (imageUtils.findImageWithBitmap("connection_error", sourceBitmap, region = imageUtils.regionMiddle, suppressError = true) != null) {
