@@ -144,6 +144,37 @@ class Game(val myContext: Context) {
         return Pair(true, dialog)
     }
 
+    /** Attempts to handle dialogs for all components containing a dialogHandler.
+     *
+     * @return Whether a dialog was successfully handled.
+     * If no dialog is detected at all, then False is returned.
+     * If an unhandled dialog was detected, throws an InterruptedException.
+     */
+    fun tryHandleAllDialogs(): Boolean {
+        // Attempt to handle any dialogs from the main dialog handler first.
+        var (bWasDialogHandled, dialog) = handleDialogs()
+
+        // If that failed, then try passing it to the campaign dialog handler.
+        if (!bWasDialogHandled && dialog != null) {
+            bWasDialogHandled = campaign.handleDialogs(dialog).first
+        }
+
+        // Finally, try the racing handler as a last ditch effort.
+        if (!bWasDialogHandled && dialog != null) {
+            bWasDialogHandled = racing.handleDialogs(dialog).first
+        }
+
+        // If we still couldn't handle it, then we're stuck with a dialog
+        // open. This shouldn't ever happen unless there is a new dialog
+        // or something else in the game changed.
+        if (!bWasDialogHandled && dialog != null) {
+            MessageLog.e(TAG, "[GAME] Failed to handle a detected dialog: ${dialog.name}")
+            throw InterruptedException("Failed to handle a detected dialog: ${dialog.name}")
+        }
+
+        return bWasDialogHandled
+    }
+
 	////////////////////////////////////////////////////////////////////
 	////////////////////////////////////////////////////////////////////
 	// Helper functions for bot interaction.

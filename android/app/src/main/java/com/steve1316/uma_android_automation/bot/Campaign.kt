@@ -772,22 +772,8 @@ open class Campaign(val game: Game) {
 	fun start() {
 		while (true) {
             try {
-                var (bWasDialogHandled, dialog) = handleDialogs()
                 // We always check for dialogs first.
-                if (bWasDialogHandled) {
-                    continue
-                }
-                // Chaining the result from the first dialog handler should
-                // improve speed by a few tenths.
-                bWasDialogHandled = game.handleDialogs(dialog).first
-                if (bWasDialogHandled) {
-                    continue
-                }
-
-                // If we still havent handled the dialog, check with the racing
-                // dialog handler.
-                bWasDialogHandled = game.racing.handleDialogs(dialog).first
-                if (bWasDialogHandled) {
+                if (game.tryHandleAllDialogs()) {
                     continue
                 }
 

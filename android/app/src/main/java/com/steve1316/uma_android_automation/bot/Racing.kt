@@ -1927,11 +1927,13 @@ class Racing (private val game: Game) {
         }
         
         while (raceRetries >= 0) {
+            if (game.tryHandleAllDialogs()) {
+                continue
+            }
+
             val bitmap: Bitmap = game.imageUtils.getSourceBitmap()
             if (canSkip) {
                 when {
-                    // Handle any dialogs that may have popped up.
-                    handleDialogs().first -> {}
                     // Attempt to skip the race.
                     ButtonViewResults.click(game.imageUtils, sourceBitmap = bitmap) -> {
                         MessageLog.i(TAG, "[RACE] Clicked ViewResults button to skip race.")
@@ -1941,12 +1943,10 @@ class Racing (private val game: Game) {
                         return true
                     }
                     // Otherwise click to progress through screens.
-                    else -> game.tap(350.0, 450.0, "ok", taps = 1)
+                    else -> game.tap(350.0, 450.0, "ok", taps = 3)
                 }
             } else {
                 when {
-                    // Handle any dialogs that may have popped up.
-                    handleDialogs().first -> {}
                     ButtonRaceManual.click(game.imageUtils, sourceBitmap = bitmap) -> {
                         MessageLog.i(TAG, "[RACE] Started the manual race.")
                     }
@@ -1964,7 +1964,7 @@ class Racing (private val game: Game) {
                         return true
                     }
                     // Otherwise click to progress through screens.
-                    else -> game.tap(350.0, 450.0, "ok", taps = 1)
+                    else -> game.tap(350.0, 450.0, "ok", taps = 3)
                 }
             }
         }
@@ -1990,12 +1990,15 @@ class Racing (private val game: Game) {
         }
         
         // Max time limit for the while loop to attempt to finalize race results.
+        // It really shouldn't ever take this long.
         val startTime: Long = System.currentTimeMillis()
-        val maxTimeMs: Long = 20000
+        val maxTimeMs: Long = 30000
         while (System.currentTimeMillis() - startTime < maxTimeMs) {
+            if (game.tryHandleAllDialogs()) {
+                continue
+            }
             val bitmap: Bitmap = game.imageUtils.getSourceBitmap()
             when {
-                handleDialogs().first -> {}
                 ButtonNext.click(game.imageUtils, sourceBitmap = bitmap) -> {
                     MessageLog.i(TAG, "[RACE] Clicked on Next (race results) button.")
                 }
@@ -2006,7 +2009,7 @@ class Racing (private val game: Game) {
                     return true
                 }
                 // Tap on the screen to progress through screens.
-                else -> game.tap(350.0, 750.0, "ok", taps = 1)
+                else -> game.tap(350.0, 750.0, "ok", taps = 3)
             }
         }
         return false
