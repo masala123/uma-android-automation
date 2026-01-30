@@ -80,3 +80,8 @@ object LabelTrainingCannotPerform : ComponentInterface {
     override val TAG: String = "[${MainActivity.loggerTag}]LabelTrainingCannotPerform"
     override val template = Template("components/label/training_cannot_perform", region = Region.middle)
 }
+
+object LabelTrophyWonDialogTitle : ComponentInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]LabelTrophyWonDialogTitle"
+    override val template = Template("components/label/trophy_won")
+}
