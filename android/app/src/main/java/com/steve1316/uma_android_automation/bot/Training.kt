@@ -621,8 +621,11 @@ class Training(private val game: Game) {
 
 		// Enter the Training screen.
 		if (ButtonTraining.click(imageUtils = game.imageUtils)) {
-			// Acquire the percentages and stat gains for each training.
+            // Upon going to the training screen, there is a short animation
+            // on the training header icon. We need to make sure this is finished
+            // before we can properly begin analyzing the screen.
 			game.wait(0.5)
+            // Acquire the percentages and stat gains for each training.
 			analyzeTrainings()
 			val trainingSelected: StatName? = recommendTraining()
 
@@ -702,11 +705,43 @@ class Training(private val game: Game) {
             StatName.WIT to IconTrainingHeaderWit,
         )
 
+        /** Changes the active (selected) training stat in the training screen.
+         *
+         * @param statName The stat to switch to.
+         * @param retries The number of times to attempt to switch to the [statName].
+         *
+         * @return Whether the operation was successful.
+         */
+        fun goToStat(statName: StatName, retries: Int = 3): Boolean {
+            // KeyError indicates programmer error.
+            val header: ComponentInterface = iconTrainingHeaders[statName]!!
+            val button: ComponentInterface = trainingButtons[statName]!!
+
+            // If we're already at the stat, return early.
+            // Otherwise we'd accidentally click the button to train the stat.
+            if (header.check(game.imageUtils)) {
+                return true
+            }
+
+            var attempts: Int = 0
+            while (attempts < retries) {
+                button.click(game.imageUtils)
+                // Wait for screen to finish updating before proceeding.
+                game.wait(0.2, skipWaitingForLoading = true)
+                if (header.check(game.imageUtils)) {
+                    return true
+                }
+                attempts++
+            }
+
+            MessageLog.w(TAG, "Failed to go to $statName on training screen after $attempts attempts.")
+            return false
+        }
+
         // If not doing single training and speed training isn't active, make it active.
-        if (!singleTraining && !IconTrainingHeaderSpeed.check(imageUtils = game.imageUtils)) {
-            ButtonTrainingSpeed.click(imageUtils = game.imageUtils)
-            // Wait for screen to finish updating before proceeding.
-            game.wait(0.2, skipWaitingForLoading = true)
+        if (!singleTraining && !goToStat(StatName.SPEED)) {
+            MessageLog.w(TAG, "Skipping training due to not being able to confirm whether the bot is at the training screen.")
+            return
         }
 
         // List to store all training analysis results for parallel processing.
@@ -766,16 +801,10 @@ class Training(private val game: Game) {
                     MessageLog.i(TAG, "[TRAINING] The $statName training is currently selected on the screen.")
                 }
 
-                // Only click the button if we arent doing single training.
-                // Also speed should be selected at beginning so we don't want to click it again
-                // otherwise it will be trained.
-                if (!singleTraining && statName != StatName.SPEED) {
-                    if (!trainingButtons[statName]!!.click(imageUtils = game.imageUtils)) {
-                        MessageLog.e(TAG, "[TRAINING] Failed to click training button for $statName. Aborting training...")
-                        return
-                    }
-                    // Slight delay for UI to update after clicking button.
-                    game.wait(0.2, skipWaitingForLoading = true)
+                // Only go to a different stat if we aren't doing single training.
+                if (!singleTraining && !goToStat(statName)) {
+                    MessageLog.e(TAG, "[TRAINING] Failed to click training button for $statName. Aborting training...")
+                    return
                 }
 
                 // Check if the currently selected training is restricted.
