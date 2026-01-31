@@ -53,6 +53,8 @@ import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
 import com.steve1316.uma_android_automation.components.ComponentInterface
 
+import com.steve1316.uma_android_automation.utils.types.BoundingBox
+
 object DialogUtils {
     private val titleGradientTemplates: List<String> = listOf(
         "components/dialog/dialog_title_gradient_0",
@@ -112,17 +114,19 @@ object DialogUtils {
         val x = titleLocation.x - (templateBitmap.width / 2.0)
         val y = titleLocation.y - (templateBitmap.height / 2.0)
 
-        val relativeX = imageUtils.relX(x, 0)
-        val relativeY = imageUtils.relY(y, 0)
-        val relativeWidth = imageUtils.relWidth((SharedData.displayWidth - (x * 2)).toInt())
-        val relativeHeight = imageUtils.relHeight(templateBitmap.height)
+        val bbox = BoundingBox(
+            imageUtils.relX(x, 0),
+            imageUtils.relY(y, 0),
+            imageUtils.relWidth((SharedData.displayWidth - (x * 2)).toInt()),
+            imageUtils.relHeight(templateBitmap.height),
+        )
 
-        val result: String = imageUtils.performOCROnRegion(
+        val text: String = imageUtils.performOCROnRegion(
             sourceBitmap,
-            relativeX,
-            relativeY,
-            relativeWidth,
-            relativeHeight,
+            bbox.x,
+            bbox.y,
+            bbox.w,
+            bbox.h,
             useThreshold=true,
             useGrayscale=true,
             scale=1.0,
@@ -130,11 +134,35 @@ object DialogUtils {
             debugName="dialogTitle",
         )
 
-        if (result == "") {
+        if (text == "") {
             return null
         }
 
-        return result
+        val match: String? = TextUtils.matchStringInList(text, DialogObjects.items.map { it.title })
+
+        // If title detection failed, attempt to find some known titles
+        // that use a different font (like Trophy Won).
+        if (match == null) {
+            val croppedBitmap: Bitmap? = imageUtils.createSafeBitmap(
+                sourceBitmap,
+                bbox.x,
+                bbox.y,
+                bbox.w,
+                bbox.h,
+                "Dialog::getTitle cropped",
+            )
+            if (croppedBitmap == null) {
+                return null
+            }
+
+            if (LabelTrophyWonDialogTitle.check(imageUtils, sourceBitmap = croppedBitmap)) {
+                return DialogTrophyWon.title
+            }
+
+            return null
+        }
+
+        return match
     }
 
     /** Detect and return a DialogInterface on screen.
@@ -147,14 +175,8 @@ object DialogUtils {
     fun getDialog(imageUtils: CustomImageUtils, tries: Int = 1): DialogInterface? {
         val title: String = getTitle(imageUtils = imageUtils) ?: return null
 
-        val match: String? = TextUtils.matchStringInList(title, DialogObjects.items.map { it.title })
-        if (match == null) {
-            return null
-        }
-
         // There may be multiple matches for titles since they are not unique.
-        val matches: List<DialogInterface> = DialogObjects.items.filter { it.title == match }
-
+        val matches: List<DialogInterface> = DialogObjects.items.filter { it.title == title }
         if (matches.size == 1) {
             return matches[0]
         }
