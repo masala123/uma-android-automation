@@ -63,8 +63,8 @@ object DialogUtils {
 
     // If any of these dialogs are ever detected, we want to throw an error
     // immediately to stop the bot.
-    // These are typically just dialogs that involve irl money (i.e. carats).
-    // See the [handleDangerousDialogs] function.
+    // These are typically just dialogs that involve IRL money (i.e. carats).
+    // See the `handleDangerousDialogs` function.
     private val dangerousDialogs: List<DialogInterface> = listOf(
         DialogAgeConfirmation,
         DialogPurchaseCarats,
@@ -177,7 +177,7 @@ object DialogUtils {
     /** Throws error if the specified dialog is in the [dangerousDialogs] list.
      *
      * Some dialogs are dangerous in that they could lead to parts of the game
-     * that involve irl purchases. This function checks if the passed [dialog]
+     * that involve IRL purchases. This function checks if the passed [dialog]
      * is in a hardcoded list of dangerous dialogs. If it is, then we throw
      * an InterruptedException error to immediately stop the bot.
      *
