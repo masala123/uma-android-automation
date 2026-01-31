@@ -53,6 +53,8 @@ import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
 import com.steve1316.uma_android_automation.components.ComponentInterface
 
+import com.steve1316.uma_android_automation.utils.types.BoundingBox
+
 object DialogUtils {
     private val titleGradientTemplates: List<String> = listOf(
         "components/dialog/dialog_title_gradient_0",
@@ -110,7 +112,7 @@ object DialogUtils {
             return null
         }
 
-        // If we failed to find the template bitmap, we can't do any calcs.
+        // If we failed to find the template bitmap, we can't do any calculations.
         if (templateBitmap == null) {
             return null
         }
@@ -121,17 +123,19 @@ object DialogUtils {
         val x = titleLocation.x - (templateBitmap.width / 2.0)
         val y = titleLocation.y - (templateBitmap.height / 2.0)
 
-        val _x = imageUtils.relX(x, 0)
-        val _y = imageUtils.relY(y, 0)
-        val _w = imageUtils.relWidth((SharedData.displayWidth - (x * 2)).toInt())
-        val _h = imageUtils.relHeight(templateBitmap.height)
-
-        val result: String = imageUtils.performOCROnRegion(
-            sourceBitmap,
+        val bbox = BoundingBox(
             imageUtils.relX(x, 0),
             imageUtils.relY(y, 0),
             imageUtils.relWidth((SharedData.displayWidth - (x * 2)).toInt()),
             imageUtils.relHeight(templateBitmap.height),
+        )
+
+        val text: String = imageUtils.performOCROnRegion(
+            sourceBitmap,
+            bbox.x,
+            bbox.y,
+            bbox.w,
+            bbox.h,
             useThreshold=true,
             useGrayscale=true,
             scale=1.0,
@@ -139,11 +143,35 @@ object DialogUtils {
             debugName="dialogTitle",
         )
 
-        if (result == "") {
+        if (text == "") {
             return null
         }
 
-        return result
+        val match: String? = TextUtils.matchStringInList(text, DialogObjects.items.map { it.title })
+
+        // If title detection failed, attempt to find some known titles
+        // that use a different font (like Trophy Won).
+        if (match == null) {
+            val croppedBitmap: Bitmap? = imageUtils.createSafeBitmap(
+                sourceBitmap,
+                bbox.x,
+                bbox.y,
+                bbox.w,
+                bbox.h,
+                "Dialog::getTitle cropped",
+            )
+            if (croppedBitmap == null) {
+                return null
+            }
+
+            if (LabelTrophyWonDialogTitle.check(imageUtils, sourceBitmap = croppedBitmap)) {
+                return DialogTrophyWon.title
+            }
+
+            return null
+        }
+
+        return match
     }
 
     /** Throws error if the specified dialog is in the [dangerousDialogs] list.
@@ -171,14 +199,8 @@ object DialogUtils {
     fun getDialog(imageUtils: CustomImageUtils, tries: Int = 1): DialogInterface? {
         val title: String = getTitle(imageUtils = imageUtils) ?: return null
 
-        val match: String? = TextUtils.matchStringInList(title, DialogObjects.items.map { it.title })
-        if (match == null) {
-            return null
-        }
-
         // There may be multiple matches for titles since they are not unique.
-        val matches: List<DialogInterface> = DialogObjects.items.filter { it.title == match }
-
+        val matches: List<DialogInterface> = DialogObjects.items.filter { it.title == title }
         if (matches.size == 1) {
             handleDangerousDialogs(matches[0])
             return matches[0]
@@ -336,6 +358,7 @@ object DialogObjects {
         DialogSessionError,                 // Anywhere
         DialogSkillDetails,                 // Anywhere
         DialogSkillListConfirmation,        // Career
+        DialogSkillListConfirmExit,         // Career
         DialogSkillsLearned,                // Career
         DialogSongAcquired,                 // Career
         DialogSparkDetails,                 // Career (legacy uma details)
@@ -1252,6 +1275,18 @@ object DialogSkillListConfirmation : DialogInterface {
     override val buttons: List<ComponentInterface> = listOf(
         ButtonCancel,
         ButtonLearn,
+    )
+}
+
+object DialogSkillListConfirmExit : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogSkillListConfirmExit"
+    override val name: String = "skill_list_confirm_exit"
+    override val title: String = "Confirm"
+    override val closeButton = null
+    override val okButton: ComponentInterface = ButtonOk
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonCancel,
+        ButtonOk,
     )
 }
 

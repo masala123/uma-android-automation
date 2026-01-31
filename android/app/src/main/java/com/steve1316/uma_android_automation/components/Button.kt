@@ -557,6 +557,11 @@ object ButtonRaceListFullStats : ComponentInterface {
     override val template = Template("components/button/race_list_full_stats", region = Region.middle)
 }
 
+object ButtonSkillListFullStats : ComponentInterface {
+    override val TAG: String = "ButtonSkillListFullStats"
+    override val template = Template("components/button/skill_list_full_stats", region = Region.topHalf)
+}
+
 object ButtonHomeFullStats : ComponentInterface {
     override val TAG: String = "[${MainActivity.loggerTag}]ButtonHomeFullStats"
     override val template = Template("components/button/home_full_stats", region = Region.middle)
@@ -600,4 +605,14 @@ object ButtonRaces : ComponentInterface {
 object ButtonHomeFansInfo : ComponentInterface {
     override val TAG: String = "[${MainActivity.loggerTag}]ButtonHomeFansInfo"
     override val template = Template("components/button/home_fans_info", region = Region.leftHalf)
+}
+
+object ButtonSkillUp : ComponentInterface {
+    override val TAG: String = "ButtonSkillUp"
+    override val template = Template("components/button/skill_up", region = Region.rightHalf)
+}
+
+object ButtonSkillDown : ComponentInterface {
+    override val TAG: String = "ButtonSkillDown"
+    override val template = Template("components/button/skill_down", region = Region.rightHalf)
 }

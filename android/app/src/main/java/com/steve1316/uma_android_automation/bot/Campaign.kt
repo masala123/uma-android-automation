@@ -4,6 +4,7 @@ import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.automation_library.utils.SettingsHelper
 import com.steve1316.automation_library.utils.MessageLog
 import com.steve1316.automation_library.utils.BotService
+import com.steve1316.automation_library.data.SharedData
 
 import com.steve1316.uma_android_automation.utils.types.DateYear
 import com.steve1316.uma_android_automation.utils.types.DateMonth
@@ -34,6 +35,15 @@ open class Campaign(val game: Game) {
     // Flag used to prevent us from attempting to check fans multiple times in a day.
     // This helps us avoid infinite loops.
     protected var bHasTriedCheckingFansToday: Boolean = false
+    // Flag for whether we have handled the skill point check conditions
+    // during this run.
+    // This is necessary since the user may have enabled the skill point check
+    // skill spending plan. If their plan ends up not purchasing many skills,
+    // then it is possible that we could get stuck in a loop of hitting the
+    // skill point threshold and attempting to buy skills every single turn.
+    // To resolve this, we only allow the skill point check to be handled
+    // once per run.
+    protected var bHasHandledSkillPointCheck: Boolean = false
 
     // Flag for only checking for maiden races once per day.
     var bHasCheckedForMaidenRaceToday: Boolean = false
@@ -258,6 +268,12 @@ open class Campaign(val game: Game) {
 
         game.wait(0.5, skipWaitingForLoading = true)
         return Pair(true, dialog)
+    }
+
+    fun handleSkillListScreen(skillPlanName: String? = null): Boolean {
+        MessageLog.i(TAG, "Beginning process to purchase skills...")
+
+        return game.skillPlan.start(skillPlanName)
     }
 
     /**
@@ -635,15 +651,40 @@ open class Campaign(val game: Game) {
                 MessageLog.i(TAG, "[TRAINEE] Skills Updated: ${game.trainee.getStatsString()}")
                 MessageLog.i(TAG, "[TRAINEE] Mood Updated: ${game.trainee.mood}")
                 if (game.trainee.bHasUpdatedAptitudes) game.trainee.logInfo()
+
+                // Now check if we need to handle skills before finals.
+                if (game.currentDate.day == 72 && game.skillPlan.skillPlans["preFinals"]?.bIsEnabled ?: false) {
+                    ButtonSkills.click(game.imageUtils)
+                    game.wait(1.0)
+                    if (!handleSkillListScreen()) {
+                        MessageLog.w(TAG, "handleMainScreen:: handleSkillList() for Pre-Finals failed.")
+                    }
+                }
             }
 
             // Mark that we've checked the date this turn.
             bHasCheckedDateThisTurn = true
         }
 
-        // If the required skill points has been reached, stop the bot.
-        if (game.enableSkillPointCheck && game.trainee.skillPoints >= game.skillPointsRequired) {
-            throw InterruptedException("Bot reached skill point check threshold. Stopping bot...")
+        // If we haven't already handled the skill point check this run and
+        // if the required skill points has been reached,
+        // stop the bot or run the skill plan if it is enabled.
+        if (
+            !bHasHandledSkillPointCheck &&
+            game.enableSkillPointCheck &&
+            game.trainee.skillPoints >= game.skillPointsRequired
+        ) {
+            if (game.skillPlan.skillPlans["skillPointCheck"]?.bIsEnabled ?: false) {
+                ButtonSkills.click(game.imageUtils)
+                game.wait(1.0)
+                if (!handleSkillListScreen("skillPointCheck")) {
+                    MessageLog.w(TAG, "handleMainScreen:: handleSkillList() for Skill Point Check failed.")
+                    throw InterruptedException("handleMainScreen:: handleSkillList() for Skill Point Check failed. Stopping bot...")
+                }
+                bHasHandledSkillPointCheck = true
+            } else {
+                throw InterruptedException("Bot reached skill point check threshold. Stopping bot...")
+            }
         }
 
         // Since we're at the main screen, we don't need to worry about this
@@ -817,6 +858,13 @@ open class Campaign(val game: Game) {
                     game.racing.handleStandaloneRace()
                 } else if (game.checkEndScreen()) {
                     // Stop when the bot has reached the screen where it details the overall result of the run.
+                    if (game.skillPlan.skillPlans["careerComplete"]?.bIsEnabled ?: false) {
+                        ButtonCareerEndSkills.click(game.imageUtils)
+                        game.wait(1.0)
+                        if (!handleSkillListScreen()) {
+                            MessageLog.w(TAG, "Career End Screen: handleSkillList() failed.")
+                        }
+                    }
                     throw InterruptedException("Bot had reached end of run. Stopping bot...")
                 } else if (checkCampaignSpecificConditions()) {
                     MessageLog.i(TAG, "Campaign-specific checks complete.")
