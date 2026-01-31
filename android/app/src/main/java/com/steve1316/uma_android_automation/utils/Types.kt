@@ -26,10 +26,8 @@ enum class FanCountClass {
 
     companion object {
         private val nameMap = entries.associateBy { it.name }
-        private val ordinalMap = entries.associateBy { it.ordinal }
 
         fun fromName(value: String): FanCountClass? = nameMap[value.uppercase()]
-        fun fromOrdinal(ordinal: Int): FanCountClass? = ordinalMap[ordinal]
     }
 }
 
@@ -42,10 +40,8 @@ enum class StatName {
 
     companion object {
         private val nameMap = entries.associateBy { it.name }
-        private val ordinalMap = entries.associateBy { it.ordinal }
 
         fun fromName(value: String): StatName? = nameMap[value.uppercase()]
-        fun fromOrdinal(ordinal: Int): StatName? = ordinalMap[ordinal]
     }
 }
 
@@ -61,10 +57,8 @@ enum class Aptitude {
 
     companion object {
         private val nameMap = entries.associateBy { it.name }
-        private val ordinalMap = entries.associateBy { it.ordinal }
 
         fun fromName(value: String): Aptitude? = nameMap[value.uppercase()]
-        fun fromOrdinal(ordinal: Int): Aptitude? = ordinalMap[ordinal]
     }
 }
 
@@ -121,10 +115,8 @@ enum class Mood {
 
     companion object {
         private val nameMap = entries.associateBy { it.name }
-        private val ordinalMap = entries.associateBy { it.ordinal }
 
         fun fromName(value: String): Mood? = nameMap[value.uppercase()]
-        fun fromOrdinal(ordinal: Int): Mood? = ordinalMap[ordinal]
     }
 }
 
@@ -140,10 +132,8 @@ enum class RaceGrade {
 
     companion object {
         private val nameMap = entries.associateBy { it.name }
-        private val ordinalMap = entries.associateBy { it.ordinal }
 
         fun fromName(value: String): RaceGrade? = nameMap[value.uppercase()]
-        fun fromOrdinal(ordinal: Int): RaceGrade? = ordinalMap[ordinal]
     }
 }
 
@@ -195,7 +185,6 @@ enum class DateYear(val longName: String) {
 
         fun fromName(value: String): DateYear? = nameMap[value.uppercase()]
         fun fromOrdinal(ordinal: Int): DateYear? = ordinalMap[ordinal]
-        fun fromLongName(value: String): DateYear? = entries.find { value.uppercase() == it.longName }
     }
 }
 
@@ -246,10 +235,8 @@ enum class SkillType {
 
     companion object {
         private val nameMap = entries.associateBy { it.name }
-        private val ordinalMap = entries.associateBy { it.ordinal }
 
         fun fromName(value: String): SkillType? = nameMap[value.uppercase()]
-        fun fromOrdinal(ordinal: Int): SkillType? = ordinalMap[ordinal]
         fun fromIconId(iconId: Int): SkillType? {
             val digits: String = iconId.toString()
             return when {
@@ -410,10 +397,8 @@ data class SkillData(
 
         companion object {
             private val nameMap = entries.associateBy { it.name }
-            private val ordinalMap = entries.associateBy { it.ordinal }
 
             fun fromName(value: String): Operator? = nameMap[value]
-            fun fromOrdinal(ordinal: Int): Operator? = ordinalMap[ordinal]
             fun fromString(value: String): Operator? = entries.find { value == it.opString }
         }
     }
@@ -607,7 +592,6 @@ data class SkillData(
         val runningStyle: RunningStyle? = calculateRunningStyle()
         val trackDistance: TrackDistance? = calculateTrackDistance()
         val trackSurface: TrackSurface? = calculateTrackSurface()
-        val inferredRunningStyles: List<RunningStyle> = calculateInferredRunningStyles()
 
         companion object {
             fun fromString(input: String): Conditions {
