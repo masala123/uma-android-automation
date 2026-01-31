@@ -53,10 +53,21 @@ import com.steve1316.uma_android_automation.MainActivity
 import com.steve1316.uma_android_automation.utils.CustomImageUtils
 import com.steve1316.uma_android_automation.components.ComponentInterface
 
+import com.steve1316.uma_android_automation.utils.types.BoundingBox
+
 object DialogUtils {
     private val titleGradientTemplates: List<String> = listOf(
         "components/dialog/dialog_title_gradient_0",
         "components/dialog/dialog_title_gradient_1",
+    )
+
+    // If any of these dialogs are ever detected, we want to throw an error
+    // immediately to stop the bot.
+    // These are typically just dialogs that involve IRL money (i.e. carats).
+    // See the `handleDangerousDialogs` function.
+    private val dangerousDialogs: List<DialogInterface> = listOf(
+        DialogAgeConfirmation,
+        DialogPurchaseCarats,
     )
 
     /** Checks if any dialog is on screen.
@@ -101,7 +112,7 @@ object DialogUtils {
             return null
         }
 
-        // If we failed to find the template bitmap, we can't do any calcs.
+        // If we failed to find the template bitmap, we can't do any calculations.
         if (templateBitmap == null) {
             return null
         }
@@ -112,17 +123,19 @@ object DialogUtils {
         val x = titleLocation.x - (templateBitmap.width / 2.0)
         val y = titleLocation.y - (templateBitmap.height / 2.0)
 
-        val _x = imageUtils.relX(x, 0)
-        val _y = imageUtils.relY(y, 0)
-        val _w = imageUtils.relWidth((SharedData.displayWidth - (x * 2)).toInt())
-        val _h = imageUtils.relHeight(templateBitmap.height)
-
-        val result: String = imageUtils.performOCROnRegion(
-            sourceBitmap,
+        val bbox = BoundingBox(
             imageUtils.relX(x, 0),
             imageUtils.relY(y, 0),
             imageUtils.relWidth((SharedData.displayWidth - (x * 2)).toInt()),
             imageUtils.relHeight(templateBitmap.height),
+        )
+
+        val text: String = imageUtils.performOCROnRegion(
+            sourceBitmap,
+            bbox.x,
+            bbox.y,
+            bbox.w,
+            bbox.h,
             useThreshold=true,
             useGrayscale=true,
             scale=1.0,
@@ -130,11 +143,50 @@ object DialogUtils {
             debugName="dialogTitle",
         )
 
-        if (result == "") {
+        if (text == "") {
             return null
         }
 
-        return result
+        val match: String? = TextUtils.matchStringInList(text, DialogObjects.items.map { it.title })
+
+        // If title detection failed, attempt to find some known titles
+        // that use a different font (like Trophy Won).
+        if (match == null) {
+            val croppedBitmap: Bitmap? = imageUtils.createSafeBitmap(
+                sourceBitmap,
+                bbox.x,
+                bbox.y,
+                bbox.w,
+                bbox.h,
+                "Dialog::getTitle cropped",
+            )
+            if (croppedBitmap == null) {
+                return null
+            }
+
+            if (LabelTrophyWonDialogTitle.check(imageUtils, sourceBitmap = croppedBitmap)) {
+                return DialogTrophyWon.title
+            }
+
+            return null
+        }
+
+        return match
+    }
+
+    /** Throws error if the specified dialog is in the [dangerousDialogs] list.
+     *
+     * Some dialogs are dangerous in that they could lead to parts of the game
+     * that involve IRL purchases. This function checks if the passed [dialog]
+     * is in a hardcoded list of dangerous dialogs. If it is, then we throw
+     * an InterruptedException error to immediately stop the bot.
+     *
+     * @param dialog The dialog to check.
+     */
+    private fun handleDangerousDialogs(dialog: DialogInterface) {
+        if (dialog in dangerousDialogs) {
+            throw InterruptedException("Stopping bot due to a dangerous dialog: ${dialog.name}")
+        }
     }
 
     /** Detect and return a DialogInterface on screen.
@@ -147,15 +199,10 @@ object DialogUtils {
     fun getDialog(imageUtils: CustomImageUtils, tries: Int = 1): DialogInterface? {
         val title: String = getTitle(imageUtils = imageUtils) ?: return null
 
-        val match: String? = TextUtils.matchStringInList(title, DialogObjects.items.map { it.title })
-        if (match == null) {
-            return null
-        }
-
         // There may be multiple matches for titles since they are not unique.
-        val matches: List<DialogInterface> = DialogObjects.items.filter { it.title == match }
-
+        val matches: List<DialogInterface> = DialogObjects.items.filter { it.title == title }
         if (matches.size == 1) {
+            handleDangerousDialogs(matches[0])
             return matches[0]
         }
 
@@ -164,6 +211,7 @@ object DialogUtils {
         if (matches.size > 1) {
             for (dialog in matches) {
                 if (dialog.buttons.all { button -> button.check(imageUtils) }) {
+                    handleDangerousDialogs(dialog)
                     return dialog
                 }
             }
@@ -239,6 +287,8 @@ interface DialogInterface {
  */
 object DialogObjects {
     val items: List<DialogInterface> = listOf(
+        DialogAccountLink,                  // Title Screen
+        DialogAgeConfirmation,              // Anywhere (ALWAYS THROW ERROR)
         DialogAgendaDetails,                // Career
         DialogAutoFill,                     // Career (Unity Cup)
         DialogAutoSelect,                   // Career Selection
@@ -262,6 +312,7 @@ object DialogObjects {
         DialogDailySale,                    // Team Trials, Special Events, Daily Races
         DialogDateChanged,                  // Anywhere
         DialogDisplaySettings,              // Anywhere
+        DialogDownloadError,                // Title Screen (only?)
         DialogEpithet,                      // Career End
         DialogEpithets,                     // Career DialogMenu -> Epithets button
         DialogExternalLink,                 // Main Screen
@@ -288,12 +339,14 @@ object DialogObjects {
         DialogPlacing,                      // Career -> DialogTryAgain
         DialogPresents,                     // Main Screen (i think?)
         DialogPurchaseAlarmClock,           // Career
+        DialogPurchaseCarats,               // Anywhere (ALWAYS THROW ERROR)
         DialogPurchaseDailyRaceTicket,      // Daily Races
         DialogQuickModeSettings,            // Career
         DialogRaceDetails,                  // Daily Races, Special Events, and Career
         DialogRacePlayback,                 // Career
         DialogRaceRecommendations,          // Career
         DialogRecreation,                   // Career
+        DialogRegistrationComplete,         // Anywhere
         DialogRequestFulfilled,             // Transfer Requests
         DialogRest,                         // Career
         DialogRestAndRecreation,            // Career
@@ -305,6 +358,7 @@ object DialogObjects {
         DialogSessionError,                 // Anywhere
         DialogSkillDetails,                 // Anywhere
         DialogSkillListConfirmation,        // Career
+        DialogSkillListConfirmExit,         // Career
         DialogSkillsLearned,                // Career
         DialogSongAcquired,                 // Career
         DialogSparkDetails,                 // Career (legacy uma details)
@@ -330,6 +384,37 @@ object DialogObjects {
 // =========================
 //      DIALOG OBJECTS
 // =========================
+
+/**
+ * This dialog also has an "Account Link" button, but we never want to allow
+ * the bot to click that, so we won't add it.
+ */
+object DialogAccountLink : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogAccountLink"
+    override val name: String = "account_link"
+    override val title: String = "Account Link"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonLater,
+    )
+}
+
+/**
+ * This dialog has two different OK buttons: ButtonEnter and ButtonOk.
+ * However since we never want to handle those buttons, we won't even
+ * add them in here.
+ */
+object DialogAgeConfirmation : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogAgeConfirmation"
+    override val name: String = "age_confirmation"
+    override val title: String = "Age Confirmation"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonCancel,
+    )
+}
 
 object DialogAgendaDetails : DialogInterface {
     override val TAG: String = "[${MainActivity.loggerTag}]DialogAgendaDetails"
@@ -598,6 +683,18 @@ object DialogDisplaySettings : DialogInterface {
     override val buttons: List<ComponentInterface> = listOf(
         ButtonCancel,
         ButtonOk,
+    )
+}
+
+object DialogDownloadError : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogDownloadError"
+    override val name: String = "download_error"
+    override val title: String = "Download Error"
+    override val closeButton = null
+    override val okButton: ComponentInterface = ButtonRetry
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonTitleScreen,
+        ButtonRetry,
     )
 }
 
@@ -914,15 +1011,34 @@ object DialogPresents : DialogInterface {
     )
 }
 
+/**
+ * If the player has 0 carats, then this dialog shows a "Purchase Carats"
+ * button instead of ButtonOk. We don't even want to humor this as an option,
+ * so that button will not be added.
+ *
+ * The other, less scary option is it will have a ButtonOk button which will
+ * attempt to buy a clock using carats. Again, we don't want to even give the
+ * bot a chance to do this, so we just won't even add that button in here.
+ */
 object DialogPurchaseAlarmClock : DialogInterface {
     override val TAG: String = "[${MainActivity.loggerTag}]DialogPurchaseAlarmClock"
     override val name: String = "purchase_alarm_clock"
     override val title: String = "Purchase Alarm Clock"
     override val closeButton = null
-    override val okButton: ComponentInterface = ButtonOk
+    override val okButton = null
     override val buttons: List<ComponentInterface> = listOf(
         ButtonCancel,
-        ButtonOk,
+    )
+}
+
+object DialogPurchaseCarats : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogPurchaseCarats"
+    override val name: String = "purchase_carats"
+    override val title: String = "Purchase Carats"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
     )
 }
 
@@ -1020,6 +1136,17 @@ object DialogRecreation : DialogInterface {
         ButtonCancel,
         ButtonOk,
         Checkbox,
+    )
+}
+
+object DialogRegistrationComplete : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogRegistrationComplete"
+    override val name: String = "registration_complete"
+    override val title: String = "Registration Complete"
+    override val closeButton = null
+    override val okButton = null
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonClose,
     )
 }
 
@@ -1148,6 +1275,18 @@ object DialogSkillListConfirmation : DialogInterface {
     override val buttons: List<ComponentInterface> = listOf(
         ButtonCancel,
         ButtonLearn,
+    )
+}
+
+object DialogSkillListConfirmExit : DialogInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]DialogSkillListConfirmExit"
+    override val name: String = "skill_list_confirm_exit"
+    override val title: String = "Confirm"
+    override val closeButton = null
+    override val okButton: ComponentInterface = ButtonOk
+    override val buttons: List<ComponentInterface> = listOf(
+        ButtonCancel,
+        ButtonOk,
     )
 }
 
