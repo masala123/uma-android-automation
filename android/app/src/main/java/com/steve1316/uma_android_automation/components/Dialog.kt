@@ -114,7 +114,7 @@ object DialogUtils {
         val x = titleLocation.x - (templateBitmap.width / 2.0)
         val y = titleLocation.y - (templateBitmap.height / 2.0)
 
-        val bbox: BoundingBox = BoundingBox(
+        val bbox = BoundingBox(
             imageUtils.relX(x, 0),
             imageUtils.relY(y, 0),
             imageUtils.relWidth((SharedData.displayWidth - (x * 2)).toInt()),
