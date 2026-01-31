@@ -112,17 +112,17 @@ object DialogUtils {
         val x = titleLocation.x - (templateBitmap.width / 2.0)
         val y = titleLocation.y - (templateBitmap.height / 2.0)
 
-        val _x = imageUtils.relX(x, 0)
-        val _y = imageUtils.relY(y, 0)
-        val _w = imageUtils.relWidth((SharedData.displayWidth - (x * 2)).toInt())
-        val _h = imageUtils.relHeight(templateBitmap.height)
+        val relativeX = imageUtils.relX(x, 0)
+        val relativeY = imageUtils.relY(y, 0)
+        val relativeWidth = imageUtils.relWidth((SharedData.displayWidth - (x * 2)).toInt())
+        val relativeHeight = imageUtils.relHeight(templateBitmap.height)
 
         val result: String = imageUtils.performOCROnRegion(
             sourceBitmap,
-            imageUtils.relX(x, 0),
-            imageUtils.relY(y, 0),
-            imageUtils.relWidth((SharedData.displayWidth - (x * 2)).toInt()),
-            imageUtils.relHeight(templateBitmap.height),
+            relativeX,
+            relativeY,
+            relativeWidth,
+            relativeHeight,
             useThreshold=true,
             useGrayscale=true,
             scale=1.0,
