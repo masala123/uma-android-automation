@@ -159,6 +159,11 @@ object ButtonSpecialMissionsTabSpecial : ComponentInterface {
     override val template = Template("components/button/special_missions_tab_special")
 }
 
+object ButtonLater : ComponentInterface {
+    override val TAG: String = "[${MainActivity.loggerTag}]ButtonLater"
+    override val template = Template("components/button/later")
+}
+
 object ButtonLegendRace : ComponentInterface {
     override val TAG: String = "[${MainActivity.loggerTag}]ButtonLegendRace"
     override val template = Template("components/button/legend_race")
