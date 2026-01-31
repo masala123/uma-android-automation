@@ -630,13 +630,16 @@ data class SkillData(
         }
 
         /**
-         * NOTE: Not currently working due to gametora's seemingly inaccurate
+         * NOTE: Not currently working due to GameTora's seemingly inaccurate
          * conditions. Too many conditions cause overlapping running styles that
          * don't make any sense. For example they have some data that defines
          * "toward the back" as being any lower than 5th place which doesn't make
          * any sense in larger fields. Other things conflict as well so I'm not sure
          * if many of the positional conditions are accurate.
+         *
+         * @return A distinct list of inferred running styles based on positional conditions.
          */
+        @Deprecated("Not currently working due to GameTora's seemingly inaccurate conditions.")
         private fun calculateInferredRunningStyles(): List<RunningStyle> {
             val result: MutableList<RunningStyle> = mutableListOf()
             if (bIsLeading) {
