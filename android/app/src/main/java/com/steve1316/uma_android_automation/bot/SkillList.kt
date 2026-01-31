@@ -810,7 +810,7 @@ class SkillList (private val game: Game) {
 
         // Combine the sets of locations and sort by their height on the screen.
         val points = skillUpLocs.plus(obtainedPillLocs).sortedBy { it.second.y }
-        var i: Int = 0
+        var i = 0
         for ((index, pair) in points.withIndex()) {
             val (pointType, point) = pair
             // Calculate the bounding box for the skill info relative to
@@ -902,7 +902,7 @@ class SkillList (private val game: Game) {
 
         // Combine the sets of locations and sort by their height on the screen.
         val points = skillUpLocs.plus(obtainedPillLocs).sortedBy { it.second.y }
-        var i: Int = 0
+        var i = 0
         for ((index, pair) in points.withIndex()) {
             val (pointType, point) = pair
             // Calculate the bounding box for the skill info relative to
@@ -1044,7 +1044,7 @@ class SkillList (private val game: Game) {
             return parseMockSkillListEntries()
         }
 
-        iterateOverSkillList() { _, entry: SkillListEntry, point: Point ->
+        iterateOverSkillList { _, entry: SkillListEntry, point: Point ->
             // Bubble the event up.
             if (onEntry != null) onEntry(this, entry, point) else false
         }

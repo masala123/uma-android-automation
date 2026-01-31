@@ -75,10 +75,7 @@ class SkillDatabase (private val game: Game) {
             MessageLog.e(TAG, "[ERROR] Database not available.")
             return emptyMap()
         }
-        val database = settingsManager.getDatabase()
-        if (database == null) {
-            return emptyMap()
-        }
+        val database = settingsManager.getDatabase() ?: return emptyMap()
 
         try {
             val result: MutableMap<String, SkillData> = mutableMapOf()
@@ -104,7 +101,7 @@ class SkillDatabase (private val game: Game) {
                         val upgradeIndex: Int = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_UPGRADE)
                         val downgradeIndex: Int = cursor.getColumnIndexOrThrow(SKILLS_COLUMN_DOWNGRADE)
 
-                        val skillData: SkillData = SkillData(
+                        val skillData = SkillData(
                             id = it.getInt(idIndex),
                             name = it.getString(nameIndex),
                             description = it.getString(descriptionIndex),
@@ -177,7 +174,7 @@ class SkillDatabase (private val game: Game) {
             // Combine the version names, including this one, in order.
             val orderedNames: List<String> = downgradeNames + name + upgradeNames
             // We don't want to add anything if it is already in the structure.
-            // The first occurence of any skill in a skill's upgrade chain
+            // The first occurrence of any skill in a skill's upgrade chain
             // will populate all entries for that chain in the structure.
             if (orderedNames.any { it in result }) {
                 continue
@@ -261,10 +258,7 @@ class SkillDatabase (private val game: Game) {
     fun getSkillData(names: List<String>): List<SkillData>? {
         val res: MutableList<SkillData> = mutableListOf()
         for (name in names) {
-            val skillData: SkillData? = getSkillData(name)
-            if (skillData == null) {
-                return null
-            }
+            val skillData: SkillData = getSkillData(name) ?: return null
             res.add(skillData)
         }
         return res.toList()

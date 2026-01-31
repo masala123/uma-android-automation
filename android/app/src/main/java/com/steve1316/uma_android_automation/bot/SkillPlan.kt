@@ -228,12 +228,9 @@ class SkillPlan (private val game: Game) {
 
             // If no downgraded versions exist in our skill list, skip this
             // entry since we won't be able to buy it.
-            val availableEntry: SkillListEntry? = entry.getFirstAvailableDowngrade()
-            if (availableEntry == null) {
-                continue
-            }
+            val availableEntry: SkillListEntry = entry.getFirstAvailableDowngrade() ?: continue
 
-            // Otherwise if there IS a downgraded verison in the skill list, then
+            // Otherwise if there IS a downgraded version in the skill list, then
             // we need to purchase it for the planned skill to become available.
 
             // Get all skill entries from the available entry to the one from
@@ -410,8 +407,8 @@ class SkillPlan (private val game: Game) {
         // of the loop until we run out of affordable skills.
 
         // Infinite loop protection.
-        val maxIterations: Int = 10
-        var i: Int = 0
+        val maxIterations = 10
+        var i = 0
         var remainingSkills: Map<String, SkillListEntry> = getFilteredSkills(remainingSkillPoints)
         while (remainingSkills.any { it.value.screenPrice <= remainingSkillPoints}) {
             MessageLog.v(TAG, "\nChecking skills. Iteration #$i.\n")
@@ -439,7 +436,7 @@ class SkillPlan (private val game: Game) {
                         continue
                     }
 
-                    // If this skill isnt an in-place upgrade and we have already
+                    // If this skill isn't an in-place upgrade and we have already
                     // added its upgraded version to the list, then don't add it.
                     if (!entry.bIsAvailable) {
                         continue
@@ -505,8 +502,8 @@ class SkillPlan (private val game: Game) {
         // of the loop until we run out of affordable skills.
 
         // Infinite loop protection.
-        val maxIterations: Int = 10
-        var i: Int = 0 
+        val maxIterations = 10
+        var i = 0
         var remainingSkills: Map<String, SkillListEntry> = skillList.getAvailableSkills()
         while (remainingSkills.any { it.value.screenPrice <= remainingSkillPoints}) {
             MessageLog.v(TAG, "\nChecking skills. Iteration #$i.\n")
@@ -679,7 +676,7 @@ class SkillPlan (private val game: Game) {
     fun start(skillPlanName: String? = null): Boolean {
         val bitmap: Bitmap = game.imageUtils.getSourceBitmap()
 
-        val skillList: SkillList = SkillList(game)
+        val skillList = SkillList(game)
 
         // Verify that we are at the skill list screen.
         val bIsCareerComplete: Boolean = skillList.checkCareerCompleteSkillListScreen(bitmap)
@@ -768,7 +765,7 @@ class SkillPlan (private val game: Game) {
         skillList.sellAllSkills()
 
         // Go back through skill list and purchase skills.
-        skillList.parseSkillListEntries() { skillList: SkillList, entry: SkillListEntry, point: Point ->
+        skillList.parseSkillListEntries { skillList: SkillList, entry: SkillListEntry, point: Point ->
             onSkillListEntryDetected(
                 entry = entry,
                 point = point,

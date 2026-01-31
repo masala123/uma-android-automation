@@ -549,7 +549,7 @@ class SkillListEntry(
         }
 
         val downgrades: List<SkillListEntry> = getDowngrades()
-        var foundMatch: Boolean = false
+        var foundMatch = false
         for (entry in downgrades.reversed()) {
             result.add(entry)
             if (entry.name == name) {
@@ -615,7 +615,7 @@ class SkillListEntry(
         }
 
         val upgrades: List<SkillListEntry> = getUpgrades()
-        var foundMatch: Boolean = false
+        var foundMatch = false
         for (entry in upgrades) {
             result.add(entry)
             if (entry.name == lastName) {
