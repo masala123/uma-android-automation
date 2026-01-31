@@ -1451,7 +1451,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		// Check if any side-effect stat has a higher gain than the main stat.
 		val maxSideEffectGain: Int = sideEffectStatGains.maxOfOrNull { it.value } ?: 0
 		
-		if (mainStatGain > 0 && maxSideEffectGain > mainStatGain) {
+		if (mainStatGain in 1..<maxSideEffectGain) {
 			// Set main stat to be 10 points higher than the highest side-effect stat.
 			val originalGain = boostedResults[trainingName]
 			boostedResults[trainingName] = maxSideEffectGain + 10
@@ -2041,7 +2041,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         val colorPixels = Core.countNonZero(colorMask)
         val totalPixels = grayPixels + colorPixels
 
-        var fillPercent: Double = 0.0
+        var fillPercent = 0.0
         if (totalPixels > 0) {
             fillPercent = (colorPixels.toDouble() / totalPixels.toDouble()) * 100.0
         }

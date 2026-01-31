@@ -26,10 +26,8 @@ enum class FanCountClass {
 
     companion object {
         private val nameMap = entries.associateBy { it.name }
-        private val ordinalMap = entries.associateBy { it.ordinal }
 
         fun fromName(value: String): FanCountClass? = nameMap[value.uppercase()]
-        fun fromOrdinal(ordinal: Int): FanCountClass? = ordinalMap[ordinal]
     }
 }
 
@@ -42,10 +40,8 @@ enum class StatName {
 
     companion object {
         private val nameMap = entries.associateBy { it.name }
-        private val ordinalMap = entries.associateBy { it.ordinal }
 
         fun fromName(value: String): StatName? = nameMap[value.uppercase()]
-        fun fromOrdinal(ordinal: Int): StatName? = ordinalMap[ordinal]
     }
 }
 
@@ -61,10 +57,8 @@ enum class Aptitude {
 
     companion object {
         private val nameMap = entries.associateBy { it.name }
-        private val ordinalMap = entries.associateBy { it.ordinal }
 
         fun fromName(value: String): Aptitude? = nameMap[value.uppercase()]
-        fun fromOrdinal(ordinal: Int): Aptitude? = ordinalMap[ordinal]
     }
 }
 
@@ -121,10 +115,8 @@ enum class Mood {
 
     companion object {
         private val nameMap = entries.associateBy { it.name }
-        private val ordinalMap = entries.associateBy { it.ordinal }
 
         fun fromName(value: String): Mood? = nameMap[value.uppercase()]
-        fun fromOrdinal(ordinal: Int): Mood? = ordinalMap[ordinal]
     }
 }
 
@@ -140,10 +132,8 @@ enum class RaceGrade {
 
     companion object {
         private val nameMap = entries.associateBy { it.name }
-        private val ordinalMap = entries.associateBy { it.ordinal }
 
         fun fromName(value: String): RaceGrade? = nameMap[value.uppercase()]
-        fun fromOrdinal(ordinal: Int): RaceGrade? = ordinalMap[ordinal]
     }
 }
 
@@ -195,7 +185,6 @@ enum class DateYear(val longName: String) {
 
         fun fromName(value: String): DateYear? = nameMap[value.uppercase()]
         fun fromOrdinal(ordinal: Int): DateYear? = ordinalMap[ordinal]
-        fun fromLongName(value: String): DateYear? = entries.find { value.uppercase() == it.longName }
     }
 }
 
@@ -214,10 +203,10 @@ enum class DateYear(val longName: String) {
  */
 data class BoundingBox(val x: Int, val y: Int, val w: Int, val h: Int) {
     val cx: Int
-        get() = (x + (w / 2)).toInt()
+        get() = (x + (w / 2))
     
     val cy: Int
-        get() = (y + (h / 2)).toInt()
+        get() = (y + (h / 2))
 
     val center: Pair<Int, Int>
         get() = Pair(cx, cy)
@@ -246,10 +235,8 @@ enum class SkillType {
 
     companion object {
         private val nameMap = entries.associateBy { it.name }
-        private val ordinalMap = entries.associateBy { it.ordinal }
 
         fun fromName(value: String): SkillType? = nameMap[value.uppercase()]
-        fun fromOrdinal(ordinal: Int): SkillType? = ordinalMap[ordinal]
         fun fromIconId(iconId: Int): SkillType? {
             val digits: String = iconId.toString()
             return when {
@@ -293,7 +280,7 @@ enum class SkillCommunityTier {
  * This is calculated using the Icon ID. If the last digit is a 3, then it is unique.
  * @property bIsNegative Whether this skill is considered a negative skill.
  * This is calculated using the Icon ID. If the last digit is a 4, then it is negative.
- * @proprty type The type of this skill (i.e. Green, Blue, Red, Yellow).
+ * @property type The type of this skill (i.e. Green, Blue, Red, Yellow).
  * @property bIsInPlace Whether this skill chain has an in-place upgrade system.
  * Only certain types of skills can have in-place upgrades:
  *      Negative Skills (purple)
@@ -395,9 +382,7 @@ data class SkillData(
             .replace("[", "")
             .replace("]", "")
             .split(",")
-            .filter { it.isNotEmpty() }
-            .map { it.trim().toInt() }
-            .filterNotNull(),
+            .filter { it.isNotEmpty() }.map { it.trim().toInt() },
         upgrade,
         downgrade,
     )
@@ -412,10 +397,8 @@ data class SkillData(
 
         companion object {
             private val nameMap = entries.associateBy { it.name }
-            private val ordinalMap = entries.associateBy { it.ordinal }
 
             fun fromName(value: String): Operator? = nameMap[value]
-            fun fromOrdinal(ordinal: Int): Operator? = ordinalMap[ordinal]
             fun fromString(value: String): Operator? = entries.find { value == it.opString }
         }
     }
@@ -434,7 +417,7 @@ data class SkillData(
         val value: Int,
     ) {
         companion object {
-            /** Parses a single condition string and splits it into its three consituent parts.
+            /** Parses a single condition string and splits it into its three parts.
              *
              * For example, the string "order==1" will be split into "order", "==", and 1.
              *
@@ -447,7 +430,7 @@ data class SkillData(
                 // (\\s*\\S+?): Captures the left operand (non-whitespace characters, non-greedy, with optional surrounding whitespace).
                 // (==|!=|>=|<=|>|<): Captures the operator from a set of possible conditional operators.
                 // (\\s*\\S+): Captures the right operand (non-whitespace characters, with optional surrounding whitespace).
-                val pattern = "(\\s*\\S+?) *(==|!=|>=|<=|>|\\<) *(\\S+)\\s*".toRegex()
+                val pattern = "(\\s*\\S+?) *(==|!=|>=|<=|>|<) *(\\S+)\\s*".toRegex()
                 val matchResult = pattern.find(input.trim())
                 if (matchResult != null && matchResult.groupValues.size == 4) {
                     // groupValues[0] is the whole match.
@@ -471,10 +454,10 @@ data class SkillData(
          * @return Whether this condition matches the passed parameters.
          */
         fun check(name: String? = null, op: Operator, value: Int): Boolean {
-            if (name != null) {
-                return this.name == name && this.op == op && this.value == value
+            return if (name != null) {
+                this.name == name && this.op == op && this.value == value
             } else {
-                return this.op == op && this.value == value
+                this.op == op && this.value == value
             }
         }
 
@@ -609,11 +592,10 @@ data class SkillData(
         val runningStyle: RunningStyle? = calculateRunningStyle()
         val trackDistance: TrackDistance? = calculateTrackDistance()
         val trackSurface: TrackSurface? = calculateTrackSurface()
-        val inferredRunningStyles: List<RunningStyle> = calculateInferredRunningStyles()
 
         companion object {
             fun fromString(input: String): Conditions {
-                return Conditions(input.split("@").mapNotNull { ConditionGroup.fromString(it) })
+                return Conditions(input.split("@").map { ConditionGroup.fromString(it) })
             }
         }
 
@@ -648,13 +630,16 @@ data class SkillData(
         }
 
         /**
-         * NOTE: Not currently working due to gametora's seemingly inaccurate
+         * NOTE: Not currently working due to GameTora's seemingly inaccurate
          * conditions. Too many conditions cause overlapping running styles that
          * don't make any sense. For example they have some data that defines
          * "toward the back" as being any lower than 5th place which doesn't make
          * any sense in larger fields. Other things conflict as well so I'm not sure
          * if many of the positional conditions are accurate.
+         *
+         * @return A distinct list of inferred running styles based on positional conditions.
          */
+        @Deprecated("Not currently working due to GameTora's seemingly inaccurate conditions.")
         private fun calculateInferredRunningStyles(): List<RunningStyle> {
             val result: MutableList<RunningStyle> = mutableListOf()
             if (bIsLeading) {

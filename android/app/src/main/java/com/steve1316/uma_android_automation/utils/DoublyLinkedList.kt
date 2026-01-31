@@ -72,7 +72,7 @@ open class DoublyLinkedList<T> {
 
     fun findIndex(value: T): Int? {
         var curr = head
-        var i: Int = 0
+        var i = 0
         while (curr != null) {
             if (curr.value == value) {
                 return i
