@@ -214,10 +214,10 @@ enum class DateYear(val longName: String) {
  */
 data class BoundingBox(val x: Int, val y: Int, val w: Int, val h: Int) {
     val cx: Int
-        get() = (x + (w / 2)).toInt()
+        get() = (x + (w / 2))
     
     val cy: Int
-        get() = (y + (h / 2)).toInt()
+        get() = (y + (h / 2))
 
     val center: Pair<Int, Int>
         get() = Pair(cx, cy)
