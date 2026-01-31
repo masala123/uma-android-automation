@@ -199,7 +199,14 @@ def calculate_turn_number(date_string: str) -> int:
     return turn_number
 
 
-def download_image(url, out_fp):
+def download_image(url: str, out_fp: str):
+    """
+    Downloads an image from the given URL and saves it to the specified file path.
+
+    Args:
+        url (str): The URL of the image to download.
+        out_fp (str): The file path to save the downloaded image to.
+    """
     try:
         response = requests.get(url)
         response.raise_for_status()
@@ -307,7 +314,16 @@ class BaseScraper:
                 logging.info("No cookie consent button found.")
                 self.cookie_accepted = True
 
-    def handle_ad_banner(self, driver: webdriver.Chrome, skip=False):
+    def handle_ad_banner(self, driver: webdriver.Chrome, skip: bool = False):
+        """Handles the ad banner.
+
+        Args:
+            driver (webdriver.Chrome): The Chrome driver.
+            skip (bool, optional): Whether to skip the ad banner. Defaults to False.
+
+        Returns:
+            Whether the ad banner was dismissed.
+        """
         if not skip:
             try:
                 ad_banner_button = driver.find_element(By.XPATH, "//div[contains(@class, 'publift-widget-sticky_footer-button')]")
@@ -469,16 +485,19 @@ class SkillScraper(BaseScraper):
     def __init__(self):
         super().__init__("https://gametora.com/umamusume/skills", "skills.json")
 
-    """ Scrapes skill Evaluation Points from the umamusume wiki.
-
-    Evaluation Points affect the result rank of a trainee.
-    Unsure whether the evaluation points are 1:1 with the rank gained or if they
-    are just a factor of the rank calculation.
-
-    We also scrape the evaluation point ratio which is just the ratio
-    of evaluation points to the base cost of the skill.
-    """
     def scrape_skill_evaluation_points(self):
+        """Scrapes skill Evaluation Points from the umamusume wiki.
+
+        Evaluation Points affect the result rank of a trainee.
+        Unsure whether the evaluation points are 1:1 with the rank gained or if they
+        are just a factor of the rank calculation.
+
+        We also scrape the evaluation point ratio which is just the ratio
+        of evaluation points to the base cost of the skill.
+
+        Returns:
+            The skill evaluation points as a dictionary mapping skill ID to evaluation points.
+        """
         driver = create_chromedriver()
         driver.get("https://umamusu.wiki/Game:List_of_Skills")
         data = {}
@@ -504,18 +523,21 @@ class SkillScraper(BaseScraper):
 
         driver.quit()
         return data
-    
-    """ Scrapes Game8's skill tier list.
 
-    Game8's tier list is split across four different tables (SS, S, A, and B).
-    Since they don't use any unique IDs for the tables, we instead use the headers
-    before each table to determine which rank is associated with each table.
-    See `h4_tier_map` for the mapping of header to tier.
-
-    There are other tier lists out there but this site seems like it isn't
-    going anywhere so it makes it relatively stable for scraping.
-    """
     def scrape_skill_tier_list(self):
+        """Scrapes Game8's skill tier list.
+
+        Game8's tier list is split across four different tables (SS, S, A, and B).
+        Since they don't use any unique IDs for the tables, we instead use the headers
+        before each table to determine which rank is associated with each table.
+        See `h4_tier_map` for the mapping of header to tier.
+
+        There are other tier lists out there but this site seems like it isn't
+        going anywhere so it makes it relatively stable for scraping.
+
+        Returns:
+            The tier list of skills as a dictionary mapping skill name to tier.
+        """
         driver = create_chromedriver()
         driver.get("https://game8.co/games/Umamusume-Pretty-Derby/archives/536805")
 
@@ -663,81 +685,84 @@ class SkillScraper(BaseScraper):
         # Then we return it as a dictionary.
         skill_data = driver.execute_script("let tmp = { exports: null }; window.webpackChunk_N_E.find(arr => arr[0][0] == 4318)[1][60930](tmp); return tmp.exports")
         
-        """ Gets the activation condition/precondition string for a skill.
+        def get_skill_activation_conditions(s, get_preconditions = False):
+            """ Gets the activation condition/precondition string for a skill.
 
-        `skill_data` is a very complex and deeply nested JSON object.
-        For each skill entry in this JSON, we need to extract the conditions
-        and preconditions string values. However, these can be in one of a few places.
+            `skill_data` is a very complex and deeply nested JSON object.
+            For each skill entry in this JSON, we need to extract the conditions
+            and preconditions string values. However, these can be in one of a few places.
 
-        The following is one of the more complex examples from the data:
+            The following is one of the more complex examples from the data:
 
-        {
-            "name_en": "Arrows Whistle, Shadows Disperse",
-            "condition_groups": [
-                {
-                    "condition": "is_finalcorner==1",
-                    "precondition": "phase>=2&order_rate<=50&overtake_target_time>=2",
-                }
-            ],
-            "gene_version": {
+            {
+                "name_en": "Arrows Whistle, Shadows Disperse",
                 "condition_groups": [
                     {
                         "condition": "is_finalcorner==1",
                         "precondition": "phase>=2&order_rate<=50&overtake_target_time>=2",
                     }
                 ],
-            },
-            "loc": {
-                "en": {     // Global version
+                "gene_version": {
                     "condition_groups": [
                         {
-                            "condition": "is_finalcorner==1&order_rate<=40&overtake_target_time>=2",
+                            "condition": "is_finalcorner==1",
+                            "precondition": "phase>=2&order_rate<=50&overtake_target_time>=2",
                         }
                     ],
-                    "gene_version": {
+                },
+                "loc": {
+                    "en": {     // Global version
                         "condition_groups": [
                             {
                                 "condition": "is_finalcorner==1&order_rate<=40&overtake_target_time>=2",
                             }
-                        ]
+                        ],
+                        "gene_version": {
+                            "condition_groups": [
+                                {
+                                    "condition": "is_finalcorner==1&order_rate<=40&overtake_target_time>=2",
+                                }
+                            ]
+                        }
                     }
                 }
             }
-        }
 
-        In this example, we have a unique skill. Since this is a unique skill,
-        it has properties called "gene_version". The "gene_version" is the inherited
-        version that can be purchased when inherited from legacy umamusume.
+            In this example, we have a unique skill. Since this is a unique skill,
+            it has properties called "gene_version". The "gene_version" is the inherited
+            version that can be purchased when inherited from legacy umamusume.
 
-        If a skill has a gene_version, then we always want to use that data since
-        the non-inherited version can't be purchased.
+            If a skill has a gene_version, then we always want to use that data since
+            the non-inherited version can't be purchased.
 
-        However, in these entries we also have the "loc" property. This is the
-        localization (i.e. JP, KO, Global). These localizations may be on different
-        patches and thus may have different values. So we want to make sure to use
-        the Global (en) localization.
+            However, in these entries we also have the "loc" property. This is the
+            localization (i.e. JP, KO, Global). These localizations may be on different
+            patches and thus may have different values. So we want to make sure to use
+            the Global (en) localization.
 
-        Then within the localization, we can extract our "condition" string.
-        Take note that the "precondition" field is not in the localization.
-        Not every entry contains all of these structures so we have to combine
-        data across the existing fields to get everything we need.
+            Then within the localization, we can extract our "condition" string.
+            Take note that the "precondition" field is not in the localization.
+            Not every entry contains all of these structures so we have to combine
+            data across the existing fields to get everything we need.
 
-        To do this, we try to get data using the following priority order:
-        1) loc -> en -> gene_version -> condition_groups -> condition/precondition
-        2) loc -> en -> condition_groups -> condition/precondition
-        3) gene_version -> condition_groups -> condition/precondition
-        4) condition_groups -> condition/precondition
+            To do this, we try to get data using the following priority order:
+            1) loc -> en -> gene_version -> condition_groups -> condition/precondition
+            2) loc -> en -> condition_groups -> condition/precondition
+            3) gene_version -> condition_groups -> condition/precondition
+            4) condition_groups -> condition/precondition
 
-        To sum up, we just need to get the most accurate data possible for the
-        global release by combining the best data we can extract from the entry.
-        Not every entry has all these fields so we just take what we can get.
+            To sum up, we just need to get the most accurate data possible for the
+            global release by combining the best data we can extract from the entry.
+            Not every entry has all these fields so we just take what we can get.
 
-        Args:
-            s (dict) A single entry from skill_data. This is a complex nested dict.
-            get_preconditions (boolean) Whether to get the "preconditions" entry
-                instead of the "conditions" entry.
-        """
-        def get_skill_activation_conditions(s, get_preconditions = False):
+            Args:
+                s (dict) A single entry from skill_data. This is a complex nested dict.
+                get_preconditions (boolean) Whether to get the "preconditions" entry
+                    instead of the "conditions" entry.
+
+            Returns:
+                The condition string.
+            """
             # Prioritize getting the english version of the condition group since it
             # should be the current global patch data.
             # Always try the gene_version first.
