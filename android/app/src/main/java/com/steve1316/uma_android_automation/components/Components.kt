@@ -230,7 +230,7 @@ interface ComponentInterface: BaseComponentInterface {
     }
 
     fun findAllWithBitmap(imageUtils: CustomImageUtils, sourceBitmap: Bitmap, region: IntArray? = null, confidence: Double? = null): ArrayList<Point> {
-        return imageUtils.findAllWithBitmap(template.path, sourceBitmap = sourceBitmap, region = region ?: template.region, customConfidence = (confidence ?: template.confidence) ?: 0.0)
+        return imageUtils.findAllWithBitmap(template.path, sourceBitmap = sourceBitmap, region = region ?: template.region, customConfidence = (confidence ?: template.confidence))
     }
 
     override fun check(
@@ -265,16 +265,15 @@ interface ComponentInterface: BaseComponentInterface {
         taps: Int,
         confidence: Double?,
     ): Boolean {
-        var point: Point? = null
-        if (sourceBitmap == null) {
-            point = find(
+        val point = if (sourceBitmap == null) {
+            find(
                 imageUtils = imageUtils,
                 region = region ?: template.region,
                 tries = tries,
                 confidence = confidence ?: template.confidence,
             ).first ?: return false
         } else {
-            point = findImageWithBitmap(
+            findImageWithBitmap(
                 imageUtils = imageUtils,
                 region = region ?: template.region,
                 sourceBitmap = sourceBitmap,

@@ -101,7 +101,7 @@ object DialogUtils {
             return null
         }
 
-        // If we failed to find the template bitmap, we can't do any calcs.
+        // If we failed to find the template bitmap, we can't do any calculations.
         if (templateBitmap == null) {
             return null
         }

@@ -395,9 +395,7 @@ data class SkillData(
             .replace("[", "")
             .replace("]", "")
             .split(",")
-            .filter { it.isNotEmpty() }
-            .map { it.trim().toInt() }
-            .filterNotNull(),
+            .filter { it.isNotEmpty() }.map { it.trim().toInt() },
         upgrade,
         downgrade,
     )
@@ -447,7 +445,7 @@ data class SkillData(
                 // (\\s*\\S+?): Captures the left operand (non-whitespace characters, non-greedy, with optional surrounding whitespace).
                 // (==|!=|>=|<=|>|<): Captures the operator from a set of possible conditional operators.
                 // (\\s*\\S+): Captures the right operand (non-whitespace characters, with optional surrounding whitespace).
-                val pattern = "(\\s*\\S+?) *(==|!=|>=|<=|>|\\<) *(\\S+)\\s*".toRegex()
+                val pattern = "(\\s*\\S+?) *(==|!=|>=|<=|>|<) *(\\S+)\\s*".toRegex()
                 val matchResult = pattern.find(input.trim())
                 if (matchResult != null && matchResult.groupValues.size == 4) {
                     // groupValues[0] is the whole match.
@@ -471,10 +469,10 @@ data class SkillData(
          * @return Whether this condition matches the passed parameters.
          */
         fun check(name: String? = null, op: Operator, value: Int): Boolean {
-            if (name != null) {
-                return this.name == name && this.op == op && this.value == value
+            return if (name != null) {
+                this.name == name && this.op == op && this.value == value
             } else {
-                return this.op == op && this.value == value
+                this.op == op && this.value == value
             }
         }
 
@@ -613,7 +611,7 @@ data class SkillData(
 
         companion object {
             fun fromString(input: String): Conditions {
-                return Conditions(input.split("@").mapNotNull { ConditionGroup.fromString(it) })
+                return Conditions(input.split("@").map { ConditionGroup.fromString(it) })
             }
         }
 
