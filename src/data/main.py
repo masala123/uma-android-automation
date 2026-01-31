@@ -685,7 +685,7 @@ class SkillScraper(BaseScraper):
         # Then we return it as a dictionary.
         skill_data = driver.execute_script("let tmp = { exports: null }; window.webpackChunk_N_E.find(arr => arr[0][0] == 4318)[1][60930](tmp); return tmp.exports")
         
-        def get_skill_activation_conditions(s, get_preconditions = False):
+        def get_skill_activation_conditions(skill_object: Dict[str, Any], get_preconditions: bool = False):
             """ Gets the activation condition/precondition string for a skill.
 
             `skill_data` is a very complex and deeply nested JSON object.
@@ -756,9 +756,9 @@ class SkillScraper(BaseScraper):
             Not every entry has all these fields so we just take what we can get.
 
             Args:
-                s (dict) A single entry from skill_data. This is a complex nested dict.
-                get_preconditions (boolean) Whether to get the "preconditions" entry
-                    instead of the "conditions" entry.
+                skill_object (Dict[str, Any]) A single entry from skill_data. This is a complex nested dict.
+                get_preconditions (bool, optional) Whether to get the "preconditions" entry
+                    instead of the "conditions" entry. Defaults to False.
 
             Returns:
                 The condition string.
@@ -766,18 +766,18 @@ class SkillScraper(BaseScraper):
             # Prioritize getting the english version of the condition group since it
             # should be the current global patch data.
             # Always try the gene_version first.
-            groups = s.get("loc", {}).get("en", {}).get("gene_version", None)
+            groups = skill_object.get("loc", {}).get("en", {}).get("gene_version", None)
             if groups is not None:
-                groups = s.get("loc", {}).get("en", {}).get("gene_version", {}).get("condition_groups", None)
+                groups = skill_object.get("loc", {}).get("en", {}).get("gene_version", {}).get("condition_groups", None)
             else:
-                groups = s.get("loc", {}).get("en", {}).get("condition_groups", None)
+                groups = skill_object.get("loc", {}).get("en", {}).get("condition_groups", None)
             
             # Fall back to main condition_groups field.
             if groups is None:
-                if "gene_version" in s:
-                    groups = s["gene_version"].get("condition_groups", None)
+                if "gene_version" in skill_object:
+                    groups = skill_object["gene_version"].get("condition_groups", None)
                 else:
-                    groups = s.get("condition_groups", None)
+                    groups = skill_object.get("condition_groups", None)
     
             # Just return now if we still havent found anything.
             if groups is None:
