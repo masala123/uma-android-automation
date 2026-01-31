@@ -20,7 +20,11 @@ import com.steve1316.uma_android_automation.utils.types.SkillCommunityTier
 private const val USE_MOCK_DATA: Boolean = false
 private const val MOCK_SKILL_POINTS: Int = 1495
 
-/** Handles operations based on the user's Skill Plan Settings. */
+/**
+ * Handles operations based on the user's Skill Plan Settings.
+ *
+ * @param game A reference to the Game instance.
+ */
 class SkillPlan (private val game: Game) {
     private val TAG: String = "[${MainActivity.loggerTag}]SkillPlan"
 
@@ -96,7 +100,7 @@ class SkillPlan (private val game: Game) {
      *
      * @return A mapping of the new skill names and their prices that we want to buy.
      * This only includes the skills that we calculated in this function.
-     * It does not include anything from `skillsToBuy`.
+     * It does not include anything from [skillsToBuy].
      */
     private fun getNegativeSkills(
         skillPlanSettings: SkillPlanSettings,
@@ -137,7 +141,7 @@ class SkillPlan (private val game: Game) {
      *
      * @return A mapping of the new skill names and their prices that we want to buy.
      * This only includes the skills that we calculated in this function.
-     * It does not include anything from `skillsToBuy`.
+     * It does not include anything from [skillsToBuy].
      */
     private fun getInheritedUniqueSkills(
         skillPlanSettings: SkillPlanSettings,
@@ -177,7 +181,7 @@ class SkillPlan (private val game: Game) {
      *
      * @return A mapping of the new skill names and their prices that we want to buy.
      * This only includes the skills that we calculated in this function.
-     * It does not include anything from `skillsToBuy`.
+     * It does not include anything from [skillsToBuy].
      */
     private fun getUserPlannedSkills(
         skillPlanSettings: SkillPlanSettings,
@@ -269,7 +273,7 @@ class SkillPlan (private val game: Game) {
      *
      * @return A mapping of the new skill names and their prices that we want to buy.
      * This only includes the skills that we calculated in this function.
-     * It does not include anything from `skillsToBuy`.
+     * It does not include anything from [skillsToBuy].
      */
     private fun getSkillsToBuyCommon(
         skillPlanSettings: SkillPlanSettings,
@@ -315,7 +319,7 @@ class SkillPlan (private val game: Game) {
      *
      * @return A mapping of the new skill names and their prices that we want to buy.
      * This only includes the skills that we calculated in this function.
-     * It does not include anything from `skillsToBuy`.
+     * It does not include anything from [skillsToBuy].
      */
     private fun getSkillsToBuyDefaultStrategy(
         skillPlanSettings: SkillPlanSettings,
@@ -344,7 +348,7 @@ class SkillPlan (private val game: Game) {
      *
      * @return A mapping of the new skill names and their prices that we want to buy.
      * This only includes the skills that we calculated in this function.
-     * It does not include anything from `skillsToBuy`.
+     * It does not include anything from [skillsToBuy].
      */
     private fun getSkillsToBuyOptimizeSkillsStrategy(
         skillPlanSettings: SkillPlanSettings,
@@ -486,7 +490,7 @@ class SkillPlan (private val game: Game) {
      *
      * @return A mapping of the new skill names and their prices that we want to buy.
      * This only includes the skills that we calculated in this function.
-     * It does not include anything from `skillsToBuy`.
+     * It does not include anything from [skillsToBuy].
      */
     private fun getSkillsToBuyOptimizeRankStrategy(
         skillPlanSettings: SkillPlanSettings,
@@ -548,7 +552,7 @@ class SkillPlan (private val game: Game) {
      *
      * @return A mapping of the new skill names and their prices that we want to buy.
      * This only includes the skills that we calculated in this function.
-     * It does not include anything from `skillsToBuy`.
+     * It does not include anything from [skillsToBuy].
      */
     private fun getSkillsToBuy(
         skillPlanSettings: SkillPlanSettings,
@@ -621,8 +625,8 @@ class SkillPlan (private val game: Game) {
      * @param skillsToBuy The list of skill names that we want to purchase.
      * @param skillList The SkillList instance which triggered this event.
      *
-     * @return True if all `skillsToBuy` have been purchased. Otherwise, False.
-     * SkillList uses a return of True to trigger an early exit of its loop.
+     * @return True if all [skillsToBuy] have been purchased. Otherwise, False.
+     * [SkillList] uses a return of True to trigger an early exit of its loop.
      */
     private fun onSkillListEntryDetected(
         entry: SkillListEntry,
