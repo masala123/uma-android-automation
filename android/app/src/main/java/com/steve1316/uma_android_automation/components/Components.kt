@@ -31,11 +31,20 @@ object Region {
     val topRightThird: IntArray = intArrayOf(SharedData.displayWidth - (SharedData.displayWidth / 3), 0, SharedData.displayWidth / 3, SharedData.displayHeight - (SharedData.displayHeight / 3))
 }
 
-/** Defines a template image file and provides helpful functions. */
+/** Defines a template image file and provides helpful functions.
+ *
+ * @property path The relative path to the template image file within the assets folder.
+ * @property region The screen region to search within, formatted as [x, y, width, height].
+ * Defaults to the full screen if not specified.
+ * @property confidence The threshold (0.0, 1.0] required for a match. Defaults to 0.0 which
+ * uses the default confidence value.
+ */
 data class Template(val path: String, val region: IntArray = intArrayOf(0, 0, 0, 0), val confidence: Double = 0.0) {
+    /** The directory portion of the path, excluding the filename. */
     val dirname: String
         get() = path.substringBeforeLast('/')
 
+    /** The filename portion of the path, excluding the directory. */
     val basename: String
         get() = path.substringAfterLast('/')
 
@@ -128,7 +137,7 @@ interface BaseComponentInterface {
     fun findImageWithBitmap(
         imageUtils: CustomImageUtils,
         sourceBitmap: Bitmap,
-        region: IntArray = intArrayOf(0, 0, 0, 0),
+        region: IntArray? = null,
         confidence: Double? = null,
     ): Point?
     /** Attempts to click on the component.
@@ -188,13 +197,13 @@ interface ComponentInterface: BaseComponentInterface {
     override fun findImageWithBitmap(
         imageUtils: CustomImageUtils,
         sourceBitmap: Bitmap,
-        region: IntArray,
+        region: IntArray?,
         confidence: Double?,
     ): Point? {
         return imageUtils.findImageWithBitmap(
             templateName = template.path,
             sourceBitmap = sourceBitmap,
-            region = region,
+            region = region ?: template.region,
             customConfidence = confidence ?: template.confidence,
             suppressError = true,
         )
@@ -229,6 +238,18 @@ interface ComponentInterface: BaseComponentInterface {
         }
     }
 
+    /** Finds all occurrences of the component within a source bitmap.
+     *
+     * @param imageUtils A reference to a CustomImageUtils instance.
+     * @param sourceBitmap The source bitmap to search within.
+     * @param region The screen region to search in.
+     * @param confidence The threshold (0.0, 1.0] to use when performing image matching.
+     * @return A list of Points where the component was found.
+     */
+    fun findAllWithBitmap(imageUtils: CustomImageUtils, sourceBitmap: Bitmap, region: IntArray? = null, confidence: Double? = null): ArrayList<Point> {
+        return imageUtils.findAllWithBitmap(template.path, sourceBitmap = sourceBitmap, region = region ?: template.region, customConfidence = (confidence ?: template.confidence))
+    }
+
     override fun check(
         imageUtils: CustomImageUtils,
         region: IntArray?,
@@ -261,16 +282,15 @@ interface ComponentInterface: BaseComponentInterface {
         taps: Int,
         confidence: Double?,
     ): Boolean {
-        var point: Point? = null
-        if (sourceBitmap == null) {
-            point = find(
+        val point = if (sourceBitmap == null) {
+            find(
                 imageUtils = imageUtils,
                 region = region ?: template.region,
                 tries = tries,
                 confidence = confidence ?: template.confidence,
             ).first ?: return false
         } else {
-            point = findImageWithBitmap(
+            findImageWithBitmap(
                 imageUtils = imageUtils,
                 region = region ?: template.region,
                 sourceBitmap = sourceBitmap,
@@ -304,9 +324,15 @@ interface ComplexComponentInterface: BaseComponentInterface {
         return Pair(null, imageUtils.getSourceBitmap())
     }
 
-    override fun findImageWithBitmap(imageUtils: CustomImageUtils, sourceBitmap: Bitmap, region: IntArray, confidence: Double?): Point? {
+    override fun findImageWithBitmap(imageUtils: CustomImageUtils, sourceBitmap: Bitmap, region: IntArray?, confidence: Double?): Point? {
         for (template in templates) {
-            val result: Point? = imageUtils.findImageWithBitmap(template.path, sourceBitmap, region, customConfidence = confidence ?: template.confidence, suppressError = true)
+            val result: Point? = imageUtils.findImageWithBitmap(
+                template.path,
+                sourceBitmap,
+                region ?: template.region,
+                customConfidence = confidence ?: template.confidence,
+                suppressError = true,
+            )
             if (result != null) {
                 return result
             }

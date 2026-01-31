@@ -1,5 +1,6 @@
 from deprecated import deprecated
-import undetected_chromedriver as uc
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import NoSuchElementException, ElementClickInterceptedException, WebDriverException
 from selenium.webdriver.remote.webelement import WebElement
@@ -11,6 +12,7 @@ import os
 from typing import List, Dict
 from difflib import SequenceMatcher
 import bisect
+import requests
 
 IS_DELTA = True
 DELTA_BACKLOG_COUNT = 5
@@ -83,7 +85,12 @@ def create_chromedriver():
     Returns:
         The Chrome driver.
     """
-    driver = uc.Chrome(headless=True, use_subprocess=True)
+    chrome_options = Options()
+    chrome_options.add_argument("--headless=new") # Use the new headless mode
+    chrome_options.add_argument("--disable-gpu") # Disable GPU hardware acceleration (recommended for containers)
+    chrome_options.add_argument("--no-sandbox") # Bypass OS security model (needed for some environments like Docker)
+    chrome_options.add_argument("--window-size=1920,1080") # Set a default window size for consistent rendering
+    driver = webdriver.Chrome(options=chrome_options)
     return driver
 
 
@@ -192,6 +199,23 @@ def calculate_turn_number(date_string: str) -> int:
     return turn_number
 
 
+def download_image(url: str, out_fp: str):
+    """
+    Downloads an image from the given URL and saves it to the specified file path.
+
+    Args:
+        url (str): The URL of the image to download.
+        out_fp (str): The file path to save the downloaded image to.
+    """
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        with open(out_fp, "wb") as f_out:
+            f_out.write(response.content)
+    except requests.exceptions.RequestException as exc:
+        print(f"An error occurred when downloading image: {e}")
+
+
 class BaseScraper:
     """Base class for scraping data from the website.
 
@@ -207,11 +231,11 @@ class BaseScraper:
         self.initial_data_count = len(self.data) if IS_DELTA else 0
         self.cookie_accepted = False
 
-    def safe_click(self, driver: uc.Chrome, element: WebElement, retries: int = 3, delay: float = 0.5):
+    def safe_click(self, driver: webdriver.Chrome, element: WebElement, retries: int = 3, delay: float = 0.5):
         """Try clicking an element normally and falls back to JS click if blocked by ads/overlays.
 
         Args:
-            driver (uc.Chrome): The Chrome driver.
+            driver (webdriver.Chrome): The Chrome driver.
             element (WebElement): The web element to interact with.
             retries (int, optional): How many times to retry if intercepted.
             delay (float, optional): Seconds to wait between retries
@@ -272,11 +296,11 @@ class BaseScraper:
         else:
             logging.info(f"Saved {len(self.data)} items to {self.output_filename}.")
 
-    def handle_cookie_consent(self, driver: uc.Chrome):
+    def handle_cookie_consent(self, driver: webdriver.Chrome):
         """Handles the cookie consent.
 
         Args:
-            driver (uc.Chrome): The Chrome driver.
+            driver (webdriver.Chrome): The Chrome driver.
         """
         if not self.cookie_accepted:
             try:
@@ -290,7 +314,16 @@ class BaseScraper:
                 logging.info("No cookie consent button found.")
                 self.cookie_accepted = True
 
-    def handle_ad_banner(self, driver: uc.Chrome, skip=False):
+    def handle_ad_banner(self, driver: webdriver.Chrome, skip: bool = False):
+        """Handles the ad banner.
+
+        Args:
+            driver (webdriver.Chrome): The Chrome driver.
+            skip (bool, optional): Whether to skip the ad banner. Defaults to False.
+
+        Returns:
+            Whether the ad banner was dismissed.
+        """
         if not skip:
             try:
                 ad_banner_button = driver.find_element(By.XPATH, "//div[contains(@class, 'publift-widget-sticky_footer-button')]")
@@ -344,11 +377,11 @@ class BaseScraper:
             options.append(option_text)
         return options
 
-    def process_training_events(self, driver: uc.Chrome, item_name: str, data_dict: Dict[str, List[str]], include_after_race_events: bool = False):
+    def process_training_events(self, driver: webdriver.Chrome, item_name: str, data_dict: Dict[str, List[str]], include_after_race_events: bool = False):
         """Processes the training events for the given item.
 
         Args:
-            driver (uc.Chrome): The Chrome driver.
+            driver (webdriver.Chrome): The Chrome driver.
             item_name (str): The name of the item.
             data_dict (Dict[str, List[str]]): The data dictionary to modify.
             include_after_race_events (bool): Whether to include 'After a Race' events (only for characters).
@@ -430,11 +463,11 @@ class BaseScraper:
 
             ad_banner_closed = self.handle_ad_banner(driver, ad_banner_closed)
 
-    def _sort_by_value(self, driver: uc.Chrome, value_key: str):
+    def _sort_by_value(self, driver: webdriver.Chrome, value_key: str):
         """Sorts the list elements by the given value key.
 
         Args:
-            driver (uc.Chrome): The Chrome driver.
+            driver (webdriver.Chrome): The Chrome driver.
             value_key (str): The key to sort by.
         """
         # Click on the "Sort by" dropdown and select the value key.
@@ -451,6 +484,114 @@ class SkillScraper(BaseScraper):
 
     def __init__(self):
         super().__init__("https://gametora.com/umamusume/skills", "skills.json")
+
+    def scrape_skill_evaluation_points(self):
+        """Scrapes skill Evaluation Points from the umamusume wiki.
+
+        Evaluation Points affect the result rank of a trainee.
+        Unsure whether the evaluation points are 1:1 with the rank gained or if they
+        are just a factor of the rank calculation.
+
+        We also scrape the evaluation point ratio which is just the ratio
+        of evaluation points to the base cost of the skill.
+
+        Returns:
+            The skill evaluation points as a dictionary mapping skill ID to evaluation points.
+        """
+        driver = create_chromedriver()
+        driver.get("https://umamusu.wiki/Game:List_of_Skills")
+        data = {}
+
+        tables = driver.find_elements(By.TAG_NAME, "table")
+        for table in tables:
+            tbody = table.find_element(By.TAG_NAME, "tbody")
+            rows = tbody.find_elements(By.TAG_NAME, "tr")
+            for row in rows:
+                cells = row.find_elements(By.TAG_NAME, "td")
+                skill_name_anchor = cells[1].find_element(By.TAG_NAME, "a")
+                skill_id = skill_name_anchor.get_attribute("title")
+                skill_id = int("".join(filter(str.isdigit, skill_id)))
+                skill_points = int(cells[3].text.strip())
+                if skill_points == 0:
+                    continue
+                skill_evaluation_points = int(cells[4].text.strip())
+                skill_point_ratio = float(cells[5].text.strip())
+                data[skill_id] = {
+                    "evaluation_points": skill_evaluation_points,
+                    "point_ratio": skill_point_ratio,
+                }
+
+        driver.quit()
+        return data
+
+    def scrape_skill_tier_list(self):
+        """Scrapes Game8's skill tier list.
+
+        Game8's tier list is split across four different tables (SS, S, A, and B).
+        Since they don't use any unique IDs for the tables, we instead use the headers
+        before each table to determine which rank is associated with each table.
+        See `h4_tier_map` for the mapping of header to tier.
+
+        There are other tier lists out there but this site seems like it isn't
+        going anywhere so it makes it relatively stable for scraping.
+
+        Returns:
+            The tier list of skills as a dictionary mapping skill name to tier.
+        """
+        driver = create_chromedriver()
+        driver.get("https://game8.co/games/Umamusume-Pretty-Derby/archives/536805")
+
+        h4_tier_map = {
+            "hs_1": 0, # SS
+            "hs_2": 1, # S
+            "hs_3": 2, # A
+            "hs_4": 3, # B
+        }
+
+        res = {}
+
+        for h4_id, tier_name in h4_tier_map.items():
+            table = driver.find_element(By.XPATH, f"//h4[@id='{h4_id}']/following-sibling::table[2]")
+            tds = table.find_elements(By.TAG_NAME, "td")
+        
+            for td in tds:
+                divs = td.find_elements(By.TAG_NAME, "div")
+                for div in divs:
+                    anchor = div.find_elements(By.TAG_NAME, "a")[-1]
+                    skill_name = anchor.text.strip()
+                    # Make sure we use the same special characters as gametora.
+                    skill_name = skill_name.replace("◯", "○")
+                    skill_name = skill_name.replace("◎", "◎")
+                    # Get rid of any double spaces.
+                    skill_name = skill_name.replace("  ", "")
+                    if skill_name in res and res[skill_name] != tier_name:
+                        logging.warning(f"Skill is already in tier map with conflicting value: {skill_name} ({tier_name} != {res[skill_name]})")
+                        continue
+                    res[skill_name] = tier_name
+
+        driver.quit()
+
+        # They misspelled some skill names so we need to fix them.
+        # Pretty much if you run the scraper and it throws an error for a skill,
+        # just make sure that the skill isn't misspelled and then
+        # update this map.
+        rename_map = {
+            "Let's Pump Some Iron": "Let's Pump Some Iron!",
+            "Fast and Furious": "Fast & Furious",
+            "Mile Straightaway ○": "Mile Straightaways ○",
+            "Mile Straightaway ◎": "Mile Straightaways ◎",
+            "Flowery ☆ Maneuver": "Flowery☆Maneuver",
+            "OMG! ☆ The Final Sprint (ﾟ∀ﾟ)": "OMG! (ﾟ∀ﾟ) The Final Sprint! ☆",
+        }
+
+        for old_name, new_name in rename_map.items():
+            if old_name in res:
+                res[new_name] = res.pop(old_name)
+            else:
+                logging.warning(f"Old name not in rename_map: {old_name}")
+        
+        return res
+
 
     @deprecated("Use start_webpack_method() instead.")
     def start(self):
@@ -526,12 +667,17 @@ class SkillScraper(BaseScraper):
         """Starts the scraping process using the JS webpack method."""
         driver = create_chromedriver()
         driver.get(self.url)
-        time.sleep(5)
 
-        self.handle_cookie_consent(driver)
-        
         self.data = {}
+
+        # Get supplementary data for later use.
+        skill_evaluation_points = self.scrape_skill_evaluation_points()
+        skill_to_tier_map = self.scrape_skill_tier_list()
         
+        # Capitalization on the website we use for the tier list may differ.
+        # We need to make everything lowercase for proper lookups between sources.
+        skill_to_tier_map_lowercase = {k.lower(): k for k in skill_to_tier_map.keys()}
+
         # Webpack for Next.js loads chunks into a global variable called webpackChunk_N_E.
         # Each chunk contains these module functions that populates "module.exports".
         # This JS script creates a fake object "tmp" with a null "exports" property.
@@ -539,27 +685,191 @@ class SkillScraper(BaseScraper):
         # Then we return it as a dictionary.
         skill_data = driver.execute_script("let tmp = { exports: null }; window.webpackChunk_N_E.find(arr => arr[0][0] == 4318)[1][60930](tmp); return tmp.exports")
         
+        def get_skill_activation_conditions(skill_object: Dict[str, Any], get_preconditions: bool = False):
+            """ Gets the activation condition/precondition string for a skill.
+
+            `skill_data` is a very complex and deeply nested JSON object.
+            For each skill entry in this JSON, we need to extract the conditions
+            and preconditions string values. However, these can be in one of a few places.
+
+            The following is one of the more complex examples from the data:
+
+            {
+                "name_en": "Arrows Whistle, Shadows Disperse",
+                "condition_groups": [
+                    {
+                        "condition": "is_finalcorner==1",
+                        "precondition": "phase>=2&order_rate<=50&overtake_target_time>=2",
+                    }
+                ],
+                "gene_version": {
+                    "condition_groups": [
+                        {
+                            "condition": "is_finalcorner==1",
+                            "precondition": "phase>=2&order_rate<=50&overtake_target_time>=2",
+                        }
+                    ],
+                },
+                "loc": {
+                    "en": {     // Global version
+                        "condition_groups": [
+                            {
+                                "condition": "is_finalcorner==1&order_rate<=40&overtake_target_time>=2",
+                            }
+                        ],
+                        "gene_version": {
+                            "condition_groups": [
+                                {
+                                    "condition": "is_finalcorner==1&order_rate<=40&overtake_target_time>=2",
+                                }
+                            ]
+                        }
+                    }
+                }
+            }
+
+            In this example, we have a unique skill. Since this is a unique skill,
+            it has properties called "gene_version". The "gene_version" is the inherited
+            version that can be purchased when inherited from legacy umamusume.
+
+            If a skill has a gene_version, then we always want to use that data since
+            the non-inherited version can't be purchased.
+
+            However, in these entries we also have the "loc" property. This is the
+            localization (i.e. JP, KO, Global). These localizations may be on different
+            patches and thus may have different values. So we want to make sure to use
+            the Global (en) localization.
+
+            Then within the localization, we can extract our "condition" string.
+            Take note that the "precondition" field is not in the localization.
+            Not every entry contains all of these structures so we have to combine
+            data across the existing fields to get everything we need.
+
+            To do this, we try to get data using the following priority order:
+            1) loc -> en -> gene_version -> condition_groups -> condition/precondition
+            2) loc -> en -> condition_groups -> condition/precondition
+            3) gene_version -> condition_groups -> condition/precondition
+            4) condition_groups -> condition/precondition
+
+            To sum up, we just need to get the most accurate data possible for the
+            global release by combining the best data we can extract from the entry.
+            Not every entry has all these fields so we just take what we can get.
+
+            Args:
+                skill_object (Dict[str, Any]) A single entry from skill_data. This is a complex nested dict.
+                get_preconditions (bool, optional) Whether to get the "preconditions" entry
+                    instead of the "conditions" entry. Defaults to False.
+
+            Returns:
+                The condition string.
+            """
+            # Prioritize getting the english version of the condition group since it
+            # should be the current global patch data.
+            # Always try the gene_version first.
+            groups = skill_object.get("loc", {}).get("en", {}).get("gene_version", None)
+            if groups is not None:
+                groups = skill_object.get("loc", {}).get("en", {}).get("gene_version", {}).get("condition_groups", None)
+            else:
+                groups = skill_object.get("loc", {}).get("en", {}).get("condition_groups", None)
+            
+            # Fall back to main condition_groups field.
+            if groups is None:
+                if "gene_version" in skill_object:
+                    groups = skill_object["gene_version"].get("condition_groups", None)
+                else:
+                    groups = skill_object.get("condition_groups", None)
+    
+            # Just return now if we still havent found anything.
+            if groups is None:
+                return ""
+            
+            res = []
+            for group in groups:
+                condition = group.get("precondition" if get_preconditions else "condition", None)
+                if condition is not None:
+                    res.append(condition)
+
+            return "@".join(res)
+
         skill_id_to_name = {}
         for skill in skill_data:
             try:
                 # If name_en doesnt exist, then the skill isn't in global yet.
                 if "name_en" not in skill:
                     continue
+                
+                skill_id = skill["id"]
+                skill_name_en = skill["name_en"].strip().replace("  ", " ")
+                skill_desc_en = skill["desc_en"]
+                skill_iconid = skill["iconid"]
+                skill_rarity = skill["rarity"]
+                skill_inherited = False
+                skill_cost = skill.get("cost", None)
+                # For inherited unique skills, we actually want the
+                # gene version's ID since the primary ID isn't the one that
+                # we can purchase through inheritance.
+                if "gene_version" in skill:
+                    skill_id = skill["gene_version"]["id"]
+                    skill_desc_en = skill["gene_version"]["desc_en"]
+                    skill_iconid = skill["gene_version"]["iconid"]
+                    skill_rarity = skill["gene_version"]["rarity"]
+                    skill_inherited = skill["gene_version"].get("inherited", False)
+                    skill_cost = skill["gene_version"].get("cost", None)
+
+                if skill_cost is None:
+                    logging.warning(f"Dropping skill with invalid COST: {skill_name_en}")
+                    continue
+
+                # Get the skill activation conditions.
+                skill_condition = get_skill_activation_conditions(skill)
+                skill_precondition = get_skill_activation_conditions(skill, get_preconditions=True)
+
+                extra_data = skill_evaluation_points.get(
+                    skill_id,
+                    {"evaluation_points": 0, "point_ratio": 0.0},
+                )
+
+                # The tier list doesn't include any of the JP skills so we don't treat
+                # missing skills as errors. These warnings should be reviewed by maintainer
+                # in case any skill names are misspelled.
+                # We can ignore any negative skills since they won't appear in the tier list.
+                tmp_skill_name = skill_to_tier_map_lowercase.get(skill_name_en.lower(), None)
+                bIsNegative = skill_iconid % 10 == 4
+                if tmp_skill_name is None and not bIsNegative:
+                    logging.warning(f"Skill Tier Unknown: {skill_name_en}")
+
+                community_tier = skill_to_tier_map.get(tmp_skill_name, None)
+
+                # Corrections to invalid GameTora skill data.
+                if skill_name_en.lower() == "indomitable" and skill_id != 200471:
+                    # There are multiple entries with the name "Indomitable".
+                    # Only the one with id 200471 is valid. Skip others.
+                    continue
+                elif skill_id in [1000011, 1000012, 1000013, 1000014, 1000015, 1000016, 1000017]:
+                    # These are carnival bonus skill IDs. These aren't currently valid.
+                    # Unsure if they ever will be. So we skip them.
+                    continue
 
                 tmp = {
-                    "id": skill["id"],
-                    "name_en": skill["name_en"],
-                    "desc_en": skill["desc_en"],
-                    "icon_id": skill["iconid"],
-                    "cost": skill.get("cost", None),
-                    "rarity": skill["rarity"],
+                    "id": skill_id,
+                    "name_en": skill_name_en,
+                    "desc_en": skill_desc_en,
+                    "icon_id": skill_iconid,
+                    "cost": skill_cost,
+                    "eval_pt": extra_data["evaluation_points"],
+                    "pt_ratio": extra_data["point_ratio"],
+                    "rarity": skill_rarity,
+                    "condition": skill_condition,
+                    "precondition": skill_precondition,
+                    "inherited": skill_inherited,
+                    "community_tier": community_tier,
                     "versions": sorted(skill.get("versions", [])),
                     "upgrade": None,
                     "downgrade": None,
                 }
-                skill_id_to_name[skill["id"]] = skill["name_en"]
+                skill_id_to_name[skill["id"]] = skill_name_en
 
-                self.data[tmp["name_en"]] = tmp
+                self.data[skill_name_en] = tmp
             except KeyError as exc:
                 if "name_en" in skill:
                     logging.error(f"KeyError when parsing skill ({skill['name_en']}): {exc}")
@@ -594,6 +904,13 @@ class SkillScraper(BaseScraper):
                 downgrade_version = skill["versions"][index]
                 if downgrade_version in skill_id_to_name:
                     self.data[skill_name]["downgrade"] = downgrade_version
+
+        # Save the skill icons
+        icon_ids = set(x["icon_id"] for x in self.data.values())
+        for icon_id in icon_ids:
+            url = f"https://gametora.com/images/umamusume/skill_icons/utx_ico_skill_{icon_id}.png"
+            out_fp = f"../pages/SkillSettings/icons/utx_ico_skill_{icon_id}.png"
+            download_image(url, out_fp)
 
         self.save_data()
         driver.quit()
