@@ -5,6 +5,7 @@ import { CommonActions } from "@react-navigation/native"
 import { Ionicons } from "@expo/vector-icons"
 import { useTheme } from "../../context/ThemeContext"
 import { BotStateContext } from "../../context/BotStateContext"
+import { skillPlanSettingsPages } from "../../pages/SkillPlanSettings"
 
 interface MenuItem {
     name: string
@@ -22,7 +23,16 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
     const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(["Settings"]))
     const previousDrawerStatus = useRef<string | undefined>(undefined)
 
-    const settingsNestedRoutes = ["TrainingSettings", "TrainingEventSettings", "OCRSettings", "RacingSettings", "RacingPlanSettings", "DebugSettings"]
+    const settingsNestedRoutes = [
+        "TrainingSettings",
+        "TrainingEventSettings",
+        "OCRSettings",
+        "RacingSettings",
+        "RacingPlanSettings",
+        "SkillSettings",
+        ...Object.values(skillPlanSettingsPages).flatMap(item => item.name),
+        "DebugSettings",
+    ]
 
     const styles = StyleSheet.create({
         container: {
@@ -183,6 +193,18 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
                     ],
                 },
                 {
+                    name: "SkillSettings",
+                    label: "Skill Settings",
+                    icon: () => "american-football-outline",
+                    nested: Object.values(skillPlanSettingsPages).map((item) => (
+                        {
+                            name: item.name,
+                            label: `${item.title} Skill Plan Settings`,
+                            icon: () => "cube-outline",
+                        }
+                    )),
+                },
+                {
                     name: "EventLogVisualizer",
                     label: "Event Log Visualizer",
                     icon: () => "eye-outline",
@@ -241,6 +263,11 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
         // Auto-expand Racing Settings if Racing Plan Settings is active.
         if (currentScreen === "RacingPlanSettings") {
             newExpanded.add("RacingSettings")
+        }
+
+        // Auto-expand Skill Settings if Skill Plan Settings is active.
+        if (Object.values(skillPlanSettingsPages).map(item => item.name).includes(currentScreen)) {
+            newExpanded.add("SkillSettings")
         }
 
         // Merge with existing expanded sections to preserve user's manual expansions.

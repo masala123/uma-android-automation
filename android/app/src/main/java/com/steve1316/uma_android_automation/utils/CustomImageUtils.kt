@@ -3,6 +3,7 @@ package com.steve1316.uma_android_automation.utils
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color
 import android.util.Log
 import com.google.mlkit.vision.common.InputImage
 import com.steve1316.automation_library.utils.BotService
@@ -15,6 +16,8 @@ import com.steve1316.uma_android_automation.components.Region
 import com.steve1316.uma_android_automation.utils.types.StatName
 import com.steve1316.uma_android_automation.utils.types.Aptitude
 import com.steve1316.uma_android_automation.utils.types.BoundingBox
+import com.steve1316.uma_android_automation.utils.types.SkillData
+import com.steve1316.uma_android_automation.components.*
 import org.opencv.android.Utils
 import org.opencv.core.*
 import org.opencv.imgcodecs.Imgcodecs
@@ -568,11 +571,6 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         } else {
 			Pair(skillPointsLocation, sourceBitmap)
 		}
-
-        if (sourceBitmap == null) {
-            MessageLog.e(TAG, "determineSkillPoints: sourceBitmap is NULL.")
-            return -1
-        }
 
         if (skillPointsLocation == null) {
             MessageLog.e(TAG, "determineSkillPoints: skillPointsLocation is NULL.")
@@ -2090,11 +2088,129 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		return result
     }
 
-    fun saveBitmap(bitmap: Bitmap, filename: String) {
-        val externalFilesPath = context.getExternalFilesDir(null)?.absolutePath
-        val mat = Mat()
-		Utils.bitmapToMat(bitmap, mat)
-		Imgcodecs.imwrite("$externalFilesPath/temp/${filename}.png", mat)
-        mat.release()
+    /** Saves a bitmap for debugging purposes.
+     *
+     * @param bitmap The optional bitmap to save.
+     * If not specified, then a screenshot is taken and saved instead.
+     * @param filename The filename for the saved bitmap.
+     */
+    fun saveBitmap(bitmap: Bitmap? = null, filename: String) {
+        val bitmap = bitmap ?: getSourceBitmap()
+        val tempImage = Mat()
+        Utils.bitmapToMat(bitmap, tempImage)
+        Imgcodecs.imwrite("$matchFilePath/$filename.png", tempImage)
+        tempImage.release()
+    }
+
+    /** Saves a bitmap for debugging purposes.
+     *
+     * @param bitmap The optional bitmap to save.
+     * If not specified, then a screenshot is taken and saved instead.
+     * @param filename The filename for the saved bitmap.
+     * @param bbox A bounding region to crop the [bitmap] to before saving.
+     */
+    fun saveBitmap(bitmap: Bitmap? = null, filename: String, bbox: BoundingBox) {
+        val bitmap = bitmap ?: getSourceBitmap()
+        val croppedBitmap = createSafeBitmap(
+            bitmap,
+            bbox.x,
+            bbox.y,
+            bbox.w,
+            bbox.h,
+            "saveBitmap(filename=$filename, bbox=$bbox)",
+        )
+        saveBitmap(bitmap = croppedBitmap, filename = filename)
+    }
+
+    /** Crops a bitmap to the specified region.
+     *
+     * This is a wrapper around [ImageUtils::createSafeBitmap] that allows
+     * us to pass a BoundingBox for the cropping region instead of passing
+     * each parameter separately.
+     *
+     * @param sourceBitmap The bitmap to crop.
+     * @param bbox The BoundingBox specifying the crop region.
+     * @param context The debugging context string.
+     *
+     * @return The cropped bitmap.
+     */
+    fun createSafeBitmap(sourceBitmap: Bitmap, bbox: BoundingBox, context: String): Bitmap? {
+        return createSafeBitmap(
+            sourceBitmap,
+            bbox.x,
+            bbox.y,
+            bbox.w,
+            bbox.h,
+            context,
+        )
+    }
+
+    /** Takes a screenshot of the specified region on the screen.
+     *
+     * This is a wrapper around [ImageUtils::getRegionBitmap] that allows
+     * us to pass a BoundingBox for the cropping region instead of passing
+     * each parameter separately.
+     *
+     * This is faster than calling [getSourceBitmap] since it crops the
+     * screenshot prior to converting it to a Bitmap.
+     *
+     * @param bbox The BoundingBox specifying the crop region.
+     *
+     * @return The cropped screenshot.
+     */
+    fun getRegionBitmap(bbox: BoundingBox): Bitmap? {
+        return getRegionBitmap(
+            x = bbox.x,
+            y = bbox.y,
+            w = bbox.w,
+            h = bbox.h,
+        )
+    }
+
+    /** Compares two bitmaps using Structural Similarity Index (SSIM).
+     *
+     * @param bitmap1 The first bitmap to compare.
+     * @param bitmap2 The bitmap to compare against.
+     *
+     * @return The similarity score between the two bitmaps between 0.0 and 1.0.
+     * Higher values are more similar.
+     */
+    fun compareBitmapsSSIM(bitmap1: Bitmap, bitmap2: Bitmap): Double {
+        // Ensure bitmaps are same size for SSIM comparison
+        if (bitmap1.width != bitmap2.width || bitmap1.height != bitmap2.height) {
+            // Handle error or resize
+            return 0.0
+        }
+
+        val mat1 = Mat()
+        val mat2 = Mat()
+        Utils.bitmapToMat(bitmap1, mat1)
+        Utils.bitmapToMat(bitmap2, mat2)
+
+        val grayMat1 = Mat()
+        val grayMat2 = Mat()
+        Imgproc.cvtColor(mat1, grayMat1, Imgproc.COLOR_BGR2GRAY)
+        Imgproc.cvtColor(mat2, grayMat2, Imgproc.COLOR_BGR2GRAY)
+
+        // A direct SSIM function isn't readily available in the core Java/Kotlin bindings,
+        // so you'd need a custom implementation or use a different metric like MSE
+        // for a quick calculation. A simplified pixel difference is shown below.
+
+        val diff = Mat()
+        org.opencv.core.Core.absdiff(grayMat1, grayMat2, diff)
+        val nonZeroPixels = org.opencv.core.Core.countNonZero(diff)
+
+        val totalPixels = grayMat1.rows() * grayMat1.cols()
+        val similarityScore = 1.0 - (nonZeroPixels.toDouble() / totalPixels.toDouble())
+
+        // A score near 1.0 means very similar.
+
+        mat1.release()
+        mat2.release()
+        grayMat1.release()
+        grayMat2.release()
+        diff.release()
+
+        return similarityScore
     }
 }

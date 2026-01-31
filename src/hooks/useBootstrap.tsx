@@ -4,8 +4,9 @@ import { BotStateContext, BotStateProviderProps } from "../context/BotStateConte
 import { MessageLogContext, MessageLogProviderProps } from "../context/MessageLogContext"
 import { useSettings } from "../context/SettingsContext"
 import { logWithTimestamp, logErrorWithTimestamp } from "../lib/logger"
-import { databaseManager, DatabaseRace } from "../lib/database"
+import { databaseManager, DatabaseRace, DatabaseSkill } from "../lib/database"
 import racesData from "../data/races.json"
+import skillsData from "../data/skills.json"
 import charactersData from "../data/characters.json"
 import supportsData from "../data/supports.json"
 
@@ -36,9 +37,10 @@ export const useBootstrap = () => {
     useEffect(() => {
         const initializeApp = async () => {
             try {
-                logWithTimestamp("[Bootstrap] Initializing database and populating races data...")
+                logWithTimestamp("[Bootstrap] Initializing database and populating table data...")
                 await databaseManager.initialize()
                 await populateRacesData()
+                await populateSkillsData()
                 await populateEventData()
 
                 // Load settings after database initialization but before marking app as ready.
@@ -91,6 +93,46 @@ export const useBootstrap = () => {
             logWithTimestamp(`[Bootstrap] Successfully populated ${races.length} races into database`)
         } catch (error) {
             logErrorWithTimestamp("[Bootstrap] Error populating races data:", error)
+            throw error
+        }
+    }
+
+    /**
+     * Populate skills data from skills.json into SQLite.
+     */
+    const populateSkillsData = async (): Promise<void> => {
+        try {
+            logWithTimestamp("[Bootstrap] Starting skills data population...")
+
+            // Convert races.json data to database format
+            const skills: Array<Omit<DatabaseSkill, "id">> = Object.entries(skillsData).map(([key, skill]) => ({
+                key,
+                skill_id: skill.id,
+                name_en: skill.name_en,
+                desc_en: skill.desc_en,
+                icon_id: skill.icon_id,
+                cost: skill.cost,
+                eval_pt: skill.eval_pt,
+                pt_ratio: skill.pt_ratio,
+                rarity: skill.rarity,
+                condition: skill.condition,
+                precondition: skill.precondition,
+                inherited: skill.inherited,
+                community_tier: skill.community_tier,
+                versions: skill.versions,
+                upgrade: skill.upgrade,
+                downgrade: skill.downgrade,
+            }))
+
+            logWithTimestamp(`[Bootstrap] Converted ${skills.length} skills from JSON to database format`)
+
+            // Clear existing skills and populate with new data
+            await databaseManager.clearSkills()
+            await databaseManager.saveSkillsBatch(skills)
+
+            logWithTimestamp(`[Bootstrap] Successfully populated ${skills.length} skills into database`)
+        } catch (error) {
+            logErrorWithTimestamp("[Bootstrap] Error populating skills data:", error)
             throw error
         }
     }
