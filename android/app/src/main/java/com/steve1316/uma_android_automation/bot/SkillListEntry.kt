@@ -104,10 +104,10 @@ class SkillListEntry(
     // NOTE: We need to make sure to call updateScreenPrice() after fully
     // setting up the entire upgrade chain linked list.
     var screenPrice: Int = maxScreenPrice
-    // Copy of the screen price that is only ever modified in [updateScreenPrice].
+    // Copy of the screen price that is only ever modified in `updateScreenPrice`.
     // We use this so that we have a baseline for what the screen price was
     // when we originally read it with OCR.
-    // This is necessary for some calculations since [screenPrice] is modified
+    // This is necessary for some calculations since `screenPrice` is modified
     // in multiple functions.
     private var originalScreenPrice: Int = screenPrice
 
@@ -200,7 +200,7 @@ class SkillListEntry(
         // For skills that have downgrades as separate entries in the skill list,
         // we need to subtract the downgrade's price from our screenPrice.
         // We need to calculate this adjusted value in order for
-        // [calculateDiscount] to be accurate.
+        // `calculateDiscount` to be accurate.
         // This is because the skills in this type of upgrade chain can have
         // different hint levels and thus different discount values.
         if (!bIsInPlace && !prev.bIsObtained && !prev.bIsVirtual) {
