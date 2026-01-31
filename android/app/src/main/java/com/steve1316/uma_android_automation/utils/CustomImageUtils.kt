@@ -2107,7 +2107,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
      * @param bitmap The optional bitmap to save.
      * If not specified, then a screenshot is taken and saved instead.
      * @param filename The filename for the saved bitmap.
-     * @bbox A bounding region to crop the [bitmap] to before saving.
+     * @param bbox A bounding region to crop the [bitmap] to before saving.
      */
     fun saveBitmap(bitmap: Bitmap? = null, filename: String, bbox: BoundingBox) {
         val bitmap = bitmap ?: getSourceBitmap()
