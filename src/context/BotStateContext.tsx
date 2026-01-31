@@ -1,13 +1,20 @@
 import { createContext, useState } from "react"
 import { startTiming } from "../lib/performanceLogger"
 import racesData from "../data/races.json"
+import { skillPlanSettingsPages } from "../pages/SkillPlanSettings"
+
+interface SkillPlanSettingsConfig {
+    enabled: boolean
+    strategy: string
+    enableBuyInheritedUniqueSkills: boolean
+    enableBuyNegativeSkills: boolean
+    plan: string
+}
 
 export interface Settings {
     // General settings
     general: {
         scenario: string
-        enableSkillPointCheck: boolean
-        skillPointCheck: number
         enablePopupCheck: boolean
         enableCraneGameAttempt: boolean
         enableStopBeforeFinals: boolean
@@ -38,6 +45,16 @@ export interface Settings {
         minimumQualityThreshold: number
         timeDecayFactor: number
         improvementThreshold: number
+    }
+
+    // Skill Settings
+    skills: {
+        enableSkillPointCheck: boolean
+        skillPointCheck: number
+        preferredRunningStyle: string
+        preferredTrackDistance: string
+        preferredTrackSurface: string
+        plans: Record<string, SkillPlanSettingsConfig>
     }
 
     // Training Event settings
@@ -139,8 +156,6 @@ export interface Settings {
 export const defaultSettings: Settings = {
     general: {
         scenario: "",
-        enableSkillPointCheck: false,
-        skillPointCheck: 750,
         enablePopupCheck: false,
         enableCraneGameAttempt: false,
         enableStopBeforeFinals: false,
@@ -175,6 +190,23 @@ export const defaultSettings: Settings = {
         minimumQualityThreshold: 70.0,
         timeDecayFactor: 0.8,
         improvementThreshold: 25.0,
+    },
+    skills: {
+        enableSkillPointCheck: false,
+        skillPointCheck: 750,
+        preferredRunningStyle: "inherit",
+        preferredTrackDistance: "inherit",
+        preferredTrackSurface: "no_preference",
+        plans: Object.keys(skillPlanSettingsPages).reduce((acc, curr) => {
+            acc[curr] = {
+                enabled: false,
+                strategy: "default",
+                enableBuyInheritedUniqueSkills: false,
+                enableBuyNegativeSkills: false,
+                plan: "",
+            }
+            return acc
+        }, {} as Record<string, SkillPlanSettingsConfig>),
     },
     trainingEvent: {
         enablePrioritizeEnergyOptions: false,

@@ -102,6 +102,36 @@ object IconRaceListMaidenPill : ComponentInterface {
     override val template = Template("components/icon/race_list_maiden_pill", region = Region.bottomHalf)
 }
 
+object IconScrollListTopLeft : ComponentInterface {
+    override val TAG: String = "IconScrollListTopLeft"
+    override val template = Template("components/icon/scroll_list_top_left", region = Region.leftHalf)
+}
+
+object IconScrollListBottomRight : ComponentInterface {
+    override val TAG: String = "IconScrollListBottomRight"
+    override val template = Template("components/icon/scroll_list_bottom_right", region = Region.rightHalf)
+}
+
+object IconObtainedPill : ComponentInterface {
+    override val TAG: String = "IconObtainedPill"
+    override val template = Template("components/icon/obtained_pill", region = Region.rightHalf)
+}
+
+object IconSkillTitleDoubleCircle : ComponentInterface {
+    override val TAG: String = "IconSkillTitleDoubleCircle"
+    override val template = Template("components/icon/skill_title_double_circle")
+}
+
+object IconSkillTitleCircle : ComponentInterface {
+    override val TAG: String = "IconSkillTitleCircle"
+    override val template = Template("components/icon/skill_title_circle")
+}
+
+object IconSkillTitleX : ComponentInterface {
+    override val TAG: String = "IconSkillTitleX"
+    override val template = Template("components/icon/skill_title_x")
+}
+
 object IconRaceListTopLeft : ComponentInterface {
     override val TAG: String = "[${MainActivity.loggerTag}]IconRaceListTopLeft"
     override val template = Template("components/icon/race_list_top_left", region = Region.leftHalf)

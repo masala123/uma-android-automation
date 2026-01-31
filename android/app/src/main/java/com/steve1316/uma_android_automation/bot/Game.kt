@@ -14,6 +14,8 @@ import com.steve1316.automation_library.utils.MyAccessibilityService
 import com.steve1316.automation_library.utils.SettingsHelper
 import com.steve1316.uma_android_automation.utils.GameDate
 import com.steve1316.uma_android_automation.bot.Trainee
+import com.steve1316.uma_android_automation.bot.SkillPlan
+import com.steve1316.uma_android_automation.bot.SkillDatabase
 
 import com.steve1316.uma_android_automation.utils.types.BoundingBox
 import com.steve1316.uma_android_automation.utils.types.Aptitude
@@ -31,6 +33,7 @@ import com.steve1316.uma_android_automation.components.IconRaceDayRibbon
 import com.steve1316.uma_android_automation.components.IconGoalRibbon
 import com.steve1316.uma_android_automation.components.ButtonBack
 import com.steve1316.uma_android_automation.components.ButtonUnityCupRace
+import com.steve1316.uma_android_automation.components.ButtonCompleteCareer
 
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -47,6 +50,7 @@ class Game(val myContext: Context) {
 
 	val imageUtils: CustomImageUtils = CustomImageUtils(myContext, this)
 	val gestureUtils: MyAccessibilityService = MyAccessibilityService.getInstance()
+    val skillDatabase: SkillDatabase = SkillDatabase(this)
 
 	val decimalFormat = DecimalFormat("#.##")
 
@@ -55,8 +59,8 @@ class Game(val myContext: Context) {
 	// SQLite Settings
 	val scenario: String = SettingsHelper.getStringSetting("general", "scenario")
 	val debugMode: Boolean = SettingsHelper.getBooleanSetting("debug", "enableDebugMode")
-    val enableSkillPointCheck: Boolean = SettingsHelper.getBooleanSetting("general", "enableSkillPointCheck")
-	val skillPointsRequired: Int = SettingsHelper.getIntSetting("general", "skillPointCheck")
+    val enableSkillPointCheck: Boolean = SettingsHelper.getBooleanSetting("skills", "enableSkillPointCheck")
+	val skillPointsRequired: Int = SettingsHelper.getIntSetting("skills", "skillPointCheck")
 	private val enablePopupCheck: Boolean = SettingsHelper.getBooleanSetting("general", "enablePopupCheck")
     private val enableCraneGameAttempt: Boolean = SettingsHelper.getBooleanSetting("general", "enableCraneGameAttempt")
     private val enableStopBeforeFinals: Boolean = SettingsHelper.getBooleanSetting("general", "enableStopBeforeFinals")
@@ -67,6 +71,7 @@ class Game(val myContext: Context) {
     val trainee: Trainee = Trainee()
 	val training: Training = Training(this)
 	val racing: Racing = Racing(this)
+    val skillPlan: SkillPlan = SkillPlan(this)
 	val trainingEvent: TrainingEvent = TrainingEvent(this)
     val campaign: Campaign = if (scenario == "Unity Cup") {
         UnityCup(this)
@@ -391,7 +396,7 @@ class Game(val myContext: Context) {
 	 */
 	fun checkEndScreen(): Boolean {
 		MessageLog.i(TAG, "\nChecking if the bot is sitting on the End screen.")
-		return if (imageUtils.findImage("complete_career", tries = 1, region = imageUtils.regionBottomHalf).first != null) {
+		return if (ButtonCompleteCareer.check(imageUtils)) {
 			true
 		} else {
 			MessageLog.i(TAG, "Bot is not at the End screen and can keep going.")

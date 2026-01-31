@@ -16,6 +16,8 @@ import TrainingEventSettings from "./pages/TrainingEventSettings"
 import OCRSettings from "./pages/OCRSettings"
 import RacingSettings from "./pages/RacingSettings"
 import RacingPlanSettings from "./pages/RacingPlanSettings"
+import SkillSettings from "./pages/SkillSettings"
+import SkillPlanSettings, { skillPlanSettingsPages } from "./pages/SkillPlanSettings"
 import EventLogVisualizer from "./pages/EventLogVisualizer"
 import ImportSettingsPreview from "./pages/ImportSettingsPreview"
 import DebugSettings from "./pages/DebugSettings"
@@ -40,6 +42,20 @@ function SettingsStack() {
             <Stack.Screen name="OCRSettings" component={OCRSettings} />
             <Stack.Screen name="RacingSettings" component={RacingSettings} />
             <Stack.Screen name="RacingPlanSettings" component={RacingPlanSettings} />
+            <Stack.Screen name="SkillSettings" component={SkillSettings} />
+            {Object.entries(skillPlanSettingsPages).map(([key, config]) => (
+                <Stack.Screen name={config.name}>
+                    {(props) => (
+                        <SkillPlanSettings
+                            {...props}
+                            planKey={config.planKey}
+                            name={config.name}
+                            title={config.title}
+                            description={config.description}
+                        />
+                    )}
+                </Stack.Screen>
+            ))}
             <Stack.Screen name="EventLogVisualizer" component={EventLogVisualizer} />
             <Stack.Screen name="ImportSettingsPreview" component={ImportSettingsPreview} />
             <Stack.Screen name="DebugSettings" component={DebugSettings} />

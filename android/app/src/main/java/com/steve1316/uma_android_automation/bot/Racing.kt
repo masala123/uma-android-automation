@@ -514,24 +514,24 @@ class Racing (private val game: Game) {
 
     private fun selectMaidenRace(): Boolean {
         // Get the bounding region of the race list.
-        val raceListTopLeftBitmap: Bitmap? = IconRaceListTopLeft.template.getBitmap(game.imageUtils)
+        val raceListTopLeftBitmap: Bitmap? = IconScrollListTopLeft.template.getBitmap(game.imageUtils)
         if (raceListTopLeftBitmap == null) {
-            MessageLog.e(TAG, "[RACE] Failed to load IconRaceListTopLeft bitmap.")
+            MessageLog.e(TAG, "[RACE] Failed to load IconScrollListTopLeft bitmap.")
             return false
         }
 
-        val raceListBottomRightBitmap: Bitmap? = IconRaceListBottomRight.template.getBitmap(game.imageUtils)
+        val raceListBottomRightBitmap: Bitmap? = IconScrollListBottomRight.template.getBitmap(game.imageUtils)
         if (raceListBottomRightBitmap == null) {
-            MessageLog.e(TAG, "[RACE] Failed to load IconRaceListBottomRight bitmap.")
+            MessageLog.e(TAG, "[RACE] Failed to load IconScrollListBottomRight bitmap.")
             return false
         }
 
-        val raceListTopLeft: Point? = IconRaceListTopLeft.find(game.imageUtils).first
+        val raceListTopLeft: Point? = IconScrollListTopLeft.find(game.imageUtils).first
         if (raceListTopLeft == null) {
             MessageLog.e(TAG, "[RACE] Failed to find top left corner of race list.")
             return false
         }
-        val raceListBottomRight: Point? = IconRaceListBottomRight.find(game.imageUtils).first
+        val raceListBottomRight: Point? = IconScrollListBottomRight.find(game.imageUtils).first
         if (raceListBottomRight == null) {
             MessageLog.e(TAG, "[RACE] Failed to find bottom right corner of race list.")
             return false
