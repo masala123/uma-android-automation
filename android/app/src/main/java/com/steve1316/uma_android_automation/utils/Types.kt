@@ -280,7 +280,7 @@ enum class SkillCommunityTier {
  * This is calculated using the Icon ID. If the last digit is a 3, then it is unique.
  * @property bIsNegative Whether this skill is considered a negative skill.
  * This is calculated using the Icon ID. If the last digit is a 4, then it is negative.
- * @proprty type The type of this skill (i.e. Green, Blue, Red, Yellow).
+ * @property type The type of this skill (i.e. Green, Blue, Red, Yellow).
  * @property bIsInPlace Whether this skill chain has an in-place upgrade system.
  * Only certain types of skills can have in-place upgrades:
  *      Negative Skills (purple)
@@ -417,7 +417,7 @@ data class SkillData(
         val value: Int,
     ) {
         companion object {
-            /** Parses a single condition string and splits it into its three consituent parts.
+            /** Parses a single condition string and splits it into its three parts.
              *
              * For example, the string "order==1" will be split into "order", "==", and 1.
              *
