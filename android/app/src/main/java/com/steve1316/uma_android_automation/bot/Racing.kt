@@ -247,11 +247,17 @@ class Racing (private val game: Game) {
             }
             "trophy_won" -> dialog.close(imageUtils = game.imageUtils)
             "try_again" -> {
+                // All branches need a slight delay to allow the dialog to close
+                // since the runRaceWithRetries loop handles dialogs at the start
+                // of each iteration. Can cause problem where we handle one branch
+                // then immediately handle dialogs again and handle a second branch
+                // for the same dialog instance.
                 if (disableRaceRetries) {
                     if (enableFreeRaceRetry && IconOneFreePerDayTooltip.check(game.imageUtils)) {
                         MessageLog.i(TAG, "[RACE] Failed mandatory race. Using daily free race retry...")
                         raceRetries--
                         dialog.ok(game.imageUtils)
+                        game.wait(0.5, skipWaitingForLoading = true)
                         return Pair(true, dialog)
                     }
                     if (enableCompleteCareerOnFailure) {
@@ -259,6 +265,7 @@ class Racing (private val game: Game) {
                         // Manually set retries to -1 to break the race retry loop.
                         raceRetries = -1
                         dialog.close(game.imageUtils)
+                        game.wait(0.5, skipWaitingForLoading = true)
                         return Pair(true, dialog)
                     }
                     MessageLog.i(TAG, "\n[END] Stopping the bot due to failing a mandatory race.")
@@ -268,6 +275,7 @@ class Racing (private val game: Game) {
                 }
                 raceRetries--
                 dialog.ok(game.imageUtils)
+                game.wait(0.5, skipWaitingForLoading = true)
             }
             "unlock_requirements" -> dialog.close(imageUtils = game.imageUtils)
             // This dialog shows runner details other than our own.
@@ -1916,6 +1924,8 @@ class Racing (private val game: Game) {
      * @return True if the bot completed the race with retry attempts remaining. Otherwise false.
      */
     fun runRaceWithRetries(): Boolean {
+        // We can check this outside the loop since retrying a race won't change
+        // the fact that it can be skipped.
         val canSkip = !ButtonViewResultsLocked.check(game.imageUtils, tries = 5)
         if (canSkip) {
             MessageLog.i(TAG, "[RACE] Race can be skipped. Proceeding to handle the race with skips...")
@@ -1925,9 +1935,6 @@ class Racing (private val game: Game) {
         
         do {
             if (game.tryHandleAllDialogs()) {
-                // Don't want to start next iteration too quick since dialogs
-                // may still be in process of closing.
-                game.wait(0.5, skipWaitingForLoading = true)
                 continue
             }
 
