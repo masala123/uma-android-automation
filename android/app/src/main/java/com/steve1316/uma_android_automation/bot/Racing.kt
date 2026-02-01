@@ -1925,6 +1925,9 @@ class Racing (private val game: Game) {
         
         do {
             if (game.tryHandleAllDialogs()) {
+                // Don't want to start next iteration too quick since dialogs
+                // may still be in process of closing.
+                game.wait(0.5, skipWaitingForLoading = true)
                 continue
             }
 
@@ -1994,6 +1997,9 @@ class Racing (private val game: Game) {
         val maxTimeMs: Long = 30000
         while (System.currentTimeMillis() - startTime < maxTimeMs) {
             if (game.tryHandleAllDialogs()) {
+                // Don't want to start next iteration too quick since dialogs
+                // may still be in process of closing.
+                game.wait(0.5, skipWaitingForLoading = true)
                 continue
             }
             val bitmap: Bitmap = game.imageUtils.getSourceBitmap()
