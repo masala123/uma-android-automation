@@ -1932,7 +1932,7 @@ class Racing (private val game: Game) {
         } else {
             MessageLog.i(TAG, "[RACE] Unable to skip the race. Proceeding to handle the race manually...")
         }
-        
+
         do {
             if (game.tryHandleAllDialogs()) {
                 continue

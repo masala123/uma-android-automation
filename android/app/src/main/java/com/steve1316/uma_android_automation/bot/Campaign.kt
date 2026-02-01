@@ -849,6 +849,8 @@ open class Campaign(val game: Game) {
                     MessageLog.d(TAG, "Misc checks complete.")
                 } else {
                     MessageLog.v(TAG, "Did not detect the bot being at the following screens: Main, Training Event, Inheritance, Mandatory Race Preparation, Racing and Career End.")
+                    // Tap to progress any intermediate screens.
+                    game.tap(350.0, 450.0, "ok", taps = 1)
                 }
             } catch (e: InterruptedException) {
                 game.notificationMessage = "Campaign main loop exiting: ${e.message}"
