@@ -9,7 +9,7 @@
  * to its own file.
  */
 
-package com.steve1316.uma_android_automation.utils.types
+package com.steve1316.uma_android_automation.types
 
 /** These are the different tiers defined in game and awarded based on fan count. */
 enum class FanCountClass {
