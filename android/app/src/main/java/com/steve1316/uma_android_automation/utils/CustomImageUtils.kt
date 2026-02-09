@@ -2094,11 +2094,17 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
      * If not specified, then a screenshot is taken and saved instead.
      * @param filename The filename for the saved bitmap.
      */
-    fun saveBitmap(bitmap: Bitmap? = null, filename: String) {
+    fun saveBitmap(bitmap: Bitmap? = null, filename: String, fullRes: Boolean = false) {
         val bitmap = bitmap ?: getSourceBitmap()
         val tempImage = Mat()
         Utils.bitmapToMat(bitmap, tempImage)
-        Imgcodecs.imwrite("$matchFilePath/$filename.png", tempImage)
+        if (fullRes) {
+            val params = MatOfInt(Imgcodecs.IMWRITE_JPEG_QUALITY, 100)
+            Imgcodecs.imwrite("$matchFilePath/$filename.png", tempImage, params)
+            params.release()
+        } else {
+            Imgcodecs.imwrite("$matchFilePath/$filename.png", tempImage)
+        }
         tempImage.release()
     }
 
@@ -2158,13 +2164,25 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
      *
      * @return The cropped screenshot.
      */
-    fun getRegionBitmap(bbox: BoundingBox): Bitmap? {
-        return getRegionBitmap(
+    fun getRegionBitmap(bbox: BoundingBox): Bitmap {
+        var bitmap: Bitmap? = getRegionBitmap(
             x = bbox.x,
             y = bbox.y,
             w = bbox.w,
             h = bbox.h,
         )
+
+        if (bitmap == null) {
+            Log.w(TAG, "Source bitmap is null on initial capture. Waiting a moment before trying again.")
+            bitmap = getRegionBitmap(
+                x = bbox.x,
+                y = bbox.y,
+                w = bbox.w,
+                h = bbox.h,
+            )
+        }
+
+        return bitmap ?: throw IllegalStateException("Failed to acquire a source bitmap even after caching and retries.")
     }
 
     /** Compares two bitmaps using Structural Similarity Index (SSIM).

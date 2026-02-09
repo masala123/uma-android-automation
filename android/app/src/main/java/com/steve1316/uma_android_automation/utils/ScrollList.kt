@@ -43,26 +43,67 @@ data class ScrollListEntry(
     val bbox: BoundingBox,
 )
 
-/**
+/** Stores configuration for entry image detection.
+ *
+ * See [CustomImageUtils.detectRoundedRectangles] for more information.
+ */
+data class ScrollListEntryDetectionConfig (
+    // The area parameters can be updated later to fit the scroll list's dims.
+    var minArea: Int? = null,
+    var maxArea: Int? = null,
+    val blurSize: Int = 5,
+    val epsilonScalar: Double = 0.02,
+    val cannyLowerThreshold: Int = 30,
+    val cannyUpperThreshold: Int = 50,
+    val bUseAdaptiveThreshold: Boolean = true,
+    val adaptiveThresholdBlockSize: Int = 11,
+    val adaptiveThresholdConstant: Double = 2.0,
+)
+
+/** Handles parsing entries in a scrollable list.
+ *
+ * Example:
+ *
+ * val list: ScrollList? = ScrollList.create(game)
+ * if (list == null) throw InvalidStateException()
+ * scrollList.process() { scrollList: ScrollList, entry: ScrollListEntry ->
+ *      imageUtils.saveBitmap(entry.bitmap, "entry_${entry.index}")
+ *      // Return true to stop the scrollList loop if we've read 5 entries.
+ *      entry.index > 5
+ * }
  *
  * @param game Reference to the bot's Game instance.
  * @param bboxList The bounding region of the full list.
  * @param bboxEntries The refined [bboxList] with a buffer on the top and bottom
  * to prevent partial entries.
- * @param entryHeight The estimated height of a single entry in the list.
+ * @param entryDetectionConfig The configuration for image detection.
  */
 class ScrollList private constructor(
     private val game: Game,
     private val bboxList: BoundingBox,
+    entryDetectionConfig: ScrollListEntryDetectionConfig,
 ) {
-    private val minEntryHeight: Int = game.imageUtils.relHeight((SharedData.displayHeight * 0.0781).toInt()) // 150px on 1920h
-    private val maxEntryHeight: Int = game.imageUtils.relHeight((SharedData.displayHeight * 0.1302).toInt()) // 250px on 1920h
-    private val entryDetectionCannyThreshold1: Int = 30
-    private val entryDetectionCannyThreshold2: Int = 50
-    private val entryDetectionBlurSize: Int = 5
-    private val entryDetectionUseAdaptiveThreshold: Boolean = true
+    // These are safe values for entry heights. We use these to calculate area limits
+    // if no config is passed.
+    private val defaultMinEntryHeight: Int = game.imageUtils.relHeight((SharedData.displayHeight * 0.0781).toInt()) // 150px on 1920h
+    private val defaultMaxEntryHeight: Int = game.imageUtils.relHeight((SharedData.displayHeight * 0.1302).toInt()) // 250px on 1920h
 
-    private val listPadding: Int = 2
+    private val entryDetectionConfig = ScrollListEntryDetectionConfig(
+        minArea = entryDetectionConfig.minArea ?: defaultMinEntryHeight * (bboxList.w.toDouble() * 0.7).toInt(),
+        maxArea = entryDetectionConfig.maxArea ?: defaultMaxEntryHeight * bboxList.w,
+        blurSize = entryDetectionConfig.blurSize,
+        epsilonScalar = entryDetectionConfig.epsilonScalar,
+        cannyLowerThreshold = entryDetectionConfig.cannyLowerThreshold,
+        cannyUpperThreshold = entryDetectionConfig.cannyUpperThreshold,
+        bUseAdaptiveThreshold = entryDetectionConfig.bUseAdaptiveThreshold,
+        adaptiveThresholdBlockSize = entryDetectionConfig.adaptiveThresholdBlockSize,
+        adaptiveThresholdConstant = entryDetectionConfig.adaptiveThresholdConstant,
+    )
+
+    // Create a small padding within the bboxList. This is where the list entries
+    // will reside. This prevents us from accidentally clicking outside of the
+    // list.
+    private val listPadding: Int = 5
     private val bboxEntries: BoundingBox = BoundingBox(
         x = bboxList.x + listPadding,
         y = bboxList.y + listPadding,
@@ -76,6 +117,11 @@ class ScrollList private constructor(
         /** Creates a new ScrollList instance.
          *
          * @param game Reference to the bot's Game instance.
+         * @param listTopLeftComponent An image component used to detect the top
+         * left corner of the list.
+         * @param listBottomRightComponent An image component used to detect the
+         * bottom right corner of the list.
+         * @param entryDetectionConfig Optional image detection configuration.
          *
          * @return On success, the ScrollList instance. Otherwise, NULL.
          */
@@ -84,6 +130,7 @@ class ScrollList private constructor(
             bitmap: Bitmap? = null,
             listTopLeftComponent: ComponentInterface? = null,
             listBottomRightComponent: ComponentInterface? = null,
+            entryDetectionConfig: ScrollListEntryDetectionConfig? = null,
         ): ScrollList? {
             val bboxList: BoundingBox? = getListBoundingRegion(
                 game,
@@ -95,7 +142,7 @@ class ScrollList private constructor(
                 return null
             }
 
-            return ScrollList(game, bboxList)
+            return ScrollList(game, bboxList, entryDetectionConfig ?: ScrollListEntryDetectionConfig())
         }
 
         /** Gets the bounding region for the list on the screen.
@@ -169,25 +216,27 @@ class ScrollList private constructor(
         }
     }
 
+    /** Detects locations of each entry in the visible portion of the list.
+     *
+     * @param bitmap An optional bitmap to use when detecting entries.
+     * If not specified, a screenshot will be taken.
+     *
+     * @return A list of bounding boxes for each entry that we detected.
+     */
     private fun detectEntries(bitmap: Bitmap? = null): List<BoundingBox> {
-        // The width shouldn't ever be substantially smaller than the list region's
-        // width. We just have to adjust for a small padding and a scrollbar.
-        val minEntryWidth = (bboxList.w * 0.8).toInt()
-        val maxEntryWidth = bboxList.w
-        
-        val minEntryArea = minEntryWidth * minEntryHeight
-        val maxEntryArea = maxEntryWidth * maxEntryHeight
-
         // Extract a list of bounding boxes for each entry in the list.
         val rects: List<BoundingBox> = game.imageUtils.detectRoundedRectangles(
             bitmap = bitmap,
             region = bboxList,
-            minArea = minEntryArea,
-            maxArea = maxEntryArea,
-            blurSize = entryDetectionBlurSize,
-            threshold1 = entryDetectionCannyThreshold1,
-            threshold2 = entryDetectionCannyThreshold2,
-            bUseAdaptiveThreshold = entryDetectionUseAdaptiveThreshold,
+            minArea = entryDetectionConfig.minArea,
+            maxArea = entryDetectionConfig.maxArea,
+            blurSize = entryDetectionConfig.blurSize,
+            epsilonScalar = entryDetectionConfig.epsilonScalar,
+            cannyLowerThreshold = entryDetectionConfig.cannyLowerThreshold,
+            cannyUpperThreshold = entryDetectionConfig.cannyUpperThreshold,
+            bUseAdaptiveThreshold = entryDetectionConfig.bUseAdaptiveThreshold,
+            adaptiveThresholdBlockSize = entryDetectionConfig.adaptiveThresholdBlockSize,
+            adaptiveThresholdConstant = entryDetectionConfig.adaptiveThresholdConstant,
         )
 
         // Need to adjust the coordinates of each BoundingBox to be in screen
@@ -211,6 +260,7 @@ class ScrollList private constructor(
      *
      * @param bitmap Optional bitmap used for debugging.
      * @param bboxSkillList The bounding region of the list on the screen.
+     * @param debugString An optional string to use for debugging purposes.
      *
      * @return On success, the bounding region. On failure, NULL.
      */
@@ -315,10 +365,11 @@ class ScrollList private constructor(
      *
      * @param startLoc An optional starting location to swipe from.
      * If not specified, then the swipe starts from the center of the list.
+     * @param entryHeight Optional height of an entry in the list. This is used
+     * to determine how far to scroll. If not specified, we just scroll
+     * to the bboxList bounds.
      */
-    private fun scrollDown(startLoc: Point? = null, entryHeight: Int? = null) {
-        val entryHeight: Int = entryHeight ?: minEntryHeight
-
+    private fun scrollDown(startLoc: Point? = null, entryHeight: Int = 0) {
         val x0: Int = (startLoc?.x ?: bboxList.x + (bboxList.w / 2)).toInt()
         val y0: Int = (startLoc?.y ?: bboxList.y + (bboxList.h / 2)).toInt()
         game.gestureUtils.swipe(
@@ -336,9 +387,11 @@ class ScrollList private constructor(
      *
      * @param startLoc An optional starting location to swipe from.
      * If not specified, then the swipe starts from the center of the list.
+     * @param entryHeight Optional height of an entry in the list. This is used
+     * to determine how far to scroll. If not specified, we just scroll
+     * to the bboxList bounds.
      */
-    private fun scrollUp(startLoc: Point? = null, entryHeight: Int? = null) {
-        val entryHeight: Int = entryHeight ?: minEntryHeight
+    private fun scrollUp(startLoc: Point? = null, entryHeight: Int = 0) {
         val x0: Int = (startLoc?.x ?: bboxList.x + (bboxList.w / 2)).toInt()
         val y0: Int = (startLoc?.y ?: bboxList.y + (bboxList.h / 2)).toInt()
         game.gestureUtils.swipe(
@@ -352,6 +405,15 @@ class ScrollList private constructor(
         stopScrolling()
     }
 
+    /** Scrolls through a list and fires a callback on each entry. 
+     *
+     * @param maxTimeMs The maximum runtime for this process before it times out.
+     * @param onEntry A callback function that is called for each detected entry.
+     * This callback can return TRUE to force this loop to exit early; before
+     * finishing the list. See [OnEntryDetectedCallback] for more info.
+     *
+     * @return Whether the operation was successful.
+     */
     fun process(
         //entryComponents: List<ComponentInterface>,
         maxTimeMs: Int = MAX_PROCESS_TIME_DEFAULT_MS,
