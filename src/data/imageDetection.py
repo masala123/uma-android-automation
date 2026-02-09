@@ -52,7 +52,7 @@ def nothing(x):
     pass
 
 def detectRectangles(
-    fp,
+    fp, # can be .png or .mp4
     min_area = 0,
     max_area = 1e+7,
     blur_size = 5,
@@ -167,9 +167,6 @@ def detectRectangles(
 
 if __name__ == "__main__":
     fp = "./imageDetectionSample.mp4"
-    # NOTE: The mp4 is 720x1280, so the min/max area will need to be
-    # changed to reflect this smaller size.
-    #fp = "./imageDetectionSample.mp4"
     detectRectangles(
         fp,
         min_area=200*900,
