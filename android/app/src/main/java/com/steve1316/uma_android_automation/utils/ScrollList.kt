@@ -13,7 +13,7 @@ import com.steve1316.uma_android_automation.utils.types.BoundingBox
 
 import com.steve1316.uma_android_automation.components.*
 
-const val MAX_PROCESS_TIME_DEFAULT_MS = 60000
+const val DEFAULT_MAX_PROCESS_TIME_MS = 60000
 
 /** Callback that is called whenever an entry is detected while processing the list.
  *
@@ -416,7 +416,7 @@ class ScrollList private constructor(
      */
     fun process(
         //entryComponents: List<ComponentInterface>,
-        maxTimeMs: Int = MAX_PROCESS_TIME_DEFAULT_MS,
+        maxTimeMs: Int = DEFAULT_MAX_PROCESS_TIME_MS,
         onEntry: OnEntryDetectedCallback,
     ): Boolean {
         var bitmap = game.imageUtils.getSourceBitmap()
@@ -429,18 +429,12 @@ class ScrollList private constructor(
 
         scrollToTop()
 
-        // Max time limit for the while loop to scroll through the list.
-        val startTime: Long = System.currentTimeMillis()
-        val maxTimeMs: Long = 60000
-        var prevScrollBarBitmap: Bitmap? = null
-
-        var index: Int = 0
-
         // Stores all bboxes. Used to calculate average entry height.
         val entryBboxes: MutableList<BoundingBox> = mutableListOf()
-
-        val prevBitmaps: MutableList<Bitmap> = mutableListOf()
-
+        // Used to detect if we reached bottom of scroll list.
+        var prevScrollBarBitmap: Bitmap? = null
+        var index: Int = 0
+        val startTime: Long = System.currentTimeMillis()
         while (System.currentTimeMillis() - startTime < maxTimeMs) {
             bitmap = game.imageUtils.getSourceBitmap()
 
@@ -480,12 +474,11 @@ class ScrollList private constructor(
                     MessageLog.d(TAG, "onEntry callback returned TRUE for entry $index. Exiting loop.")
                     return true
                 }
-                prevBitmaps.add(cropped)
             }
 
-            prevBitmaps.clear()
-
             entryBboxes.addAll(bboxes)
+            // Get the average height of an entry. We use this to determine how
+            // far to scroll so that we get only new entries on the next iteration.
             val avgEntryHeight: Int = entryBboxes.map { it.h }.average().toInt()
             val scrollStartLoc: Point? = if (bboxes.isEmpty()) null else Point(bboxEntries.x.toDouble(), bboxes.last().y.toDouble())
             scrollDown(startLoc = scrollStartLoc, entryHeight = avgEntryHeight)
