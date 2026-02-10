@@ -6,6 +6,8 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.util.Log
 import com.google.mlkit.vision.common.InputImage
+import com.googlecode.tesseract.android.TessBaseAPI
+import com.google.mlkit.common.MlKitException
 import com.steve1316.automation_library.utils.BotService
 import com.steve1316.automation_library.utils.ImageUtils
 import com.steve1316.automation_library.utils.MessageLog
@@ -33,6 +35,7 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.math.sqrt
 import kotlin.text.replace
+import kotlin.random.Random
 import java.util.concurrent.ConcurrentHashMap
 
 
@@ -1810,21 +1813,37 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		useThreshold: Boolean = true,
 		useGrayscale: Boolean = true,
 		scale: Double = 1.0,
+        multiLine: Boolean = false,
 		ocrEngine: String = "tesseract",
-		debugName: String = ""
+		debugName: String = "",
 	): String {
 		// Perform OCR using findText() from ImageUtils.
-		return findText(
-			cropRegion = intArrayOf(x, y, width, height),
-			grayscale = useGrayscale,
-			thresh = useThreshold,
-			threshold = threshold.toDouble(),
-			thresholdMax = 255.0,
-			scale = scale,
-			sourceBitmap = sourceBitmap,
-			detectDigitsOnly = ocrEngine == "tesseract_digits",
-            debugName = debugName
-		)
+        return if(multiLine) {
+            findTextMultiLine(
+                cropRegion = intArrayOf(x, y, width, height),
+                grayscale = useGrayscale,
+                thresh = useThreshold,
+                threshold = threshold.toDouble(),
+                thresholdMax = 255.0,
+                scale = scale,
+                sourceBitmap = sourceBitmap,
+                detectDigitsOnly = ocrEngine == "tesseract_digits",
+                debugName = debugName
+            )
+        } else {
+            findText(
+                cropRegion = intArrayOf(x, y, width, height),
+                grayscale = useGrayscale,
+                thresh = useThreshold,
+                threshold = threshold.toDouble(),
+                thresholdMax = 255.0,
+                scale = scale,
+                sourceBitmap = sourceBitmap,
+                detectDigitsOnly = ocrEngine == "tesseract_digits",
+                debugName = debugName
+            )
+        }
+		
 	}
 
 	/**
@@ -1852,24 +1871,26 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		useThreshold: Boolean = true,
 		useGrayscale: Boolean = true,
 		scale: Double = 1.0,
+        multiLine: Boolean = false,
 		ocrEngine: String = "tesseract",
-		debugName: String = ""
+		debugName: String = "",
 	): String {
 		val sourceBitmap = getSourceBitmap()
 		val finalX = relX(referencePoint.x, offsetX)
 		val finalY = relY(referencePoint.y, offsetY)
 		
 		return performOCROnRegion(
-			sourceBitmap,
-			finalX,
-			finalY,
-			width,
-			height,
-			useThreshold,
-			useGrayscale,
-			scale,
-			ocrEngine,
-			debugName
+			sourceBitmap = sourceBitmap,
+			x = finalX,
+			y = finalY,
+			width = width,
+			height = height,
+			useThreshold = useThreshold,
+			useGrayscale = useGrayscale,
+			scale = scale,
+            multiLine = multiLine,
+			ocrEngine = ocrEngine,
+			debugName = debugName,
 		)
 	}
 
@@ -2125,6 +2146,9 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
             bbox.h,
             "saveBitmap(filename=$filename, bbox=$bbox)",
         )
+        if (croppedBitmap == null) {
+            return
+        }
         saveBitmap(bitmap = croppedBitmap, filename = filename)
     }
 
@@ -2231,6 +2255,165 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
         return similarityScore
     }
+
+    fun findTextMultiLine(
+		cropRegion: IntArray,
+        grayscale: Boolean = true,
+        thresh: Boolean = true,
+        threshold: Double = 130.0,
+        thresholdMax: Double = 255.0,
+        scale: Double = 1.0,
+        sourceBitmap: Bitmap? = null,
+        detectDigitsOnly: Boolean = false,
+        debugName: String = "ocr",
+	): String {
+		val startTime: Long = System.currentTimeMillis()
+		var result = ""
+
+		val finalSourceBitmap: Bitmap = sourceBitmap ?: getSourceBitmap()
+
+		if (debugMode) Log.d(TAG, "\n[TEXT_DETECTION] Starting text detection now...")
+
+		// Crop and convert the source bitmap to Mat.
+		// Google ML Kit requires a minimum of 32x32 pixels, so clamp the dimensions.
+		val (x, y, width, height) = cropRegion
+		val minDimension = 32
+		val clampedWidth = maxOf(width, minDimension).coerceAtMost(finalSourceBitmap.width - x)
+		val clampedHeight = maxOf(height, minDimension).coerceAtMost(finalSourceBitmap.height - y)
+
+		// Log if the dimensions were clamped to meet the minimum requirement.
+		if (width < minDimension || height < minDimension) {
+			Log.w(TAG, "[TEXT_DETECTION] Crop region clamped from ${width}x${height} to ${clampedWidth}x${clampedHeight} to meet ML Kit's minimum 32x32 requirement.")
+		}
+
+		val croppedBitmap = Bitmap.createBitmap(finalSourceBitmap, x, y, clampedWidth, clampedHeight)
+		val cvImage = Mat()
+		Utils.bitmapToMat(croppedBitmap, cvImage)
+
+		// Save the cropped image before converting it to black and white in order to troubleshoot issues related to differing device sizes and cropping.
+		if (debugMode) {
+			Imgcodecs.imwrite("$matchFilePath/debug_${debugName}_cropped.png", cvImage)
+		}
+
+		// Grayscale the cropped image.
+		val grayImage = Mat()
+		val imageForProcessing: Mat = if (grayscale) {
+			Imgproc.cvtColor(cvImage, grayImage, Imgproc.COLOR_RGB2GRAY)
+			grayImage
+		} else {
+			cvImage
+		}
+
+		// Thresh the grayscale cropped image to make black and white.
+		val processedMat: Mat = if (thresh) {
+			val bwImage = Mat()
+			Imgproc.threshold(imageForProcessing, bwImage, threshold, thresholdMax, Imgproc.THRESH_BINARY)
+
+			// Save the cropped image before converting it to black and white in order to troubleshoot issues related to differing device sizes and cropping.
+			if (debugMode) {
+				Imgcodecs.imwrite("$matchFilePath/debug_${debugName}_threshold.png", bwImage)
+			}
+			bwImage
+		} else {
+			imageForProcessing
+		}
+
+		// Convert the processed Mat to Bitmap and apply scaling if needed.
+		val clampedScale: Double = scale.coerceAtLeast(0.0)
+		val baseBitmap = createBitmap(processedMat.cols(), processedMat.rows())
+		Utils.matToBitmap(processedMat, baseBitmap)
+		val finalBitmap = if (clampedScale != 1.0) {
+			baseBitmap.scale((baseBitmap.width * clampedScale).toInt(), (baseBitmap.height * clampedScale).toInt())
+		} else {
+			baseBitmap
+		}
+
+		// Create a InputImage object for Google's ML OCR.
+		val inputImage: InputImage = InputImage.fromBitmap(finalBitmap, 0)
+
+		// Use CountDownLatch to make the async operation synchronous.
+		val latch = CountDownLatch(1)
+		var mlKitFailed = false
+		var errorMessage = "Google ML Kit failed to do text detection."
+
+		googleTextRecognizer.process(inputImage)
+			.addOnSuccessListener { text ->
+				if (text.textBlocks.isNotEmpty()) {
+                    result = text.text
+				}
+				latch.countDown()
+			}
+			.addOnFailureListener { exception ->
+				// Check if it's an MlKitException and extract error code information.
+				if (exception is MlKitException) {
+					val errorCode = exception.errorCode
+					errorMessage += " Error code: $errorCode."
+				}
+				
+				// Include the exception message if available.
+				exception.message?.let {
+					errorMessage += " Exception message: $it"
+				}
+				
+				mlKitFailed = true
+				latch.countDown()
+			}
+
+		// Wait for the async operation to complete.
+		try {
+			latch.await(5, TimeUnit.SECONDS)
+		} catch (_: InterruptedException) {
+			Log.e(TAG, "Google ML Kit operation timed out.")
+		}
+
+		// Fallback to Tesseract if ML Kit failed or didn't find result.
+		if (mlKitFailed || result == "") {
+			// Use either the default Tesseract client or the Tesseract client geared towards digits to set the image to scan.
+            Log.e(TAG, errorMessage)
+			if (detectDigitsOnly) {
+                Log.d(TAG, "[TEXT_DETECTION] Setting Tesseract image for digits only.")
+				tessDigitsBaseAPI.setImage(finalBitmap)
+			} else {
+				Log.d(TAG, "[TEXT_DETECTION] Setting Tesseract image for text detection.")
+				tessBaseAPI.setImage(finalBitmap)
+			}
+
+			try {
+                val prevMode = tessBaseAPI.pageSegMode
+                tessBaseAPI.pageSegMode = TessBaseAPI.PageSegMode.PSM_AUTO
+				// Finally, detect text on the cropped region.
+				result = if (detectDigitsOnly) {
+					tessDigitsBaseAPI.utF8Text
+				} else {
+					tessBaseAPI.utF8Text
+				}
+                tessBaseAPI.pageSegMode = prevMode
+				Log.d(TAG, "[TEXT_DETECTION] Detected text with Tesseract: $result")
+			} catch (e: Exception) {
+				Log.e(TAG, "Cannot perform OCR: ${e.stackTraceToString()}")
+			}
+
+			// Stop Tesseract operations.
+			if (detectDigitsOnly) {
+				tessDigitsBaseAPI.stop()
+			} else {
+				tessBaseAPI.stop()
+			}
+
+			tessBaseAPI.clear()
+			tessDigitsBaseAPI.clear()
+		} else {
+            Log.d(TAG, "[TEXT_DETECTION] Detected text with Google ML Kit: $result")
+        }
+
+		if (debugMode) Log.d(TAG, "[TEXT_DETECTION] Text detection finished in ${System.currentTimeMillis() - startTime}ms.")
+
+		cvImage.release()
+        grayImage.release()
+        processedMat.release()
+
+		return result
+	}
 
     /** Converts ConvexHull indices to actual points.
      *
@@ -2421,5 +2604,292 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         srcImage.release()
 
         return result.toList()
+    }
+
+    /** Detects rectangles with on the screen.
+     *
+     * A more robust version of [detectRoundedRectangles] with slightly less
+     * accurate rectangle boundaries in favor of higher chance of detection.
+     *
+     * This uses traditional image processing algorithms to detect
+     * all rectangles on the screen.
+     *
+     * For this to work, the rectangle must either have an outline or
+     * be easily differentiable from the background color. Play around with
+     * the `src/data/imageDetection.py` test script to see what parameters
+     * work best for the items you're trying to detect.
+     *
+     * @param bitmap Optional bitmap containing the rectangles you want to detect.
+     * If NULL, then a screenshot will be used.
+     * @param region A bounding box region to limit the detection to.
+     * If not specified, then the entire bitmap will be used.
+     * @param minArea Filters out any rectangles with an area smaller than this parameter.
+     * If not specified, then no lower bound filter will be applied.
+     * @param maxArea Filters out any rectangles with an area larger than this parameter.
+     * If not specified, then no upper bound filter will be applied.
+     * @param blurSize The size of the kernel to use for the gaussian blur.
+     * Must be a positive and odd integer. A value of 1 will effectively be no blur.
+     * @param epsilonScalar A small value used to scale the detection of rounded
+     * corners on the rectangles. Defaults to 0.02 which works in most cases.
+     * @param fillSeedPoint The location within the [bitmap] or [region] that is part
+     * of the background on which the rectangles are located. Think of this like
+     * the fill (paint bucket) tool in image editing software. So if the rectangles
+     * are all against a white background, then [fillSeedPoint] should be the location
+     * of one of the white pixels in the background.
+     * @param fillLoDiffValue Maximum lower brightness/color difference for fill.
+     * Higher values cause the [fillSeedPoint] color fill to spread further.
+     * @param fillUpDiffValue Maximum upper brightness/color difference for fill.
+     * Higher values cause the [fillSeedPoint] color fill to spread further.
+     * @param morphKernelSize The size of the kernel used for the opening morphology
+     * operation. Higher values will cause detected rectangles to be more accurate,
+     * but too high of values can cause rectangles to not be detected at all.
+     *
+     * @return A list of BoundingBox objects for detected rectangles, sorted by their
+     * y-position in the bitmap (from top to bottom on screen).
+     */
+    fun detectRectanglesGeneric(
+        bitmap: Bitmap? = null,
+        region: BoundingBox? = null,
+        minArea: Int? = null,
+        maxArea: Int? = null,
+        blurSize: Int = 7,
+        epsilonScalar: Double = 0.02,
+        fillSeedPoint: Point = Point(10.0, 10.0),
+        fillLoDiffValue: Int = 1,
+        fillUpDiffValue: Int = 1,
+        morphKernelSize: Int = 100,
+    ): List<BoundingBox> {
+        val bitmap: Bitmap = if (region == null) {
+            bitmap ?: getSourceBitmap()
+        } else if (bitmap == null) {
+            getRegionBitmap(region)
+        } else {
+            createSafeBitmap(bitmap, region, "detectRoundedRectangles") ?: getSourceBitmap()
+        }
+
+        // Input sanitization
+
+        val screenArea: Int = SharedData.displayWidth * SharedData.displayHeight
+        val minArea: Int = (minArea ?: 0).coerceIn(0, screenArea)
+        val maxArea: Int = (maxArea ?: screenArea).coerceIn(minArea, screenArea)
+
+        if (minArea > maxArea) {
+            throw IllegalArgumentException("minArea ($minArea) > maxArea ($maxArea)")
+        }
+
+        if (blurSize <= 0 || blurSize % 2 == 0) {
+            throw IllegalArgumentException("blurSize must be a positive odd integer. Got: $blurSize.")
+        }
+
+        val blurKernel = Size(blurSize.toDouble(), blurSize.toDouble())
+
+        val fillLoDiffValue: Int = fillLoDiffValue.coerceIn(0, 255)
+        val loDiff = Scalar(fillLoDiffValue.toDouble(), fillLoDiffValue.toDouble(), fillLoDiffValue.toDouble())
+
+        val fillUpDiffValue: Int = fillUpDiffValue.coerceIn(0, 255)
+        val upDiff = Scalar(fillUpDiffValue.toDouble(), fillUpDiffValue.toDouble(), fillUpDiffValue.toDouble())
+
+        val morphKernelSize: Int = morphKernelSize.coerceIn(0, 250)
+        val morphKernel = Imgproc.getStructuringElement(
+            Imgproc.MORPH_RECT,
+            Size(morphKernelSize.toDouble(), morphKernelSize.toDouble()),
+        )
+
+        val result: MutableList<BoundingBox> = mutableListOf()
+
+        val srcImage = Mat()
+		Utils.bitmapToMat(bitmap, srcImage)
+
+        val image = Mat()
+        Imgproc.cvtColor(srcImage, image, Imgproc.COLOR_BGR2GRAY)
+        Imgproc.GaussianBlur(image, image, blurKernel, 0.0)
+        
+        val rect = Rect()
+        val fillColor = Scalar(0.0, 0.0, 0.0)
+        Imgproc.floodFill(
+            image,
+            Mat(),
+            fillSeedPoint,
+            fillColor,
+            rect,
+            loDiff,
+            upDiff,
+        )
+
+        if (debugMode) {
+            val resultBitmap = createBitmap(image.cols(), image.rows())
+            Utils.matToBitmap(image, resultBitmap)
+            saveBitmap(resultBitmap, "detectRectanglesGeneric_floodFill", fullRes = true)
+        }
+
+        // Set all non-black pixels to white.
+        val blackMask = Mat()
+        Core.compare(image, fillColor, blackMask, Core.CMP_EQ)
+        val nonBlackMask = Mat()
+        Core.bitwise_not(blackMask, nonBlackMask)
+        image.setTo(Scalar(255.0, 255.0, 255.0), nonBlackMask)
+        blackMask.release()
+        nonBlackMask.release()
+
+        if (debugMode) {
+            val resultBitmap = createBitmap(image.cols(), image.rows())
+            Utils.matToBitmap(image, resultBitmap)
+            saveBitmap(resultBitmap, "detectRectanglesGeneric_masked", fullRes = true)
+        }
+
+        Imgproc.morphologyEx(image, image, Imgproc.MORPH_OPEN, morphKernel)
+
+        if (debugMode) {
+            val resultBitmap = createBitmap(image.cols(), image.rows())
+            Utils.matToBitmap(image, resultBitmap)
+            saveBitmap(resultBitmap, "detectRectanglesGeneric_opened", fullRes = true)
+        }
+
+        // Invert binary image.
+        //Core.bitwise_not(image, image)
+
+        val contours: MutableList<MatOfPoint> = mutableListOf()
+        val hierarchy = Mat()
+        Imgproc.findContours(
+            image,
+            contours,
+            hierarchy,
+            Imgproc.RETR_EXTERNAL,
+            Imgproc.CHAIN_APPROX_SIMPLE,
+        )
+
+        for (cnt in contours) {
+            val area = Imgproc.contourArea(cnt)
+
+            // Filter out contours with invalid areas.
+            if (area < minArea || area > maxArea) {
+                continue
+            }
+
+            // Use convex hull to ignore rounded corners.
+            val hullPoints = MatOfInt()
+            Imgproc.convexHull(cnt, hullPoints)
+            // Convert hull indices back to MatOfPoint
+            val hullContour = getHullFromIndices(cnt, hullPoints)
+
+            // Approximate shape.
+            val approx = MatOfPoint2f()
+            val cnt2f = MatOfPoint2f(*hullContour.toArray())
+            val peri = Imgproc.arcLength(cnt2f, true)
+            Imgproc.approxPolyDP(cnt2f, approx, epsilonScalar * peri, true)
+
+            // Check for four vertices.
+            if (approx.total() == 4L) {
+                val rect = Imgproc.boundingRect(cnt)
+
+                // Do not include any rects that are touching the bounding region.
+                if (rect.x <= 0 ||
+                    rect.y <= 0 ||
+                    rect.x + rect.width >= bitmap.width - 1 ||
+                    rect.y + rect.height >= bitmap.height - 1
+                ) {
+                    continue
+                }
+
+                if (debugMode) {
+                    Imgproc.rectangle(srcImage, rect.tl(), rect.br(), Scalar(0.0, 255.0, 0.0), 2)
+                }
+                result.add(BoundingBox(rect.x, rect.y, rect.width, rect.height))
+            }
+
+            // Free memory for each mat.
+            hullPoints.release()
+            hullContour.release()
+            approx.release()
+            cnt2f.release()
+        }
+
+        if (debugMode) {
+            val resultBitmap = createBitmap(srcImage.cols(), srcImage.rows())
+            Imgproc.cvtColor(srcImage, srcImage, Imgproc.COLOR_BGR2RGB)
+            Utils.matToBitmap(srcImage, resultBitmap)
+            saveBitmap(resultBitmap, "detectRectanglesGeneric_result", fullRes = true)
+        }
+
+        // Free memory for each mat.
+        contours.forEach { it.release() }
+        contours.clear()
+        hierarchy.release()
+        image.release()
+        srcImage.release()
+
+        return result.toList()
+    }
+
+    /** Returns the luminance at a pixel in a bitmap.
+     *
+     * @param x The x-coordinate to test.
+     * @param y The y-coordinate to test.
+     * @param bitmap The bitmap that we want to check the luminance of.
+     *
+     * @return The luminance of the pixel as a Double between 0.0 and 1.0.
+     * Higher values indicate a brighter pixel.
+     */
+    fun getLuminanceAtCoordinates(x: Int, y: Int, bitmap: Bitmap? = null): Double {
+        val bitmap: Bitmap = bitmap ?: getSourceBitmap()
+        val pixel = bitmap.getPixel(x, y)
+        val r = Color.red(pixel)
+        val g = Color.green(pixel)
+        val b = Color.blue(pixel)
+        // https://en.wikipedia.org/wiki/Relative_luminance
+        val luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255.0
+        return luminance
+    }
+
+    /** Compares the luminance of two bitmaps.
+     *
+     * NOTE: Bitmaps [a] and [b] must be the same dimensions.
+     * Otherwise, 0 is returned.
+     *
+     * @param a The first bitmap for comparison.
+     * @param b The bitmap to compare against.
+     * @param samples The number of pixels to sample across both bitmaps.
+     * @param tolerance Margin of error for comparison. Should be very low value.
+     *
+     * @return
+     *      -1  If [a] is brighter than [b].
+     *      0   If [a] and [b] have the same luminance.
+     *      1   If [b] is brighter than [a].
+     */
+    fun compareBitmapLuminance(
+        a: Bitmap,
+        b: Bitmap,
+        samples: Int = 100,
+        tolerance: Double = 0.05,
+    ): Int {
+        if (a.width != b.width || a.height != b.height) {
+            return 0
+        }
+
+        var lumA: Double = 0.0
+        var lumB: Double = 0.0
+
+        // Clamp number of samples based on bitmap size.
+        val samples: Int = minOf(samples, a.width * a.height)
+
+        for (i in 0 until samples) {
+            // We want to sample at the same coordinates for each bitmap.
+            val x = Random.nextInt(0, a.width)
+            val y = Random.nextInt(0, a.height)
+
+            lumA += getLuminanceAtCoordinates(x, y, a)
+            lumB += getLuminanceAtCoordinates(x, y, b)
+        }
+
+        lumA /= samples
+        lumB /= samples
+
+        return if (lumA < lumB - tolerance) {
+            return 1
+        } else if (lumB < lumA - tolerance) {
+            return -1
+        } else {
+            return 0
+        }
     }
 }
