@@ -1814,7 +1814,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		debugName: String = ""
 	): String {
 		// Perform OCR using findText() from ImageUtils.
-        return findText(
+		return findText(
 			cropRegion = intArrayOf(x, y, width, height),
 			grayscale = useGrayscale,
 			thresh = useThreshold,
