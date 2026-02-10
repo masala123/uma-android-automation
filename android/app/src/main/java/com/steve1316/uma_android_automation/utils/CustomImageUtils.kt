@@ -6,8 +6,6 @@ import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.util.Log
 import com.google.mlkit.vision.common.InputImage
-import com.googlecode.tesseract.android.TessBaseAPI
-import com.google.mlkit.common.MlKitException
 import com.steve1316.automation_library.utils.BotService
 import com.steve1316.automation_library.utils.ImageUtils
 import com.steve1316.automation_library.utils.MessageLog
@@ -35,7 +33,6 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.math.sqrt
 import kotlin.text.replace
-import kotlin.random.Random
 import java.util.concurrent.ConcurrentHashMap
 
 
@@ -1813,37 +1810,21 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		useThreshold: Boolean = true,
 		useGrayscale: Boolean = true,
 		scale: Double = 1.0,
-        multiLine: Boolean = false,
 		ocrEngine: String = "tesseract",
-		debugName: String = "",
+		debugName: String = ""
 	): String {
 		// Perform OCR using findText() from ImageUtils.
-        return if(multiLine) {
-            findTextMultiLine(
-                cropRegion = intArrayOf(x, y, width, height),
-                grayscale = useGrayscale,
-                thresh = useThreshold,
-                threshold = threshold.toDouble(),
-                thresholdMax = 255.0,
-                scale = scale,
-                sourceBitmap = sourceBitmap,
-                detectDigitsOnly = ocrEngine == "tesseract_digits",
-                debugName = debugName
-            )
-        } else {
-            findText(
-                cropRegion = intArrayOf(x, y, width, height),
-                grayscale = useGrayscale,
-                thresh = useThreshold,
-                threshold = threshold.toDouble(),
-                thresholdMax = 255.0,
-                scale = scale,
-                sourceBitmap = sourceBitmap,
-                detectDigitsOnly = ocrEngine == "tesseract_digits",
-                debugName = debugName
-            )
-        }
-		
+        return findText(
+			cropRegion = intArrayOf(x, y, width, height),
+			grayscale = useGrayscale,
+			thresh = useThreshold,
+			threshold = threshold.toDouble(),
+			thresholdMax = 255.0,
+			scale = scale,
+			sourceBitmap = sourceBitmap,
+			detectDigitsOnly = ocrEngine == "tesseract_digits",
+            debugName = debugName
+		)
 	}
 
 	/**
@@ -1871,26 +1852,24 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 		useThreshold: Boolean = true,
 		useGrayscale: Boolean = true,
 		scale: Double = 1.0,
-        multiLine: Boolean = false,
 		ocrEngine: String = "tesseract",
-		debugName: String = "",
+		debugName: String = ""
 	): String {
 		val sourceBitmap = getSourceBitmap()
 		val finalX = relX(referencePoint.x, offsetX)
 		val finalY = relY(referencePoint.y, offsetY)
 		
 		return performOCROnRegion(
-			sourceBitmap = sourceBitmap,
-			x = finalX,
-			y = finalY,
-			width = width,
-			height = height,
-			useThreshold = useThreshold,
-			useGrayscale = useGrayscale,
-			scale = scale,
-            multiLine = multiLine,
-			ocrEngine = ocrEngine,
-			debugName = debugName,
+			sourceBitmap,
+			finalX,
+			finalY,
+			width,
+			height,
+			useThreshold,
+			useGrayscale,
+			scale,
+			ocrEngine,
+			debugName
 		)
 	}
 
@@ -2146,9 +2125,6 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
             bbox.h,
             "saveBitmap(filename=$filename, bbox=$bbox)",
         )
-        if (croppedBitmap == null) {
-            return
-        }
         saveBitmap(bitmap = croppedBitmap, filename = filename)
     }
 
@@ -2255,165 +2231,6 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
 
         return similarityScore
     }
-
-    fun findTextMultiLine(
-		cropRegion: IntArray,
-        grayscale: Boolean = true,
-        thresh: Boolean = true,
-        threshold: Double = 130.0,
-        thresholdMax: Double = 255.0,
-        scale: Double = 1.0,
-        sourceBitmap: Bitmap? = null,
-        detectDigitsOnly: Boolean = false,
-        debugName: String = "ocr",
-	): String {
-		val startTime: Long = System.currentTimeMillis()
-		var result = ""
-
-		val finalSourceBitmap: Bitmap = sourceBitmap ?: getSourceBitmap()
-
-		if (debugMode) Log.d(TAG, "\n[TEXT_DETECTION] Starting text detection now...")
-
-		// Crop and convert the source bitmap to Mat.
-		// Google ML Kit requires a minimum of 32x32 pixels, so clamp the dimensions.
-		val (x, y, width, height) = cropRegion
-		val minDimension = 32
-		val clampedWidth = maxOf(width, minDimension).coerceAtMost(finalSourceBitmap.width - x)
-		val clampedHeight = maxOf(height, minDimension).coerceAtMost(finalSourceBitmap.height - y)
-
-		// Log if the dimensions were clamped to meet the minimum requirement.
-		if (width < minDimension || height < minDimension) {
-			Log.w(TAG, "[TEXT_DETECTION] Crop region clamped from ${width}x${height} to ${clampedWidth}x${clampedHeight} to meet ML Kit's minimum 32x32 requirement.")
-		}
-
-		val croppedBitmap = Bitmap.createBitmap(finalSourceBitmap, x, y, clampedWidth, clampedHeight)
-		val cvImage = Mat()
-		Utils.bitmapToMat(croppedBitmap, cvImage)
-
-		// Save the cropped image before converting it to black and white in order to troubleshoot issues related to differing device sizes and cropping.
-		if (debugMode) {
-			Imgcodecs.imwrite("$matchFilePath/debug_${debugName}_cropped.png", cvImage)
-		}
-
-		// Grayscale the cropped image.
-		val grayImage = Mat()
-		val imageForProcessing: Mat = if (grayscale) {
-			Imgproc.cvtColor(cvImage, grayImage, Imgproc.COLOR_RGB2GRAY)
-			grayImage
-		} else {
-			cvImage
-		}
-
-		// Thresh the grayscale cropped image to make black and white.
-		val processedMat: Mat = if (thresh) {
-			val bwImage = Mat()
-			Imgproc.threshold(imageForProcessing, bwImage, threshold, thresholdMax, Imgproc.THRESH_BINARY)
-
-			// Save the cropped image before converting it to black and white in order to troubleshoot issues related to differing device sizes and cropping.
-			if (debugMode) {
-				Imgcodecs.imwrite("$matchFilePath/debug_${debugName}_threshold.png", bwImage)
-			}
-			bwImage
-		} else {
-			imageForProcessing
-		}
-
-		// Convert the processed Mat to Bitmap and apply scaling if needed.
-		val clampedScale: Double = scale.coerceAtLeast(0.0)
-		val baseBitmap = createBitmap(processedMat.cols(), processedMat.rows())
-		Utils.matToBitmap(processedMat, baseBitmap)
-		val finalBitmap = if (clampedScale != 1.0) {
-			baseBitmap.scale((baseBitmap.width * clampedScale).toInt(), (baseBitmap.height * clampedScale).toInt())
-		} else {
-			baseBitmap
-		}
-
-		// Create a InputImage object for Google's ML OCR.
-		val inputImage: InputImage = InputImage.fromBitmap(finalBitmap, 0)
-
-		// Use CountDownLatch to make the async operation synchronous.
-		val latch = CountDownLatch(1)
-		var mlKitFailed = false
-		var errorMessage = "Google ML Kit failed to do text detection."
-
-		googleTextRecognizer.process(inputImage)
-			.addOnSuccessListener { text ->
-				if (text.textBlocks.isNotEmpty()) {
-                    result = text.text
-				}
-				latch.countDown()
-			}
-			.addOnFailureListener { exception ->
-				// Check if it's an MlKitException and extract error code information.
-				if (exception is MlKitException) {
-					val errorCode = exception.errorCode
-					errorMessage += " Error code: $errorCode."
-				}
-				
-				// Include the exception message if available.
-				exception.message?.let {
-					errorMessage += " Exception message: $it"
-				}
-				
-				mlKitFailed = true
-				latch.countDown()
-			}
-
-		// Wait for the async operation to complete.
-		try {
-			latch.await(5, TimeUnit.SECONDS)
-		} catch (_: InterruptedException) {
-			Log.e(TAG, "Google ML Kit operation timed out.")
-		}
-
-		// Fallback to Tesseract if ML Kit failed or didn't find result.
-		if (mlKitFailed || result == "") {
-			// Use either the default Tesseract client or the Tesseract client geared towards digits to set the image to scan.
-            Log.e(TAG, errorMessage)
-			if (detectDigitsOnly) {
-                Log.d(TAG, "[TEXT_DETECTION] Setting Tesseract image for digits only.")
-				tessDigitsBaseAPI.setImage(finalBitmap)
-			} else {
-				Log.d(TAG, "[TEXT_DETECTION] Setting Tesseract image for text detection.")
-				tessBaseAPI.setImage(finalBitmap)
-			}
-
-			try {
-                val prevMode = tessBaseAPI.pageSegMode
-                tessBaseAPI.pageSegMode = TessBaseAPI.PageSegMode.PSM_AUTO
-				// Finally, detect text on the cropped region.
-				result = if (detectDigitsOnly) {
-					tessDigitsBaseAPI.utF8Text
-				} else {
-					tessBaseAPI.utF8Text
-				}
-                tessBaseAPI.pageSegMode = prevMode
-				Log.d(TAG, "[TEXT_DETECTION] Detected text with Tesseract: $result")
-			} catch (e: Exception) {
-				Log.e(TAG, "Cannot perform OCR: ${e.stackTraceToString()}")
-			}
-
-			// Stop Tesseract operations.
-			if (detectDigitsOnly) {
-				tessDigitsBaseAPI.stop()
-			} else {
-				tessBaseAPI.stop()
-			}
-
-			tessBaseAPI.clear()
-			tessDigitsBaseAPI.clear()
-		} else {
-            Log.d(TAG, "[TEXT_DETECTION] Detected text with Google ML Kit: $result")
-        }
-
-		if (debugMode) Log.d(TAG, "[TEXT_DETECTION] Text detection finished in ${System.currentTimeMillis() - startTime}ms.")
-
-		cvImage.release()
-        grayImage.release()
-        processedMat.release()
-
-		return result
-	}
 
     /** Converts ConvexHull indices to actual points.
      *
@@ -2819,77 +2636,5 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         srcImage.release()
 
         return result.toList()
-    }
-
-    /** Returns the luminance at a pixel in a bitmap.
-     *
-     * @param x The x-coordinate to test.
-     * @param y The y-coordinate to test.
-     * @param bitmap The bitmap that we want to check the luminance of.
-     *
-     * @return The luminance of the pixel as a Double between 0.0 and 1.0.
-     * Higher values indicate a brighter pixel.
-     */
-    fun getLuminanceAtCoordinates(x: Int, y: Int, bitmap: Bitmap? = null): Double {
-        val bitmap: Bitmap = bitmap ?: getSourceBitmap()
-        val pixel = bitmap.getPixel(x, y)
-        val r = Color.red(pixel)
-        val g = Color.green(pixel)
-        val b = Color.blue(pixel)
-        // https://en.wikipedia.org/wiki/Relative_luminance
-        val luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255.0
-        return luminance
-    }
-
-    /** Compares the luminance of two bitmaps.
-     *
-     * NOTE: Bitmaps [a] and [b] must be the same dimensions.
-     * Otherwise, 0 is returned.
-     *
-     * @param a The first bitmap for comparison.
-     * @param b The bitmap to compare against.
-     * @param samples The number of pixels to sample across both bitmaps.
-     * @param tolerance Margin of error for comparison. Should be very low value.
-     *
-     * @return
-     *      -1  If [a] is brighter than [b].
-     *      0   If [a] and [b] have the same luminance.
-     *      1   If [b] is brighter than [a].
-     */
-    fun compareBitmapLuminance(
-        a: Bitmap,
-        b: Bitmap,
-        samples: Int = 100,
-        tolerance: Double = 0.05,
-    ): Int {
-        if (a.width != b.width || a.height != b.height) {
-            return 0
-        }
-
-        var lumA: Double = 0.0
-        var lumB: Double = 0.0
-
-        // Clamp number of samples based on bitmap size.
-        val samples: Int = minOf(samples, a.width * a.height)
-
-        for (i in 0 until samples) {
-            // We want to sample at the same coordinates for each bitmap.
-            val x = Random.nextInt(0, a.width)
-            val y = Random.nextInt(0, a.height)
-
-            lumA += getLuminanceAtCoordinates(x, y, a)
-            lumB += getLuminanceAtCoordinates(x, y, b)
-        }
-
-        lumA /= samples
-        lumB /= samples
-
-        return if (lumA < lumB - tolerance) {
-            return 1
-        } else if (lumB < lumA - tolerance) {
-            return -1
-        } else {
-            return 0
-        }
     }
 }
