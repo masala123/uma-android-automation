@@ -2301,7 +2301,11 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         val bitmap: Bitmap = if (region == null) {
             bitmap ?: getSourceBitmap()
         } else if (bitmap == null) {
-            getRegionBitmap(region)
+            createSafeBitmap(
+                getSourceBitmap(),
+                region,
+                "detectRoundedRectangles"
+            )!!
         } else {
             createSafeBitmap(bitmap, region, "detectRoundedRectangles") ?: getSourceBitmap()
         }
@@ -2479,9 +2483,13 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         val bitmap: Bitmap = if (region == null) {
             bitmap ?: getSourceBitmap()
         } else if (bitmap == null) {
-            getRegionBitmap(region)
+            createSafeBitmap(
+                getSourceBitmap(),
+                region,
+                "detectRectanglesGeneric"
+            )!!
         } else {
-            createSafeBitmap(bitmap, region, "detectRoundedRectangles") ?: getSourceBitmap()
+            createSafeBitmap(bitmap, region, "detectRectanglesGeneric") ?: getSourceBitmap()
         }
 
         // Input sanitization
@@ -2696,7 +2704,11 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         val bitmap: Bitmap = if (region == null) {
             bitmap ?: getSourceBitmap()
         } else if (bitmap == null) {
-            getRegionBitmap(region)
+            createSafeBitmap(
+                getSourceBitmap(),
+                region,
+                "detectScrollBar"
+            )!!
         } else {
             createSafeBitmap(bitmap, region, "detectScrollBar") ?: getSourceBitmap()
         }
