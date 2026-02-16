@@ -167,7 +167,7 @@ class Racing (private val game: Game) {
             "consecutive_race_warning" -> {
                 raceRepeatWarningCheck = true
                 if (bIgnoreConsecutiveRaceWarning || enableForceRacing) {
-                    MessageLog.i(TAG, "[RACE] Consective race warning! Racing anyway...")
+                    MessageLog.i(TAG, "[RACE] Consecutive race warning! Racing anyway...")
                     dialog.ok(imageUtils = game.imageUtils)
                     // This dialog requires a little extra delay since it loads the
                     // race list instead of just closing the dialog.
