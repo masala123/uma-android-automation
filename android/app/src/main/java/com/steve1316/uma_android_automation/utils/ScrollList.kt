@@ -71,7 +71,7 @@ data class ScrollListEntryDetectionConfig (
 /** Handles parsing entries in a scrollable list.
  *
  * Example:
- *
+ * ```
  * val list: ScrollList? = ScrollList.create(game)
  * if (list == null) throw InvalidStateException()
  * scrollList.process() { scrollList: ScrollList, entry: ScrollListEntry ->
@@ -79,6 +79,7 @@ data class ScrollListEntryDetectionConfig (
  *      // Return true to stop the scrollList loop if we've read 5 entries.
  *      entry.index > 5
  * }
+ * ```
  *
  * @param game Reference to the bot's Game instance.
  * @param bboxList The bounding region of the full list.
