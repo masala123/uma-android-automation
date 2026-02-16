@@ -98,8 +98,8 @@ class ScrollList private constructor(
 
     private val entryDetectionConfig = ScrollListEntryDetectionConfig(
         bUseGeneric = entryDetectionConfig.bUseGeneric,
-        minArea = entryDetectionConfig.minArea ?: defaultMinEntryHeight * (bboxList.w.toDouble() * 0.7).toInt(),
-        maxArea = entryDetectionConfig.maxArea ?: defaultMaxEntryHeight * bboxList.w,
+        minArea = entryDetectionConfig.minArea ?: (defaultMinEntryHeight * (bboxList.w.toDouble() * 0.7).toInt()),
+        maxArea = entryDetectionConfig.maxArea ?: (defaultMaxEntryHeight * bboxList.w),
         blurSize = entryDetectionConfig.blurSize,
         epsilonScalar = entryDetectionConfig.epsilonScalar,
         // detectRoundedRectangles params
@@ -334,7 +334,7 @@ class ScrollList private constructor(
                 h = result.first.h,
             )
 
-            val bboxThumb: BoundingBox = BoundingBox(
+            val bboxThumb = BoundingBox(
                 x = bboxScrollBarRegionDefault.x + result.second.x,
                 y = bboxScrollBarRegionDefault.y + result.second.y,
                 w = result.second.w,
@@ -513,8 +513,8 @@ class ScrollList private constructor(
         durationMs: Long = 1000L,
     ) {
         val durationMs: Long = durationMs.coerceAtLeast(250L)
-        val x0: Int = (startLoc?.x ?: bboxList.x + (bboxList.w / 2)).toInt()
-        val y0: Int = (startLoc?.y ?: bboxList.y + (bboxList.h / 2)).toInt()
+        val x0: Int = ((startLoc?.x ?: (bboxList.x + (bboxList.w / 2)))).toInt()
+        val y0: Int = ((startLoc?.y ?: (bboxList.y + (bboxList.h / 2)))).toInt()
         // Add some extra height since scrolling isn't accurate.
         val y1: Int = (bboxList.y - (entryHeight * 1.5)).toInt().coerceAtLeast(0)
         game.gestureUtils.swipe(
@@ -544,8 +544,8 @@ class ScrollList private constructor(
         durationMs: Long = 1000L,
     ) {
         val durationMs: Long = durationMs.coerceAtLeast(250L)
-        val x0: Int = (startLoc?.x ?: bboxList.x + (bboxList.w / 2)).toInt()
-        val y0: Int = (startLoc?.y ?: bboxList.y + (bboxList.h / 2)).toInt()
+        val x0: Int = ((startLoc?.x ?: (bboxList.x + (bboxList.w / 2)))).toInt()
+        val y0: Int = ((startLoc?.y ?: (bboxList.y + (bboxList.h / 2)))).toInt()
         // Add some extra height since scrolling isn't accurate.
         val y1: Int = (bboxList.y + bboxList.h + (entryHeight * 1.5)).toInt().coerceAtLeast(0)
         game.gestureUtils.swipe(
@@ -587,7 +587,7 @@ class ScrollList private constructor(
         // Used as break point.
         var prevBboxScrollBarThumb: BoundingBox? = null
 
-        var index: Int = 0
+        var index = 0
         while (System.currentTimeMillis() - startTime < maxTimeMs) {
             bitmap = game.imageUtils.getSourceBitmap()
 
