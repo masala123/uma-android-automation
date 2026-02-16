@@ -187,23 +187,29 @@ class Racing (private val game: Game) {
                     game.trainee.bTemporaryRunningStyleAptitudesUpdated = updateRaceScreenRunningStyleAptitudes()
                 }
 
-                var runningStyle: RunningStyle? = null
-                val runningStyleString: String = when {
-                    // Special case for when the bot has not been able to check the date
-                    // i.e. when the bot starts at the race screen.
-                    game.currentDate.day == 1 -> userSelectedOriginalStrategy
-                    game.currentDate.year == DateYear.JUNIOR -> juniorYearRaceStrategy
-                    else -> userSelectedOriginalStrategy
-                }
-                when (runningStyleString.uppercase()) {
-                    // Do not select a strategy. Use what is already selected.
-                    "DEFAULT" -> {
-                        MessageLog.i(TAG, "[DIALOG] strategy:: Using the default running style.")
-                        dialog.ok(imageUtils = game.imageUtils)
-                        game.trainee.bHasSetRunningStyle = true
-                        game.wait(0.5, skipWaitingForLoading = true)
-                        return Pair(true, dialog)
-                    }
+				var runningStyle: RunningStyle? = null
+				val runningStyleString: String = when {
+					// Special case for when the bot has not been able to check the date
+					// i.e. when the bot starts at the race screen.
+					game.currentDate.day == 1 -> userSelectedOriginalStrategy
+					game.currentDate.year == DateYear.JUNIOR -> {
+						hasAppliedStrategyOverride = juniorYearRaceStrategy != userSelectedOriginalStrategy
+						juniorYearRaceStrategy
+					}
+					else -> {
+						hasAppliedStrategyOverride = false
+						userSelectedOriginalStrategy
+					}
+				}
+				when (runningStyleString.uppercase()) {
+					// Do not select a strategy. Use what is already selected.
+					"DEFAULT" -> {
+						MessageLog.i(TAG, "[DIALOG] strategy:: Using the default running style.")
+						dialog.ok(imageUtils = game.imageUtils)
+						game.trainee.bHasSetRunningStyle = true
+						game.wait(0.5, skipWaitingForLoading = true)
+						return Pair(true, dialog)
+					}
                     // Auto-select the optimal running style based on trainee aptitudes.
                     "AUTO" -> {
                         MessageLog.i(TAG, "[DIALOG] strategy:: Auto-selecting the trainee's optimal running style.")
@@ -1897,38 +1903,52 @@ class Racing (private val game: Game) {
         return true
     }
 
-    /**
-     * Handles race strategy override for Junior Year races.
-     *
-     * During Junior Year: Applies the user-selected strategy and stores the original.
-     * After Junior Year: Restores the original strategy and disables the feature.
-     */
-    fun selectRaceStrategy() {
-        if (
-            !game.trainee.bHasUpdatedAptitudes &&
-            !game.trainee.bTemporaryRunningStyleAptitudesUpdated
-        ) {
-            // If trainee aptitudes are unknown, this means we probably started the bot
-            // at the race screen. We need to open the race strategy dialog and
-            // read the aptitudes in from there.
-            MessageLog.i(TAG, "Setting running style and performing temporary initial aptitude check.")
-            ButtonChangeRunningStyle.click(imageUtils = game.imageUtils, tries = 10)
-            game.wait(0.5, skipWaitingForLoading = true)
-            var tries = 10
-            while (tries > 0 && !handleDialogs().first) {
-                tries--
-            }
-        } else if (!game.trainee.bHasSetRunningStyle) {
-            // If we haven't set the trainee's running style yet, open the dialog.
-            MessageLog.i(TAG, "Setting running style for the first time.")
-            ButtonChangeRunningStyle.click(imageUtils = game.imageUtils, tries = 10)
-            game.wait(0.5, skipWaitingForLoading = true)
-            var tries = 10
-            while (tries > 0 && !handleDialogs().first) {
-                tries--
-            }
-        }
-    }
+	/**
+	 * Handles race strategy override for Junior Year races.
+	 *
+	 * During Junior Year: Applies the user-selected strategy and stores the original.
+	 * After Junior Year: Restores the original strategy and disables the feature.
+	 */
+	fun selectRaceStrategy() {
+		val isJuniorYear = game.currentDate.year == DateYear.JUNIOR
+		val isPastJuniorYear = game.currentDate.year.ordinal > DateYear.JUNIOR.ordinal
+
+		// Determine if a strategy override or reversion is needed.
+		val needsOverride = isJuniorYear && !hasAppliedStrategyOverride && juniorYearRaceStrategy != userSelectedOriginalStrategy
+		val needsReversion = isPastJuniorYear && hasAppliedStrategyOverride
+
+		if (
+			!game.trainee.bHasUpdatedAptitudes &&
+			!game.trainee.bTemporaryRunningStyleAptitudesUpdated
+		) {
+			// If trainee aptitudes are unknown, this means we probably started the bot
+			// at the race screen. We need to open the race strategy dialog and
+			// read the aptitudes in from there.
+			MessageLog.i(TAG, "Setting running style and performing temporary initial aptitude check.")
+			ButtonChangeRunningStyle.click(imageUtils = game.imageUtils, tries = 10)
+			game.wait(0.5, skipWaitingForLoading = true)
+			var tries = 10
+			while (tries > 0 && !handleDialogs().first) {
+				tries--
+			}
+		} else if (!game.trainee.bHasSetRunningStyle || needsOverride || needsReversion) {
+			if (needsOverride) {
+				MessageLog.i(TAG, "[RACE] Junior Year detected. Applying Junior race strategy override: $juniorYearRaceStrategy")
+			} else if (needsReversion) {
+				MessageLog.i(TAG, "[RACE] Past Junior Year detected. Reverting to original race strategy: $userSelectedOriginalStrategy")
+			} else {
+				// If we haven't set the trainee's running style yet, open the dialog.
+				MessageLog.i(TAG, "Setting running style for the first time.")
+			}
+
+			ButtonChangeRunningStyle.click(imageUtils = game.imageUtils, tries = 10)
+			game.wait(0.5, skipWaitingForLoading = true)
+			var tries = 10
+			while (tries > 0 && !handleDialogs().first) {
+				tries--
+			}
+		}
+	}
 
     /**
      * Executes the race with retry logic.
