@@ -53,6 +53,7 @@ class Racing (private val game: Game) {
     var hasFanRequirement = false  // Indicates that a fan requirement has been detected on the main screen.
     var hasTrophyRequirement = false  // Indicates that a trophy requirement has been detected on the main screen.
     var hasPreOpOrAboveRequirement = false  // Indicates that a Pre-OP or above requirement has been detected (any race can fulfill it).
+    var hasG3OrAboveRequirement = false  // Indicates that a G3 or above requirement has been detected (any race can fulfill it).
     private var nextSmartRaceDay: Int? = null  // Tracks the specific day to race based on opportunity cost analysis.
     private var hasLoadedUserRaceAgenda = false  // Tracks if the user's race agenda has been loaded this career.
 
@@ -138,6 +139,7 @@ class Racing (private val game: Game) {
         hasFanRequirement = false
         hasTrophyRequirement = false
         hasPreOpOrAboveRequirement = false
+        hasG3OrAboveRequirement = false
     }
 
     /**
@@ -165,7 +167,7 @@ class Racing (private val game: Game) {
             "consecutive_race_warning" -> {
                 raceRepeatWarningCheck = true
                 if (bIgnoreConsecutiveRaceWarning || enableForceRacing) {
-                    MessageLog.i(TAG, "[RACE] Consective race warning! Racing anyway...")
+                    MessageLog.i(TAG, "[RACE] Consecutive race warning! Racing anyway...")
                     dialog.ok(imageUtils = game.imageUtils)
                     // This dialog requires a little extra delay since it loads the
                     // race list instead of just closing the dialog.
@@ -185,23 +187,29 @@ class Racing (private val game: Game) {
                     game.trainee.bTemporaryRunningStyleAptitudesUpdated = updateRaceScreenRunningStyleAptitudes()
                 }
 
-                var runningStyle: RunningStyle? = null
-                val runningStyleString: String = when {
-                    // Special case for when the bot has not been able to check the date
-                    // i.e. when the bot starts at the race screen.
-                    game.currentDate.day == 1 -> userSelectedOriginalStrategy
-                    game.currentDate.year == DateYear.JUNIOR -> juniorYearRaceStrategy
-                    else -> userSelectedOriginalStrategy
-                }
-                when (runningStyleString.uppercase()) {
-                    // Do not select a strategy. Use what is already selected.
-                    "DEFAULT" -> {
-                        MessageLog.i(TAG, "[DIALOG] strategy:: Using the default running style.")
-                        dialog.ok(imageUtils = game.imageUtils)
-                        game.trainee.bHasSetRunningStyle = true
-                        game.wait(0.5, skipWaitingForLoading = true)
-                        return Pair(true, dialog)
-                    }
+				var runningStyle: RunningStyle? = null
+				val runningStyleString: String = when {
+					// Special case for when the bot has not been able to check the date
+					// i.e. when the bot starts at the race screen.
+					game.currentDate.day == 1 -> userSelectedOriginalStrategy
+					game.currentDate.year == DateYear.JUNIOR -> {
+						hasAppliedStrategyOverride = juniorYearRaceStrategy != userSelectedOriginalStrategy
+						juniorYearRaceStrategy
+					}
+					else -> {
+						hasAppliedStrategyOverride = false
+						userSelectedOriginalStrategy
+					}
+				}
+				when (runningStyleString.uppercase()) {
+					// Do not select a strategy. Use what is already selected.
+					"DEFAULT" -> {
+						MessageLog.i(TAG, "[DIALOG] strategy:: Using the default running style.")
+						dialog.ok(imageUtils = game.imageUtils)
+						game.trainee.bHasSetRunningStyle = true
+						game.wait(0.5, skipWaitingForLoading = true)
+						return Pair(true, dialog)
+					}
                     // Auto-select the optimal running style based on trainee aptitudes.
                     "AUTO" -> {
                         MessageLog.i(TAG, "[DIALOG] strategy:: Auto-selecting the trainee's optimal running style.")
@@ -794,10 +802,16 @@ class Racing (private val game: Game) {
 
             if (hasFanRequirement) MessageLog.i(TAG, "[RACE] Fan requirement criteria detected. This race must be completed to meet the requirement.")
             if (hasTrophyRequirement) {
-                if (hasPreOpOrAboveRequirement) {
-                    MessageLog.i(TAG, "[RACE] Trophy requirement with Pre-OP or above criteria detected. Any race can be selected to meet the requirement.")
-                } else {
-                    MessageLog.i(TAG, "[RACE] Trophy requirement criteria detected. Only G1 races will be selected to meet the requirement.")
+                when {
+                    hasPreOpOrAboveRequirement -> {
+                        MessageLog.i(TAG, "[RACE] Trophy requirement with Pre-OP or above criteria detected. Any race can be selected to meet the requirement.")
+                    }
+                    hasG3OrAboveRequirement -> {
+                        MessageLog.i(TAG, "[RACE] Trophy requirement with G3 or above criteria detected. Any race can be selected to meet the requirement.")
+                    }
+                    else -> {
+                        MessageLog.i(TAG, "[RACE] Trophy requirement criteria detected. Only G1 races will be selected to meet the requirement.")
+                    }
                 }
             }
 
@@ -1001,8 +1015,8 @@ class Racing (private val game: Game) {
 
         // If trophy requirement is active, filter to only G1 races.
         // Trophy requirement is independent of racing plan and farming fans settings.
-        // If Pre-OP or above requirement is active, any race can fulfill the requirement.
-        val racesForSelection = if (hasTrophyRequirement && !hasPreOpOrAboveRequirement) {
+        // If Pre-OP or G3 criteria is active, any race can fulfill the requirement.
+        val racesForSelection = if (hasTrophyRequirement && !hasPreOpOrAboveRequirement && !hasG3OrAboveRequirement) {
             val g1Races = currentRaces.filter { it.grade == RaceGrade.G1 }
             if (g1Races.isEmpty()) {
                 // No G1 races available. Cancel since trophy requirement specifically needs G1 races.
@@ -1012,8 +1026,12 @@ class Racing (private val game: Game) {
                 MessageLog.i(TAG, "[RACE] Trophy requirement active. Filtering to ${g1Races.size} G1 races: ${g1Races.map { it.name }}.")
                 g1Races
             }
-        } else if (hasTrophyRequirement && hasPreOpOrAboveRequirement) {
-            MessageLog.i(TAG, "[RACE] Trophy requirement with Pre-OP or above criteria active. Using all ${currentRaces.size} races.")
+        } else if (hasTrophyRequirement && (hasPreOpOrAboveRequirement || hasG3OrAboveRequirement)) {
+            if (hasPreOpOrAboveRequirement) {
+                MessageLog.i(TAG, "[RACE] Trophy requirement with Pre-OP or above criteria active. Using all ${currentRaces.size} races.")
+            } else {
+                MessageLog.i(TAG, "[RACE] Trophy requirement with G3 or above criteria active. Using all ${currentRaces.size} races.")
+            }
             currentRaces
         } else {
             currentRaces
@@ -1031,7 +1049,11 @@ class Racing (private val game: Game) {
         // Filter both lists by user Racing Plan settings.
         // If trophy requirement is active, bypass min fan filtering but still apply other filters.
         val filteredPlannedRaces = if (hasTrophyRequirement) {
-            MessageLog.i(TAG, "[RACE] Trophy requirement active. Bypassing min fan threshold for G1 races.")
+            if (hasPreOpOrAboveRequirement || hasG3OrAboveRequirement) {
+                MessageLog.i(TAG, "[RACE] Trophy requirement active. Bypassing min fan threshold for all valid races.")
+            } else {
+                MessageLog.i(TAG, "[RACE] Trophy requirement active. Bypassing min fan threshold for G1 races.")
+            }
             filterRacesByCriteria(plannedRaces, bypassMinFans = true)
         } else {
             filterRacesByCriteria(plannedRaces)
@@ -1164,8 +1186,8 @@ class Racing (private val game: Game) {
         // Detects double-star races on screen.
         var doublePredictionLocations = game.imageUtils.findAll("race_extra_double_prediction")
 
-        // If no double predictions found and fans/pre-op requirement is active and is after Junior Year, scroll to find them.
-        if (doublePredictionLocations.isEmpty() && game.currentDate.year != DateYear.JUNIOR && (hasFanRequirement || hasPreOpOrAboveRequirement)) {
+        // If no double predictions found and fans/Pre-OP/G3 requirement is active and is after Junior Year, scroll to find them.
+        if (doublePredictionLocations.isEmpty() && game.currentDate.year != DateYear.JUNIOR && (hasFanRequirement || hasPreOpOrAboveRequirement || hasG3OrAboveRequirement)) {
             val maxScrollAttempts = 5
             MessageLog.i(TAG, "[RACE] No double-star predictions found on initial screen. Scrolling to find races to satisfy fans/pre-op requirement...")
 
@@ -1193,9 +1215,9 @@ class Racing (private val game: Game) {
         }
 
         // If only one race has double predictions, check if it's G1 when trophy requirement is active.
-        // If Pre-OP or above requirement is active, any race is acceptable.
+        // If Pre-OP or G3 criteria is active, any race is acceptable.
         if (maxCount == 1) {
-            if (hasTrophyRequirement && !hasPreOpOrAboveRequirement) {
+            if (hasTrophyRequirement && !hasPreOpOrAboveRequirement && !hasG3OrAboveRequirement) {
                 game.updateDate()
                 val raceName = game.imageUtils.extractRaceName(doublePredictionLocations[0])
                 val raceDataList = lookupRaceInDatabase(game.currentDate.day, raceName)
@@ -1209,8 +1231,12 @@ class Racing (private val game: Game) {
                     MessageLog.i(TAG, "[RACE] Trophy requirement active but only non-G1 race available. Canceling racing process...")
                     return false
                 }
-            } else if (hasTrophyRequirement && hasPreOpOrAboveRequirement) {
-                MessageLog.i(TAG, "[RACE] Only one race with double predictions and Pre-OP or above criteria active. Selecting it.")
+            } else if (hasTrophyRequirement && (hasPreOpOrAboveRequirement || hasG3OrAboveRequirement)) {
+                if (hasPreOpOrAboveRequirement) {
+                    MessageLog.i(TAG, "[RACE] Only one race with double predictions and Pre-OP or above criteria active. Selecting it.")
+                } else {
+                    MessageLog.i(TAG, "[RACE] Only one race with double predictions and G3 or above criteria active. Selecting it.")
+                }
                 game.tap(doublePredictionLocations[0].x, doublePredictionLocations[0].y, "race_extra_double_prediction", ignoreWaiting = true)
                 return true
             } else {
@@ -1249,7 +1275,7 @@ class Racing (private val game: Game) {
         }
 
         // If trophy requirement is active, filter to only G1 races.
-        val (filteredRaces, filteredLocations, _) = if (hasTrophyRequirement && !hasPreOpOrAboveRequirement) {
+        val (filteredRaces, filteredLocations, _) = if (hasTrophyRequirement && !hasPreOpOrAboveRequirement && !hasG3OrAboveRequirement) {
             game.updateDate()
             val g1Indices = raceNamesList.mapIndexedNotNull { index, raceName ->
                 val raceDataList = lookupRaceInDatabase(game.currentDate.day, raceName)
@@ -1269,8 +1295,12 @@ class Racing (private val game: Game) {
                 val filteredNames = g1Indices.map { raceNamesList[it] }
                 Triple(filtered, filteredLocations, filteredNames)
             }
-        } else if (hasTrophyRequirement && hasPreOpOrAboveRequirement) {
-            MessageLog.i(TAG, "[RACE] Trophy requirement with Pre-OP or above criteria active. Using all ${listOfRaces.size} races.")
+        } else if (hasTrophyRequirement && (hasPreOpOrAboveRequirement || hasG3OrAboveRequirement)) {
+            if (hasPreOpOrAboveRequirement) {
+                MessageLog.i(TAG, "[RACE] Trophy requirement with Pre-OP or above criteria active. Using all ${listOfRaces.size} races.")
+            } else {
+                MessageLog.i(TAG, "[RACE] Trophy requirement with G3 or above criteria active. Using all ${listOfRaces.size} races.")
+            }
             Triple(listOfRaces, extraRaceLocations, raceNamesList)
         } else {
             Triple(listOfRaces, extraRaceLocations, raceNamesList)
@@ -1563,6 +1593,15 @@ class Racing (private val game: Game) {
      * Check if there are fan or trophy requirements that need to be satisfied.
      */
     fun checkRacingRequirements(sourceBitmap: Bitmap? = null) {
+        // Skip racing requirements checks during Summer.
+        if (game.currentDate.isSummer()) {
+            if (hasFanRequirement || hasTrophyRequirement) {
+                MessageLog.i(TAG, "[RACE] It is currently Summer. Skipping racing requirements checks and clearing flags.")
+                clearRacingRequirementFlags()
+            }
+            return
+        }
+
         // Check for fan requirement on the main screen.
         val sourceBitmap = sourceBitmap ?: game.imageUtils.getSourceBitmap()
         val needsFanRequirement = game.imageUtils.findImageWithBitmap("race_fans_criteria", sourceBitmap, region = game.imageUtils.regionTopHalf, customConfidence = 0.90) != null
@@ -1588,15 +1627,28 @@ class Racing (private val game: Game) {
                     MessageLog.i(TAG, "[RACE] Trophy requirement with Pre-OP or above criteria detected. Any race can be run to fulfill the requirement.")
                 } else {
                     hasPreOpOrAboveRequirement = false
+                }
+
+                // Check for G3 or above criteria.
+                val needsG3OrAbove = game.imageUtils.findImageWithBitmap("race_g3_or_above_criteria", sourceBitmap, region = game.imageUtils.regionTopHalf, customConfidence = 0.90) != null
+                if (needsG3OrAbove) {
+                    hasG3OrAboveRequirement = true
+                    MessageLog.i(TAG, "[RACE] Trophy requirement with G3 or above criteria detected. Any race can be run to fulfill the requirement.")
+                } else {
+                    hasG3OrAboveRequirement = false
+                }
+
+                if (!hasPreOpOrAboveRequirement && !hasG3OrAboveRequirement) {
                     MessageLog.i(TAG, "[RACE] Trophy requirement criteria detected on main screen. Forcing racing to fulfill requirement (G1 races only).")
                 }
             } else {
                 // Clear the flags if requirement is no longer present.
                 if (hasTrophyRequirement) {
                     MessageLog.i(TAG, "[RACE] Trophy requirement no longer detected on main screen. Clearing flags.")
-                    // Clear trophy and Pre-OP flags together since they are related.
+                    // Clear trophy and criteria flags together since they are related.
                     hasTrophyRequirement = false
                     hasPreOpOrAboveRequirement = false
+                    hasG3OrAboveRequirement = false
                 }
             }
         }
@@ -1623,7 +1675,7 @@ class Racing (private val game: Game) {
         } else if (game.imageUtils.findImageWithBitmap("race_select_extra_locked", sourceBitmap, region = game.imageUtils.regionBottomHalf) != null) {
             MessageLog.i(TAG, "[RACE] Extra Races button is currently locked. Stopping extra race check.")
             return false
-        } else if (game.imageUtils.findImageWithBitmap("recover_energy_summer", sourceBitmap, region = game.imageUtils.regionBottomHalf) != null) {
+        } else if (game.currentDate.isSummer()) {
             MessageLog.i(TAG, "[RACE] It is currently Summer right now. Stopping extra race check.")
             return false
         }
@@ -1634,8 +1686,12 @@ class Racing (private val game: Game) {
             MessageLog.i(TAG, "[RACE] Fan requirement detected. Bypassing smart racing logic to fulfill requirement.")
             return !raceRepeatWarningCheck
         } else if (hasTrophyRequirement) {
-            if (hasPreOpOrAboveRequirement) {
-                MessageLog.i(TAG, "[RACE] Trophy requirement with Pre-OP or above criteria detected. Proceeding to racing screen.")
+            if (hasPreOpOrAboveRequirement || hasG3OrAboveRequirement) {
+                if (hasPreOpOrAboveRequirement) {
+                    MessageLog.i(TAG, "[RACE] Trophy requirement with Pre-OP or above criteria detected. Proceeding to racing screen.")
+                } else {
+                    MessageLog.i(TAG, "[RACE] Trophy requirement with G3 or above criteria detected. Proceeding to racing screen.")
+                }
                 return !raceRepeatWarningCheck
             }
 
@@ -1847,38 +1903,52 @@ class Racing (private val game: Game) {
         return true
     }
 
-    /**
-     * Handles race strategy override for Junior Year races.
-     *
-     * During Junior Year: Applies the user-selected strategy and stores the original.
-     * After Junior Year: Restores the original strategy and disables the feature.
-     */
-    fun selectRaceStrategy() {
-        if (
-            !game.trainee.bHasUpdatedAptitudes &&
-            !game.trainee.bTemporaryRunningStyleAptitudesUpdated
-        ) {
-            // If trainee aptitudes are unknown, this means we probably started the bot
-            // at the race screen. We need to open the race strategy dialog and
-            // read the aptitudes in from there.
-            MessageLog.i(TAG, "Setting running style and performing temporary initial aptitude check.")
-            ButtonChangeRunningStyle.click(imageUtils = game.imageUtils, tries = 10)
-            game.wait(0.5, skipWaitingForLoading = true)
-            var tries = 10
-            while (tries > 0 && !handleDialogs().first) {
-                tries--
-            }
-        } else if (!game.trainee.bHasSetRunningStyle) {
-            // If we haven't set the trainee's running style yet, open the dialog.
-            MessageLog.i(TAG, "Setting running style for the first time.")
-            ButtonChangeRunningStyle.click(imageUtils = game.imageUtils, tries = 10)
-            game.wait(0.5, skipWaitingForLoading = true)
-            var tries = 10
-            while (tries > 0 && !handleDialogs().first) {
-                tries--
-            }
-        }
-    }
+	/**
+	 * Handles race strategy override for Junior Year races.
+	 *
+	 * During Junior Year: Applies the user-selected strategy and stores the original.
+	 * After Junior Year: Restores the original strategy and disables the feature.
+	 */
+	fun selectRaceStrategy() {
+		val isJuniorYear = game.currentDate.year == DateYear.JUNIOR
+		val isPastJuniorYear = game.currentDate.year.ordinal > DateYear.JUNIOR.ordinal
+
+		// Determine if a strategy override or reversion is needed.
+		val needsOverride = isJuniorYear && !hasAppliedStrategyOverride && juniorYearRaceStrategy != userSelectedOriginalStrategy
+		val needsReversion = isPastJuniorYear && hasAppliedStrategyOverride
+
+		if (
+			!game.trainee.bHasUpdatedAptitudes &&
+			!game.trainee.bTemporaryRunningStyleAptitudesUpdated
+		) {
+			// If trainee aptitudes are unknown, this means we probably started the bot
+			// at the race screen. We need to open the race strategy dialog and
+			// read the aptitudes in from there.
+			MessageLog.i(TAG, "Setting running style and performing temporary initial aptitude check.")
+			ButtonChangeRunningStyle.click(imageUtils = game.imageUtils, tries = 10)
+			game.wait(0.5, skipWaitingForLoading = true)
+			var tries = 10
+			while (tries > 0 && !handleDialogs().first) {
+				tries--
+			}
+		} else if (!game.trainee.bHasSetRunningStyle || needsOverride || needsReversion) {
+			if (needsOverride) {
+				MessageLog.i(TAG, "[RACE] Junior Year detected. Applying Junior race strategy override: $juniorYearRaceStrategy")
+			} else if (needsReversion) {
+				MessageLog.i(TAG, "[RACE] Past Junior Year detected. Reverting to original race strategy: $userSelectedOriginalStrategy")
+			} else {
+				// If we haven't set the trainee's running style yet, open the dialog.
+				MessageLog.i(TAG, "Setting running style for the first time.")
+			}
+
+			ButtonChangeRunningStyle.click(imageUtils = game.imageUtils, tries = 10)
+			game.wait(0.5, skipWaitingForLoading = true)
+			var tries = 10
+			while (tries > 0 && !handleDialogs().first) {
+				tries--
+			}
+		}
+	}
 
     /**
      * Executes the race with retry logic.
