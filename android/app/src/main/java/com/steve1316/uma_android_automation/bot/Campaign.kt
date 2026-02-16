@@ -598,8 +598,8 @@ open class Campaign(val game: Game) {
                 }
                 
                 // Use CountDownLatch to run the operations in parallel.
-                // 1 racingRequirements + 5 stats + 1 skill points + 1 mood = 8 threads.
-                val latch = CountDownLatch(8)
+                // 1 racingRequirements (skipped during summer) + 5 stats + 1 skill points + 1 mood = 8 (or 7) threads.
+                val latch = if (game.currentDate.isSummer()) CountDownLatch(7) else CountDownLatch(8)
 
                 MessageLog.disableOutput = true
                 
@@ -630,15 +630,17 @@ open class Campaign(val game: Game) {
                 }.apply { isDaemon = true }.start()
 
                 // Thread 8: Update racing requirements.
-                Thread {
-                    try {
-                        game.racing.checkRacingRequirements(sourceBitmap)
-                    } catch (e: Exception) {
-                        MessageLog.e(TAG, "Error in checkRacingRequirements thread: ${e.stackTraceToString()}")
-                    } finally {
-                        latch.countDown()
-                    }
-                }.apply { isDaemon = true }.start()
+                if (!game.currentDate.isSummer()) {
+                    Thread {
+                        try {
+                            game.racing.checkRacingRequirements(sourceBitmap)
+                        } catch (e: Exception) {
+                            MessageLog.e(TAG, "Error in checkRacingRequirements thread: ${e.stackTraceToString()}")
+                        } finally {
+                            latch.countDown()
+                        }
+                    }.apply { isDaemon = true }.start()
+                }
                 
                 // Wait for all threads to complete.
                 try {

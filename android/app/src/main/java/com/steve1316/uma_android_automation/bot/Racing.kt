@@ -1675,7 +1675,7 @@ class Racing (private val game: Game) {
         } else if (game.imageUtils.findImageWithBitmap("race_select_extra_locked", sourceBitmap, region = game.imageUtils.regionBottomHalf) != null) {
             MessageLog.i(TAG, "[RACE] Extra Races button is currently locked. Stopping extra race check.")
             return false
-        } else if (game.imageUtils.findImageWithBitmap("recover_energy_summer", sourceBitmap, region = game.imageUtils.regionBottomHalf) != null) {
+        } else if (game.currentDate.isSummer()) {
             MessageLog.i(TAG, "[RACE] It is currently Summer right now. Stopping extra race check.")
             return false
         }
