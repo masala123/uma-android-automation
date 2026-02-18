@@ -11,7 +11,7 @@ import com.steve1316.automation_library.utils.MessageLog
 
 import com.steve1316.uma_android_automation.utils.types.BoundingBox
 
-import com.steve1316.uma_android_automation.components.*
+import com.steve1316.uma_android_automation.components.BaseComponentInterface
 
 const val MAX_PROCESS_TIME_DEFAULT_MS = 60000
 
@@ -154,8 +154,8 @@ class ScrollList private constructor(
         fun create(
             game: Game,
             bitmap: Bitmap? = null,
-            listTopLeftComponent: ComponentInterface? = null,
-            listBottomRightComponent: ComponentInterface? = null,
+            listTopLeftComponent: BaseComponentInterface? = null,
+            listBottomRightComponent: BaseComponentInterface? = null,
             entryDetectionConfig: ScrollListEntryDetectionConfig? = null,
         ): ScrollList? {
             val bboxList: BoundingBox? = getListBoundingRegion(
@@ -187,14 +187,14 @@ class ScrollList private constructor(
         private fun getListBoundingRegion(
             game: Game,
             bitmap: Bitmap? = null,
-            listTopLeftComponent: ComponentInterface? = null,
-            listBottomRightComponent: ComponentInterface? = null,
+            listTopLeftComponent: BaseComponentInterface? = null,
+            listBottomRightComponent: BaseComponentInterface? = null,
             debugString: String = "",
         ): BoundingBox? {
             val bitmap: Bitmap = bitmap ?: game.imageUtils.getSourceBitmap()
 
-            val listTopLeftComponent: ComponentInterface = listTopLeftComponent ?: IconScrollListTopLeft
-            val listBottomRightComponent: ComponentInterface = listBottomRightComponent ?: IconScrollListBottomRight
+            val listTopLeftComponent: BaseComponentInterface = listTopLeftComponent ?: IconScrollListTopLeft
+            val listBottomRightComponent: BaseComponentInterface = listBottomRightComponent ?: IconScrollListBottomRight
 
             val listTopLeftBitmap: Bitmap? = listTopLeftComponent.template.getBitmap(game.imageUtils)
             if (listTopLeftBitmap == null) {
