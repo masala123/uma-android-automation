@@ -18,11 +18,7 @@ const val MAX_PROCESS_TIME_DEFAULT_MS = 60000
 /** Callback that is called whenever an entry is detected while processing the list.
  *
  * @param ScrollList A reference to this class instance.
- * @param Int The index of this entry in the list.
- * @param Point The location of the detected entry's component.
- * This is the location of the component that is specified when calling
- * [ScrollList.process] in the [entryComponent] parameter.
- * @param Bitmap The current bitmap.
+ * @param entry The [ScrollListEntry] instance that we detected.
  *
  * @return Whether the [ScrollList.process] function should exit early.
  * For example, if we just want to search for a specific entry in the list
@@ -570,7 +566,6 @@ class ScrollList private constructor(
      * @return Whether the operation was successful.
      */
     fun process(
-        //entryComponents: List<ComponentInterface>,
         maxTimeMs: Int = MAX_PROCESS_TIME_DEFAULT_MS,
         bScrollBottomToTop: Boolean = false,
         onEntry: OnEntryDetectedCallback,
