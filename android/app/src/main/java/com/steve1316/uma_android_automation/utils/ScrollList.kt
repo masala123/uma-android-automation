@@ -11,7 +11,9 @@ import com.steve1316.automation_library.utils.MessageLog
 
 import com.steve1316.uma_android_automation.types.BoundingBox
 
-import com.steve1316.uma_android_automation.components.BaseComponentInterface
+import com.steve1316.uma_android_automation.components.ComponentInterface
+import com.steve1316.uma_android_automation.components.IconScrollListTopLeft
+import com.steve1316.uma_android_automation.components.IconScrollListBottomRight
 
 const val MAX_PROCESS_TIME_DEFAULT_MS = 60000
 
@@ -154,8 +156,8 @@ class ScrollList private constructor(
         fun create(
             game: Game,
             bitmap: Bitmap? = null,
-            listTopLeftComponent: BaseComponentInterface? = null,
-            listBottomRightComponent: BaseComponentInterface? = null,
+            listTopLeftComponent: ComponentInterface? = null,
+            listBottomRightComponent: ComponentInterface? = null,
             entryDetectionConfig: ScrollListEntryDetectionConfig? = null,
         ): ScrollList? {
             val bboxList: BoundingBox? = getListBoundingRegion(
@@ -187,14 +189,14 @@ class ScrollList private constructor(
         private fun getListBoundingRegion(
             game: Game,
             bitmap: Bitmap? = null,
-            listTopLeftComponent: BaseComponentInterface? = null,
-            listBottomRightComponent: BaseComponentInterface? = null,
+            listTopLeftComponent: ComponentInterface? = null,
+            listBottomRightComponent: ComponentInterface? = null,
             debugString: String = "",
         ): BoundingBox? {
             val bitmap: Bitmap = bitmap ?: game.imageUtils.getSourceBitmap()
 
-            val listTopLeftComponent: BaseComponentInterface = listTopLeftComponent ?: IconScrollListTopLeft
-            val listBottomRightComponent: BaseComponentInterface = listBottomRightComponent ?: IconScrollListBottomRight
+            val listTopLeftComponent: ComponentInterface = listTopLeftComponent ?: IconScrollListTopLeft
+            val listBottomRightComponent: ComponentInterface = listBottomRightComponent ?: IconScrollListBottomRight
 
             val listTopLeftBitmap: Bitmap? = listTopLeftComponent.template.getBitmap(game.imageUtils)
             if (listTopLeftBitmap == null) {
