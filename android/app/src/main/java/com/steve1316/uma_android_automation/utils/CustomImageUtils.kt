@@ -2094,11 +2094,17 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
      * If not specified, then a screenshot is taken and saved instead.
      * @param filename The filename for the saved bitmap.
      */
-    fun saveBitmap(bitmap: Bitmap? = null, filename: String) {
+    fun saveBitmap(bitmap: Bitmap? = null, filename: String, fullRes: Boolean = false) {
         val bitmap = bitmap ?: getSourceBitmap()
         val tempImage = Mat()
         Utils.bitmapToMat(bitmap, tempImage)
-        Imgcodecs.imwrite("$matchFilePath/$filename.png", tempImage)
+        if (fullRes) {
+            val params = MatOfInt(Imgcodecs.IMWRITE_JPEG_QUALITY, 100)
+            Imgcodecs.imwrite("$matchFilePath/$filename.png", tempImage, params)
+            params.release()
+        } else {
+            Imgcodecs.imwrite("$matchFilePath/$filename.png", tempImage)
+        }
         tempImage.release()
     }
 
@@ -2158,7 +2164,7 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
      *
      * @return The cropped screenshot.
      */
-    fun getRegionBitmap(bbox: BoundingBox): Bitmap? {
+    fun getRegionBitmap(bbox: BoundingBox): Bitmap {
         return getRegionBitmap(
             x = bbox.x,
             y = bbox.y,
@@ -2212,5 +2218,688 @@ class CustomImageUtils(context: Context, private val game: Game) : ImageUtils(co
         diff.release()
 
         return similarityScore
+    }
+
+    /** Converts ConvexHull indices to actual points.
+     *
+     * @param contour The contour to apply this translation to.
+     * @param hullIndices The indices to convert.
+     *
+     * @return The MatOfPoint containing the converted points.
+     */
+    private fun getHullFromIndices(
+        contour: MatOfPoint,
+        hullIndices: MatOfInt,
+    ): MatOfPoint {
+        val points = contour.toArray()
+        val hullPoints = hullIndices.toArray().map { points[it] }
+        return MatOfPoint(*hullPoints.toTypedArray())
+    }
+
+    /** Detects rectangles with rounded corners on the screen.
+     *
+     * This uses traditional image processing algorithms to detect
+     * all rectangles with rounded corners on the screen.
+     *
+     * For this to work, the rectangle must either have an outline or
+     * be easily differentiable from the background color. Play around with
+     * the `src/data/imageDetection.py` test script to see what parameters
+     * work best for the items you're trying to detect.
+     *
+     * @param bitmap Optional bitmap containing the rectangles you want to detect.
+     * If NULL, then a screenshot will be used.
+     * @param region A bounding box region to limit the detection to.
+     * If not specified, then the entire bitmap will be used.
+     * @param minArea Filters out any rectangles with an area smaller than this parameter.
+     * If not specified, then no lower bound filter will be applied.
+     * @param maxArea Filters out any rectangles with an area larger than this parameter.
+     * If not specified, then no upper bound filter will be applied.
+     * @param epsilonScalar A small value used to scale the detection of rounded
+     * corners on the rectangles. Defaults to 0.02 which works in most cases.
+     * @param cannyLowerThreshold First threshold for hysteresis procedure for
+     * Canny edge detection. Not applicable if [bUseAdaptiveThreshold] is enabled.
+     * @param cannyUpperThreshold Second threshold for hysteresis procedure for
+     * Canny edge detection. Not applicable if [bUseAdaptiveThreshold] is enabled.
+     * @param blurSize The size of the kernel to use for the gaussian blur.
+     * Must be a positive and odd integer. A value of 1 will effectively be no blur.
+     * @param bUseAdaptiveThreshold Whether to use an adaptive threshold instead
+     * of Canny edge detection. Can provide better results in some cases.
+     * @param adaptiveThresholdBlockSize The size of a pixel neighborhood that is used
+     * to calculate the threshold value. Must be an odd integer with a value of
+     * 3 or higher.
+     * @param adaptiveThresholdConstant A constant that is subtracted from the mean
+     * or weighted mean. Can be any real number.
+     *
+     * @return A list of BoundingBox objects for detected rectangles, sorted by their
+     * y-position in the bitmap (from top to bottom on screen).
+     */
+    fun detectRoundedRectangles(
+        bitmap: Bitmap? = null,
+        region: BoundingBox? = null,
+        minArea: Int? = null,
+        maxArea: Int? = null,
+        blurSize: Int = 5,
+        epsilonScalar: Double = 0.02,
+        cannyLowerThreshold: Int = 30,
+        cannyUpperThreshold: Int = 50,
+        bUseAdaptiveThreshold: Boolean = false,
+        adaptiveThresholdBlockSize: Int = 11,
+        adaptiveThresholdConstant: Double = 2.0,
+    ): List<BoundingBox> {
+        val bitmap: Bitmap = if (region == null) {
+            bitmap ?: getSourceBitmap()
+        } else if (bitmap == null) {
+            createSafeBitmap(
+                getSourceBitmap(),
+                region,
+                "detectRoundedRectangles"
+            )!!
+        } else {
+            createSafeBitmap(bitmap, region, "detectRoundedRectangles") ?: getSourceBitmap()
+        }
+
+        // Input sanitization
+
+        val cannyLowerThreshold: Double = cannyLowerThreshold.coerceIn(0, 255).toDouble()
+        val cannyUpperThreshold: Double = cannyUpperThreshold.coerceIn(0, 255).toDouble()
+
+        val screenArea: Int = SharedData.displayWidth * SharedData.displayHeight
+        val minArea: Int = (minArea ?: 0).coerceIn(0, screenArea)
+        val maxArea: Int = (maxArea ?: screenArea).coerceIn(minArea, screenArea)
+
+        if (minArea > maxArea) {
+            throw IllegalArgumentException("minArea ($minArea) > maxArea ($maxArea)")
+        }
+
+        if (blurSize <= 0 || blurSize % 2 == 0) {
+            throw IllegalArgumentException("blurSize must be a positive odd integer. Got: $blurSize.")
+        }
+
+        val blurKernel = Size(blurSize.toDouble(), blurSize.toDouble())
+
+        val result: MutableList<BoundingBox> = mutableListOf()
+
+        val srcImage = Mat()
+		Utils.bitmapToMat(bitmap, srcImage)
+
+        val image = Mat()
+        Imgproc.cvtColor(srcImage, image, Imgproc.COLOR_BGR2GRAY)
+        Imgproc.GaussianBlur(image, image, blurKernel, 0.0)
+        if (bUseAdaptiveThreshold) {
+            Imgproc.adaptiveThreshold(
+                image,
+                image,
+                255.0, // maxValue
+                Imgproc.ADAPTIVE_THRESH_GAUSSIAN_C,
+                Imgproc.THRESH_BINARY_INV,
+                adaptiveThresholdBlockSize, // blockSize (must be odd)
+                adaptiveThresholdConstant, // C (constant to subtract)
+            )
+        } else {
+            Imgproc.Canny(
+                image,
+                image,
+                cannyLowerThreshold,
+                cannyUpperThreshold,
+                3,
+                false,
+            )
+        }
+
+        if (debugMode) {
+            val resultBitmap = createBitmap(image.cols(), image.rows())
+            Utils.matToBitmap(image, resultBitmap)
+            saveBitmap(resultBitmap, "detectRoundedRectangles_canny", fullRes = true)
+        }
+
+        val contours: MutableList<MatOfPoint> = mutableListOf()
+        val hierarchy = Mat()
+        Imgproc.findContours(
+            image,
+            contours,
+            hierarchy,
+            Imgproc.RETR_EXTERNAL,
+            Imgproc.CHAIN_APPROX_SIMPLE,
+        )
+
+        for (cnt in contours) {
+            val area = Imgproc.contourArea(cnt)
+
+            // Filter out contours with invalid areas.
+            if (area < minArea || area > maxArea) {
+                continue
+            }
+
+            // Use convex hull to ignore rounded corners.
+            val hullPoints = MatOfInt()
+            Imgproc.convexHull(cnt, hullPoints)
+            // Convert hull indices back to MatOfPoint
+            val hullContour = getHullFromIndices(cnt, hullPoints)
+
+            // Approximate shape.
+            val approx = MatOfPoint2f()
+            val cnt2f = MatOfPoint2f(*hullContour.toArray())
+            val peri = Imgproc.arcLength(cnt2f, true)
+            Imgproc.approxPolyDP(cnt2f, approx, epsilonScalar * peri, true)
+
+            // Check for four vertices.
+            if (approx.total() == 4L) {
+                val rect = Imgproc.boundingRect(cnt)
+                if (debugMode) {
+                    Imgproc.rectangle(srcImage, rect.tl(), rect.br(), Scalar(0.0, 255.0, 0.0), 2)
+                }
+                result.add(BoundingBox(rect.x, rect.y, rect.width, rect.height))
+            }
+
+            // Free memory for each mat.
+            hullPoints.release()
+            hullContour.release()
+            approx.release()
+            cnt2f.release()
+        }
+
+        if (debugMode) {
+            val resultBitmap = createBitmap(srcImage.cols(), srcImage.rows())
+            Imgproc.cvtColor(srcImage, srcImage, Imgproc.COLOR_BGR2RGB)
+            Utils.matToBitmap(srcImage, resultBitmap)
+            saveBitmap(resultBitmap, "detectRoundedRectangles", fullRes = true)
+        }
+
+        // Free memory for each mat.
+        contours.forEach { it.release() }
+        contours.clear()
+        hierarchy.release()
+        image.release()
+        srcImage.release()
+
+        return result.toList()
+    }
+
+    /** Detects rectangles with on the screen.
+     *
+     * A more robust version of [detectRoundedRectangles] with slightly less
+     * accurate rectangle boundaries in favor of higher chance of detection.
+     *
+     * This uses traditional image processing algorithms to detect
+     * all rectangles on the screen.
+     *
+     * For this to work, the rectangle must either have an outline or
+     * be easily differentiable from the background color. Play around with
+     * the `src/data/imageDetection.py` test script to see what parameters
+     * work best for the items you're trying to detect.
+     *
+     * @param bitmap Optional bitmap containing the rectangles you want to detect.
+     * If NULL, then a screenshot will be used.
+     * @param region A bounding box region to limit the detection to.
+     * If not specified, then the entire bitmap will be used.
+     * @param minArea Filters out any rectangles with an area smaller than this parameter.
+     * If not specified, then no lower bound filter will be applied.
+     * @param maxArea Filters out any rectangles with an area larger than this parameter.
+     * If not specified, then no upper bound filter will be applied.
+     * @param blurSize The size of the kernel to use for the gaussian blur.
+     * Must be a positive and odd integer. A value of 1 will effectively be no blur.
+     * @param epsilonScalar A small value used to scale the detection of rounded
+     * corners on the rectangles. Defaults to 0.02 which works in most cases.
+     * @param fillSeedPoint The location within the [bitmap] or [region] that is part
+     * of the background on which the rectangles are located. Think of this like
+     * the fill (paint bucket) tool in image editing software. So if the rectangles
+     * are all against a white background, then [fillSeedPoint] should be the location
+     * of one of the white pixels in the background.
+     * @param fillLoDiffValue Maximum lower brightness/color difference for fill.
+     * Higher values cause the [fillSeedPoint] color fill to spread further.
+     * @param fillUpDiffValue Maximum upper brightness/color difference for fill.
+     * Higher values cause the [fillSeedPoint] color fill to spread further.
+     * @param morphKernelSize The size of the kernel used for the opening morphology
+     * operation. Higher values will cause detected rectangles to be more accurate,
+     * but too high of values can cause rectangles to not be detected at all.
+     *
+     * @return A list of BoundingBox objects for detected rectangles, sorted by their
+     * y-position in the bitmap (from top to bottom on screen).
+     */
+    fun detectRectanglesGeneric(
+        bitmap: Bitmap? = null,
+        region: BoundingBox? = null,
+        minArea: Int? = null,
+        maxArea: Int? = null,
+        blurSize: Int = 7,
+        epsilonScalar: Double = 0.02,
+        fillSeedPoint: Point = Point(10.0, 10.0),
+        fillLoDiffValue: Int = 1,
+        fillUpDiffValue: Int = 1,
+        morphKernelSize: Int = 100,
+    ): List<BoundingBox> {
+        val bitmap: Bitmap = if (region == null) {
+            bitmap ?: getSourceBitmap()
+        } else if (bitmap == null) {
+            createSafeBitmap(
+                getSourceBitmap(),
+                region,
+                "detectRectanglesGeneric"
+            )!!
+        } else {
+            createSafeBitmap(bitmap, region, "detectRectanglesGeneric") ?: getSourceBitmap()
+        }
+
+        // Input sanitization
+
+        val screenArea: Int = SharedData.displayWidth * SharedData.displayHeight
+        val minArea: Int = (minArea ?: 0).coerceIn(0, screenArea)
+        val maxArea: Int = (maxArea ?: screenArea).coerceIn(minArea, screenArea)
+
+        if (minArea > maxArea) {
+            throw IllegalArgumentException("minArea ($minArea) > maxArea ($maxArea)")
+        }
+
+        if (blurSize <= 0 || blurSize % 2 == 0) {
+            throw IllegalArgumentException("blurSize must be a positive odd integer. Got: $blurSize.")
+        }
+
+        val blurKernel = Size(blurSize.toDouble(), blurSize.toDouble())
+
+        val fillLoDiffValue: Int = fillLoDiffValue.coerceIn(0, 255)
+        val loDiff = Scalar(fillLoDiffValue.toDouble(), fillLoDiffValue.toDouble(), fillLoDiffValue.toDouble())
+
+        val fillUpDiffValue: Int = fillUpDiffValue.coerceIn(0, 255)
+        val upDiff = Scalar(fillUpDiffValue.toDouble(), fillUpDiffValue.toDouble(), fillUpDiffValue.toDouble())
+
+        val morphKernelSize: Int = morphKernelSize.coerceIn(0, 250)
+        val morphKernel = Imgproc.getStructuringElement(
+            Imgproc.MORPH_RECT,
+            Size(morphKernelSize.toDouble(), morphKernelSize.toDouble()),
+        )
+
+        val result: MutableList<BoundingBox> = mutableListOf()
+
+        val srcImage = Mat()
+		Utils.bitmapToMat(bitmap, srcImage)
+
+        val image = Mat()
+        Imgproc.cvtColor(srcImage, image, Imgproc.COLOR_BGR2GRAY)
+        Imgproc.GaussianBlur(image, image, blurKernel, 0.0)
+        
+        val rect = Rect()
+        val fillColor = Scalar(0.0, 0.0, 0.0)
+        Imgproc.floodFill(
+            image,
+            Mat(),
+            fillSeedPoint,
+            fillColor,
+            rect,
+            loDiff,
+            upDiff,
+        )
+
+        if (debugMode) {
+            val resultBitmap = createBitmap(image.cols(), image.rows())
+            Utils.matToBitmap(image, resultBitmap)
+            saveBitmap(resultBitmap, "detectRectanglesGeneric_floodFill", fullRes = true)
+        }
+
+        // Set all non-black pixels to white.
+        val blackMask = Mat()
+        Core.compare(image, fillColor, blackMask, Core.CMP_EQ)
+        val nonBlackMask = Mat()
+        Core.bitwise_not(blackMask, nonBlackMask)
+        image.setTo(Scalar(255.0, 255.0, 255.0), nonBlackMask)
+        blackMask.release()
+        nonBlackMask.release()
+
+        if (debugMode) {
+            val resultBitmap = createBitmap(image.cols(), image.rows())
+            Utils.matToBitmap(image, resultBitmap)
+            saveBitmap(resultBitmap, "detectRectanglesGeneric_masked", fullRes = true)
+        }
+
+        Imgproc.morphologyEx(image, image, Imgproc.MORPH_OPEN, morphKernel)
+
+        if (debugMode) {
+            val resultBitmap = createBitmap(image.cols(), image.rows())
+            Utils.matToBitmap(image, resultBitmap)
+            saveBitmap(resultBitmap, "detectRectanglesGeneric_opened", fullRes = true)
+        }
+
+        // Invert binary image.
+        //Core.bitwise_not(image, image)
+
+        val contours: MutableList<MatOfPoint> = mutableListOf()
+        val hierarchy = Mat()
+        Imgproc.findContours(
+            image,
+            contours,
+            hierarchy,
+            Imgproc.RETR_EXTERNAL,
+            Imgproc.CHAIN_APPROX_SIMPLE,
+        )
+
+        for (cnt in contours) {
+            val area = Imgproc.contourArea(cnt)
+
+            // Filter out contours with invalid areas.
+            if (area < minArea || area > maxArea) {
+                continue
+            }
+
+            // Use convex hull to ignore rounded corners.
+            val hullPoints = MatOfInt()
+            Imgproc.convexHull(cnt, hullPoints)
+            // Convert hull indices back to MatOfPoint
+            val hullContour = getHullFromIndices(cnt, hullPoints)
+
+            // Approximate shape.
+            val approx = MatOfPoint2f()
+            val cnt2f = MatOfPoint2f(*hullContour.toArray())
+            val peri = Imgproc.arcLength(cnt2f, true)
+            Imgproc.approxPolyDP(cnt2f, approx, epsilonScalar * peri, true)
+
+            // Check for four vertices.
+            if (approx.total() == 4L) {
+                val rect = Imgproc.boundingRect(cnt)
+
+                // Do not include any rects that are touching the bounding region.
+                if (rect.x <= 0 ||
+                    rect.y <= 0 ||
+                    rect.x + rect.width >= bitmap.width - 1 ||
+                    rect.y + rect.height >= bitmap.height - 1
+                ) {
+                    continue
+                }
+
+                if (debugMode) {
+                    Imgproc.rectangle(srcImage, rect.tl(), rect.br(), Scalar(0.0, 255.0, 0.0), 2)
+                }
+                result.add(BoundingBox(rect.x, rect.y, rect.width, rect.height))
+            }
+
+            // Free memory for each mat.
+            hullPoints.release()
+            hullContour.release()
+            approx.release()
+            cnt2f.release()
+        }
+
+        if (debugMode) {
+            val resultBitmap = createBitmap(srcImage.cols(), srcImage.rows())
+            Imgproc.cvtColor(srcImage, srcImage, Imgproc.COLOR_BGR2RGB)
+            Utils.matToBitmap(srcImage, resultBitmap)
+            saveBitmap(resultBitmap, "detectRectanglesGeneric_result", fullRes = true)
+        }
+
+        // Free memory for each mat.
+        contours.forEach { it.release() }
+        contours.clear()
+        hierarchy.release()
+        image.release()
+        srcImage.release()
+
+        return result.toList()
+    }
+
+    /** Converts an RGB hex string to an HSV
+     *
+     * The string should be a color hex string of the format:
+     *      #RRGGBB
+     *
+     * @return A Scalar with HSV values.
+     * H: 0-179
+     * S: 0-255
+     * V: 0-255
+     */
+    fun String.hexRGBToHSVScalar(): Scalar {
+        val colorInt = Color.parseColor(this)
+        val r = Color.red(colorInt)
+        val g = Color.green(colorInt)
+        val b = Color.blue(colorInt)
+
+        val bgrColor = Scalar(b.toDouble(), g.toDouble(), r.toDouble())
+
+        val bgrMat = Mat(1, 1, CvType.CV_8UC3, bgrColor)
+        val hsvMat = Mat()
+
+        Imgproc.cvtColor(bgrMat, hsvMat, Imgproc.COLOR_BGR2HSV)
+        val res = Scalar(hsvMat.get(0, 0))
+
+        bgrMat.release()
+        hsvMat.release()
+
+        return res
+    }
+
+    /** Detects a scrollbar on the screen.
+     *
+     * @param bitmap Optional bitmap containing the rectangles you want to detect.
+     * If NULL, then a screenshot will be used.
+     * @param region A bounding box region to limit the detection to.
+     * If not specified, then the entire bitmap will be used.
+     * @param minArea Filters out any rectangles with an area smaller than this parameter.
+     * If not specified, then no lower bound filter will be applied.
+     * @param maxArea Filters out any rectangles with an area larger than this parameter.
+     * If not specified, then no upper bound filter will be applied.
+     * @param morphCloseKernelSize The size of the kernel used when applying a
+     * closing morphology to the image. Higher values improve detection of scrollbars
+     * at the cost of reduced location accuracy.
+     *
+     * @return On success, a pair where the first value is the full scrollbar's
+     * BoundingBox and the second value is just the scrollbar's thumb's BoundingBox.
+     * If either of these could not be found, then we return NULL.
+     */
+    fun detectScrollBar(
+        bitmap: Bitmap? = null,
+        region: BoundingBox? = null,
+        minArea: Int? = null,
+        maxArea: Int? = null,
+        morphCloseKernelSize: Int = 10,
+    ): Pair<BoundingBox, BoundingBox>? {
+        val bitmap: Bitmap = if (region == null) {
+            bitmap ?: getSourceBitmap()
+        } else if (bitmap == null) {
+            createSafeBitmap(
+                getSourceBitmap(),
+                region,
+                "detectScrollBar"
+            )!!
+        } else {
+            createSafeBitmap(bitmap, region, "detectScrollBar") ?: getSourceBitmap()
+        }
+
+        // Input sanitization
+
+        val screenArea: Int = SharedData.displayWidth * SharedData.displayHeight
+        val minArea: Int = (minArea ?: 0).coerceIn(0, screenArea)
+        val maxArea: Int = (maxArea ?: screenArea).coerceIn(minArea, screenArea)
+
+        if (minArea > maxArea) {
+            throw IllegalArgumentException("minArea ($minArea) > maxArea ($maxArea)")
+        }
+
+        val morphCloseKernelSize: Int = morphCloseKernelSize.coerceIn(0, 250)
+        val morphCloseKernel = Imgproc.getStructuringElement(
+            Imgproc.MORPH_RECT,
+            Size(morphCloseKernelSize.toDouble(), morphCloseKernelSize.toDouble()),
+        )
+
+        val morphOpenKernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, Size(5.0, 5.0))
+
+        val srcImage = Mat()
+		Utils.bitmapToMat(bitmap, srcImage)
+
+        val image = Mat()
+        Imgproc.cvtColor(srcImage, image, Imgproc.COLOR_BGR2GRAY)
+
+        val hsvImage = Mat()
+        Imgproc.cvtColor(srcImage, hsvImage, Imgproc.COLOR_BGR2HSV)
+
+        if (debugMode) {
+            val resultBitmap = createBitmap(hsvImage.cols(), hsvImage.rows())
+            Utils.matToBitmap(hsvImage, resultBitmap)
+            saveBitmap(resultBitmap, "detectScrollBar_hsvImage", fullRes = true)
+        }
+
+        val thumbColorRange: Pair<String, String> = Pair("#787388", "#7d788e")
+        val barColorRange: Pair<String, String> = Pair("#d3d1db", "#d3d1db")
+
+        val combinedColorRange: List<Pair<String, String>> = listOf(
+            thumbColorRange,
+            barColorRange,
+        )
+
+        /** Generates a mask from an HSV image using the given color range.
+         *
+         * @param hsvImage The HSV image used to gernerate the mask.
+         * @param colorRanges A list of pairs of RGB hex color strings.
+         * The first item in each pair is the lower bound and the second item is
+         * the upper bound. Colors within this range in [hsvImage] will be masked.
+         *
+         * @return The generated mask Mat. Make sure to release this Mat when done.
+         */
+        fun extractMask(hsvImage: Mat, colorRanges: List<Pair<String, String>>): Mat {
+            val mask = Mat.zeros(hsvImage.size(), CvType.CV_8UC1)
+            for ((lower, upper) in colorRanges) {
+                val tmpMask = Mat()
+                Core.inRange(
+                    hsvImage,
+                    lower.hexRGBToHSVScalar(),
+                    upper.hexRGBToHSVScalar(),
+                    tmpMask,
+                )
+                Core.bitwise_or(mask, tmpMask, mask)
+                tmpMask.release()
+            }
+
+            Imgproc.morphologyEx(mask, mask, Imgproc.MORPH_OPEN, morphOpenKernel)
+            Imgproc.morphologyEx(mask, mask, Imgproc.MORPH_CLOSE, morphCloseKernel)
+            return mask
+        }
+
+        val barMask: Mat = extractMask(
+            hsvImage,
+            combinedColorRange,
+        )
+        if (debugMode) {
+            val resultBitmap = createBitmap(barMask.cols(), barMask.rows())
+            Utils.matToBitmap(barMask, resultBitmap)
+            saveBitmap(resultBitmap, "detectScrollBar_barMask", fullRes = true)
+        }
+
+        val thumbMask: Mat = extractMask(
+            hsvImage,
+            listOf<Pair<String, String>>(thumbColorRange),
+        )
+        if (debugMode) {
+            val resultBitmap = createBitmap(thumbMask.cols(), thumbMask.rows())
+            Utils.matToBitmap(thumbMask, resultBitmap)
+            saveBitmap(resultBitmap, "detectScrollBar_thumbMask", fullRes = true)
+        }
+
+        /** Detects part of a scrollbar in the given mask.
+         *
+         * @param mask The masked image to find a scrollbar within.
+         * @param minArea The smallest area allowed for the scrollbar.
+         * @param maxArea The largest area allowed for the scrollbar.
+         * @param debugString String used for debugging and saving debug images.
+         *
+         * @return The BoundingBox of the detected scrollbar on success.
+         * Otherwise, NULL.
+         */
+        fun detectFromMask(
+            mask: Mat,
+            minArea: Int,
+            maxArea: Int,
+            debugString: String = "",
+        ): BoundingBox? {
+            val debugImage = Mat()
+            Utils.bitmapToMat(bitmap, debugImage)
+
+            val contours: MutableList<MatOfPoint> = mutableListOf()
+            val hierarchy = Mat()
+            Imgproc.findContours(
+                mask,
+                contours,
+                hierarchy,
+                Imgproc.RETR_EXTERNAL,
+                Imgproc.CHAIN_APPROX_SIMPLE,
+            )
+
+            val result: MutableList<Pair<BoundingBox, Double>> = mutableListOf()
+            for (cnt in contours) {
+                val area = Imgproc.contourArea(cnt)
+
+                // Filter out contours with invalid areas.
+                if (area < minArea || area > maxArea) {
+                    continue
+                }
+
+                val rect = Imgproc.boundingRect(cnt)
+
+                // Do not include any rects that are touching the bounding region.
+                if (rect.x <= 0 ||
+                    rect.y <= 0 ||
+                    rect.x + rect.width >= bitmap.width - 1 ||
+                    rect.y + rect.height >= bitmap.height - 1
+                ) {
+                    continue
+                }
+
+                if (debugMode) {
+                    Imgproc.rectangle(debugImage, rect.tl(), rect.br(), Scalar(0.0, 255.0, 0.0), 2)
+                }
+
+                result.add(Pair(
+                    BoundingBox(rect.x, rect.y, rect.width, rect.height),
+                    area,
+                ))
+            }
+
+            if (debugMode) {
+                val resultBitmap = createBitmap(debugImage.cols(), debugImage.rows())
+                Imgproc.cvtColor(debugImage, debugImage, Imgproc.COLOR_BGR2RGB)
+                Utils.matToBitmap(debugImage, resultBitmap)
+                saveBitmap(resultBitmap, "detectScrollBar_$debugString", fullRes = true)
+            }
+
+            contours.forEach { it.release() }
+            contours.clear()
+            hierarchy.release()
+            debugImage.release()
+
+            return result.maxByOrNull { it.second }?.first ?: null
+        }
+
+        val bboxBar: BoundingBox? = detectFromMask(
+            barMask,
+            minArea = minArea,
+            maxArea = maxArea,
+            debugString = "bar",
+        )
+        if (bboxBar == null) {
+            MessageLog.i(TAG, "No scrollbar detected.")
+            val resultBitmap = createBitmap(srcImage.cols(), srcImage.rows())
+            Imgproc.cvtColor(srcImage, srcImage, Imgproc.COLOR_BGR2RGB)
+            Utils.matToBitmap(srcImage, resultBitmap)
+            saveBitmap(resultBitmap, "detectScrollBar_FAILED", fullRes = true)
+        }
+
+        val bboxThumb: BoundingBox? = detectFromMask(
+            thumbMask,
+            minArea = 100,
+            maxArea = maxArea,
+            debugString = "thumb",
+        )
+        if (bboxThumb == null) {
+            MessageLog.i(TAG, "No scrollbar thumb detected.")
+        }
+
+        // Free memory for each mat.
+        barMask.release()
+        thumbMask.release()
+        hsvImage.release()
+        image.release()
+        srcImage.release()
+
+        if (bboxThumb == null || bboxBar == null) {
+            return null
+        }
+
+        MessageLog.d(TAG, "Detected ScrollBar: $bboxBar, ScrollBarThumb: $bboxThumb")
+        return Pair(bboxBar, bboxThumb)
     }
 }

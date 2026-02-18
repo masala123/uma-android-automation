@@ -1,0 +1,519 @@
+import os
+
+import cv2
+import numpy as np
+import tkinter as tk
+
+root = tk.Tk()
+SCREEN_WIDTH = root.winfo_screenwidth()
+SCREEN_HEIGHT = root.winfo_screenheight()
+
+
+def get_fullscreen_image_keep_aspect(
+    img: cv2.typing.MatLike,
+    screen_width: int = SCREEN_WIDTH,
+    screen_height: int = SCREEN_HEIGHT,
+) -> cv2.typing.MatLike:
+    """
+    Resizes an image to fill the screen while maintaining aspect ratio.
+
+    Args:
+        img: The image to display.
+        screen_width: The width of the screen.
+        screen_height: The height of the screen.
+
+    Returns:
+        cv2.typing.MatLike: The resized image.
+    """
+
+    img_height, img_width = img.shape[:2]
+
+    # 2. Calculate new dimensions while maintaining aspect ratio.
+    # Calculate scale factors for both dimensions.
+    scale_width = screen_width / img_width
+    scale_height = screen_height / img_height
+
+    # Use the minimum scale factor to fit the image entirely within the screen.
+    scale = min(scale_width, scale_height)
+
+    # Calculate new dimensions.
+    new_width = int(img_width * scale)
+    new_height = int(img_height * scale)
+
+    # 3. Resize the image.
+    # INTER_AREA is good for shrinking; INTER_CUBIC or INTER_LINEAR for enlarging.
+    resized_img = cv2.resize(img, (new_width, new_height), interpolation=cv2.INTER_AREA)
+
+    # 4. (Optional) Pad the image with black borders to fill the whole screen.
+    # Calculate padding for top/bottom or left/right
+    top_pad = (screen_height - new_height) // 2
+    bottom_pad = screen_height - new_height - top_pad
+    left_pad = (screen_width - new_width) // 2
+    right_pad = screen_width - new_width - left_pad
+
+    padded_img = cv2.copyMakeBorder(resized_img, top_pad, bottom_pad, left_pad, right_pad, cv2.BORDER_CONSTANT, value=[0, 0, 0])
+
+    return padded_img
+
+
+def nothing(x):
+    """Function used as empty callback for OpenCV sliders."""
+    pass
+
+
+def detectRectangles(
+    fp: str,  # can be .png or .mp4
+    min_area: int = 0,
+    max_area: int = 1e7,
+    blur_size: int = 5,
+    epsilon_scalar: float = 0.02,
+    canny_lower_threshold: int = 30,
+    canny_upper_threshold: int = 50,
+    use_adaptive_threshold: bool = False,
+    adaptive_threshold_block_size: int = 11,
+    adaptive_threshold_constant: float = 2.0,
+    window_name: str = "detectRectangles",
+):
+    """
+    Detects rectangles in an image.
+
+    Args:
+        fp (str): The filepath of the image (or video) to load.
+        min_area (int): Rectangles with an area smaller than this will be ignored.
+        max_area (int): Rectangles with an area larger than this will be ignored.
+        blur_size (int): The size of the kernel used to blur the image.
+            Must be an odd and positive integer.
+        epsilon_scalar (float): Scaling factor for the epsilon component when
+            calculating polygons. Helps to detect rounded corners on rectangles.
+            Should be a very small value.
+        canny_lower_threshold (int): Lower threshold value for canny edge detection.
+        canny_upper_threshold (int): Upper threshold value for canny edge detection.
+        use_adaptive_threshold (bool): Whether to use adaptive thresholding instead
+            of canny edge detection.
+        adaptive_threshold_block_size (int): The blockSize parameter of the
+            cv2.adaptiveThreshold function.
+        adaptive_threshold_constant (float): The constant parameter value of the
+            cv2.adaptiveThreshold function.
+        window_name (string): The name of the cv2 window.
+    """
+
+    is_video = os.path.splitext(fp)[-1] == ".mp4"
+
+    if is_video:
+        cap = cv2.VideoCapture(fp)
+
+    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    # Set the window to fullscreen mode
+    cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
+    cv2.createTrackbar("Blur Size", window_name, blur_size, 32, nothing)
+    # Trackbar doesn't allow float values. Need to scale this value back down later.
+    cv2.createTrackbar("Epsilon", window_name, int(epsilon_scalar * 100), 100, nothing)
+
+    if use_adaptive_threshold:
+        cv2.createTrackbar("Block Size", window_name, adaptive_threshold_block_size, 255, nothing)
+    else:
+        cv2.createTrackbar("Threshold1", window_name, canny_lower_threshold, 255, nothing)
+        cv2.createTrackbar("Threshold2", window_name, canny_upper_threshold, 255, nothing)
+
+    while True:
+        blur_size = cv2.getTrackbarPos("Blur Size", window_name)
+        epsilon_scalar = cv2.getTrackbarPos("Epsilon", window_name)
+
+        if use_adaptive_threshold:
+            adaptive_threshold_block_size = cv2.getTrackbarPos("Block Size", window_name)
+
+            adaptive_threshold_block_size = max(3, adaptive_threshold_block_size)
+            if adaptive_threshold_block_size % 2 == 0:
+                adaptive_threshold_block_size += 1
+        else:
+            canny_lower_threshold = cv2.getTrackbarPos("Threshold1", window_name)
+            canny_upper_threshold = cv2.getTrackbarPos("Threshold2", window_name)
+
+        blur_size = max(1, blur_size)
+        if blur_size % 2 == 0:
+            blur_size += 1
+
+        # Scale back to decimal range.
+        epsilon_scalar = float(epsilon_scalar) / 100.0
+
+        if is_video:
+            ret, image = cap.read()
+            if not ret:
+                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                ret, image = cap.read()
+        else:
+            image = cv2.imread(fp)
+
+        # Process Image
+        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        blurred = cv2.GaussianBlur(gray, (blur_size, blur_size), 0)
+
+        if use_adaptive_threshold:
+            tmp = cv2.adaptiveThreshold(
+                blurred,
+                255,
+                cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                cv2.THRESH_BINARY_INV,
+                adaptive_threshold_block_size,
+                adaptive_threshold_constant,
+            )
+        else:
+            tmp = cv2.Canny(
+                image=blurred,
+                threshold1=canny_lower_threshold,
+                threshold2=canny_upper_threshold,
+            )
+
+        out_img = tmp
+        if len(out_img.shape) == 2 or out_img.shape[2] == 1:
+            out_img = cv2.cvtColor(out_img, cv2.COLOR_GRAY2BGR)
+
+        # Find and filter contours
+        contours, _ = cv2.findContours(tmp, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        for cnt in contours:
+            # Filter out invalid sized contours.
+            area = cv2.contourArea(cnt)
+            if area < min_area or area > max_area:
+                continue
+
+            # Use Convex Hull to ignore rounded corners
+            hull = cv2.convexHull(cnt)
+
+            # Approximate the hull shape
+            peri = cv2.arcLength(hull, True)
+            approx = cv2.approxPolyDP(hull, epsilon_scalar * peri, True)
+
+            # If 4 vertices are found, it's a candidate for a rounded rectangle
+            if len(approx) == 4:
+                x, y, w, h = cv2.boundingRect(cnt)
+                # Draw rectangle for visualization.
+                cv2.rectangle(out_img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+        res = get_fullscreen_image_keep_aspect(out_img, SCREEN_WIDTH, SCREEN_HEIGHT)
+        cv2.imshow(window_name, res)
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
+
+    if is_video:
+        cap.release()
+    cv2.destroyAllWindows()
+
+
+def detectRectanglesGeneric(
+    fp,  # can be .png or .mp4
+    min_area=0,
+    max_area=1e7,
+    blur_size=7,
+    lo_diff_val=1,
+    up_diff_val=1,
+    kernel_size=100,
+    crop_x=10,
+    crop_y=700,
+    crop_w=1055,
+    crop_h=840,
+    window_name="detectRectanglesGeneric",
+):
+    """
+    Detects rectangles in an image using a more generalized approach.
+
+    This method can detect a wider range of rectangle shapes including incomplete
+    rectangles or rectangles with noise along the edges. However, it may be less
+    accurate for detecting clean rectangles.
+
+    This method uses something similar to a standard image editing software's
+    paint bucket feature in order to clean up the rectangles. This means that
+    rectangles must be against a background with a mostly solid color and the
+    rectangles must be mostly distinguishable from the background.
+
+    Args:
+        fp (str): The filepath of the image (or video) to load.
+        min_area (int): Rectangles with an area smaller than this will be ignored.
+        max_area (int): Rectangles with an area larger than this will be ignored.
+        blur_size (int): The size of the kernel used to blur the image.
+            Must be an odd and positive integer.
+        lo_diff_val (int): The lower bounds for the "paint bucket" threshold.
+        up_diff_val (int): The upper bounds for the "paint bucket" threshold.
+        kernel_size (int): The size of the kernel used when performing the
+            opening morphology operation. Must be a positive and odd integer.
+        crop_x (int): The x location of the cropped image region.
+        crop_y (int): The y location of the cropped image region.
+        crop_w (int): The width of the cropped image region.
+        crop_h (int): The height of the cropped image region.
+        window_name (string): The name of the cv2 window.
+    """
+    is_video = os.path.splitext(fp)[-1] == ".mp4"
+
+    if is_video:
+        cap = cv2.VideoCapture(fp)
+
+    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    # Set the window to fullscreen mode.
+    cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
+    cv2.createTrackbar("Blur Size", window_name, blur_size, 32, nothing)
+    cv2.createTrackbar("loDiff", window_name, lo_diff_val, 100, nothing)
+    cv2.createTrackbar("upDiff", window_name, up_diff_val, 100, nothing)
+    cv2.createTrackbar("Kernel", window_name, kernel_size, 1000, nothing)
+
+    while True:
+        blur_size = cv2.getTrackbarPos("Blur Size", window_name)
+        lo_diff_val = cv2.getTrackbarPos("loDiff", window_name)
+        up_diff_val = cv2.getTrackbarPos("upDiff", window_name)
+        kernel_size = cv2.getTrackbarPos("Kernel", window_name)
+
+        blur_size = max(1, blur_size)
+        if blur_size % 2 == 0:
+            blur_size += 1
+
+        # Process Image.
+        if is_video:
+            ret, image = cap.read()
+            if not ret:
+                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                ret, image = cap.read()
+        else:
+            image = cv2.imread(fp)
+
+        image = image[crop_y : crop_y + crop_h, crop_x : crop_x + crop_w]
+        image = cv2.GaussianBlur(image, (blur_size, blur_size), 0)
+        # image = cv2.bilateralFilter(image, blur_size, 75, 75)
+        image_h, image_w = image.shape[:2]
+        mask = np.zeros((image_h + 2, image_w + 2), np.uint8)
+
+        loDiff = (lo_diff_val, lo_diff_val, lo_diff_val)
+        upDiff = (up_diff_val, up_diff_val, up_diff_val)
+        cv2.floodFill(image, mask, (15, 15), (0, 0, 0), loDiff, upDiff)
+
+        mask[mask != 0] = 255
+        mask = cv2.bitwise_not(mask)
+
+        kernel = np.ones((kernel_size, kernel_size), np.uint8)
+        morphed = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+        # closed = cv2.erode(mask, kernel, iterations=1)
+
+        # edges = cv2.Canny(morphed, canny_lower_threshold, canny_upper_threshold)
+
+        tmp = morphed
+
+        out_img = mask
+        if len(out_img.shape) == 2 or out_img.shape[2] == 1:
+            out_img = cv2.cvtColor(out_img, cv2.COLOR_GRAY2BGR)
+
+        # Find and filter contours.
+        contours, _ = cv2.findContours(tmp, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        for cnt in contours:
+            # Filter out invalid sized contours.
+            area = cv2.contourArea(cnt)
+            if area < min_area or area > max_area:
+                continue
+
+            # Use Convex Hull to ignore rounded corners.
+            hull = cv2.convexHull(cnt)
+
+            # Approximate the hull shape.
+            peri = cv2.arcLength(hull, True)
+            approx = cv2.approxPolyDP(hull, 0.02 * peri, True)
+
+            # If 4 vertices are found, it's a candidate for a rounded rectangle.
+            if len(approx) == 4:
+                x, y, w, h = cv2.boundingRect(cnt)
+                # Do not include any rects that are touching the bounding region.
+                if x <= 0 or y <= 0 or x + w >= image_w - 1 or y + h >= image_h - 1:
+                    continue
+
+                # Draw rectangle for visualization.
+                cv2.rectangle(out_img, (x, y), (x + w, y + h), (0, 255, 0), 1)
+
+        res = get_fullscreen_image_keep_aspect(out_img, SCREEN_WIDTH, SCREEN_HEIGHT)
+        cv2.imshow(window_name, res)
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
+
+    if is_video:
+        cap.release()
+    cv2.destroyAllWindows()
+
+
+def hex_to_hsv(hex_color):
+    """
+    Converts a hexadecimal color value to its corresponding HSV value
+    using OpenCV's color space conversion.
+
+    Args:
+        hex_color (str): The color in hexadecimal format (e.g., '#RRGGBB' or 'RRGGBB').
+
+    Returns:
+        numpy.ndarray: The HSV values in OpenCV's range (H: 0-179, S: 0-255, V: 0-255).
+    """
+    # Remove '#' if present.
+    hex_color = hex_color.lstrip("#")
+
+    # Convert hex to RGB integers (0-255).
+    r = int(hex_color[0:2], 16)
+    g = int(hex_color[2:4], 16)
+    b = int(hex_color[4:6], 16)
+
+    # OpenCV expects BGR format, so we use (b, g, r).
+    # Wrap the BGR values in a NumPy array with a specific shape and uint8 data type.
+    color_bgr = np.uint8([[[b, g, r]]])
+
+    # Convert the BGR color to HSV.
+    color_hsv = cv2.cvtColor(color_bgr, cv2.COLOR_BGR2HSV)
+
+    return color_hsv[0][0]
+
+
+def detectScrollBar(
+    fp,  # can be .png or .mp4
+    min_area=0,
+    max_area=1e7,
+    kernel_size=10,
+    crop_x=10,
+    crop_y=700,
+    crop_w=1055,
+    crop_h=840,
+    window_name="detectScrollBar",
+):
+    """
+    Detects a scrollbar in an image.
+
+    Args:
+        fp (str): The filepath of the image (or video) to load.
+        min_area (int): Regions with an area smaller than this will be ignored.
+        max_area (int): Regions with an area larger than this will be ignored.
+        kernel_size (int): The size of the kernel used when performing the
+            closing morphology operation. Must be a positive and odd integer.
+        crop_x (int): The x location of the cropped image region.
+        crop_y (int): The y location of the cropped image region.
+        crop_w (int): The width of the cropped image region.
+        crop_h (int): The height of the cropped image region.
+        window_name (string): The name of the cv2 window.
+    """
+    is_video = os.path.splitext(fp)[-1] == ".mp4"
+
+    if is_video:
+        cap = cv2.VideoCapture(fp)
+
+    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    # Set the window to fullscreen mode.
+    cv2.setWindowProperty(window_name, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
+    cv2.createTrackbar("Kernel", window_name, kernel_size, 1000, nothing)
+
+    epsilon = 0.02
+    cv2.createTrackbar("Epsilon", window_name, int(epsilon * 100), 100, nothing)
+
+    while True:
+        kernel_size = cv2.getTrackbarPos("Kernel", window_name)
+        epsilon = cv2.getTrackbarPos("Epsilon", window_name)
+
+        # Scale back to decimal range.
+        epsilon = float(epsilon) / 100.0
+
+        # Process Image.
+        if is_video:
+            ret, image = cap.read()
+            if not ret:
+                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
+                ret, image = cap.read()
+        else:
+            image = cv2.imread(fp)
+
+        image = image[crop_y : crop_y + crop_h, crop_x : crop_x + crop_w]
+        image_h, image_w = image.shape[:2]
+
+        hsv_img = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
+        color_boundaries = [
+            (hex_to_hsv("#787388"), hex_to_hsv("#7d788e")),
+            (hex_to_hsv("#d3d1db"), hex_to_hsv("#d3d1db")),
+        ]
+
+        mask = np.zeros(hsv_img.shape[:2], dtype=np.uint8)
+        for lower, upper in color_boundaries:
+            lower = np.array(lower, dtype=np.uint8)
+            upper = np.array(upper, dtype=np.uint8)
+
+            tmp_mask = cv2.inRange(hsv_img, lower, upper)
+            mask = cv2.bitwise_or(tmp_mask, mask)
+
+        kernel = np.ones((kernel_size, kernel_size), np.uint8)
+        morphed = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
+        morphed = cv2.morphologyEx(morphed, cv2.MORPH_CLOSE, kernel)
+        tmp = morphed
+
+        out_img = image
+        if len(out_img.shape) == 2 or out_img.shape[2] == 1:
+            out_img = cv2.cvtColor(out_img, cv2.COLOR_GRAY2BGR)
+
+        found_rects = []
+        # Find and filter contours.
+        contours, _ = cv2.findContours(tmp, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        for cnt in contours:
+            # Filter out invalid sized contours.
+            area = cv2.contourArea(cnt)
+            if area < min_area or area > max_area:
+                continue
+
+            # If 4 vertices are found, it's a candidate for a rounded rectangle.
+            x, y, w, h = cv2.boundingRect(cnt)
+            if cnt not in found_rects:
+                found_rects.append(cnt)
+
+                # Do not include any rects that are touching the bounding region.
+                if x <= 0 or y <= 0 or x + w >= image_w - 1 or y + h >= image_h - 1:
+                    continue
+                # Draw rectangle for visualization.
+                cv2.rectangle(out_img, (x, y), (x + w, y + h), (0, 255, 0), 1)
+
+        res = get_fullscreen_image_keep_aspect(out_img, SCREEN_WIDTH, SCREEN_HEIGHT)
+        cv2.imshow(window_name, res)
+        if cv2.waitKey(1) & 0xFF == ord("q"):
+            break
+
+    if is_video:
+        cap.release()
+    cv2.destroyAllWindows()
+
+
+if __name__ == "__main__":
+    fp = "./imageDetectionSample.png"
+    # fp = "./imageDetectionSample2.png"
+
+    detectRectangles(
+        fp,
+        min_area=200 * 900,
+        max_area=300 * 1050,
+        blur_size=5,
+        epsilon_scalar=0.02,
+        canny_lower_threshold=30,
+        canny_upper_threshold=50,
+        use_adaptive_threshold=True,
+        adaptive_threshold_block_size=11,
+        adaptive_threshold_constant=2.0,
+    )
+
+    detectRectanglesGeneric(
+        fp,
+        min_area=0,
+        max_area=1e7,
+        blur_size=7,
+        lo_diff_val=1,
+        up_diff_val=1,
+        kernel_size=100,
+        crop_x=10,
+        crop_y=700,
+        crop_w=1055,
+        crop_h=840,
+    )
+
+    detectScrollBar(
+        fp,
+        min_area=0,
+        max_area=1e7,
+        kernel_size=100,
+        crop_x=10,
+        crop_y=700,
+        crop_w=1055,
+        crop_h=840,
+    )
