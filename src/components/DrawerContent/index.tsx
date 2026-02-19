@@ -119,6 +119,7 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
             fontSize: 15,
             fontWeight: "400",
             color: colors.foreground,
+            flex: 1,
         },
         nestedItemTextActive: {
             color: colors.primary,
@@ -146,6 +147,7 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
             fontSize: 14,
             fontWeight: "400",
             color: colors.foreground,
+            flex: 1,
         },
         doubleNestedItemTextActive: {
             color: colors.primary,
