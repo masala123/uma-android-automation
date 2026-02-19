@@ -208,7 +208,7 @@ const SkillPlanSettings: FC<SkillPlanSettingsProps> = ({ planKey, name, title, d
             fontSize: 14,
             color: colors.foreground,
             opacity: 0.7,
-            marginTop: 4,
+            marginTop: 8,
         },
         inputContainer: {
             marginBottom: 16,
