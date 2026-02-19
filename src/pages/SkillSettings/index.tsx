@@ -282,6 +282,7 @@ const SkillSettings = () => {
                     <View className="m-1">
                         {Object.values(skillPlanSettingsPages).map((value) => (
                             <NavigationLink
+                                key={value.name}
                                 title={`Go to ${value.title} Skill Plan Settings`}
                                 description={value.description}
                                 onPress={() => navigation.navigate(value.name as never)}
