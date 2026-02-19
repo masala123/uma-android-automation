@@ -47,19 +47,20 @@ export const skillPlanSettingsPages: DynamicSkillPlanSettingsProps = {
         planKey: "skillPointCheck",
         name: "SkillPlanSettingsSkillPointCheck",
         title: "Skill Point Check",
-        description: "Configure the skills to buy when the skill point threshold has been reached.",
+        description:
+            "Configure the skills to buy when the skill point threshold has been reached.\n\nEvaluated ratings are sourced from Umamusume Wiki and community tier list ratings are sourced from Game8.",
     },
     preFinals: {
         planKey: "preFinals",
         name: "SkillPlanSettingsPreFinals",
         title: "Pre-Finals",
-        description: "Configure the skills to buy just before the finale season.",
+        description: "Configure the skills to buy just before the finale season.\n\nEvaluated ratings are sourced from Umamusume Wiki and community tier list ratings are sourced from Game8.",
     },
     careerComplete: {
         planKey: "careerComplete",
         name: "SkillPlanSettingsCareerComplete",
         title: "Career Complete",
-        description: "Configure the skills to buy after the career has completed.",
+        description: "Configure the skills to buy after the career has completed.\n\nEvaluated ratings are sourced from Umamusume Wiki and community tier list ratings are sourced from Game8.",
     },
 }
 
