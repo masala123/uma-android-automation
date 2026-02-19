@@ -168,7 +168,7 @@ class SkillDatabase (private val game: Game) {
         val result: MutableMap<String, DoublyLinkedListNode<String>> = mutableMapOf()
 
         for ((name, skillData) in skillData) {
-            // Get all downgrade/upgrade versions for this skill.            
+            // Get all downgrade/upgrade versions for this skill.
             val downgradeNames: List<String> = getVersionNames(skillData.downgrade)
             val upgradeNames: List<String> = getVersionNames(skillData.upgrade, bIsUpgrade = true)
 
