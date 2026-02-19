@@ -200,7 +200,7 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
                     icon: () => "american-football-outline",
                     nested: Object.values(skillPlanSettingsPages).map((item) => ({
                         name: item.name,
-                        label: `${item.title} Skill Plan Settings`,
+                        label: `${item.title} Plan Settings`,
                         icon: () => "cube-outline",
                     })),
                 },
