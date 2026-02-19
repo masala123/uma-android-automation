@@ -21,7 +21,7 @@ const SkillSettings = () => {
 
     // Merge current skills settings with defaults to handle missing properties.
     const skillSettings = { ...defaultSettings.skills, ...settings.skills }
-    const { enableSkillPointCheck, skillPointCheck, preferredRunningStyle, preferredTrackDistance, preferredTrackSurface } = skillSettings
+    const { preferredRunningStyle, preferredTrackDistance, preferredTrackSurface } = skillSettings
 
     useEffect(() => {
         if (bsc.settings.skills.plans.skillPointCheck.enabled) {
