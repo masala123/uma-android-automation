@@ -356,7 +356,7 @@ const SkillPlanSettings: FC<SkillPlanSettingsProps> = ({ planKey, name, title, d
 
     return (
         <View style={styles.root}>
-            <PageHeader title={`${title} Skill Plan`} />
+            <PageHeader title={`${title} Plan`} />
             <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
                 <View className="m-1">
                     <Text style={styles.description}>{description}</Text>
@@ -365,7 +365,7 @@ const SkillPlanSettings: FC<SkillPlanSettingsProps> = ({ planKey, name, title, d
                         id={`enable-career-complete-skill-plan-${planKey}`}
                         checked={enabled}
                         onCheckedChange={(checked) => updateSkillsSetting("enabled", checked)}
-                        label={`Enable ${title} Skill Plan (Beta)`}
+                        label={`Enable ${title} Plan (Beta)`}
                         description={"When enabled, the bot will attempt to purchase skills based on the following configuration."}
                     />
                     {enabled && (
