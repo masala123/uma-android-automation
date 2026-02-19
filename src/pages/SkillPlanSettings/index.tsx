@@ -11,7 +11,7 @@ import PageHeader from "../../components/PageHeader"
 import { Input } from "../../components/ui/input"
 import { CircleCheckBig, Trash2 } from "lucide-react-native"
 import skillsData from "../../data/skills.json"
-import icons from "../SkillSettings/icons";
+import icons from "../SkillSettings/icons"
 
 interface Skill {
     id: number
@@ -72,18 +72,12 @@ const SkillPlanSettings: FC<SkillPlanSettingsProps> = ({ planKey, name, title, d
     // Merge current skills settings with defaults to handle missing properties.
     const combinedConfig = { ...defaultSettings.skills.plans, ...settings.skills.plans }
 
-    const {
-        enabled,
-        strategy,
-        enableBuyInheritedUniqueSkills,
-        enableBuyNegativeSkills,
-        plan,
-    } = combinedConfig[planKey]
+    const { enabled, strategy, enableBuyInheritedUniqueSkills, enableBuyNegativeSkills, plan } = combinedConfig[planKey]
 
     const [searchQuery, setSearchQuery] = useState("")
 
     // Parse skill plan from CSV string.
-    const planIds: number[] = plan && plan !== "" && typeof plan === "string" ? plan.split(",").map(s => Number(s)) : []
+    const planIds: number[] = plan && plan !== "" && typeof plan === "string" ? plan.split(",").map((s) => Number(s)) : []
     // Convert skills.json to array.
     const skillData: Skill[] = Object.values(skillsData)
 
@@ -104,9 +98,9 @@ const SkillPlanSettings: FC<SkillPlanSettingsProps> = ({ planKey, name, title, d
                     [planKey]: {
                         ...bsc.settings.skills.plans[planKey],
                         [key]: value,
-                    }
-                }
-            }
+                    },
+                },
+            },
         })
     }
 
@@ -117,7 +111,7 @@ const SkillPlanSettings: FC<SkillPlanSettingsProps> = ({ planKey, name, title, d
         let newPlanIds: number[] = []
         if (isSelected) {
             // Remove the skill from the skill plan.
-            newPlanIds = planIds.filter(id => id !== skill.id)
+            newPlanIds = planIds.filter((id) => id !== skill.id)
         } else {
             // Add the skill to the skill plan.
             newPlanIds = [...planIds, skill.id]
@@ -283,28 +277,19 @@ const SkillPlanSettings: FC<SkillPlanSettingsProps> = ({ planKey, name, title, d
                     />
                     {strategy == "optimize_rank" && (
                         <View style={styles.warningContainer}>
-                            <Text style={styles.warningText}>
-                                ⚠️ Warning: Optimize Rank ignores any of the Skill
-                                Style Overrides set in the Skill Settings page.
-                            </Text>
+                            <Text style={styles.warningText}>⚠️ Warning: Optimize Rank ignores any of the Skill Style Overrides set in the Skill Settings page.</Text>
                         </View>
                     )}
                     <Text style={styles.inputDescription}>
-                        This option determines what the bot does with any
-                        remaining skill points after it has purchased all of
-                        the skills from the Planned Skills section and the
-                        other options on this page.
+                        This option determines what the bot does with any remaining skill points after it has purchased all of the skills from the Planned Skills section and the other options on this
+                        page.
                     </Text>
                     <Text style={styles.inputDescription}>
-                        Best Skills First will use a community skill tier list
-                        to purchase better skills first and then within each
-                        tier it will attempt to optimize rank since the skills
-                        within each tier are not ordered.
+                        Best Skills First will use a community skill tier list to purchase better skills first and then within each tier it will attempt to optimize rank since the skills within each
+                        tier are not ordered.
                     </Text>
                     <Text style={styles.inputDescription}>
-                        Optimize Rank will purchase skills in a way which will
-                        result in the highest trainee rank. Avoid this option
-                        if you wish to train an uma up for TT or CM.
+                        Optimize Rank will purchase skills in a way which will result in the highest trainee rank. Avoid this option if you wish to train an uma up for TT or CM.
                     </Text>
                 </View>
             </>
@@ -330,9 +315,7 @@ const SkillPlanSettings: FC<SkillPlanSettingsProps> = ({ planKey, name, title, d
 
                 <View style={{ flexDirection: "row", marginBottom: 12 }}>
                     <View style={{ flex: 1 }}>
-                        <Text style={[styles.inputDescription, { marginTop: 0 }]}>
-                            Select skills that the bot will always attempt to buy.
-                        </Text>
+                        <Text style={[styles.inputDescription, { marginTop: 0 }]}>Select skills that the bot will always attempt to buy.</Text>
                     </View>
                 </View>
 
@@ -351,9 +334,7 @@ const SkillPlanSettings: FC<SkillPlanSettingsProps> = ({ planKey, name, title, d
                                                 <Text style={styles.skillDescription}>{skill.desc_en}</Text>
                                                 <Text style={styles.skillSubtext}>ID: {skill.id}</Text>
                                             </View>
-                                            {planIds.includes(skill.id) && (
-                                                <CircleCheckBig size={18} color={"green"} />
-                                            )}
+                                            {planIds.includes(skill.id) && <CircleCheckBig size={18} color={"green"} />}
                                         </View>
                                     </TouchableOpacity>
                                 ),
