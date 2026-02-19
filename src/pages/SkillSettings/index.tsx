@@ -136,15 +136,14 @@ const SkillSettings = () => {
     return (
         <View style={styles.root}>
             <PageHeader title="Skill Settings" />
-            <Text style={styles.description}>Allows configuration of automated skill point spending.</Text>
-            <Text style={styles.description}>
-                This feature is not made of magic. If you wish to train an uma up for TT or CM, then you should buy your skills manually. The main purpose of this feature is to make the process of
-                farming rank in events less of a hassle.
-            </Text>
-            <Divider style={{ marginBottom: 16 }} />
             <ScrollView nestedScrollEnabled={true} showsVerticalScrollIndicator={false} showsHorizontalScrollIndicator={false} contentContainerStyle={{ flexGrow: 1 }}>
-                <CustomTitle title="General Skill Settings" />
                 <View style={styles.inputContainer}>
+                    <Text style={styles.description}>Allows configuration of automated skill point spending.</Text>
+                    <Text style={styles.description}>
+                        This feature is not made of magic. If you wish to train an uma up for TT or CM, then you should buy your skills manually. The main purpose of this feature is to make the
+                        process of farming rank in events less of a hassle.
+                    </Text>
+                    <Divider style={{ marginBottom: 16 }} />
                     <CustomCheckbox
                         checked={bsc.settings.skills.enableSkillPointCheck}
                         onCheckedChange={(checked) => {
