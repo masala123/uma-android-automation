@@ -82,11 +82,7 @@ const SkillPlanSettings: FC<SkillPlanSettingsProps> = ({ planKey, name, title, d
     const skillData: Skill[] = Object.values(skillsData)
 
     // Filter skills based on search and preferences.
-    const filteredSkills = skillData.filter((skill) => {
-        const matchesSearch = skill.name_en.toLowerCase().includes(searchQuery.toLowerCase())
-
-        return matchesSearch
-    })
+    const filteredSkills = skillData.filter((skill) => skill.name_en.toLowerCase().includes(searchQuery.toLowerCase()))
 
     const updateSkillsSetting = (key: string, value: any) => {
         setSettings({

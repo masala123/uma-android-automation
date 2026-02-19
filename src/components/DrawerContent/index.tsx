@@ -30,7 +30,7 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
         "RacingSettings",
         "RacingPlanSettings",
         "SkillSettings",
-        ...Object.values(skillPlanSettingsPages).flatMap(item => item.name),
+        ...Object.values(skillPlanSettingsPages).flatMap((item) => item.name),
         "DebugSettings",
     ]
 
@@ -196,13 +196,11 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
                     name: "SkillSettings",
                     label: "Skill Settings",
                     icon: () => "american-football-outline",
-                    nested: Object.values(skillPlanSettingsPages).map((item) => (
-                        {
-                            name: item.name,
-                            label: `${item.title} Skill Plan Settings`,
-                            icon: () => "cube-outline",
-                        }
-                    )),
+                    nested: Object.values(skillPlanSettingsPages).map((item) => ({
+                        name: item.name,
+                        label: `${item.title} Skill Plan Settings`,
+                        icon: () => "cube-outline",
+                    })),
                 },
                 {
                     name: "EventLogVisualizer",
@@ -266,7 +264,11 @@ const DrawerContent: React.FC<DrawerContentComponentProps> = (props) => {
         }
 
         // Auto-expand Skill Settings if Skill Plan Settings is active.
-        if (Object.values(skillPlanSettingsPages).map(item => item.name).includes(currentScreen)) {
+        if (
+            Object.values(skillPlanSettingsPages)
+                .map((item) => item.name)
+                .includes(currentScreen)
+        ) {
             newExpanded.add("SkillSettings")
         }
 
