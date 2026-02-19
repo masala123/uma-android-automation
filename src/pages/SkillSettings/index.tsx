@@ -81,7 +81,7 @@ const SkillSettings = () => {
             lineHeight: 20,
         },
         section: {
-            marginBottom: 24,
+            marginBottom: 16,
         },
         sectionTitle: {
             fontSize: 18,
@@ -110,7 +110,7 @@ const SkillSettings = () => {
             fontSize: 14,
             color: colors.foreground,
             opacity: 0.7,
-            marginTop: 4,
+            marginTop: 8,
         },
         titleDescription: {
             fontSize: 14,
@@ -158,7 +158,7 @@ const SkillSettings = () => {
                     />
 
                     {bsc.settings.skills.enableSkillPointCheck && (
-                        <View style={{ marginTop: 8, marginLeft: 20 }}>
+                        <View style={{ marginTop: 8 }}>
                             <CustomSlider
                                 value={bsc.settings.skills.skillPointCheck}
                                 placeholder={bsc.defaultSettings.skills.skillPointCheck}
@@ -210,7 +210,7 @@ const SkillSettings = () => {
                     Any skills whose activation condition does not match the selected override will be filtered out of the list of available skills that the bot can consider for purchasing. Skills
                     that have no activation conditions will still be available.
                 </Text>
-                <View style={styles.section}>
+                <View>
                     <View style={styles.inputContainer}>
                         <Text style={styles.inputLabel}>Running Style</Text>
                         <CustomSelect
@@ -277,7 +277,7 @@ const SkillSettings = () => {
                         </Text>
                     </View>
                 </View>
-                <Divider style={{ marginBottom: 16 }} />
+                <Divider style={{ marginBottom: 24 }} />
                 <View style={styles.section}>
                     <View className="m-1">
                         {Object.values(skillPlanSettingsPages).map((value) => (
