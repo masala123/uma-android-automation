@@ -153,7 +153,7 @@ const SkillSettings = () => {
                             })
                         }}
                         label="Enable Skill Point Check"
-                        description="Enables check for a certain skill point threshold. When the threshold is reached, the bot is stopped. If the Skill Point Check skill plan is enabled, then that skill plan will be run instead of stopping the bot."
+                        description="Enables check for a certain skill point threshold. When the threshold is reached, the bot is stopped. This can be changed to allow the selected Skill Plan to spend those points instead of stopping the bot."
                     />
 
                     {bsc.settings.skills.enableSkillPointCheck && (
@@ -198,8 +198,8 @@ const SkillSettings = () => {
                                         },
                                     })
                                 }}
-                                label="Enable Skill Plan at Threshold"
-                                description="Instead of stopping the bot, this will run the Skill Point Check skill plan when the skill point threshold is met."
+                                label="Enable Skill Plan Upon Meeting Threshold"
+                                description="Instead of stopping the bot, this will run the Skill Plan to spend the skill points when the threshold is met."
                             />
                         </View>
                     )}
@@ -239,6 +239,19 @@ const SkillSettings = () => {
                             This setting will filter skills based on both of these conditions. This helps us avoid having situations like an End Closer purchasing a skill like "Keeping the Lead". This
                             skill doesn't require using the Front Runner style to activate, but it does require the runner to be in the lead mid-race which is very unlikely for an End Closer.
                         </Text>
+                        <Text style={styles.inputDescription}>Detailed breakdown of examples:</Text>
+                        <Text style={styles.inputDescription}>
+                            • Use [Racing Settings] {"->"} [Original Race Strategy]: Inherits the running style from your Racing Settings. For example, if you set the Strategy to "Late Surger" in
+                            Racing Settings, only Late Surger skills will be considered.
+                        </Text>
+                        <Text style={styles.inputDescription}>
+                            • Any: Does not filter any skills based on running style. For example, even if your trainee is an "End Closer", the bot may still purchase "Pace Chaser Corners ○" (a Pace
+                            Chaser skill) if it's available.
+                        </Text>
+                        <Text style={styles.inputDescription}>
+                            • Front Runner: Only considers skills that are compatible with the Front Runner style. For example, skills like "Escape Artist" will be included, while "Outer Swell" (Late
+                            Surger) will be ignored.
+                        </Text>
                     </View>
                     <View style={styles.inputContainer}>
                         <Text style={styles.inputLabel}>Track Distance</Text>
@@ -271,8 +284,8 @@ const SkillSettings = () => {
                             placeholder="Select Track Surface"
                         />
                         <Text style={styles.inputDescription}>
-                            At the time of writing, there are no skills that only apply to the Turf surface type. The only track surface specific skills are ones for Dirt surfaces. So if you choose
-                            Dirt, all skills will still be available for purchase. However if you choose Turf, then all the Dirt skills will be ignored.
+                            As of 2026-02-19, there are no skills that only apply to the Turf surface type. The only track surface specific skills are ones for Dirt. So if you choose Dirt, all skills
+                            will still be available for purchase. However if you choose Turf, then all the Dirt skills will be ignored.
                         </Text>
                     </View>
                 </View>
